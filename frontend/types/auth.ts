@@ -1,4 +1,4 @@
-export type Role = "USER" | "ADMIN";
+export type Role = "USER" | "AUTHOR" | "MANAGER" | "ADMIN";
 
 export interface User {
   id: string;
@@ -30,6 +30,13 @@ export type {
   RegisterPayload,
   VerifyRegisterPayload,
   ResendOtpPayload,
+  LoginPayload,
+  LoginResponseData,
+  RefreshTokenPayload,
+  RefreshTokenResponseData,
+  LogoutPayload,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
   AuthApiResponse,
 } from "../lib/services/auth.service";
 

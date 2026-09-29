@@ -1,5 +1,7 @@
+"use client";
+
 import React from "react";
-import { Header } from "@/components/layout/header";
+import { SmartHeader } from "@/components/layout/header";
 import { Footer } from "@/components/layout/Footer";
 
 export default function CongKhaiLayout({
@@ -9,11 +11,12 @@ export default function CongKhaiLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50/50">
-      {/* Header trạng thái chưa đăng nhập */}
-      <Header isLoggedIn={false} />
+      {/* Header tự động nhận biết trạng thái đăng nhập */}
+      <SmartHeader />
 
       {/* Nội dung trang */}
       <main className="flex-1 w-full">{children}</main>
+      <Footer />
     </div>
   );
 }
