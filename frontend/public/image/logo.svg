@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 48" fill="none">
+  <!-- Icon squircle -->
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="#ea580c"/>
+  <path d="M14 31.5V16.5A2.5 2.5 0 0 1 16.5 14H30v20H16.5A2.5 2.5 0 0 1 14 31.5Z" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17 18.5h9" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M17 23h9" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M30 16v18" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M34 16.5A2.5 2.5 0 0 0 31.5 14H30v20h1.5A2.5 2.5 0 0 0 34 31.5V16.5Z" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Brand Typography -->
+  <text x="56" y="26" font-family="system-ui, -apple-system, sans-serif" font-weight="700" font-size="22" fill="#18181b">Story<tspan fill="#ea580c">VN</tspan></text>
+  <text x="57" y="38" font-family="system-ui, -apple-system, sans-serif" font-weight="500" font-size="9" fill="#71717a" letter-spacing="1.5">TIỂU THUYẾT TRỰC TUYẾN</text>
+</svg>
