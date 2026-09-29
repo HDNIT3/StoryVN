@@ -1,3 +1,5 @@
+import { toast } from "./toast";
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
@@ -42,10 +44,23 @@ class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers,
+      });
+    } catch (networkError: any) {
+      const error: ApiError = {
+        message: "Website chưa hoạt động vui lòng chờ",
+        statusCode: 0,
+        error: networkError?.message,
+      };
+      if (typeof window !== "undefined") {
+        toast.error(error.message);
+      }
+      throw error;
+    }
 
     const isJson = response.headers
       .get("content-type")
@@ -53,10 +68,20 @@ class ApiClient {
     const data = isJson ? await response.json() : await response.text();
 
     if (!response.ok) {
-      const errorMessage =
+      let errorMessage =
         (typeof data === "object" && (data.message || data.error)) ||
-        response.statusText ||
-        "Đã có lỗi xảy ra khi kết nối server";
+        response.statusText;
+
+      if (
+        !errorMessage ||
+        errorMessage === "Failed to fetch" ||
+        response.status === 502 ||
+        response.status === 503 ||
+        response.status === 504
+      ) {
+        errorMessage = "Website chưa hoạt động vui lòng chờ";
+      }
+
       const error: ApiError = {
         message: Array.isArray(errorMessage) ? errorMessage.join(", ") : errorMessage,
         statusCode: response.status,
