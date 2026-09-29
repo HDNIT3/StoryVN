@@ -12,3 +12,4 @@ export { HeaderBookmark } from "./HeaderBookmark";
 export { HeaderWallet } from "./HeaderWallet";
 export { HeaderUserAvatar } from "./HeaderUserAvatar";
 export { HeaderMobileMenu } from "./HeaderMobileMenu";
+export { SmartHeader } from "./SmartHeader";
