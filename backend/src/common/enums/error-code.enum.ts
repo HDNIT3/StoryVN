@@ -39,4 +39,68 @@ export const ErrorCode = {
     error: 'INTERNAL_SERVER_ERROR',
     message: 'Đã có lỗi xảy ra trên hệ thống',
   },
+  INVALID_CREDENTIALS: {
+    error: 'INVALID_CREDENTIALS',
+    message: 'Email hoặc mật khẩu không chính xác',
+  },
+  ACCOUNT_SUSPENDED: {
+    error: 'ACCOUNT_SUSPENDED',
+    message: 'Tài khoản của bạn đã bị tạm khóa',
+  },
+  ACCOUNT_BANNED: {
+    error: 'ACCOUNT_BANNED',
+    message: 'Tài khoản của bạn đã bị vô hiệu hóa',
+  },
+  USER_NOT_FOUND: {
+    error: 'USER_NOT_FOUND',
+    message: 'Không tìm thấy người dùng',
+  },
+  INVALID_REFRESH_TOKEN: {
+    error: 'INVALID_REFRESH_TOKEN',
+    message: 'Refresh token không hợp lệ hoặc đã bị thu hồi',
+  },
+  REFRESH_TOKEN_EXPIRED: {
+    error: 'REFRESH_TOKEN_EXPIRED',
+    message: 'Refresh token đã hết hạn, vui lòng đăng nhập lại',
+  },
+  UNAUTHORIZED: {
+    error: 'UNAUTHORIZED',
+    message: 'Vui lòng đăng nhập để tiếp tục',
+  },
+  TOKEN_REVOKED: {
+    error: 'TOKEN_REVOKED',
+    message: 'Phiên đăng nhập đã bị thu hồi hoặc đã đăng xuất',
+  },
+  TOKEN_EXPIRED: {
+    error: 'TOKEN_EXPIRED',
+    message: 'Phiên đăng nhập đã hết hạn hoặc đã đăng xuất từ thiết bị khác, vui lòng đăng nhập lại',
+  },
+  FORBIDDEN_RESOURCE: {
+    error: 'FORBIDDEN_RESOURCE',
+    message: 'Bạn không có quyền truy cập tài nguyên này',
+  },
+  ALREADY_AUTHOR: {
+    error: 'ALREADY_AUTHOR',
+    message: 'Tài khoản của bạn đã là tác giả hoặc cấp quản lý',
+  },
+  AUTHOR_REQUEST_PENDING: {
+    error: 'AUTHOR_REQUEST_PENDING',
+    message: 'Bạn đã có một yêu cầu nâng cấp tác giả đang chờ xét duyệt',
+  },
+  AUTHOR_REQUEST_NOT_FOUND: {
+    error: 'AUTHOR_REQUEST_NOT_FOUND',
+    message: 'Không tìm thấy yêu cầu nâng cấp tác giả',
+  },
+  AUTHOR_REQUEST_ALREADY_PROCESSED: {
+    error: 'AUTHOR_REQUEST_ALREADY_PROCESSED',
+    message: 'Yêu cầu nâng cấp này đã được xử lý trước đó',
+  },
+  PEN_NAME_ALREADY_EXISTS: {
+    error: 'PEN_NAME_ALREADY_EXISTS',
+    message: 'Bút danh này đã được sử dụng bởi tác giả khác',
+  },
+  AUTHOR_REQUEST_CANNOT_EDIT: {
+    error: 'AUTHOR_REQUEST_CANNOT_EDIT',
+    message: 'Yêu cầu đã được phê duyệt, không thể chỉnh sửa',
+  },
 };
