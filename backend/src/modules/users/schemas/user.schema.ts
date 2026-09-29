@@ -42,6 +42,9 @@ export class User {
   @Prop({ type: String, default: null })
   googleId: string | null;
 
+  @Prop({ type: Number, default: 0 })
+  versionToken: number;
+
   createdAt?: Date;
   updatedAt?: Date;
 }
