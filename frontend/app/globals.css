@@ -19,3 +19,48 @@ body {
   min-height: 100vh;
 }
 
+/* Toast Notifications Animation */
+@keyframes toastSlideIn {
+  0% {
+    transform: translate3d(120%, 0, 0) scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(120%, 0, 0) scale(0.92);
+    opacity: 0;
+  }
+}
+
+@keyframes toastProgress {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+.animate-toast-in {
+  animation: toastSlideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-toast-out {
+  animation: toastSlideOut 0.28s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.animate-toast-progress {
+  animation: toastProgress 4000ms linear forwards;
+}
+
+

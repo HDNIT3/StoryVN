@@ -3,8 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "../services/auth.service";
+import { toast } from "../toast";
 
 export type RegisterStep = "form" | "otp";
+
+function getErrorMessage(err: any, fallback: string): string {
+  const msg = err?.message;
+  if (!msg || msg === "Failed to fetch" || (typeof msg === "string" && msg.includes("Failed to fetch"))) {
+    return "Website chưa hoạt động vui lòng chờ";
+  }
+  return msg || fallback;
+}
 
 export function useRegister() {
   const router = useRouter();
@@ -46,12 +55,16 @@ export function useRegister() {
     setBackendMessage("");
 
     if (password !== confirmPassword) {
-      setBackendError("Mật khẩu xác nhận không khớp!");
+      const errText = "Mật khẩu xác nhận không khớp!";
+      setBackendError(errText);
+      toast.warning(errText);
       return;
     }
 
     if (!termsAccepted) {
-      setBackendError("Vui lòng đồng ý với điều khoản sử dụng!");
+      const errText = "Vui lòng đồng ý với điều khoản sử dụng!";
+      setBackendError(errText);
+      toast.warning(errText);
       return;
     }
 
@@ -66,11 +79,14 @@ export function useRegister() {
 
       // Show message from backend & switch to OTP step
       setBackendMessage(res.message);
+      toast.success(res.message || "Mã xác thực OTP đã được gửi đến email!");
       setStep("otp");
       setCountdown(60);
     } catch (err: any) {
       // Backend error message
-      setBackendError(err?.message || "Đã có lỗi xảy ra khi đăng ký!");
+      const errorMsg = getErrorMessage(err, "Đã có lỗi xảy ra khi đăng ký!");
+      setBackendError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +100,9 @@ export function useRegister() {
 
     const cleanOtp = otp.trim();
     if (cleanOtp.length !== 6) {
-      setBackendError("Mã OTP phải có đúng 6 chữ số!");
+      const errText = "Mã OTP phải có đúng 6 chữ số!";
+      setBackendError(errText);
+      toast.warning(errText);
       return;
     }
 
@@ -96,6 +114,7 @@ export function useRegister() {
       });
 
       setBackendMessage(res.message);
+      toast.success(res.message || "Đăng ký tài khoản thành công!");
 
       // Chuyển hướng sang trang đăng nhập và để yên đó
       const targetUrl = `/dang-nhap?registered=true&email=${encodeURIComponent(
@@ -105,7 +124,9 @@ export function useRegister() {
       router.push(targetUrl);
     } catch (err: any) {
       // Backend error message
-      setBackendError(err?.message || "Mã OTP không chính xác hoặc đã hết hạn!");
+      const errorMsg = getErrorMessage(err, "Mã OTP không chính xác hoặc đã hết hạn!");
+      setBackendError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -126,11 +147,14 @@ export function useRegister() {
 
       // Show message from backend
       setBackendMessage(res.message);
+      toast.success(res.message || "Đã gửi lại mã xác thực OTP!");
       setCountdown(60);
       setOtp("");
     } catch (err: any) {
       // Backend error message
-      setBackendError(err?.message || "Không thể gửi lại mã OTP lúc này!");
+      const errorMsg = getErrorMessage(err, "Không thể gửi lại mã OTP lúc này!");
+      setBackendError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsResending(false);
     }
