@@ -26,6 +26,29 @@ export class UsersService {
     });
   }
 
+  async findById(id: string): Promise<UserDocument | null> {
+    return this.userModel.findById(id);
+  }
+
+  async incrementVersionToken(userId: any): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $inc: { versionToken: 1 } },
+      { new: true },
+    );
+  }
+
+  async updatePasswordHash(userId: any, passwordHash: string): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      {
+        passwordHash,
+        $inc: { versionToken: 1 },
+      },
+      { new: true },
+    );
+  }
+
   async create(userData: Partial<User>): Promise<UserDocument> {
     const newUser = new this.userModel(userData);
     return newUser.save();
