@@ -16,20 +16,26 @@ export interface ResendOtpPayload {
   email: string;
 }
 
+export interface AuthApiResponse<T = any> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
 export const authService = {
   // Gửi thông tin đăng ký để nhận mã OTP qua email
   register(payload: RegisterPayload) {
-    return api.post("/auth/register", payload);
+    return api.post<AuthApiResponse>("/auth/register", payload);
   },
 
   // Xác thực mã OTP để hoàn tất đăng ký
   verifyRegister(payload: VerifyRegisterPayload) {
-    return api.post("/auth/verify-register", payload);
+    return api.post<AuthApiResponse<{ user: any }>>("/auth/verify-register", payload);
   },
 
   // Gửi lại mã OTP
   resendOtp(payload: ResendOtpPayload) {
-    return api.post("/auth/resend-register-otp", payload);
+    return api.post<AuthApiResponse>("/auth/resend-register-otp", payload);
   },
 };
 

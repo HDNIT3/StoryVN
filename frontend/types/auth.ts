@@ -18,12 +18,20 @@ export interface LoginDto {
 }
 
 export interface RegisterDto {
-  name: string;
+  displayName: string;
+  username: string;
   email: string;
   password: string;
   confirmPassword?: string;
   termsAccepted?: boolean;
 }
+
+export type {
+  RegisterPayload,
+  VerifyRegisterPayload,
+  ResendOtpPayload,
+  AuthApiResponse,
+} from "../lib/services/auth.service";
 
 export interface LoginResponse {
   accessToken: string;

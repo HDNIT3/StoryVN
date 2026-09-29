@@ -56,7 +56,7 @@ class ApiClient {
       const errorMessage =
         (typeof data === "object" && (data.message || data.error)) ||
         response.statusText ||
-        "Đã có lỗi xảy ra khi gọi API";
+        "Đã có lỗi xảy ra khi kết nối server";
       const error: ApiError = {
         message: Array.isArray(errorMessage) ? errorMessage.join(", ") : errorMessage,
         statusCode: response.status,
