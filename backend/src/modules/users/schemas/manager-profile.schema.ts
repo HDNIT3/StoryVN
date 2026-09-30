@@ -20,17 +20,11 @@ export class ManagerProfile {
   })
   userId: Types.ObjectId;
 
-  @Prop({ type: String, default: null, trim: true })
-  department?: string | null;
-
   @Prop({
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Genre' }],
     default: [],
   })
   genreIds: Types.ObjectId[];
-
-  @Prop({ type: [String], default: [] })
-  permissions: string[];
 
   @Prop({
     type: String,

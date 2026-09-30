@@ -25,7 +25,6 @@ export class RateLimitGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<Request>();
 
-    // Bỏ qua tài liệu Swagger
     if (req.originalUrl?.includes('/api/docs')) {
       return true;
     }

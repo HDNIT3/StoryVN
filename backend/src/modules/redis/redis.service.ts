@@ -11,7 +11,6 @@ export class RedisService implements OnModuleDestroy {
     this.client = new Redis(uri);
   }
 
-
   async set(key: string, value: any, ttl?: number) {
     const val = typeof value === 'object' ? JSON.stringify(value) : String(value);
     if (ttl) {
@@ -49,4 +48,3 @@ export class RedisService implements OnModuleDestroy {
     await this.client.quit();
   }
 }
-
