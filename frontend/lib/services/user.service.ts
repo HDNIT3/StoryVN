@@ -1,32 +1,10 @@
 import api from "../api";
-
-export type UserRole = "USER" | "AUTHOR" | "MANAGER" | "ADMIN";
-export type UserStatus = "ACTIVE" | "SUSPENDED" | "BANNED";
-
-export interface UserProfile {
-  _id: string;
-  email: string;
-  username: string;
-  displayName: string;
-  avatarUrl?: string | null;
-  role: UserRole;
-  status: UserStatus;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface UserProfileData {
-  user: UserProfile;
-}
-
-export interface UserApiResponse<T = any> {
-  success: boolean;
-  message: string;
-  data: T;
-}
+import type { UserApiResponse, UserProfileData } from "../../types/user";
 
 export const userService = {
-  // Lấy thông tin hồ sơ cá nhân của người dùng đang đăng nhập (cần Bearer token)
+  /**
+   * Lấy thông tin hồ sơ cá nhân của người dùng hiện tại (yêu cầu Bearer Token)
+   */
   getProfile() {
     return api.get<UserApiResponse<UserProfileData>>("/users/profile");
   },

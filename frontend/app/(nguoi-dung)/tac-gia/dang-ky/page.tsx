@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useRouter } from "next/navigation";
-import {
-  authorRequestService,
+import { authorRequestService } from "@/lib/services/author-request.service";
+import type {
   CreateAuthorRequestPayload,
   AuthorRequestStatusData,
-} from "@/lib/services/author-request.service";
+  AuthorRequestStatus,
+} from "@/types/author";
 import { Button } from "@/components/ui";
 import { toast } from "@/lib/toast";
 
@@ -51,7 +52,18 @@ function RequestStatusCard({
 
   if (!request) return null;
 
-  const statusConfig = {
+  const statusConfig: Record<
+    AuthorRequestStatus,
+    {
+      bg: string;
+      border: string;
+      iconBg: string;
+      title: string;
+      titleColor: string;
+      desc: string;
+      descColor: string;
+    }
+  > = {
     PENDING: {
       bg: "bg-yellow-50",
       border: "border-yellow-200",

@@ -1,98 +1,71 @@
 import api from "../api";
-
-export interface RegisterPayload {
-  email: string;
-  username: string;
-  password: string;
-  displayName: string;
-}
-
-export interface VerifyRegisterPayload {
-  email: string;
-  otp: string;
-}
-
-export interface ResendOtpPayload {
-  email: string;
-}
-
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponseData {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface RefreshTokenPayload {
-  refreshToken: string;
-}
-
-export interface RefreshTokenResponseData {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface LogoutPayload {
-  refreshToken?: string;
-  allDevices?: boolean;
-}
-
-export interface ForgotPasswordPayload {
-  email: string;
-}
-
-export interface ResetPasswordPayload {
-  email: string;
-  otp: string;
-  newPassword: string;
-}
-
-export interface AuthApiResponse<T = any> {
-  success: boolean;
-  message: string;
-  data?: T;
-}
+import type {
+  RegisterPayload,
+  VerifyRegisterPayload,
+  ResendOtpPayload,
+  LoginPayload,
+  LoginResponseData,
+  RefreshTokenPayload,
+  RefreshTokenResponseData,
+  LogoutPayload,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
+  AuthApiResponse,
+} from "../../types/auth";
 
 export const authService = {
-  // Gửi thông tin đăng ký để nhận mã OTP qua email
+  /**
+   * Gửi thông tin đăng ký tài khoản mới để nhận mã xác thực OTP qua email
+   */
   register(payload: RegisterPayload) {
     return api.post<AuthApiResponse>("/auth/register", payload);
   },
 
-  // Xác thực mã OTP để hoàn tất đăng ký
+  /**
+   * Xác thực mã OTP để kích hoạt tài khoản sau khi đăng ký
+   */
   verifyRegister(payload: VerifyRegisterPayload) {
     return api.post<AuthApiResponse<{ user: any }>>("/auth/verify-register", payload);
   },
 
-  // Gửi lại mã OTP đăng ký
+  /**
+   * Gửi lại mã OTP xác thực đăng ký tài khoản
+   */
   resendOtp(payload: ResendOtpPayload) {
     return api.post<AuthApiResponse>("/auth/resend-register-otp", payload);
   },
 
-  // Đăng nhập bằng email và mật khẩu
+  /**
+   * Đăng nhập hệ thống bằng email và mật khẩu
+   */
   login(payload: LoginPayload) {
     return api.post<AuthApiResponse<LoginResponseData>>("/auth/login", payload);
   },
 
-  // Lấy accessToken mới bằng refreshToken
+  /**
+   * Cấp lại access token mới thông qua refresh token hợp lệ
+   */
   refreshToken(payload: RefreshTokenPayload) {
     return api.post<AuthApiResponse<RefreshTokenResponseData>>("/auth/refresh", payload);
   },
 
-  // Đăng xuất tài khoản (hỗ trợ logout toàn thiết bị hoặc thiết bị hiện tại)
+  /**
+   * Đăng xuất tài khoản (hỗ trợ đăng xuất thiết bị hiện tại hoặc tất cả các thiết bị)
+   */
   logout(payload?: LogoutPayload) {
     return api.post<AuthApiResponse<Record<string, never>>>("/auth/logout", payload);
   },
 
-  // Yêu cầu khôi phục mật khẩu (gửi OTP qua email)
+  /**
+   * Yêu cầu khôi phục mật khẩu quên (hệ thống gửi OTP về email)
+   */
   forgotPassword(payload: ForgotPasswordPayload) {
     return api.post<AuthApiResponse<Record<string, never>>>("/auth/forgot-password", payload);
   },
 
-  // Đặt lại mật khẩu mới với mã OTP
+  /**
+   * Đặt lại mật khẩu mới kèm mã xác thực OTP
+   */
   resetPassword(payload: ResetPasswordPayload) {
     return api.post<AuthApiResponse<Record<string, never>>>("/auth/reset-password", payload);
   },

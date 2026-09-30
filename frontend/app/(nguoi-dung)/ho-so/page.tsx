@@ -5,10 +5,8 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { Button } from "@/components/ui";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  authorRequestService,
-  AuthorRequestStatusData,
-} from "@/lib/services/author-request.service";
+import { authorRequestService } from "@/lib/services/author-request.service";
+import type { AuthorRequestStatusData } from "@/types/author";
 
 const ROLE_LABEL: Record<string, string> = {
   USER: "Người dùng",
