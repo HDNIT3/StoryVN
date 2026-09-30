@@ -31,7 +31,7 @@ export function OtpVerificationForm({
   return (
     <form onSubmit={handleVerifyOtp} className="space-y-6">
       <div className="flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-600 border border-orange-100">
+        <div className="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-600 border border-sky-100">
           <svg
             className="w-6 h-6"
             fill="none"
@@ -86,7 +86,7 @@ export function OtpVerificationForm({
           {countdown > 0 ? (
             <span className="text-zinc-400 font-medium select-none">
               Gửi lại sau{" "}
-              <span className="text-orange-600 font-semibold tabular-nums">
+              <span className="text-sky-600 font-semibold tabular-nums">
                 {countdown}s
               </span>
             </span>
@@ -95,7 +95,7 @@ export function OtpVerificationForm({
               type="button"
               onClick={handleResendOtp}
               disabled={isResending}
-              className="font-semibold text-orange-600 hover:text-orange-700 disabled:opacity-50 cursor-pointer transition-colors"
+              className="font-semibold text-sky-600 hover:text-sky-700 disabled:opacity-50 cursor-pointer transition-colors"
             >
               {isResending ? "Đang gửi..." : "Gửi lại mã OTP"}
             </button>

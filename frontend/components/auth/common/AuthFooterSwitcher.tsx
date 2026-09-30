@@ -15,11 +15,11 @@ export function AuthFooterSwitcher({
   href,
 }: AuthFooterSwitcherProps) {
   return (
-    <p className="text-center text-xs text-zinc-500">
+    <p className="text-center text-sm sm:text-base text-zinc-500">
       {questionText}{" "}
       <Link
         href={href}
-        className="text-orange-600 font-semibold hover:underline cursor-pointer"
+        className="text-sky-600 font-bold hover:underline cursor-pointer"
       >
         {actionText}
       </Link>

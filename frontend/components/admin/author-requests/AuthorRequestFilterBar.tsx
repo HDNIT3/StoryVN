@@ -40,7 +40,7 @@ export function AuthorRequestFilterBar({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Tìm theo bút danh, email, tên người dùng..."
-          className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
+          className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
         />
         {search && (
           <button

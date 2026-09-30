@@ -96,18 +96,18 @@ export function LoginForm({
       />
 
       {/* Options: Remember me & Forgot password */}
-      <div className="flex items-center justify-between text-xs pt-1">
-        <label className="flex items-center gap-2 cursor-pointer select-none text-zinc-600">
+      <div className="flex items-center justify-between text-sm pt-1.5">
+        <label className="flex items-center gap-2.5 cursor-pointer select-none text-zinc-700 font-medium">
           <input
             type="checkbox"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
-            className="rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+            className="w-4 h-4 rounded border-zinc-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
           />
           <span>Ghi nhớ đăng nhập</span>
         </label>
 
-        <span className="text-orange-600 hover:text-orange-700 cursor-pointer font-medium">
+        <span className="text-sky-600 hover:text-sky-700 cursor-pointer font-semibold">
           Quên mật khẩu?
         </span>
       </div>

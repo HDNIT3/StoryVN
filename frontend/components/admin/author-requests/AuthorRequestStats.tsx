@@ -107,7 +107,7 @@ export function AuthorRequestStats({ currentFilter, onFilterChange }: Props) {
                 {card.icon}
               </span>
               {isSelected && (
-                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
               )}
             </div>
             <p className="text-sm font-semibold text-slate-800">{card.label}</p>

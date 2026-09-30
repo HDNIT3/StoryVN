@@ -99,12 +99,12 @@ export const OtpInput: React.FC<OtpInputProps> = ({
             onKeyDown={(e) => handleKeyDown(index, e)}
             onPaste={handlePaste}
             onFocus={(e) => e.target.select()}
-            className={`w-11 h-13 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-bold rounded-xl border transition-all duration-150 focus:outline-none focus:ring-2 select-none ${
+            className={`w-13 h-15 sm:w-14 sm:h-16 text-center text-2xl sm:text-3xl font-extrabold rounded-2xl border-2 transition-all duration-150 focus:outline-none focus:ring-4 select-none ${
               hasError
                 ? "border-red-400 bg-red-50/40 text-red-700 focus:border-red-500 focus:ring-red-100"
                 : isFilled
-                ? "border-orange-500/80 bg-orange-50/20 text-zinc-900 focus:border-orange-600 focus:ring-orange-100"
-                : "border-zinc-200 bg-white text-zinc-900 hover:border-zinc-300 focus:border-orange-500 focus:ring-orange-100"
+                ? "border-sky-500 bg-sky-50/40 text-zinc-950 focus:border-sky-600 focus:ring-sky-100"
+                : "border-zinc-200 bg-white text-zinc-950 hover:border-zinc-300 focus:border-sky-500 focus:ring-sky-100"
             } disabled:opacity-50 disabled:bg-zinc-100 disabled:cursor-not-allowed`}
           />
         );

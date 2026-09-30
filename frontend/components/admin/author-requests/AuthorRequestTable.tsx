@@ -69,7 +69,7 @@ export function AuthorRequestTable({
     return (
       <div className="bg-white rounded-2xl border border-slate-200/80 p-8 shadow-sm">
         <div className="flex flex-col items-center justify-center py-12 gap-3">
-          <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-3 border-sky-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-slate-500 font-medium">Đang tải danh sách yêu cầu...</p>
         </div>
       </div>
@@ -121,7 +121,7 @@ export function AuthorRequestTable({
                   {/* Người dùng */}
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-700 font-bold flex items-center justify-center shrink-0 text-sm overflow-hidden border border-orange-200">
+                      <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 font-bold flex items-center justify-center shrink-0 text-sm overflow-hidden border border-sky-200">
                         {userInfo?.avatarUrl ? (
                           <Image
                             src={userInfo.avatarUrl}
@@ -143,7 +143,7 @@ export function AuthorRequestTable({
 
                   {/* Bút danh đăng ký */}
                   <td className="py-3.5 px-4">
-                    <div className="font-semibold text-orange-600">{req.penName}</div>
+                    <div className="font-semibold text-sky-600">{req.penName}</div>
                     {req.reason && (
                       <p className="text-xs text-slate-500 line-clamp-1 max-w-xs mt-0.5">
                         {req.reason}

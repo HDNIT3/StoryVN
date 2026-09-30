@@ -71,7 +71,7 @@ export function AuthorRequestReviewModal({
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Bút danh đăng ký:</span>
-              <span className="font-bold text-orange-600">{request.penName}</span>
+              <span className="font-bold text-sky-600">{request.penName}</span>
             </div>
           </div>
 
@@ -95,7 +95,7 @@ export function AuthorRequestReviewModal({
                   ? "Lời chúc mừng hoặc lưu ý thêm cho tác giả..."
                   : "Nêu rõ lý do chưa đạt (ví dụ: bút danh trùng, thiếu thông tin ngân hàng...)"
               }
-              className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
+              className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
             />
           </div>
         </div>

@@ -122,14 +122,14 @@ function LoginFormContainer() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+              className="rounded border-zinc-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
             />
             <span>Ghi nhớ đăng nhập</span>
           </label>
 
           <a
             href="/quen-mat-khau"
-            className="text-orange-600 hover:text-orange-700 cursor-pointer font-medium"
+            className="text-sky-600 hover:text-sky-700 cursor-pointer font-medium"
           >
             Quên mật khẩu?
           </a>
