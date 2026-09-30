@@ -1,57 +1,70 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import React, { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import {
+  AuthHeader,
+  AuthAlert,
+  SocialAuthButtons,
+  AuthFooterSwitcher,
+} from "@/components/auth";
+import { Input, Button } from "@/components/ui";
+import { useLogin } from "@/lib/hooks/useLogin";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [emailOrUsername, setEmailOrUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+function LoginFormContainer() {
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    rememberMe,
+    setRememberMe,
+    isLoading,
+    backendError,
+    handleSubmit,
+  } = useLogin();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const searchParams = useSearchParams();
+  const registered = searchParams.get("registered");
+  const msgParam = searchParams.get("message");
+  const emailParam = searchParams.get("email");
 
-    // Mock navigation after brief submission delay
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("/");
-    }, 600);
-  };
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [successBanner, setSuccessBanner] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (registered === "true") {
+      const msg = msgParam || "Đăng ký tài khoản thành công! Vui lòng đăng nhập.";
+      setSuccessBanner(msg);
+      if (emailParam && !email) setEmail(emailParam);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registered]);
 
   return (
     <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xl p-7 sm:p-9 space-y-6">
-      {/* Header */}
-      <div className="space-y-1.5 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-          Đăng Nhập
-        </h1>
-        <p className="text-xs sm:text-sm text-zinc-500">
-          Nhập thông tin tài khoản của bạn để tiếp tục
-        </p>
-      </div>
+      {/* 1. Header */}
+      <AuthHeader
+        title="Đăng Nhập"
+        subtitle="Nhập thông tin tài khoản của bạn để tiếp tục"
+      />
 
-      {/* Form */}
+      {/* 2. Success / Error banner */}
+      <AuthAlert message={successBanner || undefined} error={backendError} />
+
+      {/* 3. Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
-          label="Email hoặc Tên đăng nhập"
+          id="login-email"
+          label="Email"
           placeholder="example@gmail.com"
-          type="text"
+          type="email"
           required
-          value={emailOrUsername}
-          onChange={(e) => setEmailOrUsername(e.target.value)}
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           leftIcon={
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -63,19 +76,16 @@ export default function LoginPage() {
         />
 
         <Input
+          id="login-password"
           label="Mật khẩu"
           placeholder="••••••••"
-          type="password"
+          type={showPassword ? "text" : "password"}
           required
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           leftIcon={
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -84,27 +94,49 @@ export default function LoginPage() {
               />
             </svg>
           }
+          rightIcon={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="hover:text-zinc-600 focus:outline-none cursor-pointer"
+              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+            >
+              {showPassword ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              )}
+            </button>
+          }
         />
 
-        {/* Options: Remember me & Forgot password */}
+        {/* Remember me + quên mật khẩu */}
         <div className="flex items-center justify-between text-xs pt-1">
           <label className="flex items-center gap-2 cursor-pointer select-none text-zinc-600">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+              className="rounded border-zinc-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
             />
             <span>Ghi nhớ đăng nhập</span>
           </label>
 
-          <span className="text-orange-600 hover:text-orange-700 cursor-pointer font-medium">
+          <a
+            href="/quen-mat-khau"
+            className="text-sky-600 hover:text-sky-700 cursor-pointer font-medium"
+          >
             Quên mật khẩu?
-          </span>
+          </a>
         </div>
 
-        {/* Submit Button */}
         <Button
+          id="btn-login-submit"
           type="submit"
           fullWidth
           size="lg"
@@ -115,65 +147,29 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      {/* Divider */}
-      <div className="relative flex items-center justify-center">
-        <div className="border-t border-zinc-200 w-full" />
-        <span className="bg-white px-3 text-xs text-zinc-400 select-none">
-          hoặc
-        </span>
-        <div className="border-t border-zinc-200 w-full" />
-      </div>
+      {/* 4. Social */}
+      <SocialAuthButtons />
 
-      {/* Social login buttons */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-xs font-medium text-zinc-700 transition-colors cursor-pointer"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-            />
-          </svg>
-          <span>Google</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-xs font-medium text-zinc-700 transition-colors cursor-pointer"
-        >
-          <svg className="w-4 h-4 text-blue-600 fill-current" viewBox="0 0 24 24">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-          </svg>
-          <span>Facebook</span>
-        </button>
-      </div>
-
-      {/* Footer Switcher */}
-      <div className="text-center text-xs text-zinc-500 pt-2">
-        <span>Chưa có tài khoản? </span>
-        <Link
-          href="/dang-ky"
-          className="font-semibold text-orange-600 hover:text-orange-700 underline-offset-2 hover:underline"
-        >
-          Đăng ký ngay
-        </Link>
-      </div>
+      {/* 5. Switch to register */}
+      <AuthFooterSwitcher
+        questionText="Chưa có tài khoản?"
+        actionText="Đăng ký ngay"
+        href="/dang-ky"
+      />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xl p-7 sm:p-9 text-center text-zinc-400 text-sm">
+          Đang tải...
+        </div>
+      }
+    >
+      <LoginFormContainer />
+    </Suspense>
   );
 }

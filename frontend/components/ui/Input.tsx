@@ -27,11 +27,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
 
     return (
-      <div className={`w-full flex flex-col gap-1.5 ${containerClassName}`}>
+      <div className={`w-full flex flex-col gap-2 ${containerClassName}`}>
         {label && (
           <label
             htmlFor={inputId}
-            className="text-sm font-medium text-zinc-800 select-none flex items-center justify-between"
+            className="text-[15px] font-semibold text-zinc-900 select-none flex items-center justify-between"
           >
             {label}
             {props.required && <span className="text-red-500 ml-1">*</span>}
@@ -40,7 +40,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         <div className="relative flex items-center">
           {leftIcon && (
-            <div className="absolute left-3.5 flex items-center pointer-events-none text-zinc-400">
+            <div className="absolute left-4 flex items-center pointer-events-none text-zinc-400">
               {leftIcon}
             </div>
           )}
@@ -48,26 +48,26 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             id={inputId}
             ref={ref}
-            className={`w-full bg-white text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border transition-all duration-150 py-2.5 px-3.5 focus:outline-none focus:ring-2 ${
-              leftIcon ? "pl-10" : ""
-            } ${rightIcon ? "pr-10" : ""} ${
+            className={`w-full bg-white text-zinc-950 placeholder:text-zinc-400 text-base rounded-xl border transition-all duration-150 py-3 px-4 focus:outline-none focus:ring-2 ${
+              leftIcon ? "pl-11" : ""
+            } ${rightIcon ? "pr-11" : ""} ${
               error
                 ? "border-red-400 focus:border-red-500 focus:ring-red-100"
-                : "border-zinc-200 hover:border-zinc-300 focus:border-orange-500 focus:ring-orange-100"
+                : "border-zinc-300 hover:border-zinc-400 focus:border-sky-500 focus:ring-sky-100"
             } ${className}`}
             {...props}
           />
 
           {rightIcon && (
-            <div className="absolute right-3.5 flex items-center text-zinc-400">
+            <div className="absolute right-4 flex items-center text-zinc-400">
               {rightIcon}
             </div>
           )}
         </div>
 
-        {error && <span className="text-xs text-red-600 font-medium">{error}</span>}
+        {error && <span className="text-sm text-red-600 font-medium">{error}</span>}
         {!error && helperText && (
-          <span className="text-xs text-zinc-500">{helperText}</span>
+          <span className="text-sm text-zinc-500">{helperText}</span>
         )}
       </div>
     );
