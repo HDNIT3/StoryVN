@@ -17,7 +17,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 const ROLE_BG: Record<string, string> = {
   USER: "from-zinc-400 to-zinc-600",
-  AUTHOR: "from-orange-400 to-rose-500",
+  AUTHOR: "from-sky-400 to-blue-600",
   MANAGER: "from-blue-400 to-indigo-600",
   ADMIN: "from-purple-500 to-purple-700",
 };
@@ -67,7 +67,7 @@ export default function HoSoPage() {
   const authorProfile = authorData?.authorProfile;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* ─── Profile Card ─── */}
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mb-6">
         {/* Cover */}
@@ -78,7 +78,7 @@ export default function HoSoPage() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 mb-5">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-orange-500 flex items-center justify-center overflow-hidden">
+              <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-sky-500 flex items-center justify-center overflow-hidden">
                 {user.avatarUrl ? (
                   <Image
                     src={user.avatarUrl}
@@ -96,7 +96,7 @@ export default function HoSoPage() {
 
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-orange-100 text-orange-700">
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-sky-100 text-sky-700">
                 {ROLE_LABEL[user.role] || user.role}
               </span>
               <span
@@ -129,8 +129,8 @@ export default function HoSoPage() {
 
       {/* ─── AUTHOR: Thông tin tác giả ─── */}
       {user.role === "AUTHOR" && authorProfile && (
-        <div className="bg-white rounded-2xl border border-orange-200 shadow-sm p-6 mb-6">
-          <h2 className="text-sm font-bold text-orange-700 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-2xl border border-sky-200 shadow-sm p-6 mb-6">
+          <h2 className="text-sm font-bold text-sky-700 mb-4 flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
@@ -149,22 +149,22 @@ export default function HoSoPage() {
               </div>
             )}
             <div className="grid grid-cols-3 gap-3 pt-2">
-              <div className="text-center p-3 bg-orange-50 rounded-xl">
-                <p className="text-xl font-bold text-orange-600">{authorProfile.storyCount || 0}</p>
+              <div className="text-center p-3 bg-sky-50 rounded-xl">
+                <p className="text-xl font-bold text-sky-600">{authorProfile.storyCount || 0}</p>
                 <p className="text-xs text-zinc-500 mt-0.5">Tác phẩm</p>
               </div>
-              <div className="text-center p-3 bg-orange-50 rounded-xl">
-                <p className="text-xl font-bold text-orange-600">{authorProfile.followerCount || 0}</p>
+              <div className="text-center p-3 bg-sky-50 rounded-xl">
+                <p className="text-xl font-bold text-sky-600">{authorProfile.followerCount || 0}</p>
                 <p className="text-xs text-zinc-500 mt-0.5">Theo dõi</p>
               </div>
-              <div className="text-center p-3 bg-orange-50 rounded-xl">
-                <p className="text-xl font-bold text-orange-600">{authorProfile.totalViews || 0}</p>
+              <div className="text-center p-3 bg-sky-50 rounded-xl">
+                <p className="text-xl font-bold text-sky-600">{authorProfile.totalViews || 0}</p>
                 <p className="text-xs text-zinc-500 mt-0.5">Lượt xem</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-orange-100">
+          <div className="mt-4 pt-4 border-t border-sky-100">
             <Button
               id="btn-quan-ly-tac-pham"
               variant="primary"
@@ -186,7 +186,7 @@ export default function HoSoPage() {
       {user.role === "USER" && (
         <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 mb-6">
           <h2 className="text-sm font-bold text-zinc-900 mb-3 flex items-center gap-2">
-            <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
             Trở thành Tác giả

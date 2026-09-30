@@ -63,7 +63,7 @@ const TOAST_STYLES: Record<
   warning: {
     iconWrap: "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/60",
     border: "border-amber-200/80 dark:border-amber-900/60",
-    progressBar: "bg-gradient-to-r from-amber-500 to-orange-400",
+    progressBar: "bg-gradient-to-r from-amber-500 to-yellow-400",
     defaultTitle: "Cảnh báo",
     badge: "text-amber-600 dark:text-amber-400 bg-amber-500/10",
   },

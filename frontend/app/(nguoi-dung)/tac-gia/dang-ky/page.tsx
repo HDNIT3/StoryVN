@@ -177,7 +177,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
       {/* Thông tin cơ bản */}
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-4">
         <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
-          <span className="w-6 h-6 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center text-xs font-bold">1</span>
+          <span className="w-6 h-6 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center text-xs font-bold">1</span>
           Thông tin tác giả
         </h3>
 
@@ -193,7 +193,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
             placeholder="Tên bút danh của bạn (ít nhất 2 ký tự)"
             required
             minLength={2}
-            className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 focus:outline-none py-2.5 px-3.5 transition-all"
+            className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none py-2.5 px-3.5 transition-all"
           />
         </div>
 
@@ -205,7 +205,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
             onChange={(e) => setBiography(e.target.value)}
             placeholder="Giới thiệu về bản thân bạn, phong cách viết, thể loại yêu thích..."
             rows={4}
-            className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 focus:outline-none py-2.5 px-3.5 resize-none transition-all"
+            className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none py-2.5 px-3.5 resize-none transition-all"
           />
         </div>
 
@@ -217,7 +217,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
             placeholder="https://yourwebsite.com (tùy chọn)"
-            className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 focus:outline-none py-2.5 px-3.5 transition-all"
+            className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none py-2.5 px-3.5 transition-all"
           />
         </div>
       </div>
@@ -225,7 +225,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
       {/* Thông tin ngân hàng */}
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-4">
         <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
-          <span className="w-6 h-6 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center text-xs font-bold">2</span>
+          <span className="w-6 h-6 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center text-xs font-bold">2</span>
           Thông tin ngân hàng{" "}
           <span className="text-xs font-normal text-zinc-400">(tùy chọn, có thể bổ sung sau)</span>
         </h3>
@@ -239,7 +239,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
               value={bankName}
               onChange={(e) => setBankName(e.target.value)}
               placeholder="Vietcombank, Techcombank..."
-              className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 focus:outline-none py-2.5 px-3.5 transition-all"
+              className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none py-2.5 px-3.5 transition-all"
             />
           </div>
           <div className="space-y-1">
@@ -250,7 +250,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
               value={bankAccountNumber}
               onChange={(e) => setBankAccountNumber(e.target.value)}
               placeholder="0123456789"
-              className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 focus:outline-none py-2.5 px-3.5 transition-all"
+              className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none py-2.5 px-3.5 transition-all"
             />
           </div>
         </div>
@@ -263,7 +263,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
             value={bankAccountName}
             onChange={(e) => setBankAccountName(e.target.value.toUpperCase())}
             placeholder="NGUYEN VAN A"
-            className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 focus:outline-none py-2.5 px-3.5 transition-all font-mono"
+            className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none py-2.5 px-3.5 transition-all font-mono"
           />
         </div>
       </div>
@@ -271,7 +271,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
       {/* Lý do */}
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-4">
         <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
-          <span className="w-6 h-6 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center text-xs font-bold">3</span>
+          <span className="w-6 h-6 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center text-xs font-bold">3</span>
           Lý do đăng ký
         </h3>
         <textarea
@@ -280,7 +280,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
           onChange={(e) => setReason(e.target.value)}
           placeholder="Chia sẻ lý do bạn muốn trở thành tác giả, kinh nghiệm sáng tác..."
           rows={3}
-          className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 focus:outline-none py-2.5 px-3.5 resize-none transition-all"
+          className="w-full bg-zinc-50 text-zinc-900 placeholder:text-zinc-400 text-sm rounded-xl border border-zinc-200 hover:border-zinc-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none py-2.5 px-3.5 resize-none transition-all"
         />
       </div>
 
@@ -364,7 +364,7 @@ export default function DangKyTacGiaPage() {
   const isAuthor = statusData?.isAuthor ?? false;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Page header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
@@ -386,7 +386,7 @@ export default function DangKyTacGiaPage() {
 
         {/* Benefits banner */}
         {!isAuthor && !hasExistingRequest && (
-          <div className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl p-5 text-white">
+          <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-5 text-white">
             <h2 className="font-bold text-lg mb-2">✨ Quyền lợi khi là Tác giả</h2>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="flex items-center gap-2">
@@ -409,7 +409,7 @@ export default function DangKyTacGiaPage() {
       {/* Loading */}
       {isLoadingStatus ? (
         <div className="flex flex-col items-center py-16 gap-3">
-          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-zinc-400">Đang kiểm tra trạng thái...</p>
         </div>
       ) : (

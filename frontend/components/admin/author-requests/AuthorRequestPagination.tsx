@@ -43,7 +43,7 @@ export function AuthorRequestPagination({
                   onClick={() => onPageChange(p)}
                   className={`w-8 h-8 rounded-lg font-semibold transition-colors ${
                     isCurrent
-                      ? "bg-orange-500 text-white shadow-sm"
+                      ? "bg-sky-500 text-white shadow-sm"
                       : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
                 >

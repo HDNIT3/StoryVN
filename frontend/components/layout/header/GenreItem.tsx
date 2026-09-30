@@ -15,13 +15,13 @@ export function GenreItem({ genre, onClick, className = "" }: GenreItemProps) {
     <Link
       href={genre.href}
       onClick={() => onClick?.(genre)}
-      className={`group flex items-center justify-between py-2 px-2.5 rounded-lg text-sm transition-colors duration-150 hover:bg-orange-50/60 ${className}`}
+      className={`group flex items-center justify-between py-2.5 px-3 rounded-xl text-base transition-colors duration-150 hover:bg-sky-50/80 ${className}`}
     >
-      <span className="font-medium text-zinc-700 group-hover:text-orange-600 transition-colors">
+      <span className="font-semibold text-zinc-800 group-hover:text-sky-600 transition-colors">
         {genre.name}
       </span>
       {genre.count !== undefined && (
-        <span className="text-xs text-zinc-400 font-normal group-hover:text-orange-500/80 transition-colors ml-3">
+        <span className="text-xs text-zinc-400 font-semibold group-hover:text-sky-500 transition-colors ml-3 bg-zinc-100 group-hover:bg-sky-100/70 px-2 py-0.5 rounded-full">
           {genre.count}
         </span>
       )}

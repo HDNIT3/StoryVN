@@ -79,19 +79,19 @@ export function GenreDropdown({
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-haspopup="true"
-        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-150 select-none ${
+        className={`flex items-center gap-2 px-4.5 py-2.5 text-base font-semibold rounded-full transition-all duration-150 select-none ${
           open
             ? "bg-zinc-100 text-zinc-900"
-            : "text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100/60"
+            : "text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100/70"
         }`}
       >
         <span>{label}</span>
-        <div className="relative w-3.5 h-3.5 shrink-0 transition-transform duration-200">
+        <div className="relative w-4 h-4 shrink-0 transition-transform duration-200">
           <Image
             src={open ? chevronUpSrc : chevronDownSrc}
             alt="Dropdown arrow"
-            width={14}
-            height={14}
+            width={16}
+            height={16}
             className="w-full h-full object-contain"
           />
         </div>
@@ -102,10 +102,10 @@ export function GenreDropdown({
         <div
           role="menu"
           aria-orientation="vertical"
-          className="absolute left-0 mt-2 w-[340px] sm:w-[380px] bg-white rounded-2xl shadow-xl border border-zinc-100/80 p-4 z-50 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-0 mt-2 w-[360px] sm:w-[420px] bg-white rounded-2xl shadow-2xl border border-zinc-100 p-4.5 z-50 animate-in fade-in zoom-in-95 duration-150"
         >
           {/* 2-Column Grid */}
-          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
             {genres.map((genre) => (
               <GenreItem
                 key={genre.id}

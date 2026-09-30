@@ -18,14 +18,14 @@ export function HeaderNavItem({
   className = "",
 }: HeaderNavItemProps) {
   const activeClasses = isActive
-    ? "bg-amber-50/80 text-orange-600 font-bold shadow-xs hover:bg-amber-50"
-    : "text-zinc-700 font-medium hover:text-zinc-950 hover:bg-zinc-100/60";
+    ? "bg-sky-50 text-sky-600 font-bold shadow-xs hover:bg-sky-100/70"
+    : "text-zinc-700 font-semibold hover:text-zinc-950 hover:bg-zinc-100/70";
 
   return (
     <Link
       href={item.href}
       onClick={() => onClick?.(item)}
-      className={`inline-flex items-center justify-center px-4 py-1.5 text-sm rounded-full transition-all duration-150 select-none ${activeClasses} ${className}`}
+      className={`inline-flex items-center justify-center px-4.5 py-2.5 text-base rounded-full transition-all duration-150 select-none ${activeClasses} ${className}`}
     >
       {item.label}
     </Link>

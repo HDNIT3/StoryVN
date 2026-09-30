@@ -59,7 +59,7 @@ export function AuthorRequestDetailModal({
         <div className="p-6 overflow-y-auto space-y-6 text-sm text-slate-700">
           {/* Thông tin tài khoản người dùng */}
           <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-700 font-bold flex items-center justify-center shrink-0 text-base overflow-hidden border border-orange-200">
+            <div className="w-12 h-12 rounded-xl bg-sky-100 text-sky-700 font-bold flex items-center justify-center shrink-0 text-base overflow-hidden border border-sky-200">
               {userInfo?.avatarUrl ? (
                 <Image
                   src={userInfo.avatarUrl}
@@ -87,7 +87,7 @@ export function AuthorRequestDetailModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Bút danh đăng ký</span>
-              <p className="font-bold text-orange-600 text-base">{request.penName}</p>
+              <p className="font-bold text-sky-600 text-base">{request.penName}</p>
             </div>
 
             <div className="space-y-1">
