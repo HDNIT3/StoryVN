@@ -4,68 +4,68 @@ import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-zinc-900 text-zinc-400 text-sm border-t border-zinc-800 mt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="w-full bg-zinc-900 text-zinc-300 text-base border-t border-zinc-800 mt-20">
+      <div className="w-full px-4 sm:px-8 md:px-10 lg:px-12 xl:px-16 2xl:px-20 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Col 1: Brand info */}
           <div className="space-y-4">
-            <Link href="/" className="inline-flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/10 p-1 flex items-center justify-center">
+            <Link href="/" className="inline-flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center border border-zinc-800">
                 <Image
-                  src="/image/logo-icon.svg"
+                  src="/icon/iconweb.png"
                   alt="StoryVN"
-                  width={32}
-                  height={32}
-                  className="object-contain"
+                  width={48}
+                  height={48}
+                  className="object-cover w-full h-full"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight text-white leading-none">
-                  Story<span className="text-orange-500 ml-0.5">VN</span>
+                <span className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-none">
+                  Story<span className="text-sky-400 ml-0.5">VN</span>
                 </span>
-                <span className="text-[9px] font-semibold text-zinc-500 mt-1 tracking-wider uppercase">
+                <span className="text-[11px] font-bold text-zinc-400 mt-1 tracking-wider uppercase">
                   Tiểu thuyết trực tuyến
                 </span>
               </div>
             </Link>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-sm text-zinc-400 leading-relaxed">
               StoryVN là nền tảng đọc truyện chữ, truyện dịch online miễn phí chất lượng cao với hàng ngàn bộ truyện tiên hiệp, huyền huyễn, đô thị được cập nhật liên tục mỗi ngày.
             </p>
           </div>
 
           {/* Col 2: Thể loại */}
           <div>
-            <h4 className="text-white font-semibold text-sm mb-4 tracking-wide uppercase">
+            <h4 className="text-white font-bold text-base mb-4 tracking-wide uppercase">
               Thể Loại Nổi Bật
             </h4>
-            <ul className="grid grid-cols-2 gap-2 text-xs">
+            <ul className="grid grid-cols-2 gap-2.5 text-sm">
               <li>
-                <span className="hover:text-orange-400 transition-colors cursor-pointer">
+                <span className="hover:text-sky-400 transition-colors cursor-pointer">
                   Tiên Hiệp
                 </span>
               </li>
               <li>
-                <span className="hover:text-orange-400 transition-colors cursor-pointer">
+                <span className="hover:text-sky-400 transition-colors cursor-pointer">
                   Huyền Huyễn
                 </span>
               </li>
               <li>
-                <span className="hover:text-orange-400 transition-colors cursor-pointer">
+                <span className="hover:text-sky-400 transition-colors cursor-pointer">
                   Đô Thị
                 </span>
               </li>
               <li>
-                <span className="hover:text-orange-400 transition-colors cursor-pointer">
+                <span className="hover:text-sky-400 transition-colors cursor-pointer">
                   Ngôn Tình
                 </span>
               </li>
               <li>
-                <span className="hover:text-orange-400 transition-colors cursor-pointer">
+                <span className="hover:text-sky-400 transition-colors cursor-pointer">
                   Trọng Sinh
                 </span>
               </li>
               <li>
-                <span className="hover:text-orange-400 transition-colors cursor-pointer">
+                <span className="hover:text-sky-400 transition-colors cursor-pointer">
                   Kiếm Hiệp
                 </span>
               </li>
@@ -74,22 +74,22 @@ export function Footer() {
 
           {/* Col 3: Điều hướng nhanh */}
           <div>
-            <h4 className="text-white font-semibold text-sm mb-4 tracking-wide uppercase">
+            <h4 className="text-white font-bold text-base mb-4 tracking-wide uppercase">
               Điều Hướng
             </h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2.5 text-sm">
               <li>
-                <Link href="/" className="hover:text-orange-400 transition-colors">
+                <Link href="/" className="hover:text-sky-400 transition-colors">
                   Trang chủ
                 </Link>
               </li>
               <li>
-                <Link href="/dang-nhap" className="hover:text-orange-400 transition-colors">
+                <Link href="/dang-nhap" className="hover:text-sky-400 transition-colors">
                   Đăng nhập tài khoản
                 </Link>
               </li>
               <li>
-                <Link href="/dang-ky" className="hover:text-orange-400 transition-colors">
+                <Link href="/dang-ky" className="hover:text-sky-400 transition-colors">
                   Đăng ký thành viên
                 </Link>
               </li>
@@ -98,22 +98,22 @@ export function Footer() {
 
           {/* Col 4: Hỗ trợ & Thông tin */}
           <div>
-            <h4 className="text-white font-semibold text-sm mb-4 tracking-wide uppercase">
+            <h4 className="text-white font-bold text-base mb-4 tracking-wide uppercase">
               Hỗ Trợ & Chính Sách
             </h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2.5 text-sm">
               <li>
-                <span className="hover:text-orange-400 cursor-pointer transition-colors">
+                <span className="hover:text-sky-400 cursor-pointer transition-colors">
                   Điều khoản dịch vụ
                 </span>
               </li>
               <li>
-                <span className="hover:text-orange-400 cursor-pointer transition-colors">
+                <span className="hover:text-sky-400 cursor-pointer transition-colors">
                   Chính sách bảo mật
                 </span>
               </li>
               <li>
-                <span className="hover:text-orange-400 cursor-pointer transition-colors">
+                <span className="hover:text-sky-400 cursor-pointer transition-colors">
                   Quy định bản quyền
                 </span>
               </li>
@@ -122,7 +122,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-zinc-800/80 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+        <div className="border-t border-zinc-800/80 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-400">
           <p>© {new Date().getFullYear()} StoryVN. Bản quyền thuộc về tác giả và dịch giả.</p>
         </div>
       </div>

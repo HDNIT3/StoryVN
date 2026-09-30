@@ -125,7 +125,7 @@ export function HeaderMobileMenu({
                                 setIsOpen(false);
                                 onGenreClick?.(g);
                               }}
-                              className="px-2 py-1.5 text-xs text-zinc-600 hover:text-orange-600 flex justify-between"
+                              className="px-2 py-1.5 text-xs text-zinc-600 hover:text-sky-600 flex justify-between"
                             >
                               <span className="truncate">{g.name}</span>
                               {g.count && <span className="text-[10px] text-zinc-400">{g.count}</span>}
@@ -149,7 +149,7 @@ export function HeaderMobileMenu({
                     }}
                     className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? "bg-amber-50 text-orange-600 font-bold"
+                        ? "bg-sky-50 text-sky-600 font-bold"
                         : "text-zinc-800 hover:bg-zinc-50"
                     }`}
                   >

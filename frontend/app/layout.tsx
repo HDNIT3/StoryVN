@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Be_Vietnam_Pro, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ClientProviders } from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const beVietnamPro = Be_Vietnam_Pro({
+  weight: ["300", "400", "500", "600", "700", "800"],
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-be-vietnam-pro",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -14,7 +17,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "StoryVN — Web Đọc Truyện Online",
-  description: "Nền tảng đọc truyện chữ, truyện tranh online mới nhất và hấp dẫn nhất",
+  description: "Nền tảng đọc truyện chữ, truyện dịch online mới nhất và hấp dẫn nhất",
+  icons: {
+    icon: "/icon/iconweb.png",
+    shortcut: "/icon/iconweb.png",
+    apple: "/icon/iconweb.png",
+  },
 };
 
 export default function RootLayout({
@@ -25,9 +33,12 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${beVietnamPro.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <ClientProviders>{children}</ClientProviders>
+      </body>
     </html>
   );
 }
+

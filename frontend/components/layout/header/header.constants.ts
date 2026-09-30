@@ -12,7 +12,7 @@ export const DEFAULT_LOGO: LogoProps = {
   title: "Story",
   suffix: "VN",
   subtitle: "TIỂU THUYẾT TRỰC TUYẾN",
-  iconSrc: "/image/logo-icon.svg",
+  iconSrc: "/icon/iconweb.png",
   href: "/",
 };
 

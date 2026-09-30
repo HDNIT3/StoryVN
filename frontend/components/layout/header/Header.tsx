@@ -40,9 +40,9 @@ export function Header({
         sticky ? "sticky top-0 z-40 backdrop-blur-md bg-white/95" : ""
       } ${className}`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="w-full px-4 sm:px-8 md:px-10 lg:px-12 xl:px-16 2xl:px-20 h-20 flex items-center justify-between gap-6 lg:gap-10">
         {/* Left Side: Logo & Desktop Navigation */}
-        <div className="flex items-center gap-6 lg:gap-8 shrink-0">
+        <div className="flex items-center gap-6 lg:gap-8 xl:gap-10 shrink-0">
           <HeaderLogo {...logo} />
 
           <div className="hidden md:block">
@@ -56,9 +56,9 @@ export function Header({
           </div>
         </div>
 
-        {/* Center / Right-Middle: Search Bar */}
-        <div className="hidden sm:flex items-center justify-end flex-1 max-w-md mx-2">
-          <HeaderSearch {...search} />
+        {/* Center: Search Bar */}
+        <div className="hidden sm:flex items-center justify-center flex-1 max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-2 min-w-[260px]">
+          <HeaderSearch className="w-full" {...search} />
         </div>
 
         {/* Right Side: User Actions (Bookmark, Wallet, Avatar) & Mobile Menu */}
