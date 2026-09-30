@@ -8,7 +8,8 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { UserProfile, userService } from "@/lib/services/user.service";
+import type { UserProfile } from "@/types/user";
+import { userService } from "@/lib/services/user.service";
 import { authService } from "@/lib/services/auth.service";
 
 interface AuthContextType {
