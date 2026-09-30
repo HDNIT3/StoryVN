@@ -25,6 +25,8 @@ import {
   UserStatus,
 } from '../../users/schemas/user.schema.js';
 import { UsersService } from '../../users/services/users.service.js';
+import { GoogleLoginDto } from '../dto/google-login.dto.js';
+import { OAuth2Client } from 'google-auth-library';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto.js';
 import { LoginDto } from '../dto/login.dto.js';
 import { LogoutDto } from '../dto/logout.dto.js';
@@ -191,6 +193,10 @@ export class AuthService {
       throw new BadRequestException(ErrorCode.INVALID_CREDENTIALS);
     }
 
+    if (!user.passwordHash) {
+      throw new BadRequestException(ErrorCode.ACCOUNT_REGISTERED_WITH_GOOGLE);
+    }
+
     const isMatch = await comparePassword(dto.password, user.passwordHash);
     if (!isMatch) {
       throw new BadRequestException(ErrorCode.INVALID_CREDENTIALS);
@@ -199,8 +205,140 @@ export class AuthService {
     if (user.status === UserStatus.BANNED) {
       throw new ForbiddenException(ErrorCode.ACCOUNT_BANNED);
     }
-    if (user.status === UserStatus.SUSPENDED) {
-      throw new ForbiddenException(ErrorCode.ACCOUNT_SUSPENDED);
+
+    const tokens = await this.generateTokens(user);
+
+    return {
+      success: true,
+      message: 'Đăng nhập thành công',
+      data: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      },
+    };
+  }
+
+  async googleLogin(dto: GoogleLoginDto) {
+    const rawToken = dto.token.trim();
+    if (!rawToken) {
+      throw new BadRequestException(ErrorCode.INVALID_GOOGLE_TOKEN);
+    }
+
+    const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    let googleUser: {
+      googleId: string;
+      email: string;
+      name?: string;
+      picture?: string;
+      emailVerified?: boolean;
+    };
+
+    try {
+      const client = new OAuth2Client(googleClientId);
+      const ticket = await client.verifyIdToken({
+        idToken: rawToken,
+        audience: googleClientId,
+      });
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        throw new UnauthorizedException(ErrorCode.INVALID_GOOGLE_TOKEN);
+      }
+      googleUser = {
+        googleId: payload.sub,
+        email: payload.email.toLowerCase(),
+        name: payload.name,
+        picture: payload.picture,
+        emailVerified: payload.email_verified,
+      };
+    } catch {
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${rawToken}` },
+        });
+        if (!res.ok) {
+          throw new Error('Userinfo fetch failed');
+        }
+        const userInfo = await res.json();
+        if (!userInfo || !userInfo.email) {
+          throw new UnauthorizedException(ErrorCode.INVALID_GOOGLE_TOKEN);
+        }
+        googleUser = {
+          googleId: userInfo.sub,
+          email: userInfo.email.toLowerCase(),
+          name: userInfo.name,
+          picture: userInfo.picture,
+          emailVerified: userInfo.email_verified,
+        };
+      } catch {
+        throw new UnauthorizedException(ErrorCode.INVALID_GOOGLE_TOKEN);
+      }
+    }
+
+    if (googleUser.emailVerified === false) {
+      throw new UnauthorizedException(ErrorCode.GOOGLE_EMAIL_NOT_VERIFIED);
+    }
+
+    let user = await this.usersService.findByGoogleId(googleUser.googleId);
+
+    if (!user) {
+      user = await this.usersService.findByEmail(googleUser.email);
+      if (user) {
+        user.googleId = googleUser.googleId;
+        if (!user.avatarUrl && googleUser.picture) {
+          user.avatarUrl = googleUser.picture;
+        }
+
+        if (!user.passwordHash) {
+          const randomPassword = `Sv@${crypto.randomBytes(4).toString('hex')}`;
+          user.passwordHash = await hashPassword(randomPassword);
+          this.mailService
+            .sendGoogleAccountCreated(
+              googleUser.email,
+              user.displayName,
+              randomPassword,
+            )
+            .catch(() => {});
+        }
+
+        await user.save();
+      } else {
+        const baseUsername = googleUser.email
+          .split('@')[0]
+          .replace(/[^a-zA-Z0-9_]/g, '')
+          .toLowerCase();
+        let username = baseUsername || 'user';
+        const existingUsername = await this.usersService.findByUsername(username);
+        if (existingUsername) {
+          username = `${username}_${crypto.randomBytes(3).toString('hex')}`;
+        }
+
+        const randomPassword = `Sv@${crypto.randomBytes(4).toString('hex')}`;
+        const passwordHash = await hashPassword(randomPassword);
+
+        user = await this.usersService.create({
+          email: googleUser.email,
+          username,
+          passwordHash,
+          displayName: googleUser.name || username,
+          avatarUrl: googleUser.picture || null,
+          googleId: googleUser.googleId,
+          role: UserRole.USER,
+          status: UserStatus.ACTIVE,
+          versionToken: 0,
+        });
+
+        this.mailService
+          .sendGoogleAccountCreated(
+            googleUser.email,
+            user.displayName,
+            randomPassword,
+          )
+          .catch(() => {});
+      }
+    }
+
+    if (user.status === UserStatus.BANNED) {
+      throw new ForbiddenException(ErrorCode.ACCOUNT_BANNED);
     }
 
     const tokens = await this.generateTokens(user);
@@ -221,12 +359,30 @@ export class AuthService {
       throw new BadRequestException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
 
-    const tokenHash = crypto
-      .createHash('sha256')
-      .update(dto.refreshToken)
-      .digest('hex');
+    const refreshSecret =
+      this.configService.get<string>('JWT_REFRESH_SECRET') ||
+      'storyvn_refresh_jwt_secret_key_super_secret_2026_auth_service';
 
-    const tokenDoc = await this.refreshTokenModel.findOne({ tokenHash });
+    let decoded: any;
+    try {
+      decoded = await this.jwtService.verifyAsync(dto.refreshToken, {
+        secret: refreshSecret,
+      });
+    } catch (err: any) {
+      if (err?.name === 'TokenExpiredError') {
+        throw new UnauthorizedException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+      }
+      throw new UnauthorizedException(ErrorCode.INVALID_REFRESH_TOKEN);
+    }
+
+    if (
+      (decoded?.tokenType && decoded.tokenType !== 'refresh') ||
+      !decoded?.jti
+    ) {
+      throw new UnauthorizedException(ErrorCode.INVALID_REFRESH_TOKEN);
+    }
+
+    const tokenDoc = await this.refreshTokenModel.findOne({ jti: decoded.jti });
     if (!tokenDoc || tokenDoc.revokedAt !== null) {
       throw new UnauthorizedException(ErrorCode.INVALID_REFRESH_TOKEN);
     }
@@ -242,9 +398,6 @@ export class AuthService {
 
     if (user.status === UserStatus.BANNED) {
       throw new ForbiddenException(ErrorCode.ACCOUNT_BANNED);
-    }
-    if (user.status === UserStatus.SUSPENDED) {
-      throw new ForbiddenException(ErrorCode.ACCOUNT_SUSPENDED);
     }
 
     // Thu hồi refresh token cũ (Token rotation)
@@ -292,15 +445,20 @@ export class AuthService {
     } else {
       // Logout thiết bị hiện tại: nếu có gửi refreshToken thì thu hồi nó trong DB
       if (dto?.refreshToken) {
-        const tokenHash = crypto
-          .createHash('sha256')
-          .update(dto.refreshToken)
-          .digest('hex');
+        let jti: string | undefined;
+        try {
+          const decoded: any = this.jwtService.decode(dto.refreshToken);
+          jti = decoded?.jti;
+        } catch {
+          // ignore
+        }
 
-        await this.refreshTokenModel.updateOne(
-          { userId: user._id, tokenHash, revokedAt: null },
-          { revokedAt: new Date() },
-        );
+        if (jti) {
+          await this.refreshTokenModel.updateOne(
+            { userId: user._id, jti, revokedAt: null },
+            { revokedAt: new Date() },
+          );
+        }
       }
     }
 
@@ -321,9 +479,6 @@ export class AuthService {
 
     if (user.status === UserStatus.BANNED) {
       throw new ForbiddenException(ErrorCode.ACCOUNT_BANNED);
-    }
-    if (user.status === UserStatus.SUSPENDED) {
-      throw new ForbiddenException(ErrorCode.ACCOUNT_SUSPENDED);
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -416,18 +571,34 @@ export class AuthService {
       expiresIn: accessExpiresIn as any,
     });
 
-    const rawRefreshToken = crypto.randomBytes(40).toString('hex');
-    const tokenHash = crypto
-      .createHash('sha256')
-      .update(rawRefreshToken)
-      .digest('hex');
+    const refreshSecret =
+      this.configService.get<string>('JWT_REFRESH_SECRET') ||
+      'storyvn_refresh_jwt_secret_key_super_secret_2026_auth_service';
+    const refreshExpiresIn =
+      this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN') || '7d';
 
-    // 7 ngày hết hạn cho refresh token
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const refreshJti = crypto.randomUUID();
+    const refreshPayload = {
+      sub: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      tokenType: 'refresh',
+      jti: refreshJti,
+    };
+
+    const rawRefreshToken = await this.jwtService.signAsync(refreshPayload, {
+      secret: refreshSecret,
+      expiresIn: refreshExpiresIn as any,
+    });
+
+    const decodedRefresh: any = this.jwtService.decode(rawRefreshToken);
+    const expiresAt = decodedRefresh?.exp
+      ? new Date(decodedRefresh.exp * 1000)
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await this.refreshTokenModel.create({
       userId: user._id,
-      tokenHash,
+      jti: refreshJti,
       expiresAt,
       revokedAt: null,
       createdAt: new Date(),

@@ -1,16 +1,15 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database/database.module.js';
-import { RedisModule } from './modules/redis/redis.module.js';
-import { MailModule } from './modules/mail/mail.module.js';
-import { UsersModule } from './modules/users/users.module.js';
-import { AuthModule } from './modules/auth/auth.module.js';
-
-
-import { APP_GUARD } from '@nestjs/core';
 import { RateLimitGuard } from './common/guards/rate-limit.guard.js';
+import { DatabaseModule } from './database/database.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
+import { MailModule } from './modules/mail/mail.module.js';
+import { RedisModule } from './modules/redis/redis.module.js';
+import { UploadModule } from './modules/upload/upload.module.js';
+import { UsersModule } from './modules/users/users.module.js';
 
 @Module({
   imports: [
@@ -22,6 +21,7 @@ import { RateLimitGuard } from './common/guards/rate-limit.guard.js';
     MailModule,
     UsersModule,
     AuthModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [
@@ -33,7 +33,3 @@ import { RateLimitGuard } from './common/guards/rate-limit.guard.js';
   ],
 })
 export class AppModule {}
-
-
-
-

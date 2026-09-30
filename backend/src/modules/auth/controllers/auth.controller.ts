@@ -12,6 +12,7 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator.j
 import { AuthGuard } from '../../../common/guards/auth.guard.js';
 import { User } from '../../users/schemas/user.schema.js';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto.js';
+import { GoogleLoginDto } from '../dto/google-login.dto.js';
 import { LoginDto } from '../dto/login.dto.js';
 import { LogoutDto } from '../dto/logout.dto.js';
 import { RefreshTokenDto } from '../dto/refresh-token.dto.js';
@@ -52,6 +53,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @ApiOperation({ summary: 'Đăng nhập bằng tài khoản Google' })
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  async googleLogin(@Body() dto: GoogleLoginDto) {
+    return this.authService.googleLogin(dto);
   }
 
   @ApiOperation({ summary: 'Lấy accessToken mới bằng refreshToken' })
