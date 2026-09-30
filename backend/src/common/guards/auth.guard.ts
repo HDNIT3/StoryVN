@@ -47,7 +47,6 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
     }
 
-    // 1. Kiểm tra blacklist trong Redis
     const isBlacklisted = await this.redisService.get(`blacklist:token:${token}`);
     if (isBlacklisted) {
       throw new UnauthorizedException(ErrorCode.TOKEN_REVOKED);
@@ -68,6 +67,10 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
     }
 
+    if (payload.tokenType && payload.tokenType !== 'access') {
+      throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
+    }
+
     // 3. Tìm kiếm người dùng trong MongoDB
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
@@ -77,9 +80,6 @@ export class AuthGuard implements CanActivate {
     // 4. Kiểm tra trạng thái tài khoản
     if (user.status === UserStatus.BANNED) {
       throw new ForbiddenException(ErrorCode.ACCOUNT_BANNED);
-    }
-    if (user.status === UserStatus.SUSPENDED) {
-      throw new ForbiddenException(ErrorCode.ACCOUNT_SUSPENDED);
     }
 
     // 5. Kiểm tra versionToken để hỗ trợ logout toàn thiết bị

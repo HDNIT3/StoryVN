@@ -1,15 +1,27 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module.js';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.enableCors({
     origin: true,
     credentials: true,
+  });
+
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  app.useStaticAssets(uploadsDir, {
+    prefix: '/uploads/',
   });
 
   app.setGlobalPrefix('api');
@@ -37,4 +49,3 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 }
 await bootstrap();
-
