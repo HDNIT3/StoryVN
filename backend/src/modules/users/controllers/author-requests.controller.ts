@@ -11,13 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../../common/guards/auth.guard.js';
@@ -36,13 +30,7 @@ import { AuthorRequestsService } from '../services/author-requests.service.js';
 export class AuthorRequestsController {
   constructor(private readonly authorRequestsService: AuthorRequestsService) {}
 
-  @ApiOperation({
-    summary: 'Gửi yêu cầu nâng cấp tác giả (dành cho người dùng role USER)',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Gửi yêu cầu nâng cấp tác giả thành công',
-  })
+  @ApiOperation({ summary: 'Gửi yêu cầu nâng cấp tác giả (role USER)' })
   @Post('author-request')
   @HttpCode(HttpStatus.CREATED)
   async createRequest(
@@ -60,13 +48,7 @@ export class AuthorRequestsController {
     };
   }
 
-  @ApiOperation({
-    summary: 'Phía author xem thông tin author_profile và trạng thái đã xử lý hay chưa',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lấy thông tin author_profile và trạng thái yêu cầu thành công',
-  })
+  @ApiOperation({ summary: 'Xem thông tin author_profile và trạng thái yêu cầu của bản thân' })
   @Get('author-request')
   @HttpCode(HttpStatus.OK)
   async getAuthorProfileAndRequestStatus(
@@ -83,13 +65,7 @@ export class AuthorRequestsController {
     };
   }
 
-  @ApiOperation({
-    summary: 'Chỉnh sửa thông tin yêu cầu nâng cấp tác giả lúc chưa duyệt (PENDING) hoặc từ chối (REJECTED)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Chỉnh sửa yêu cầu nâng cấp tác giả thành công',
-  })
+  @ApiOperation({ summary: 'Chỉnh sửa yêu cầu nâng cấp tác giả lúc chưa duyệt hoặc bị từ chối' })
   @Put('author-request')
   @HttpCode(HttpStatus.OK)
   async updateRequest(
@@ -108,13 +84,7 @@ export class AuthorRequestsController {
     };
   }
 
-  @ApiOperation({
-    summary: 'Admin / Manager xem danh sách yêu cầu nâng cấp (có phân trang chuẩn và lọc)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lấy danh sách yêu cầu thành công',
-  })
+  @ApiOperation({ summary: 'Xem danh sách yêu cầu nâng cấp (Admin / Manager)' })
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Get('author-requests')
@@ -128,17 +98,7 @@ export class AuthorRequestsController {
     };
   }
 
-  @ApiOperation({
-    summary: 'Admin / Manager xử lý nâng cấp (duyệt chuyển đổi role sang AUTHOR & tạo author_profile, hoặc từ chối)',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID của yêu cầu nâng cấp (ObjectId)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Xử lý yêu cầu thành công, chuyển đổi role nếu duyệt',
-  })
+  @ApiOperation({ summary: 'Duyệt hoặc từ chối yêu cầu nâng cấp tác giả (Admin / Manager)' })
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Patch('author-requests/:id/review')
