@@ -6,6 +6,8 @@ import { Button } from "@/components/ui";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { authorRequestService } from "@/lib/services/author-request.service";
+import { userService } from "@/lib/services/user.service";
+import { toast } from "@/lib/toast";
 import type { AuthorRequestStatusData } from "@/types/author";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -24,22 +26,303 @@ const ROLE_BG: Record<string, string> = {
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Đang hoạt động",
-  SUSPENDED: "Tạm đình chỉ",
   BANNED: "Bị cấm",
 };
 
 const STATUS_COLOR: Record<string, string> = {
   ACTIVE: "bg-emerald-100 text-emerald-700",
-  SUSPENDED: "bg-yellow-100 text-yellow-700",
   BANNED: "bg-red-100 text-red-700",
 };
 
+// ─── Modal chỉnh sửa profile ───────────────────────────────────────────────
+function EditProfileModal({
+  initialName,
+  initialAvatarUrl,
+  onClose,
+  onSaved,
+}: {
+  initialName: string;
+  initialAvatarUrl?: string | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [displayName, setDisplayName] = useState(initialName);
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (displayName.trim().length < 2 || displayName.trim().length > 50) {
+      setError("Tên hiển thị phải từ 2 đến 50 ký tự");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Cập nhật displayName
+      if (displayName.trim() !== initialName) {
+        const res = await userService.updateProfile({ displayName: displayName.trim() });
+        if (!res.success) throw new Error(res.message);
+      }
+
+      // Cập nhật avatar nếu có URL mới
+      if (avatarUrl.trim() && avatarUrl.trim() !== initialAvatarUrl) {
+        const res = await userService.updateAvatar({ avatarUrl: avatarUrl.trim() });
+        if (!res.success) throw new Error(res.message);
+      }
+
+      toast.success("Cập nhật hồ sơ thành công!");
+      onSaved();
+    } catch (err: any) {
+      const msg = err?.message && !err.message.includes("Failed to fetch")
+        ? err.message
+        : "Cập nhật thất bại, vui lòng thử lại";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-zinc-900">Chỉnh sửa hồ sơ</h2>
+          <button
+            onClick={onClose}
+            className="text-zinc-400 hover:text-zinc-600 cursor-pointer"
+            aria-label="Đóng"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {error && (
+          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="space-y-4">
+          {/* Tên hiển thị */}
+          <div>
+            <label className="block text-xs font-semibold text-zinc-600 mb-1.5" htmlFor="edit-displayname">
+              Tên hiển thị <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="edit-displayname"
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition"
+              placeholder="Nhập tên hiển thị"
+              minLength={2}
+              maxLength={50}
+              required
+            />
+            <p className="text-xs text-zinc-400 mt-1">Từ 2 đến 50 ký tự</p>
+          </div>
+
+          {/* URL Avatar */}
+          <div>
+            <label className="block text-xs font-semibold text-zinc-600 mb-1.5" htmlFor="edit-avatar-url">
+              URL Ảnh đại diện
+            </label>
+            <input
+              id="edit-avatar-url"
+              type="url"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition"
+              placeholder="https://example.com/avatar.jpg"
+            />
+            {/* Preview */}
+            {avatarUrl && (
+              <div className="mt-2 flex items-center gap-3">
+                <span className="text-xs text-zinc-400">Xem trước:</span>
+                <Image
+                  src={avatarUrl}
+                  alt="Avatar preview"
+                  width={40}
+                  height={40}
+                  className="w-10 h-10 rounded-xl object-cover border border-zinc-200"
+                  onError={() => setAvatarUrl("")}
+                  unoptimized
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              id="btn-edit-profile-cancel"
+              type="button"
+              variant="outline"
+              fullWidth
+              onClick={onClose}
+              disabled={isSaving}
+            >
+              Huỷ
+            </Button>
+            <Button
+              id="btn-edit-profile-save"
+              type="submit"
+              variant="primary"
+              fullWidth
+              isLoading={isSaving}
+            >
+              Lưu thay đổi
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Input Mật khẩu ────────────────────────────────────────────────────────
+function EyeToggle({ show, toggle }: { show: boolean; toggle: () => void }) {
+  return (
+    <button type="button" onClick={toggle} className="hover:text-zinc-600 cursor-pointer" aria-label={show ? "Ẩn" : "Hiện"}>
+      {show ? (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+function PasswordField({
+  id,
+  label,
+  value,
+  onChange,
+  show,
+  onToggle,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  show: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-zinc-600 mb-1.5" htmlFor={id}>
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition"
+          placeholder="••••••••"
+          required
+        />
+        <div className="absolute inset-y-0 right-3 flex items-center text-zinc-400">
+          <EyeToggle show={show} toggle={onToggle} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal đổi mật khẩu ───────────────────────────────────────────────────
+function ChangePasswordModal({ onClose }: { onClose: () => void }) {
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!oldPassword) { setError("Vui lòng nhập mật khẩu cũ"); return; }
+    if (newPassword.length < 6) { setError("Mật khẩu mới phải có ít nhất 6 ký tự"); return; }
+    if (newPassword !== confirmPassword) { setError("Xác nhận mật khẩu không khớp"); return; }
+
+    setIsSaving(true);
+    try {
+      const res = await userService.changePassword({ oldPassword, newPassword, confirmPassword });
+      if (!res.success) throw new Error(res.message);
+      toast.success("Đổi mật khẩu thành công!");
+      onClose();
+    } catch (err: any) {
+      const msg = err?.message && !err.message.includes("Failed to fetch")
+        ? err.message
+        : "Đổi mật khẩu thất bại, vui lòng thử lại";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-zinc-900">Đổi mật khẩu</h2>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 cursor-pointer" aria-label="Đóng">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {error && (
+          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="space-y-4">
+          <PasswordField id="cp-old" label="Mật khẩu hiện tại" value={oldPassword} onChange={setOldPassword} show={showOld} onToggle={() => setShowOld(!showOld)} />
+          <PasswordField id="cp-new" label="Mật khẩu mới (tối thiểu 6 ký tự)" value={newPassword} onChange={setNewPassword} show={showNew} onToggle={() => setShowNew(!showNew)} />
+          <PasswordField id="cp-confirm" label="Xác nhận mật khẩu mới" value={confirmPassword} onChange={setConfirmPassword} show={showConfirm} onToggle={() => setShowConfirm(!showConfirm)} />
+
+          <div className="flex gap-3 pt-2">
+            <Button id="btn-cp-cancel" type="button" variant="outline" fullWidth onClick={onClose} disabled={isSaving}>
+              Huỷ
+            </Button>
+            <Button id="btn-cp-save" type="submit" variant="primary" fullWidth isLoading={isSaving}>
+              Đổi mật khẩu
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────
 export default function HoSoPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
   const [authorData, setAuthorData] = useState<AuthorRequestStatusData | null>(null);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
-  // Fetch trạng thái author request (nếu là USER hoặc AUTHOR)
   useEffect(() => {
     if (user?.role === "USER" || user?.role === "AUTHOR") {
       authorRequestService
@@ -56,18 +339,29 @@ export default function HoSoPage() {
     router.push("/dang-nhap");
   };
 
-  const avatarInitial = (user.displayName || user.username || "U")
-    .charAt(0)
-    .toUpperCase();
-
+  const avatarInitial = (user.displayName || user.username || "U").charAt(0).toUpperCase();
   const coverGradient = ROLE_BG[user.role] || ROLE_BG.USER;
-
-  // Trạng thái yêu cầu tác giả cho USER
   const authorRequest = authorData?.request;
   const authorProfile = authorData?.authorProfile;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* ─── Modals ─── */}
+      {showEditProfile && (
+        <EditProfileModal
+          initialName={user.displayName}
+          initialAvatarUrl={user.avatarUrl}
+          onClose={() => setShowEditProfile(false)}
+          onSaved={async () => {
+            await refreshUser();
+            setShowEditProfile(false);
+          }}
+        />
+      )}
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
+
       {/* ─── Profile Card ─── */}
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mb-6">
         {/* Cover */}
@@ -86,6 +380,7 @@ export default function HoSoPage() {
                     width={96}
                     height={96}
                     className="object-cover w-full h-full"
+                    unoptimized
                   />
                 ) : (
                   <span className="text-white text-3xl font-bold">{avatarInitial}</span>
@@ -94,16 +389,12 @@ export default function HoSoPage() {
               <span className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" />
             </div>
 
-            {/* Badges */}
+            {/* Badges + Actions */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-sky-100 text-sky-700">
                 {ROLE_LABEL[user.role] || user.role}
               </span>
-              <span
-                className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                  STATUS_COLOR[user.status] || "bg-zinc-100 text-zinc-700"
-                }`}
-              >
+              <span className={`text-xs font-semibold px-3 py-1 rounded-full ${STATUS_COLOR[user.status] || "bg-zinc-100 text-zinc-700"}`}>
                 {STATUS_LABEL[user.status] || user.status}
               </span>
             </div>
@@ -123,6 +414,36 @@ export default function HoSoPage() {
                 </span>
               </span>
             )}
+          </div>
+
+          {/* Edit buttons */}
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button
+              id="btn-edit-profile"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEditProfile(true)}
+              leftIcon={
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              }
+            >
+              Chỉnh sửa hồ sơ
+            </Button>
+            <Button
+              id="btn-change-password"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowChangePassword(true)}
+              leftIcon={
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              }
+            >
+              Đổi mật khẩu
+            </Button>
           </div>
         </div>
       </div>
@@ -192,46 +513,31 @@ export default function HoSoPage() {
             Trở thành Tác giả
           </h2>
 
-          {/* Hiển thị trạng thái yêu cầu */}
           {authorRequest ? (
-            <div
-              className={`rounded-xl p-4 mb-4 border ${
-                authorRequest.status === "PENDING"
-                  ? "bg-yellow-50 border-yellow-200"
-                  : authorRequest.status === "APPROVED"
-                  ? "bg-emerald-50 border-emerald-200"
-                  : "bg-red-50 border-red-200"
-              }`}
-            >
+            <div className={`rounded-xl p-4 mb-4 border ${
+              authorRequest.status === "PENDING"
+                ? "bg-yellow-50 border-yellow-200"
+                : authorRequest.status === "APPROVED"
+                ? "bg-emerald-50 border-emerald-200"
+                : "bg-red-50 border-red-200"
+            }`}>
               <div className="flex items-center gap-2 mb-1">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    authorRequest.status === "PENDING"
-                      ? "bg-yellow-500"
-                      : authorRequest.status === "APPROVED"
-                      ? "bg-emerald-500"
-                      : "bg-red-500"
-                  }`}
-                />
-                <span
-                  className={`text-xs font-bold ${
-                    authorRequest.status === "PENDING"
-                      ? "text-yellow-700"
-                      : authorRequest.status === "APPROVED"
-                      ? "text-emerald-700"
-                      : "text-red-700"
-                  }`}
-                >
-                  {authorRequest.status === "PENDING"
-                    ? "Đang chờ xét duyệt"
-                    : authorRequest.status === "APPROVED"
-                    ? "Đã được duyệt"
+                <span className={`w-2 h-2 rounded-full ${
+                  authorRequest.status === "PENDING" ? "bg-yellow-500"
+                  : authorRequest.status === "APPROVED" ? "bg-emerald-500"
+                  : "bg-red-500"
+                }`} />
+                <span className={`text-xs font-bold ${
+                  authorRequest.status === "PENDING" ? "text-yellow-700"
+                  : authorRequest.status === "APPROVED" ? "text-emerald-700"
+                  : "text-red-700"
+                }`}>
+                  {authorRequest.status === "PENDING" ? "Đang chờ xét duyệt"
+                    : authorRequest.status === "APPROVED" ? "Đã được duyệt"
                     : "Bị từ chối"}
                 </span>
               </div>
-              <p className="text-xs text-zinc-600">
-                Bút danh: <strong>{authorRequest.penName}</strong>
-              </p>
+              <p className="text-xs text-zinc-600">Bút danh: <strong>{authorRequest.penName}</strong></p>
               {authorRequest.adminNote && (
                 <p className="text-xs text-zinc-500 mt-1 italic">"{authorRequest.adminNote}"</p>
               )}
