@@ -4,6 +4,7 @@ import type {
   VerifyRegisterPayload,
   ResendOtpPayload,
   LoginPayload,
+  GoogleLoginPayload,
   LoginResponseData,
   RefreshTokenPayload,
   RefreshTokenResponseData,
@@ -40,6 +41,13 @@ export const authService = {
    */
   login(payload: LoginPayload) {
     return api.post<AuthApiResponse<LoginResponseData>>("/auth/login", payload);
+  },
+
+  /**
+   * Đăng nhập hệ thống bằng tài khoản Google (nhận ID Token hoặc Access Token)
+   */
+  googleLogin(payload: GoogleLoginPayload) {
+    return api.post<AuthApiResponse<LoginResponseData>>("/auth/google", payload);
   },
 
   /**

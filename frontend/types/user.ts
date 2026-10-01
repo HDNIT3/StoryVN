@@ -2,7 +2,7 @@
 export type UserRole = "USER" | "AUTHOR" | "MANAGER" | "ADMIN";
 
 /** Trạng thái tài khoản người dùng */
-export type UserStatus = "ACTIVE" | "SUSPENDED" | "BANNED";
+export type UserStatus = "ACTIVE" | "BANNED";
 
 /** Thông tin hồ sơ người dùng */
 export interface UserProfile {
