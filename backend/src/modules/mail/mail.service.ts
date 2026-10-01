@@ -100,5 +100,22 @@ export class MailService {
 
     return this.sendMail(to, subject, html);
   }
-}
 
+  async sendGoogleAccountCreated(to: string, displayName: string, randomPassword: string) {
+    const subject = 'StoryVN - Thông tin tài khoản đăng nhập';
+    const html = `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+      <h2 style="color: #2b6cb0;">Chào mừng bạn đến với StoryVN!</h2>
+      <p>Xin chào <strong>${displayName}</strong>,</p>
+      <p>Tài khoản StoryVN của bạn đã được liên kết và khởi tạo thành công thông qua đăng nhập Google.</p>
+      <p>Ngoài việc đăng nhập bằng Google, bạn có thể sử dụng thông tin sau để đăng nhập trực tiếp bằng email & mật khẩu:</p>
+      <div style="background-color: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <p style="margin: 0 0 8px 0;"><strong>Email:</strong> ${to}</p>
+        <p style="margin: 0;"><strong>Mật khẩu khởi tạo:</strong> <span style="font-family: monospace; font-size: 18px; font-weight: bold; color: #2b6cb0;">${randomPassword}</span></p>
+      </div>
+      <p><em>Khuyến nghị: Bạn có thể đổi lại mật khẩu này bất kỳ lúc nào trong phần Cài đặt tài khoản.</em></p>
+      <p>Chúc bạn có những trải nghiệm đọc truyện tuyệt vời tại StoryVN!</p>
+    </div>`;
+
+    return this.sendMail(to, subject, html);
+  }
+}

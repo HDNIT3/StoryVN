@@ -18,8 +18,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let message: string = ErrorCode.INTERNAL_SERVER_ERROR.message;
     let error: string = ErrorCode.INTERNAL_SERVER_ERROR.error;
 
-
-
     if (exception instanceof HttpException) {
       statusCode = exception.getStatus();
       const res = exception.getResponse();

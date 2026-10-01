@@ -14,8 +14,8 @@ export class RefreshToken {
   })
   userId: Types.ObjectId;
 
-  @Prop({ required: true, index: true })
-  tokenHash: string;
+  @Prop({ required: true, index: true, unique: true })
+  jti: string;
 
   @Prop({ required: true, index: { expires: 0 } })
   expiresAt: Date;
