@@ -43,6 +43,18 @@ export const ErrorCode = {
     error: 'INVALID_CREDENTIALS',
     message: 'Email hoặc mật khẩu không chính xác',
   },
+  INVALID_GOOGLE_TOKEN: {
+    error: 'INVALID_GOOGLE_TOKEN',
+    message: 'Token xác thực Google không hợp lệ hoặc đã hết hạn',
+  },
+  GOOGLE_EMAIL_NOT_VERIFIED: {
+    error: 'GOOGLE_EMAIL_NOT_VERIFIED',
+    message: 'Email Google chưa được xác thực',
+  },
+  ACCOUNT_REGISTERED_WITH_GOOGLE: {
+    error: 'ACCOUNT_REGISTERED_WITH_GOOGLE',
+    message: 'Tài khoản này được đăng ký bằng Google, vui lòng đăng nhập bằng Google',
+  },
   ACCOUNT_SUSPENDED: {
     error: 'ACCOUNT_SUSPENDED',
     message: 'Tài khoản của bạn đã bị tạm khóa',
@@ -102,5 +114,45 @@ export const ErrorCode = {
   AUTHOR_REQUEST_CANNOT_EDIT: {
     error: 'AUTHOR_REQUEST_CANNOT_EDIT',
     message: 'Yêu cầu đã được phê duyệt, không thể chỉnh sửa',
+  },
+  OLD_PASSWORD_INCORRECT: {
+    error: 'OLD_PASSWORD_INCORRECT',
+    message: 'Mật khẩu cũ không chính xác',
+  },
+  NEW_PASSWORD_SAME_AS_OLD: {
+    error: 'NEW_PASSWORD_SAME_AS_OLD',
+    message: 'Mật khẩu mới không được trùng với mật khẩu cũ',
+  },
+  CONFIRM_PASSWORD_MISMATCH: {
+    error: 'CONFIRM_PASSWORD_MISMATCH',
+    message: 'Mật khẩu xác nhận không khớp với mật khẩu mới',
+  },
+  CANNOT_MODIFY_SELF_STATUS: {
+    error: 'CANNOT_MODIFY_SELF_STATUS',
+    message: 'Không thể tự thay đổi trạng thái tài khoản của chính mình',
+  },
+  CANNOT_MODIFY_ADMIN: {
+    error: 'CANNOT_MODIFY_ADMIN',
+    message: 'Không thể thay đổi trạng thái hoặc quyền của tài khoản Quản trị viên',
+  },
+  CANNOT_MODIFY_SELF_ROLE: {
+    error: 'CANNOT_MODIFY_SELF_ROLE',
+    message: 'Không thể tự thay đổi vai trò của chính mình',
+  },
+  INVALID_ROLE_TRANSITION: {
+    error: 'INVALID_ROLE_TRANSITION',
+    message: 'Vai trò chỉ định không hợp lệ hoặc không được phép chuyển đổi',
+  },
+  AUTHOR_ROLE_USE_REQUEST_FLOW: {
+    error: 'AUTHOR_ROLE_USE_REQUEST_FLOW',
+    message: 'Vai trò Tác giả (AUTHOR) được xét duyệt riêng qua chức năng duyệt yêu cầu tác giả, không thể gán trực tiếp',
+  },
+  MANAGER_PERMISSION_DENIED: {
+    error: 'MANAGER_PERMISSION_DENIED',
+    message: 'Quản lý chỉ có quyền thao tác trên tài khoản Người dùng và Tác giả',
+  },
+  INVALID_OBJECT_ID: {
+    error: 'INVALID_OBJECT_ID',
+    message: 'Mã ID không hợp lệ',
   },
 };

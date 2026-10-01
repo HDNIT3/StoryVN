@@ -10,7 +10,6 @@ export enum UserRole {
 
 export enum UserStatus {
   ACTIVE = 'ACTIVE',
-  SUSPENDED = 'SUSPENDED',
   BANNED = 'BANNED',
 }
 
@@ -24,8 +23,8 @@ export class User {
   @Prop({ required: true, unique: true, trim: true })
   username: string;
 
-  @Prop({ required: true })
-  passwordHash: string;
+  @Prop({ type: String, default: null })
+  passwordHash?: string | null;
 
   @Prop({ required: true, trim: true })
   displayName: string;
@@ -39,7 +38,7 @@ export class User {
   @Prop({ type: String, enum: UserStatus, default: UserStatus.ACTIVE })
   status: UserStatus;
 
-  @Prop({ type: String, default: null })
+  @Prop({ type: String, default: null, index: true })
   googleId: string | null;
 
   @Prop({ type: Number, default: 0 })
