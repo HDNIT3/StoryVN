@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
-import { Button } from "@/components/ui";
+import { Button, ImageUploader } from "@/components/ui";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { authorRequestService } from "@/lib/services/author-request.service";
 import { userService } from "@/lib/services/user.service";
+import { uploadService } from "@/lib/services/upload.service";
 import { toast } from "@/lib/toast";
 import type { AuthorRequestStatusData } from "@/types/author";
 
@@ -129,34 +130,15 @@ function EditProfileModal({
             <p className="text-xs text-zinc-400 mt-1">Từ 2 đến 50 ký tự</p>
           </div>
 
-          {/* URL Avatar */}
+          {/* Ảnh đại diện (Upload hoặc Dán Link) */}
           <div>
-            <label className="block text-xs font-semibold text-zinc-600 mb-1.5" htmlFor="edit-avatar-url">
-              URL Ảnh đại diện
-            </label>
-            <input
-              id="edit-avatar-url"
-              type="url"
+            <ImageUploader
+              label="Ảnh đại diện"
               value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition"
-              placeholder="https://example.com/avatar.jpg"
+              onChange={(newUrl) => setAvatarUrl(newUrl)}
+              folder="avatars"
+              aspectRatio="square"
             />
-            {/* Preview */}
-            {avatarUrl && (
-              <div className="mt-2 flex items-center gap-3">
-                <span className="text-xs text-zinc-400">Xem trước:</span>
-                <Image
-                  src={avatarUrl}
-                  alt="Avatar preview"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10 rounded-xl object-cover border border-zinc-200"
-                  onError={() => setAvatarUrl("")}
-                  unoptimized
-                />
-              </div>
-            )}
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -322,6 +304,53 @@ export default function HoSoPage() {
   const [authorData, setAuthorData] = useState<AuthorRequestStatusData | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate format
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      toast.error("Chỉ chấp nhận file ảnh: JPG, PNG, WEBP, GIF");
+      return;
+    }
+
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Dung lượng file tối đa là 5MB");
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const uploadRes = await uploadService.uploadImage(file, "avatars");
+      if (uploadRes.success && uploadRes.data?.url) {
+        const updateRes = await userService.updateAvatar({ avatarUrl: uploadRes.data.url });
+        if (updateRes.success) {
+          await refreshUser();
+          toast.success("Cập nhật ảnh đại diện thành công!");
+        } else {
+          throw new Error(updateRes.message || "Cập nhật ảnh đại diện thất bại");
+        }
+      } else {
+        throw new Error(uploadRes.message || "Tải ảnh lên thất bại");
+      }
+    } catch (err: any) {
+      const errorMsg =
+        err?.message && !err.message.includes("Failed to fetch")
+          ? err.message
+          : "Cập nhật ảnh đại diện thất bại, vui lòng thử lại";
+      toast.error(errorMsg);
+    } finally {
+      setIsUploadingAvatar(false);
+      if (avatarInputRef.current) {
+        avatarInputRef.current.value = "";
+      }
+    }
+  };
 
   useEffect(() => {
     if (user?.role === "USER" || user?.role === "AUTHOR") {
@@ -370,9 +399,23 @@ export default function HoSoPage() {
         {/* Avatar + Info */}
         <div className="px-6 pb-6">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 mb-5">
-            {/* Avatar */}
-            <div className="relative">
-              <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-sky-500 flex items-center justify-center overflow-hidden">
+            {/* Avatar (Clickable to change immediately) */}
+            <div className="relative group">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                onChange={handleAvatarFileChange}
+                disabled={isUploadingAvatar}
+              />
+              <button
+                type="button"
+                onClick={() => !isUploadingAvatar && avatarInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="relative w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-sky-500 flex items-center justify-center overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-400 group-hover:shadow-xl transition-all block text-left"
+                title="Bấm để tải và đổi ảnh đại diện ngay"
+              >
                 {user.avatarUrl ? (
                   <Image
                     src={user.avatarUrl}
@@ -385,8 +428,38 @@ export default function HoSoPage() {
                 ) : (
                   <span className="text-white text-3xl font-bold">{avatarInitial}</span>
                 )}
-              </div>
-              <span className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" />
+
+                {/* Overlay on hover */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[11px] font-semibold gap-1 z-10">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>Đổi ảnh</span>
+                </div>
+
+                {/* Loading spinner */}
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white gap-1 z-20">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="text-[10px] font-medium">Đang tải...</span>
+                  </div>
+                )}
+              </button>
+
+              {/* Camera icon badge button */}
+              <button
+                type="button"
+                onClick={() => !isUploadingAvatar && avatarInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="absolute -bottom-1 -right-1 w-7 h-7 bg-white text-slate-700 hover:text-sky-600 rounded-full border border-slate-200 shadow-md flex items-center justify-center cursor-pointer transition hover:scale-110 z-10"
+                title="Tải ảnh đại diện mới"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
             </div>
 
             {/* Badges + Actions */}
