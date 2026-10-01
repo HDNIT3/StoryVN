@@ -98,8 +98,11 @@ class ApiClient {
       ? endpoint
       : `${this.baseUrl}/${endpoint.replace(/^\//, "")}`;
 
+    const isFormData =
+      typeof FormData !== "undefined" && options.body instanceof FormData;
+
     const headers: Record<string, string> = {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...this.getAuthHeader(),
       ...(options.headers as Record<string, string>),
     };
@@ -192,6 +195,14 @@ class ApiClient {
       ...options,
       method: "PATCH",
       body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  upload<T = any>(endpoint: string, formData: FormData, options?: RequestInit): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: "POST",
+      body: formData,
     });
   }
 

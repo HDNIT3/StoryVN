@@ -17,8 +17,19 @@ type StatusFilter = UserStatus | "ALL";
 
 interface StatsData {
   totalUsers: number;
-  byRole: Record<string, number>;
-  byStatus: Record<string, number>;
+  status?: {
+    active: number;
+    banned: number;
+  };
+  roles?: {
+    user: number;
+    author: number;
+    manager: number;
+    admin: number;
+  };
+  newUsersToday?: number;
+  byRole?: Record<string, number>;
+  byStatus?: Record<string, number>;
 }
 
 interface ConfirmModal {
@@ -332,6 +343,7 @@ export default function QuanLyNguoiDungPage() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("ALL");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
@@ -361,7 +373,7 @@ export default function QuanLyNguoiDungPage() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params: QueryAdminUsersParams = { page, limit: 12 };
+      const params: QueryAdminUsersParams = { page, limit };
       if (roleFilter !== "ALL") params.role = roleFilter as UserRole;
       if (statusFilter !== "ALL") params.status = statusFilter as UserStatus;
       if (search.trim()) params.search = search.trim();
@@ -377,7 +389,7 @@ export default function QuanLyNguoiDungPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, roleFilter, statusFilter, search]);
+  }, [page, limit, roleFilter, statusFilter, search]);
 
   useEffect(() => {
     fetchStats();
@@ -385,7 +397,7 @@ export default function QuanLyNguoiDungPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [roleFilter, statusFilter, search]);
+  }, [roleFilter, statusFilter, search, limit]);
 
   useEffect(() => {
     fetchData();
@@ -465,9 +477,21 @@ export default function QuanLyNguoiDungPage() {
   };
 
   // ── Stats values ──
-  const totalActive = stats?.byStatus?.ACTIVE ?? 0;
-  const totalBanned = stats?.byStatus?.BANNED ?? 0;
-  const totalAuthors = stats?.byRole?.AUTHOR ?? 0;
+  const totalActive =
+    stats?.status?.active ??
+    stats?.byStatus?.ACTIVE ??
+    (stats as any)?.status?.ACTIVE ??
+    0;
+  const totalBanned =
+    stats?.status?.banned ??
+    stats?.byStatus?.BANNED ??
+    (stats as any)?.status?.BANNED ??
+    0;
+  const totalAuthors =
+    stats?.roles?.author ??
+    stats?.byRole?.AUTHOR ??
+    (stats as any)?.roles?.AUTHOR ??
+    0;
 
   return (
     <div className="space-y-7">
@@ -603,21 +627,42 @@ export default function QuanLyNguoiDungPage() {
       {/* ── Table ── */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         {/* Table header info */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-600">
-            {isLoading ? "Đang tải..." : `${totalItems.toLocaleString("vi-VN")} người dùng`}
+        <div className="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <p className="text-sm font-semibold text-slate-600">
+              {isLoading ? "Đang tải..." : `${totalItems.toLocaleString("vi-VN")} người dùng`}
+              {(search || roleFilter !== "ALL" || statusFilter !== "ALL") && (
+                <span className="ml-1.5 text-sky-600">(đang lọc)</span>
+              )}
+            </p>
             {(search || roleFilter !== "ALL" || statusFilter !== "ALL") && (
-              <span className="ml-1.5 text-sky-600">(đang lọc)</span>
+              <button
+                onClick={() => { setSearch(""); setSearchInput(""); setRoleFilter("ALL"); setStatusFilter("ALL"); }}
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700 underline cursor-pointer"
+              >
+                Xoá bộ lọc
+              </button>
             )}
-          </p>
-          {(search || roleFilter !== "ALL" || statusFilter !== "ALL") && (
-            <button
-              onClick={() => { setSearch(""); setSearchInput(""); setRoleFilter("ALL"); setStatusFilter("ALL"); }}
-              className="text-xs font-semibold text-slate-500 hover:text-slate-700 underline cursor-pointer"
+          </div>
+
+          {/* Chọn số lượng item mỗi trang */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="select-limit" className="text-xs text-slate-500 font-medium whitespace-nowrap">
+              Hiển thị:
+            </label>
+            <select
+              id="select-limit"
+              value={limit}
+              onChange={(e) => setLimit(Number(e.target.value))}
+              className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400/40 cursor-pointer"
             >
-              Xoá bộ lọc
-            </button>
-          )}
+              <option value={10}>10 / trang</option>
+              <option value={12}>12 / trang</option>
+              <option value={20}>20 / trang</option>
+              <option value={50}>50 / trang</option>
+              <option value={100}>100 / trang</option>
+            </select>
+          </div>
         </div>
 
         {isLoading ? (

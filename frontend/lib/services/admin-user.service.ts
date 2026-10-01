@@ -17,8 +17,19 @@ export interface AdminUserItem {
 
 export interface AdminUserStats {
   totalUsers: number;
-  byRole: Record<UserRole, number>;
-  byStatus: Record<UserStatus, number>;
+  status?: {
+    active: number;
+    banned: number;
+  };
+  roles?: {
+    user: number;
+    author: number;
+    manager: number;
+    admin: number;
+  };
+  newUsersToday?: number;
+  byRole?: Record<string, number>;
+  byStatus?: Record<string, number>;
 }
 
 export interface PaginationMeta {
