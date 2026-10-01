@@ -57,6 +57,11 @@ export interface LoginPayload {
   password: string;
 }
 
+/** Dữ liệu gửi lên API khi đăng nhập bằng Google */
+export interface GoogleLoginPayload {
+  token: string;
+}
+
 /** Dữ liệu token trả về khi đăng nhập thành công */
 export interface LoginResponseData {
   accessToken: string;
