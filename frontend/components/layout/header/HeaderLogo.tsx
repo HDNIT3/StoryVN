@@ -17,16 +17,16 @@ export function HeaderLogo({
   return (
     <Link
       href={href}
-      className={`inline-flex items-center gap-3.5 group transition-transform active:scale-95 ${className}`}
+      className={`inline-flex items-center gap-2 sm:gap-2.5 group transition-transform active:scale-95 shrink-0 ${className}`}
       aria-label={`${title}${suffix} - ${subtitle}`}
     >
       {/* Brand Icon Box */}
-      <div className="relative w-12 h-12 shrink-0 rounded-2xl overflow-hidden shadow-sm group-hover:shadow-md transition-shadow border border-zinc-100">
+      <div className="relative w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 shrink-0 rounded-xl overflow-hidden shadow-xs group-hover:shadow-md transition-shadow border border-zinc-100">
         <Image
           src={iconSrc}
           alt={`${title}${suffix} Icon`}
-          width={48}
-          height={48}
+          width={40}
+          height={40}
           className="w-full h-full object-cover"
           priority
         />
@@ -34,11 +34,11 @@ export function HeaderLogo({
 
       {/* Brand Typography */}
       <div className="flex flex-col select-none">
-        <span className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-zinc-900 flex items-center">
+        <span className="text-lg sm:text-xl md:text-2xl font-black tracking-tight leading-none text-zinc-900 flex items-center">
           {title}
           <span className="text-sky-500 ml-0.5">{suffix}</span>
         </span>
-        <span className="text-[11px] font-bold tracking-widest text-zinc-400 mt-1 uppercase leading-none">
+        <span className="hidden 2xl:block text-[9px] font-bold tracking-widest text-zinc-400 mt-0.5 uppercase leading-none truncate max-w-[140px]">
           {subtitle}
         </span>
       </div>
