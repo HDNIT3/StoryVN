@@ -40,12 +40,13 @@ export function Header({
         sticky ? "sticky top-0 z-40 backdrop-blur-md bg-white/95" : ""
       } ${className}`}
     >
-      <div className="w-full px-4 sm:px-8 md:px-10 lg:px-12 xl:px-16 2xl:px-20 h-20 flex items-center justify-between gap-6 lg:gap-10">
+      <div className="w-full max-w-[1600px] mx-auto px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 h-15 sm:h-18 flex items-center justify-between gap-2 sm:gap-3 lg:gap-4">
         {/* Left Side: Logo & Desktop Navigation */}
-        <div className="flex items-center gap-6 lg:gap-8 xl:gap-10 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 xl:gap-5 shrink-0">
           <HeaderLogo {...logo} />
 
-          <div className="hidden md:block">
+          {/* Desktop Navigation (visible on xl screens) */}
+          <div className="hidden xl:flex items-center">
             <HeaderNav
               items={navItems}
               activeNavId={activeNavId}
@@ -56,13 +57,13 @@ export function Header({
           </div>
         </div>
 
-        {/* Center: Search Bar */}
-        <div className="hidden sm:flex items-center justify-center flex-1 max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-2 min-w-[260px]">
+        {/* Center: Search Bar (visible on lg and xl screens) */}
+        <div className="hidden lg:flex items-center justify-center flex-1 max-w-[180px] xl:max-w-[240px] 2xl:max-w-xs mx-1 sm:mx-2 min-w-0">
           <HeaderSearch className="w-full" {...search} />
         </div>
 
-        {/* Right Side: User Actions (Bookmark, Wallet, Avatar) & Mobile Menu */}
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        {/* Right Side: User Actions & Mobile Menu */}
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
           <HeaderActions
             isLoggedIn={isLoggedIn}
             user={user}
@@ -78,14 +79,26 @@ export function Header({
             }}
           />
 
-          {/* Mobile Menu Button & Drawer */}
+          {/* Mobile/Tablet Menu Button & Drawer (visible on < xl screens) */}
           <HeaderMobileMenu
             navItems={navItems}
             activeNavId={activeNavId}
             genres={genres}
+            isLoggedIn={isLoggedIn}
+            user={user}
+            wallet={wallet}
+            bookmark={bookmark}
             onNavItemClick={onNavItemClick}
             onGenreClick={onGenreClick}
             onSearch={search?.onSearch}
+            onLoginClick={onLoginClick}
+            onLogoutClick={onLogoutClick}
+            onRechargeClick={() => {
+              if (wallet?.onRechargeClick) wallet.onRechargeClick();
+            }}
+            onBookmarkClick={() => {
+              if (bookmark?.onClick) bookmark.onClick();
+            }}
           />
         </div>
       </div>
