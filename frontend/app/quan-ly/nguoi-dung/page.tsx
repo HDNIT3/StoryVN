@@ -132,7 +132,7 @@ function UserDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-7 relative"
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-5 sm:p-7 max-h-[90vh] overflow-y-auto relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close */}
@@ -148,7 +148,7 @@ function UserDetailModal({
 
         {/* Avatar + Name */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-2xl font-black shadow-sm shrink-0">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-xl sm:text-2xl font-black shadow-sm shrink-0">
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
@@ -159,10 +159,10 @@ function UserDetailModal({
               (user.displayName || user.username || "?").charAt(0).toUpperCase()
             )}
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">{user.displayName}</h2>
-            <p className="text-sm text-slate-500">@{user.username}</p>
-            <div className="flex items-center gap-2 mt-1.5">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">{user.displayName}</h2>
+            <p className="text-xs sm:text-sm text-slate-500 truncate">@{user.username}</p>
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
               <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${ROLE_COLOR[user.role] || "bg-slate-100 text-slate-600"}`}>
                 {ROLE_LABEL[user.role] || user.role}
               </span>
@@ -174,7 +174,7 @@ function UserDetailModal({
         </div>
 
         {/* Info Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 text-sm">
           <div className="bg-slate-50 rounded-xl p-3.5">
             <p className="text-xs text-slate-400 font-semibold uppercase mb-1">Email</p>
             <p className="font-semibold text-slate-800 truncate">{user.email}</p>
@@ -562,7 +562,7 @@ export default function QuanLyNguoiDungPage() {
       </div>
 
       {/* ── Filter + Search Bar ── */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 shadow-xs flex flex-col md:flex-row gap-3 items-stretch md:items-center">
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center gap-2">
           <div className="relative flex-1">
@@ -580,7 +580,7 @@ export default function QuanLyNguoiDungPage() {
           </div>
           <button
             type="submit"
-            className="px-4 py-2.5 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors cursor-pointer shadow-xs"
+            className="px-3.5 sm:px-4 py-2.5 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors cursor-pointer shadow-xs shrink-0"
           >
             Tìm
           </button>
@@ -588,20 +588,20 @@ export default function QuanLyNguoiDungPage() {
             <button
               type="button"
               onClick={() => { setSearch(""); setSearchInput(""); }}
-              className="px-3 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+              className="px-3 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer shrink-0"
             >
               Xoá
             </button>
           )}
         </form>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           {/* Role filter */}
           <select
             id="filter-role"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
-            className="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-400/40 cursor-pointer"
+            className="flex-1 sm:flex-initial text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-400/40 cursor-pointer"
           >
             <option value="ALL">Tất cả vai trò</option>
             <option value="USER">Người dùng</option>
@@ -615,7 +615,7 @@ export default function QuanLyNguoiDungPage() {
             id="filter-status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-400/40 cursor-pointer"
+            className="flex-1 sm:flex-initial text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-400/40 cursor-pointer"
           >
             <option value="ALL">Tất cả trạng thái</option>
             <option value="ACTIVE">Hoạt động</option>
@@ -782,11 +782,11 @@ export default function QuanLyNguoiDungPage() {
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1 || isLoading}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-xs"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-xs"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -794,7 +794,7 @@ export default function QuanLyNguoiDungPage() {
             Trước
           </button>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center">
             {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
               let p: number;
               if (totalPages <= 7) {
@@ -811,7 +811,7 @@ export default function QuanLyNguoiDungPage() {
                 <button
                   key={`page-${p}-${i}`}
                   onClick={() => setPage(p)}
-                  className={`w-9 h-9 text-sm font-bold rounded-xl transition-colors cursor-pointer shadow-xs border ${
+                  className={`w-8 h-8 sm:w-9 sm:h-9 text-xs sm:text-sm font-bold rounded-xl transition-colors cursor-pointer shadow-xs border ${
                     p === page
                       ? "bg-sky-500 text-white border-sky-500 shadow-md"
                       : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -826,7 +826,7 @@ export default function QuanLyNguoiDungPage() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages || isLoading}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-xs"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-xs"
           >
             Tiếp
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

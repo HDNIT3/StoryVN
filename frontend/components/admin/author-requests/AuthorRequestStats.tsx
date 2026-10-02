@@ -91,27 +91,27 @@ export function AuthorRequestStats({ currentFilter, onFilterChange }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {statCards.map((card) => {
         const isSelected = currentFilter === card.status;
         return (
           <button
             key={card.status}
             onClick={() => onFilterChange(card.status)}
-            className={`p-4 rounded-2xl border text-left transition-all duration-200 ${
+            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
               isSelected ? card.colorClasses.active : card.colorClasses.inactive
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.colorClasses.iconBg} ${card.colorClasses.iconText}`}>
+              <span className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center ${card.colorClasses.iconBg} ${card.colorClasses.iconText}`}>
                 {card.icon}
               </span>
               {isSelected && (
                 <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
               )}
             </div>
-            <p className="text-sm font-semibold text-slate-800">{card.label}</p>
-            <p className="text-xs text-slate-500 mt-0.5">{card.description}</p>
+            <p className="text-xs sm:text-sm font-bold text-slate-800 truncate">{card.label}</p>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 line-clamp-1">{card.description}</p>
           </button>
         );
       })}
