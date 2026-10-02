@@ -66,7 +66,7 @@ export function SocialAuthButtons() {
         id="btn-google-login"
         onClick={() => handleGoogleLogin()}
         disabled={isGoogleLoading}
-        className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-medium hover:bg-zinc-50 hover:border-zinc-300 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+        className="w-full flex items-center justify-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-xs sm:text-sm font-medium hover:bg-zinc-50 hover:border-zinc-300 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed shadow-xs cursor-pointer"
       >
         {isGoogleLoading ? (
           <svg

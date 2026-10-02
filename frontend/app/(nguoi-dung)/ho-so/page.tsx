@@ -89,10 +89,10 @@ function EditProfileModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-md p-5 sm:p-6 space-y-4 sm:space-y-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-zinc-900">Chỉnh sửa hồ sơ</h2>
+          <h2 className="text-base sm:text-lg font-bold text-zinc-900">Chỉnh sửa hồ sơ</h2>
           <button
             onClick={onClose}
             className="text-zinc-400 hover:text-zinc-600 cursor-pointer"
@@ -261,10 +261,10 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-md p-5 sm:p-6 space-y-4 sm:space-y-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-zinc-900">Đổi mật khẩu</h2>
+          <h2 className="text-base sm:text-lg font-bold text-zinc-900">Đổi mật khẩu</h2>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 cursor-pointer" aria-label="Đóng">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -374,7 +374,7 @@ export default function HoSoPage() {
   const authorProfile = authorData?.authorProfile;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-4xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10">
       {/* ─── Modals ─── */}
       {showEditProfile && (
         <EditProfileModal
@@ -392,13 +392,13 @@ export default function HoSoPage() {
       )}
 
       {/* ─── Profile Card ─── */}
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mb-6">
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-xs overflow-hidden mb-6">
         {/* Cover */}
-        <div className={`h-28 bg-gradient-to-br ${coverGradient}`} />
+        <div className={`h-24 sm:h-28 md:h-32 bg-gradient-to-br ${coverGradient}`} />
 
         {/* Avatar + Info */}
-        <div className="px-6 pb-6">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 mb-5">
+        <div className="px-4 sm:px-6 pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 -mt-10 sm:-mt-12 mb-4 sm:mb-5">
             {/* Avatar (Clickable to change immediately) */}
             <div className="relative group">
               <input
@@ -413,7 +413,7 @@ export default function HoSoPage() {
                 type="button"
                 onClick={() => !isUploadingAvatar && avatarInputRef.current?.click()}
                 disabled={isUploadingAvatar}
-                className="relative w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-sky-500 flex items-center justify-center overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-400 group-hover:shadow-xl transition-all block text-left"
+                className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-white shadow-md bg-sky-500 flex items-center justify-center overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-400 group-hover:shadow-lg transition-all block text-left"
                 title="Bấm để tải và đổi ảnh đại diện ngay"
               >
                 {user.avatarUrl ? (
@@ -426,7 +426,7 @@ export default function HoSoPage() {
                     unoptimized
                   />
                 ) : (
-                  <span className="text-white text-3xl font-bold">{avatarInitial}</span>
+                  <span className="text-white text-2xl sm:text-3xl font-bold">{avatarInitial}</span>
                 )}
 
                 {/* Overlay on hover */}
@@ -452,7 +452,7 @@ export default function HoSoPage() {
                 type="button"
                 onClick={() => !isUploadingAvatar && avatarInputRef.current?.click()}
                 disabled={isUploadingAvatar}
-                className="absolute -bottom-1 -right-1 w-7 h-7 bg-white text-slate-700 hover:text-sky-600 rounded-full border border-slate-200 shadow-md flex items-center justify-center cursor-pointer transition hover:scale-110 z-10"
+                className="absolute -bottom-1 -right-1 w-6.5 h-6.5 sm:w-7 sm:h-7 bg-white text-slate-700 hover:text-sky-600 rounded-full border border-slate-200 shadow-xs flex items-center justify-center cursor-pointer transition hover:scale-110 z-10"
                 title="Tải ảnh đại diện mới"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -474,9 +474,9 @@ export default function HoSoPage() {
           </div>
 
           {/* Info */}
-          <h1 className="text-2xl font-bold text-zinc-900">{user.displayName}</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">@{user.username}</p>
-          <p className="text-sm text-zinc-500 mt-0.5">{user.email}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 truncate">{user.displayName}</h1>
+          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 truncate">@{user.username}</p>
+          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 truncate">{user.email}</p>
 
           <div className="mt-4 flex flex-wrap gap-4 text-xs text-zinc-400">
             {user.createdAt && (
@@ -542,18 +542,18 @@ export default function HoSoPage() {
                 <p className="text-sm text-zinc-700">{authorProfile.biography}</p>
               </div>
             )}
-            <div className="grid grid-cols-3 gap-3 pt-2">
-              <div className="text-center p-3 bg-sky-50 rounded-xl">
-                <p className="text-xl font-bold text-sky-600">{authorProfile.storyCount || 0}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">Tác phẩm</p>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-2">
+              <div className="text-center p-2.5 sm:p-3 bg-sky-50 rounded-xl">
+                <p className="text-lg sm:text-xl font-bold text-sky-600">{authorProfile.storyCount || 0}</p>
+                <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5">Tác phẩm</p>
               </div>
-              <div className="text-center p-3 bg-sky-50 rounded-xl">
-                <p className="text-xl font-bold text-sky-600">{authorProfile.followerCount || 0}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">Theo dõi</p>
+              <div className="text-center p-2.5 sm:p-3 bg-sky-50 rounded-xl">
+                <p className="text-lg sm:text-xl font-bold text-sky-600">{authorProfile.followerCount || 0}</p>
+                <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5">Theo dõi</p>
               </div>
-              <div className="text-center p-3 bg-sky-50 rounded-xl">
-                <p className="text-xl font-bold text-sky-600">{authorProfile.totalViews || 0}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">Lượt xem</p>
+              <div className="text-center p-2.5 sm:p-3 bg-sky-50 rounded-xl">
+                <p className="text-lg sm:text-xl font-bold text-sky-600">{authorProfile.totalViews || 0}</p>
+                <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5">Lượt xem</p>
               </div>
             </div>
           </div>

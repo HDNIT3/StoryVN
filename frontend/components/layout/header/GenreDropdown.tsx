@@ -79,14 +79,14 @@ export function GenreDropdown({
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-haspopup="true"
-        className={`flex items-center gap-2 px-4.5 py-2.5 text-base font-semibold rounded-full transition-all duration-150 select-none ${
+        className={`flex items-center gap-1.5 2xl:gap-2 px-3 2xl:px-4 py-1.5 2xl:py-2 text-xs xl:text-sm 2xl:text-base font-semibold rounded-full transition-all duration-150 select-none whitespace-nowrap cursor-pointer ${
           open
             ? "bg-zinc-100 text-zinc-900"
             : "text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100/70"
         }`}
       >
         <span>{label}</span>
-        <div className="relative w-4 h-4 shrink-0 transition-transform duration-200">
+        <div className="relative w-3.5 h-3.5 2xl:w-4 2xl:h-4 shrink-0 transition-transform duration-200">
           <Image
             src={open ? chevronUpSrc : chevronDownSrc}
             alt="Dropdown arrow"

@@ -96,8 +96,8 @@ export function LoginForm({
       />
 
       {/* Options: Remember me & Forgot password */}
-      <div className="flex items-center justify-between text-sm pt-1.5">
-        <label className="flex items-center gap-2.5 cursor-pointer select-none text-zinc-700 font-medium">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm pt-1.5">
+        <label className="flex items-center gap-2 cursor-pointer select-none text-zinc-700 font-medium">
           <input
             type="checkbox"
             checked={rememberMe}
