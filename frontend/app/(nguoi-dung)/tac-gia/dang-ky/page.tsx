@@ -175,7 +175,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Thông tin cơ bản */}
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-xs p-4 sm:p-6 space-y-4">
         <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
           <span className="w-6 h-6 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center text-xs font-bold">1</span>
           Thông tin tác giả
@@ -223,11 +223,11 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
       </div>
 
       {/* Thông tin ngân hàng */}
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-xs p-4 sm:p-6 space-y-4">
         <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
           <span className="w-6 h-6 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center text-xs font-bold">2</span>
           Thông tin ngân hàng{" "}
-          <span className="text-xs font-normal text-zinc-400">(tùy chọn, có thể bổ sung sau)</span>
+          <span className="text-xs font-normal text-zinc-400">(tùy chọn)</span>
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -269,7 +269,7 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
       </div>
 
       {/* Lý do */}
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-xs p-4 sm:p-6 space-y-4">
         <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
           <span className="w-6 h-6 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center text-xs font-bold">3</span>
           Lý do đăng ký
@@ -364,21 +364,21 @@ export default function DangKyTacGiaPage() {
   const isAuthor = statusData?.isAuthor ?? false;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-4xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10">
       {/* Page header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center gap-3 mb-3">
           <button
             onClick={() => router.back()}
-            className="text-zinc-400 hover:text-zinc-700 p-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
+            className="text-zinc-400 hover:text-zinc-700 p-1.5 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-900">Đăng ký Tác giả</h1>
-            <p className="text-sm text-zinc-500 mt-0.5">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 truncate">Đăng ký Tác giả</h1>
+            <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 truncate">
               Chia sẻ tác phẩm của bạn với hàng nghìn độc giả trên StoryVN
             </p>
           </div>
@@ -386,9 +386,9 @@ export default function DangKyTacGiaPage() {
 
         {/* Benefits banner */}
         {!isAuthor && !hasExistingRequest && (
-          <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-5 text-white">
-            <h2 className="font-bold text-lg mb-2">✨ Quyền lợi khi là Tác giả</h2>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-4 sm:p-5 text-white">
+            <h2 className="font-bold text-base sm:text-lg mb-2">✨ Quyền lợi khi là Tác giả</h2>
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 text-xs sm:text-sm">
               <div className="flex items-center gap-2">
                 <span>📖</span> <span>Đăng tải tác phẩm</span>
               </div>

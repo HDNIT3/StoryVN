@@ -25,7 +25,7 @@ export function HeaderNavItem({
     <Link
       href={item.href}
       onClick={() => onClick?.(item)}
-      className={`inline-flex items-center justify-center px-4.5 py-2.5 text-base rounded-full transition-all duration-150 select-none ${activeClasses} ${className}`}
+      className={`inline-flex items-center justify-center px-3 2xl:px-4 py-1.5 2xl:py-2 text-xs xl:text-sm 2xl:text-base rounded-full transition-all duration-150 select-none whitespace-nowrap ${activeClasses} ${className}`}
     >
       {item.label}
     </Link>
