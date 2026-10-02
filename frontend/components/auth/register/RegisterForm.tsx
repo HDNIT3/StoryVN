@@ -157,12 +157,12 @@ export function RegisterForm({
 
       {/* Terms checkbox */}
       <div className="pt-2">
-        <label className="flex items-start gap-2.5 cursor-pointer select-none text-sm text-zinc-700 font-medium">
+        <label className="flex items-start gap-2.5 cursor-pointer select-none text-xs sm:text-sm text-zinc-700 font-medium">
           <input
             type="checkbox"
             checked={termsAccepted}
             onChange={(e) => setTermsAccepted(e.target.checked)}
-            className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+            className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-sky-600 focus:ring-sky-500 cursor-pointer shrink-0"
           />
           <span>
             Tôi đồng ý với{" "}
