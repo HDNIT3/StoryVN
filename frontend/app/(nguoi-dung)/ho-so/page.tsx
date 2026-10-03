@@ -1,15 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { Button, ImageUploader } from "@/components/ui";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { authorRequestService } from "@/lib/services/author-request.service";
-import { userService } from "@/lib/services/user.service";
+import {
+  useUserAuthorStatus,
+  useUpdateProfile,
+  useUpdateAvatar,
+  useChangePassword,
+} from "@/lib/hooks/queries/useUserQuery";
 import { uploadService } from "@/lib/services/upload.service";
 import { toast } from "@/lib/toast";
-import type { AuthorRequestStatusData } from "@/types/author";
 
 const ROLE_LABEL: Record<string, string> = {
   USER: "Người dùng",
@@ -49,8 +52,12 @@ function EditProfileModal({
 }) {
   const [displayName, setDisplayName] = useState(initialName);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl || "");
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const updateProfileMutation = useUpdateProfile();
+  const updateAvatarMutation = useUpdateAvatar();
+
+  const isSaving = updateProfileMutation.isPending || updateAvatarMutation.isPending;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,32 +68,26 @@ function EditProfileModal({
       return;
     }
 
-    setIsSaving(true);
     try {
       // Cập nhật displayName
       if (displayName.trim() !== initialName) {
-        const res = await userService.updateProfile({ displayName: displayName.trim() });
-        if (!res.success) throw new Error(res.message);
+        await updateProfileMutation.mutateAsync({ displayName: displayName.trim() });
       }
 
       // Cập nhật avatar nếu có URL mới
       if (avatarUrl.trim() && avatarUrl.trim() !== initialAvatarUrl) {
-        const res = await userService.updateAvatar({ avatarUrl: avatarUrl.trim() });
-        if (!res.success) throw new Error(res.message);
+        await updateAvatarMutation.mutateAsync({ avatarUrl: avatarUrl.trim() });
       }
 
-      toast.success("Cập nhật hồ sơ thành công!");
       onSaved();
     } catch (err: any) {
       const msg = err?.message && !err.message.includes("Failed to fetch")
         ? err.message
         : "Cập nhật thất bại, vui lòng thử lại";
       setError(msg);
-      toast.error(msg);
-    } finally {
-      setIsSaving(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
@@ -232,8 +233,9 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const changePasswordMutation = useChangePassword();
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,20 +245,18 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
     if (newPassword.length < 6) { setError("Mật khẩu mới phải có ít nhất 6 ký tự"); return; }
     if (newPassword !== confirmPassword) { setError("Xác nhận mật khẩu không khớp"); return; }
 
-    setIsSaving(true);
     try {
-      const res = await userService.changePassword({ oldPassword, newPassword, confirmPassword });
-      if (!res.success) throw new Error(res.message);
-      toast.success("Đổi mật khẩu thành công!");
+      await changePasswordMutation.mutateAsync({
+        oldPassword,
+        newPassword,
+        confirmPassword,
+      });
       onClose();
     } catch (err: any) {
       const msg = err?.message && !err.message.includes("Failed to fetch")
         ? err.message
         : "Đổi mật khẩu thất bại, vui lòng thử lại";
       setError(msg);
-      toast.error(msg);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -284,10 +284,10 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
           <PasswordField id="cp-confirm" label="Xác nhận mật khẩu mới" value={confirmPassword} onChange={setConfirmPassword} show={showConfirm} onToggle={() => setShowConfirm(!showConfirm)} />
 
           <div className="flex gap-3 pt-2">
-            <Button id="btn-cp-cancel" type="button" variant="outline" fullWidth onClick={onClose} disabled={isSaving}>
+            <Button id="btn-cp-cancel" type="button" variant="outline" fullWidth onClick={onClose} disabled={changePasswordMutation.isPending}>
               Huỷ
             </Button>
-            <Button id="btn-cp-save" type="submit" variant="primary" fullWidth isLoading={isSaving}>
+            <Button id="btn-cp-save" type="submit" variant="primary" fullWidth isLoading={changePasswordMutation.isPending}>
               Đổi mật khẩu
             </Button>
           </div>
@@ -301,11 +301,17 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
 export default function HoSoPage() {
   const { user, logout, refreshUser } = useAuth();
   const router = useRouter();
-  const [authorData, setAuthorData] = useState<AuthorRequestStatusData | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+  const updateAvatarMutation = useUpdateAvatar();
+
+  // TanStack Query: Lấy trạng thái yêu cầu tác giả
+  const { data: authorData } = useUserAuthorStatus(
+    !!user && (user.role === "USER" || user.role === "AUTHOR")
+  );
 
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -328,13 +334,8 @@ export default function HoSoPage() {
     try {
       const uploadRes = await uploadService.uploadImage(file, "avatars");
       if (uploadRes.success && uploadRes.data?.url) {
-        const updateRes = await userService.updateAvatar({ avatarUrl: uploadRes.data.url });
-        if (updateRes.success) {
-          await refreshUser();
-          toast.success("Cập nhật ảnh đại diện thành công!");
-        } else {
-          throw new Error(updateRes.message || "Cập nhật ảnh đại diện thất bại");
-        }
+        await updateAvatarMutation.mutateAsync({ avatarUrl: uploadRes.data.url });
+        await refreshUser();
       } else {
         throw new Error(uploadRes.message || "Tải ảnh lên thất bại");
       }
@@ -351,15 +352,6 @@ export default function HoSoPage() {
       }
     }
   };
-
-  useEffect(() => {
-    if (user?.role === "USER" || user?.role === "AUTHOR") {
-      authorRequestService
-        .getAuthorProfileAndRequestStatus()
-        .then((res) => setAuthorData(res.data))
-        .catch(() => setAuthorData(null));
-    }
-  }, [user]);
 
   if (!user) return null;
 
