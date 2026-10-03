@@ -3,7 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { authorRequestService } from "@/lib/services/author-request.service";
+import {
+  useMyAuthorStatus,
+  useCreateAuthorRequest,
+  useUpdateAuthorRequest,
+} from "@/lib/hooks/queries/useAuthorRequestQuery";
 import type {
   CreateAuthorRequestPayload,
   AuthorRequestStatusData,
@@ -11,6 +15,8 @@ import type {
 } from "@/types/author";
 import { Button } from "@/components/ui";
 import { toast } from "@/lib/toast";
+
+
 
 // ─── Status component ────────────────────────────────────────────
 function RequestStatusCard({
@@ -301,66 +307,42 @@ function AuthorRequestForm({ initialData, onSubmit, isLoading, isEditing }: Auth
 export default function DangKyTacGiaPage() {
   const { user } = useAuth();
   const router = useRouter();
-
-  const [statusData, setStatusData] = useState<AuthorRequestStatusData | null>(null);
-  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
 
-  // Nếu đã là AUTHOR thì không cần vào trang này
+  // Nếu đã là ADMIN hoặc MANAGER thì chuyển hướng
   useEffect(() => {
     if (user?.role === "ADMIN" || user?.role === "MANAGER") {
       router.replace("/quan-ly/duyet-tac-gia");
     }
   }, [user, router]);
 
-  const fetchStatus = async () => {
-    setIsLoadingStatus(true);
-    try {
-      const res = await authorRequestService.getAuthorProfileAndRequestStatus();
-      setStatusData(res.data);
-    } catch (err: any) {
-      // Nếu chưa có yêu cầu nào (người dùng mới) thì hiển thị form
-      setStatusData(null);
-    } finally {
-      setIsLoadingStatus(false);
-    }
-  };
+  // TanStack Query: Lấy trạng thái đăng ký tác giả
+  const { data: statusData, isLoading: isLoadingStatus } = useMyAuthorStatus();
 
-  useEffect(() => {
-    fetchStatus();
-  }, []);
+  // Mutations
+  const createMutation = useCreateAuthorRequest();
+  const updateMutation = useUpdateAuthorRequest();
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const handleCreate = async (payload: CreateAuthorRequestPayload) => {
-    setIsSubmitting(true);
     try {
-      await authorRequestService.createRequest(payload);
-      toast.success("Gửi yêu cầu nâng cấp tác giả thành công! Chúng tôi sẽ xét duyệt sớm nhất.");
+      await createMutation.mutateAsync(payload);
       setShowEditForm(false);
-      await fetchStatus();
-    } catch (err: any) {
-      toast.error(err?.message || "Gửi yêu cầu thất bại, vui lòng thử lại");
-    } finally {
-      setIsSubmitting(false);
+    } catch {
+      // Error handled by mutation onError
     }
   };
 
   const handleUpdate = async (payload: CreateAuthorRequestPayload) => {
-    setIsSubmitting(true);
     try {
-      await authorRequestService.updateRequest(payload);
-      toast.success("Cập nhật yêu cầu thành công!");
+      await updateMutation.mutateAsync(payload);
       setShowEditForm(false);
-      await fetchStatus();
-    } catch (err: any) {
-      toast.error(err?.message || "Cập nhật thất bại, vui lòng thử lại");
-    } finally {
-      setIsSubmitting(false);
+    } catch {
+      // Error handled by mutation onError
     }
   };
 
   const hasExistingRequest = statusData?.request !== null && statusData?.request !== undefined;
-  const canEdit = statusData?.canEdit ?? false;
   const isAuthor = statusData?.isAuthor ?? false;
 
   return (
@@ -472,3 +454,4 @@ export default function DangKyTacGiaPage() {
     </div>
   );
 }
+
