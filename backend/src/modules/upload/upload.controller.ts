@@ -19,6 +19,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
+import { RateLimit } from '../../common/guards/rate-limit.guard.js';
 import { UploadService } from './upload.service.js';
 
 @ApiTags('Upload')
@@ -26,7 +27,7 @@ import { UploadService } from './upload.service.js';
 @UseGuards(AuthGuard)
 @Controller('upload')
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(private readonly uploadService: UploadService) { }
 
   @ApiOperation({ summary: 'Tải lên hình ảnh (tự động chuyển đổi giữa Local và Cloudinary)' })
   @ApiConsumes('multipart/form-data')
@@ -48,6 +49,7 @@ export class UploadController {
       },
     },
   })
+  @RateLimit(3, 60) // 3 lần/phút - chống flood upload ảnh
   @Post('image')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
