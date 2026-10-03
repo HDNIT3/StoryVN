@@ -7,6 +7,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { RateLimit } from '../../../common/guards/rate-limit.guard.js';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import { AuthGuard } from '../../../common/guards/auth.guard.js';
@@ -25,9 +26,10 @@ import { AuthService } from '../services/auth.service.js';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @ApiOperation({ summary: 'Đăng ký tài khoản mới (gửi mã OTP qua email)' })
+  @RateLimit(5, 60) // 3 lần/phút - chống spam đăng ký
   @Post('register')
   @HttpCode(HttpStatus.OK)
   async register(@Body() dto: RegisterDto) {
@@ -42,6 +44,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Gửi lại mã OTP đăng ký' })
+  @RateLimit(5, 60) // 3 lần/phút - chống spam OTP
   @Post('resend-register-otp')
   @HttpCode(HttpStatus.OK)
   async resendOtp(@Body() dto: ResendOtpDto) {
@@ -49,6 +52,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Đăng nhập bằng email và mật khẩu' })
+  @RateLimit(10, 60) // 10 lần/phút - chống brute-force
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
@@ -56,6 +60,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Đăng nhập bằng tài khoản Google' })
+  @RateLimit(10, 60) // 10 lần/phút
   @Post('google')
   @HttpCode(HttpStatus.OK)
   async googleLogin(@Body() dto: GoogleLoginDto) {
@@ -84,6 +89,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Yêu cầu đổi / đặt lại mật khẩu (gửi OTP qua email)' })
+  @RateLimit(3, 60) // 3 lần/phút - chống spam email reset
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -91,6 +97,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Đặt lại mật khẩu với mã OTP' })
+  @RateLimit(5, 60) // 5 lần/phút
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() dto: ResetPasswordDto) {

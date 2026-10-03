@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { authorRequestService } from "@/lib/services/author-request.service";
+import React, { useState } from "react";
 import type { AuthorRequestItem } from "@/types/author";
-import { toast } from "@/lib/toast";
+import {
+  useAdminAuthorRequests,
+  useReviewAuthorRequest,
+} from "@/lib/hooks/queries/useAdminQuery";
 
 import {
   AuthorRequestStats,
@@ -20,17 +22,12 @@ interface ReviewModalState {
   request: AuthorRequestItem | null;
   action: "APPROVED" | "REJECTED" | null;
   adminNote: string;
-  isLoading: boolean;
 }
 
 export default function DuyetTacGiaPage() {
-  const [items, setItems] = useState<AuthorRequestItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>("PENDING");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
 
   // Modal chi tiết
   const [detailRequest, setDetailRequest] = useState<AuthorRequestItem | null>(null);
@@ -41,37 +38,33 @@ export default function DuyetTacGiaPage() {
     request: null,
     action: null,
     adminNote: "",
-    isLoading: false,
   });
 
-  // Hàm tải dữ liệu danh sách yêu cầu
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params: any = { page, limit: 10 };
-      if (filter !== "ALL") params.status = filter;
-      if (search.trim()) params.search = search.trim();
+  // Query lấy danh sách yêu cầu với TanStack Query
+  const { data, isLoading, isPlaceholderData, refetch } = useAdminAuthorRequests({
+    page,
+    limit: 10,
+    status: filter !== "ALL" ? filter : undefined,
+    search: search.trim() || undefined,
+  });
 
-      const res = await authorRequestService.findAllRequests(params);
-      if (res.success) {
-        setItems(res.data.items);
-        setTotalPages(res.data.pagination.totalPages);
-        setTotalItems(res.data.pagination.totalItems);
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "Không thể tải danh sách yêu cầu");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filter, search, page]);
+  // Mutation duyệt/từ chối
+  const reviewMutation = useReviewAuthorRequest();
 
-  useEffect(() => {
+  const items = data?.items ?? [];
+  const totalPages = data?.pagination?.totalPages ?? 1;
+  const totalItems = data?.pagination?.totalItems ?? 0;
+
+  // Xử lý đổi filter hoặc search -> reset về trang 1
+  const handleFilterChange = (newFilter: FilterStatus) => {
+    setFilter(newFilter);
     setPage(1);
-  }, [filter, search]);
+  };
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const handleSearchChange = (newSearch: string) => {
+    setSearch(newSearch);
+    setPage(1);
+  };
 
   // Xử lý mở modal xét duyệt
   const handleOpenReview = (request: AuthorRequestItem, action: "APPROVED" | "REJECTED") => {
@@ -80,7 +73,6 @@ export default function DuyetTacGiaPage() {
       request,
       action,
       adminNote: "",
-      isLoading: false,
     });
   };
 
@@ -90,31 +82,24 @@ export default function DuyetTacGiaPage() {
       request: null,
       action: null,
       adminNote: "",
-      isLoading: false,
     });
   };
 
   // Gửi API xét duyệt
   const handleSubmitReview = async () => {
     if (!reviewModal.request || !reviewModal.action) return;
-    setReviewModal((prev) => ({ ...prev, isLoading: true }));
     try {
-      const res = await authorRequestService.reviewRequest(
-        reviewModal.request._id,
-        {
-          status: reviewModal.action,
-          adminNote: reviewModal.adminNote.trim() || undefined,
-        }
-      );
-      toast.success(res.message || "Xử lý thành công!");
+      await reviewMutation.mutateAsync({
+        id: reviewModal.request._id,
+        status: reviewModal.action,
+        adminNote: reviewModal.adminNote,
+      });
       handleCloseReview();
       if (detailRequest?._id === reviewModal.request._id) {
         setDetailRequest(null);
       }
-      fetchData();
-    } catch (err: any) {
-      toast.error(err?.message || "Xử lý thất bại!");
-      setReviewModal((prev) => ({ ...prev, isLoading: false }));
+    } catch {
+      // Error handled by mutation onError
     }
   };
 
@@ -133,17 +118,17 @@ export default function DuyetTacGiaPage() {
       {/* Thẻ thống kê & chọn bộ lọc */}
       <AuthorRequestStats
         currentFilter={filter}
-        onFilterChange={setFilter}
+        onFilterChange={handleFilterChange}
         totalItems={totalItems}
       />
 
       {/* Thanh tìm kiếm & Làm mới */}
       <AuthorRequestFilterBar
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={handleSearchChange}
         isLoading={isLoading}
         totalItems={totalItems}
-        onRefresh={fetchData}
+        onRefresh={() => refetch()}
       />
 
       {/* Bảng dữ liệu danh sách */}
@@ -174,7 +159,7 @@ export default function DuyetTacGiaPage() {
         request={reviewModal.request}
         action={reviewModal.action}
         adminNote={reviewModal.adminNote}
-        isLoading={reviewModal.isLoading}
+        isLoading={reviewMutation.isPending}
         onAdminNoteChange={(val) => setReviewModal((prev) => ({ ...prev, adminNote: val }))}
         onClose={handleCloseReview}
         onSubmit={handleSubmitReview}
@@ -182,3 +167,4 @@ export default function DuyetTacGiaPage() {
     </div>
   );
 }
+
