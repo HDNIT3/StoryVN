@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
-  adminUserService,
   type AdminUserItem,
   type QueryAdminUsersParams,
 } from "@/lib/services/admin-user.service";
+import {
+  useAdminUsers,
+  useAdminUserStats,
+  useUpdateUserStatus,
+  useUpdateUserRole,
+} from "@/lib/hooks/queries/useAdminQuery";
 import { useAuth } from "@/lib/context/AuthContext";
-import { toast } from "@/lib/toast";
 import type { UserRole, UserStatus } from "@/types/user";
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -329,23 +333,18 @@ function ConfirmActionModal({
 
 // ─── Main Page ────────────────────────────────────────────────────
 
+// ─── Main Page ────────────────────────────────────────────────────
+
 export default function QuanLyNguoiDungPage() {
   const { user: currentUser } = useAuth();
 
-  // State
-  const [items, setItems] = useState<AdminUserItem[]>([]);
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
-
+  // Search & Filter State
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("ALL");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(12);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
 
   const [selectedUser, setSelectedUser] = useState<AdminUserItem | null>(null);
   const [confirmModal, setConfirmModal] = useState<ConfirmModal>({
@@ -356,57 +355,52 @@ export default function QuanLyNguoiDungPage() {
     isLoading: false,
   });
 
-  // ── Fetch stats ──
-  const fetchStats = useCallback(async () => {
-    setStatsLoading(true);
-    try {
-      const res = await adminUserService.getStats();
-      if (res.success) setStats(res.data as any);
-    } catch {
-      // silent
-    } finally {
-      setStatsLoading(false);
-    }
-  }, []);
+  // ── TanStack Query: Stats & List ──
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useAdminUserStats();
 
-  // ── Fetch list ──
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params: QueryAdminUsersParams = { page, limit };
-      if (roleFilter !== "ALL") params.role = roleFilter as UserRole;
-      if (statusFilter !== "ALL") params.status = statusFilter as UserStatus;
-      if (search.trim()) params.search = search.trim();
+  const queryParams: QueryAdminUsersParams = {
+    page,
+    limit,
+    role: roleFilter !== "ALL" ? (roleFilter as UserRole) : undefined,
+    status: statusFilter !== "ALL" ? (statusFilter as UserStatus) : undefined,
+    search: search.trim() || undefined,
+  };
 
-      const res = await adminUserService.findAll(params);
-      if (res.success) {
-        setItems(res.data.items);
-        setTotalPages(res.data.pagination.totalPages);
-        setTotalItems(res.data.pagination.totalItems);
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "Không thể tải danh sách người dùng");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, limit, roleFilter, statusFilter, search]);
+  const {
+    data: usersData,
+    isLoading,
+    refetch: refetchUsers,
+  } = useAdminUsers(queryParams);
 
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  const items = usersData?.items ?? [];
+  const totalPages = usersData?.pagination?.totalPages ?? 1;
+  const totalItems = usersData?.pagination?.totalItems ?? 0;
 
-  useEffect(() => {
-    setPage(1);
-  }, [roleFilter, statusFilter, search, limit]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // ── TanStack Mutations ──
+  const updateStatusMutation = useUpdateUserStatus();
+  const updateRoleMutation = useUpdateUserRole();
 
   // ── Search submit ──
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput);
+    setPage(1);
+  };
+
+  // ── Filter change handlers ──
+  const handleRoleFilterChange = (val: RoleFilter) => {
+    setRoleFilter(val);
+    setPage(1);
+  };
+
+  const handleStatusFilterChange = (val: StatusFilter) => {
+    setStatusFilter(val);
+    setPage(1);
+  };
+
+  const handleLimitChange = (val: number) => {
+    setLimit(val);
+    setPage(1);
   };
 
   // ── Open confirm modals ──
@@ -451,27 +445,18 @@ export default function QuanLyNguoiDungPage() {
     setConfirmModal((prev) => ({ ...prev, isLoading: true }));
     try {
       if (confirmModal.action === "ban" || confirmModal.action === "unban") {
-        await adminUserService.updateStatus(confirmModal.userId, {
+        await updateStatusMutation.mutateAsync({
+          userId: confirmModal.userId,
           status: confirmModal.newStatus!,
         });
-        toast.success(
-          confirmModal.action === "ban"
-            ? "Đã cấm tài khoản thành công!"
-            : "Đã mở khóa tài khoản thành công!"
-        );
       } else if (confirmModal.action === "role") {
-        await adminUserService.updateRole(confirmModal.userId, {
+        await updateRoleMutation.mutateAsync({
+          userId: confirmModal.userId,
           role: confirmModal.newRole!,
         });
-        toast.success(
-          `Đã đổi vai trò thành ${ROLE_LABEL[confirmModal.newRole!]} thành công!`
-        );
       }
       setConfirmModal({ open: false, userId: "", username: "", action: "ban", isLoading: false });
-      fetchData();
-      fetchStats();
-    } catch (err: any) {
-      toast.error(err?.message || "Thao tác thất bại!");
+    } catch {
       setConfirmModal((prev) => ({ ...prev, isLoading: false }));
     }
   };
@@ -506,7 +491,10 @@ export default function QuanLyNguoiDungPage() {
           </p>
         </div>
         <button
-          onClick={() => { fetchData(); fetchStats(); }}
+          onClick={() => {
+            refetchUsers();
+            refetchStats();
+          }}
           disabled={isLoading}
           className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-60 cursor-pointer shadow-xs"
         >
@@ -516,6 +504,7 @@ export default function QuanLyNguoiDungPage() {
           Làm mới
         </button>
       </div>
+
 
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -600,7 +589,7 @@ export default function QuanLyNguoiDungPage() {
           <select
             id="filter-role"
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+            onChange={(e) => handleRoleFilterChange(e.target.value as RoleFilter)}
             className="flex-1 sm:flex-initial text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-400/40 cursor-pointer"
           >
             <option value="ALL">Tất cả vai trò</option>
@@ -614,7 +603,7 @@ export default function QuanLyNguoiDungPage() {
           <select
             id="filter-status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            onChange={(e) => handleStatusFilterChange(e.target.value as StatusFilter)}
             className="flex-1 sm:flex-initial text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-400/40 cursor-pointer"
           >
             <option value="ALL">Tất cả trạng thái</option>
@@ -637,7 +626,13 @@ export default function QuanLyNguoiDungPage() {
             </p>
             {(search || roleFilter !== "ALL" || statusFilter !== "ALL") && (
               <button
-                onClick={() => { setSearch(""); setSearchInput(""); setRoleFilter("ALL"); setStatusFilter("ALL"); }}
+                onClick={() => {
+                  setSearch("");
+                  setSearchInput("");
+                  setRoleFilter("ALL");
+                  setStatusFilter("ALL");
+                  setPage(1);
+                }}
                 className="text-xs font-semibold text-slate-500 hover:text-slate-700 underline cursor-pointer"
               >
                 Xoá bộ lọc
@@ -653,7 +648,7 @@ export default function QuanLyNguoiDungPage() {
             <select
               id="select-limit"
               value={limit}
-              onChange={(e) => setLimit(Number(e.target.value))}
+              onChange={(e) => handleLimitChange(Number(e.target.value))}
               className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400/40 cursor-pointer"
             >
               <option value={10}>10 / trang</option>
