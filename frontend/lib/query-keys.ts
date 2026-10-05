@@ -25,4 +25,16 @@ export const queryKeys = {
       ["admin", "author-requests", ...(params ? [params] : [])] as const,
     authorRequestStats: ["admin", "author-requests", "stats"] as const,
   },
+  tags: {
+    all: ["tags"] as const,
+    list: (params?: Record<string, any>) =>
+      ["tags", "list", ...(params ? [params] : [])] as const,
+    detail: (id: string) => ["tags", "detail", id] as const,
+  },
+  categories: {
+    all: ["categories"] as const,
+    list: (params?: Record<string, any>) =>
+      ["categories", "list", ...(params ? [params] : [])] as const,
+    detail: (id: string) => ["categories", "detail", id] as const,
+  },
 } as const;
