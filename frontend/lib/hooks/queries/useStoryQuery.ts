@@ -113,3 +113,34 @@ export function useUpdateStory() {
     },
   });
 }
+
+/**
+ * Mutation Tác giả gửi phản hồi / giải trình khi bị từ chối duyệt
+ */
+export function useAppealStory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      feedback,
+    }: {
+      id: string;
+      feedback: string;
+    }) => {
+      const res = await storyService.appealStory(id, { feedback });
+      return res;
+    },
+    onSuccess: () => {
+      toast.success(
+        "Lời giải trình của bạn đã được chuyển tới Ban quản trị để xem xét lại.",
+        { title: "Gửi phản hồi thành công" }
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.stories.all });
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || "Không thể gửi phản hồi";
+      toast.error(msg, { title: "Gửi phản hồi thất bại" });
+    },
+  });
+}

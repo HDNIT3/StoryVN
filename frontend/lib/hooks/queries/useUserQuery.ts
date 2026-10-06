@@ -103,3 +103,56 @@ export function useChangePassword() {
     },
   });
 }
+
+/**
+ * Mutation Cập nhật ảnh bìa
+ */
+export function useUpdateCover() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (coverUrl: string) => {
+      const res = await userService.updateCover(coverUrl);
+      if (!res.success) throw new Error(res.message);
+      return res;
+    },
+    onSuccess: () => {
+      toast.success("Cập nhật ảnh bìa thành công!");
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.profile });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Cập nhật ảnh bìa thất bại");
+    },
+  });
+}
+
+/**
+ * Mutation Cập nhật hồ sơ tác giả
+ */
+export function useUpdateAuthorProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: {
+      penName?: string;
+      biography?: string;
+      website?: string;
+      socialLinks?: Record<string, any>;
+      bankName?: string;
+      bankAccountNumber?: string;
+      bankAccountName?: string;
+    }) => {
+      const res = await authorRequestService.updateAuthorProfile(payload);
+      if (!res.success) throw new Error(res.message);
+      return res;
+    },
+    onSuccess: () => {
+      toast.success("Cập nhật hồ sơ tác giả thành công!");
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.authorStatus });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Cập nhật hồ sơ tác giả thất bại");
+    },
+  });
+}

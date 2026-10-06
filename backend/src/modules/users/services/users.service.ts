@@ -94,6 +94,15 @@ export class UsersService {
     if (dto.displayName !== undefined) {
       user.displayName = dto.displayName.trim();
     }
+    if (dto.bio !== undefined) {
+      user.bio = dto.bio?.trim() || null;
+    }
+    if (dto.coverUrl !== undefined) {
+      user.coverUrl = dto.coverUrl?.trim() || null;
+    }
+    if (dto.avatarUrl !== undefined) {
+      user.avatarUrl = dto.avatarUrl?.trim() || null;
+    }
 
     return user.save();
   }
@@ -108,6 +117,19 @@ export class UsersService {
     }
 
     user.avatarUrl = dto.avatarUrl.trim();
+    return user.save();
+  }
+
+  async updateCover(
+    userId: string,
+    coverUrl: string,
+  ): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+    }
+
+    user.coverUrl = coverUrl?.trim() || null;
     return user.save();
   }
 

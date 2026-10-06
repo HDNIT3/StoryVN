@@ -118,4 +118,43 @@ export class MailService {
 
     return this.sendMail(to, subject, html);
   }
+
+  async sendStoryApproved(to: string, displayName: string, storyTitle: string) {
+    const subject = `StoryVN - Tác phẩm "${storyTitle}" đã được phê duyệt`;
+    const html = `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+      <h2 style="color: #2b6cb0;">Chúc mừng bạn! Tác phẩm đã được xuất bản</h2>
+      <p>Xin chào <strong>${displayName}</strong>,</p>
+      <p>Tác phẩm <strong>"${storyTitle}"</strong> của bạn đã được Ban quản trị StoryVN kiểm duyệt và phê duyệt xuất bản công khai thành công.</p>
+      <p>Độc giả hiện đã có thể tìm kiếm, theo dõi và đọc các chương truyện của bạn trên hệ thống.</p>
+      <p>Chúc bạn có thêm nhiều cảm hứng sáng tác và gặt hái nhiều thành công trên StoryVN!</p>
+    </div>`;
+
+    return this.sendMail(to, subject, html);
+  }
+
+  async sendStoryRejected(
+    to: string,
+    displayName: string,
+    storyTitle: string,
+    reason: string,
+  ) {
+    const subject = `StoryVN - Kết quả kiểm duyệt tác phẩm "${storyTitle}"`;
+    const html = `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+      <h2 style="color: #c53030;">Thông báo kết quả kiểm duyệt tác phẩm</h2>
+      <p>Xin chào <strong>${displayName}</strong>,</p>
+      <p>Rất tiếc, tác phẩm <strong>"${storyTitle}"</strong> của bạn chưa đáp ứng đủ tiêu chuẩn để xuất bản công khai tại thời điểm này.</p>
+      <div style="background-color: #fff5f5; border-left: 4px solid #e53e3e; padding: 12px 16px; margin: 16px 0;">
+        <p style="margin: 0; font-weight: bold; color: #c53030;">Lý do từ chối:</p>
+        <p style="margin: 8px 0 0 0; color: #4a5568;">${reason}</p>
+      </div>
+      <p><strong>Bạn có thể:</strong></p>
+      <ul>
+        <li>Chỉnh sửa lại thông tin tác phẩm (tiêu đề, ảnh bìa, văn án, thể loại...) và gửi lại yêu cầu kiểm duyệt.</li>
+        <li>Hoặc gửi phản hồi giải trình trực tiếp trên trang quản lý tác phẩm nếu bạn cho rằng lý do từ chối chưa thỏa đáng. Ban quản trị sẽ tiếp nhận và xem xét lại.</li>
+      </ul>
+      <p>Cảm ơn sự đóng góp của bạn cho cộng đồng StoryVN!</p>
+    </div>`;
+
+    return this.sendMail(to, subject, html);
+  }
 }

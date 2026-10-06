@@ -159,7 +159,7 @@ export function AuthorRequestDetailModal({
                 </div>
                 {request.adminNote && (
                   <div className="pt-2 border-t border-slate-200/60">
-                    <span className="text-slate-400 block mb-1">Ghi chú từ Ban quản trị:</span>
+                    <span className="text-slate-400 block mb-1">Ghi chú kiểm duyệt:</span>
                     <p className="text-slate-800 italic bg-white p-2.5 rounded-lg border border-slate-200">
                       &quot;{request.adminNote}&quot;
                     </p>

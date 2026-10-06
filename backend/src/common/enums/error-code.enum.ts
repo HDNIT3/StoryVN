@@ -195,4 +195,20 @@ export const ErrorCode = {
     error: 'STORY_SLUG_EXISTS',
     message: 'Đường dẫn (slug) tác phẩm đã tồn tại trên hệ thống',
   },
+  STORY_ALREADY_PROCESSED: {
+    error: 'STORY_ALREADY_PROCESSED',
+    message: 'Tác phẩm này đã được xử lý duyệt trước đó',
+  },
+  REJECT_REASON_REQUIRED: {
+    error: 'REJECT_REASON_REQUIRED',
+    message: 'Vui lòng cung cấp lý do từ chối tác phẩm',
+  },
+  STORY_NOT_REJECTED: {
+    error: 'STORY_NOT_REJECTED',
+    message: 'Chỉ tác phẩm đang ở trạng thái bị từ chối mới có thể gửi phản hồi khiếu nại',
+  },
+  APPEAL_FEEDBACK_REQUIRED: {
+    error: 'APPEAL_FEEDBACK_REQUIRED',
+    message: 'Vui lòng nhập nội dung phản hồi / giải trình của bạn',
+  },
 };

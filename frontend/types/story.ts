@@ -18,6 +18,7 @@ export interface StoryStats {
   ratingAverage: number;
   chapterCount: number;
   wordCount?: number;
+  likeCount: number;
 }
 
 export interface StoryItem {
@@ -41,6 +42,8 @@ export interface StoryItem {
   stats: StoryStats;
   authorPenName?: string;
   rejectReason?: string | null;
+  authorFeedback?: string | null;
+  appealedAt?: string | null;
   publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -92,3 +95,80 @@ export interface StoryApiResponse<T = any> {
   message: string;
   data: T;
 }
+
+export interface StoryAuthorInfo {
+  _id: string;
+  displayName: string;
+  username: string;
+  email?: string;
+  avatarUrl?: string | null;
+  penName?: string;
+  biography?: string;
+}
+
+export interface AdminStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  description: string;
+  coverUrl?: string | null;
+  genreIds?: PopulatedRef[];
+  tagIds?: PopulatedRef[];
+  status: StoryStatus;
+  visibility: StoryVisibility;
+  ageRating?: StoryAgeRating;
+  progressState?: StoryProgressState;
+  originType?: StoryOriginType;
+  authorNote?: string;
+  rejectReason?: string | null;
+  authorFeedback?: string | null;
+  appealedAt?: string | null;
+  reviewedBy?: {
+    _id: string;
+    displayName: string;
+    username: string;
+    avatarUrl?: string | null;
+  } | null;
+  reviewedAt?: string | null;
+  publishedAt?: string | null;
+  stats?: StoryStats;
+  authorId?: string | StoryAuthorInfo;
+  author?: StoryAuthorInfo | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type StoryReviewDecision = "APPROVED" | "REJECTED";
+
+export interface ReviewStoryPayload {
+  action: StoryReviewDecision;
+  rejectReason?: string;
+}
+
+export interface AppealStoryPayload {
+  feedback: string;
+}
+
+export interface QueryAdminStoriesParams {
+  status?: StoryStatus | "ALL";
+  search?: string;
+  hasAppeal?: boolean;
+  page?: number;
+  limit?: number;
+  sortBy?: "createdAt" | "updatedAt" | "appealedAt" | "title";
+  sortOrder?: "asc" | "desc";
+}
+
+export interface AdminStoryStatsData {
+  total: number;
+  pending: number;
+  published: number;
+  rejected: number;
+  appealed: number;
+}
+
+export interface PaginatedAdminStories {
+  items: AdminStoryItem[];
+  pagination: PaginationMeta;
+}
+

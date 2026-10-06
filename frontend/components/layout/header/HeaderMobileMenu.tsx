@@ -277,21 +277,32 @@ export function HeaderMobileMenu({
                       </button>
 
                       {isGenresExpanded && (
-                        <div className="grid grid-cols-2 gap-1.5 pl-3 pr-2 py-2 bg-zinc-50 rounded-2xl my-1 border border-zinc-100 max-h-60 overflow-y-auto">
-                          {genres.map((g) => (
+                        <div className="pl-3 pr-2 py-2 bg-zinc-50 rounded-2xl my-1 border border-zinc-100">
+                          <div className="grid grid-cols-2 gap-1.5 max-h-56 overflow-y-auto">
+                            {genres.map((g) => (
+                              <Link
+                                key={g.id}
+                                href={g.href}
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  onGenreClick?.(g);
+                                }}
+                                className="px-2 py-1.5 text-xs text-zinc-600 hover:text-sky-600 hover:bg-white rounded-lg flex justify-between transition-colors"
+                              >
+                                <span className="truncate">{g.name}</span>
+                                {g.count && <span className="text-[10px] text-zinc-400 font-medium">{g.count}</span>}
+                              </Link>
+                            ))}
+                          </div>
+                          <div className="pt-2 mt-2 border-t border-zinc-200/60">
                             <Link
-                              key={g.id}
-                              href={g.href}
-                              onClick={() => {
-                                setIsOpen(false);
-                                onGenreClick?.(g);
-                              }}
-                              className="px-2 py-1.5 text-xs text-zinc-600 hover:text-sky-600 hover:bg-white rounded-lg flex justify-between transition-colors"
+                              href="/the-loai"
+                              onClick={() => setIsOpen(false)}
+                              className="w-full py-1.5 text-center text-xs font-semibold text-indigo-600 hover:text-indigo-700 block bg-white rounded-lg border border-indigo-100 shadow-xs"
                             >
-                              <span className="truncate">{g.name}</span>
-                              {g.count && <span className="text-[10px] text-zinc-400 font-medium">{g.count}</span>}
+                              Xem trang tất cả thể loại →
                             </Link>
-                          ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -360,7 +371,7 @@ export function HeaderMobileMenu({
                       <svg className="w-4.5 h-4.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
-                      <span>Bảng quản lý</span>
+                      <span>{roleKey === "ADMIN" ? "Bảng quản trị" : "Bảng quản lý"}</span>
                     </Link>
                   )}
 

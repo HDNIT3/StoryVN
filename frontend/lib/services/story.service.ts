@@ -57,6 +57,19 @@ export const storyService = {
       payload
     );
   },
+
+  /**
+   * Tác giả gửi phản hồi / giải trình khi tác phẩm bị từ chối duyệt
+   */
+  async appealStory(
+    id: string,
+    payload: { feedback: string }
+  ): Promise<StoryApiResponse<StoryItem>> {
+    return api.post<StoryApiResponse<StoryItem>>(
+      `/stories/my/${id}/appeal`,
+      payload
+    );
+  },
 };
 
 export default storyService;

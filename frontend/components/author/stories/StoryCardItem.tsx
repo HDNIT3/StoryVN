@@ -6,6 +6,7 @@ interface StoryCardItemProps {
   story: StoryItem;
   onEdit: (story: StoryItem) => void;
   onSubmitReview?: (story: StoryItem) => void;
+  onAppeal?: (story: StoryItem) => void;
   isSubmittingReview?: boolean;
 }
 
@@ -13,6 +14,7 @@ export function StoryCardItem({
   story,
   onEdit,
   onSubmitReview,
+  onAppeal,
   isSubmittingReview = false,
 }: StoryCardItemProps) {
   const storyId = story._id || story.id;
@@ -161,14 +163,39 @@ export function StoryCardItem({
           )}
 
           {/* Rejection notice if REJECTED */}
-          {story.status === "REJECTED" && story.rejectReason && (
-            <div className="mt-2.5 p-2.5 rounded bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-start gap-2">
-              <svg className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <div>
-                <span className="font-semibold">Lý do từ chối:</span> {story.rejectReason}
+          {story.status === "REJECTED" && (
+            <div className="mt-2.5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-2">
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <span className="font-bold text-rose-900">Lý do từ chối:</span>{" "}
+                  {story.rejectReason || "Chưa đạt tiêu chuẩn xuất bản."}
+                </div>
               </div>
+
+              {story.authorFeedback && (
+                <div className="text-[11px] bg-white/80 p-2 rounded border border-rose-100 text-zinc-700">
+                  <span className="font-semibold text-indigo-700">Giải trình bạn đã gửi:</span>{" "}
+                  "{story.authorFeedback}"
+                </div>
+              )}
+
+              {onAppeal && (
+                <div className="pt-1 flex items-center justify-between border-t border-rose-100/80">
+                  <span className="text-[11px] text-rose-600">
+                    Lý do từ chối chưa thỏa đáng?
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onAppeal(story)}
+                    className="px-2.5 py-1 text-[11px] font-bold text-indigo-700 bg-white hover:bg-indigo-50 border border-indigo-200 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                  >
+                    💬 Gửi phản hồi / Khiếu nại
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -214,6 +241,16 @@ export function StoryCardItem({
           </div>
 
           <div className="flex items-center gap-2">
+            {story.status === "REJECTED" && onAppeal && (
+              <button
+                type="button"
+                onClick={() => onAppeal(story)}
+                className="px-3 py-1.5 rounded text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition cursor-pointer"
+              >
+                💬 Khiếu nại
+              </button>
+            )}
+
             {(story.status === "DRAFT" || story.status === "REJECTED") && onSubmitReview && (
               <button
                 type="button"

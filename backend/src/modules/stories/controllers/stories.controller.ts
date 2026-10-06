@@ -10,12 +10,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../../common/guards/roles.guard.js';
 import { UserRole } from '../../users/schemas/user.schema.js';
+import { AppealStoryDto } from '../dto/appeal-story.dto.js';
 import { CreateStoryDto, StoryAction } from '../dto/create-story.dto.js';
 import { QueryMyStoriesDto } from '../dto/query-my-stories.dto.js';
 import { UpdateStoryDto } from '../dto/update-story.dto.js';
@@ -28,6 +29,7 @@ import { StoriesService } from '../services/stories.service.js';
 export class StoriesController {
   constructor(private readonly storiesService: StoriesService) {}
 
+  @ApiOperation({ summary: 'Tạo tác phẩm mới (bản nháp hoặc gửi yêu cầu duyệt)' })
   @Roles(UserRole.AUTHOR, UserRole.ADMIN)
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -49,6 +51,7 @@ export class StoriesController {
     };
   }
 
+  @ApiOperation({ summary: 'Lấy danh sách tác phẩm của tác giả hiện tại' })
   @Roles(UserRole.AUTHOR, UserRole.ADMIN)
   @Get('my')
   @HttpCode(HttpStatus.OK)
@@ -65,6 +68,7 @@ export class StoriesController {
     };
   }
 
+  @ApiOperation({ summary: 'Cập nhật tác phẩm (sửa nội dung hoặc gửi lại yêu cầu duyệt)' })
   @Roles(UserRole.AUTHOR, UserRole.ADMIN)
   @Patch('my/:id')
   @HttpCode(HttpStatus.OK)
@@ -83,6 +87,27 @@ export class StoriesController {
         action === StoryAction.SUBMIT
           ? 'Cập nhật tác phẩm và gửi yêu cầu kiểm duyệt thành công'
           : 'Cập nhật thông tin tác phẩm thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Tác giả gửi phản hồi / giải trình khi tác phẩm bị từ chối duyệt chưa thỏa đáng',
+  })
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN)
+  @Post('my/:id/appeal')
+  @HttpCode(HttpStatus.OK)
+  async appealMyStory(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: AppealStoryDto,
+  ) {
+    const data = await this.storiesService.appealMyStory(user._id, id, dto);
+
+    return {
+      success: true,
+      message: 'Gửi phản hồi giải trình và yêu cầu xem xét lại tác phẩm thành công',
       data,
     };
   }

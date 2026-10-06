@@ -32,6 +32,12 @@ export class User {
   @Prop({ type: String, default: null })
   avatarUrl: string | null;
 
+  @Prop({ type: String, default: null })
+  coverUrl: string | null;
+
+  @Prop({ type: String, default: null, trim: true })
+  bio: string | null;
+
   @Prop({ type: String, enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
