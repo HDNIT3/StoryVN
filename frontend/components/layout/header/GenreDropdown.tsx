@@ -79,7 +79,7 @@ export function GenreDropdown({
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-haspopup="true"
-        className={`flex items-center gap-1.5 2xl:gap-2 px-3 2xl:px-4 py-1.5 2xl:py-2 text-xs xl:text-sm 2xl:text-base font-semibold rounded-full transition-all duration-150 select-none whitespace-nowrap cursor-pointer ${
+        className={`flex items-center gap-1.5 2xl:gap-2 px-3 2xl:px-4 py-1.5 2xl:py-2 text-xs xl:text-sm 2xl:text-base rounded-full transition-all duration-150 select-none whitespace-nowrap cursor-pointer ${
           open
             ? "bg-zinc-100 text-zinc-900"
             : "text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100/70"

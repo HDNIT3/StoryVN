@@ -115,6 +115,10 @@ export const ErrorCode = {
     error: 'AUTHOR_REQUEST_CANNOT_EDIT',
     message: 'Yêu cầu đã được phê duyệt, không thể chỉnh sửa',
   },
+  AUTHOR_PROFILE_NOT_FOUND: {
+    error: 'AUTHOR_PROFILE_NOT_FOUND',
+    message: 'Không tìm thấy hồ sơ tác giả',
+  },
   OLD_PASSWORD_INCORRECT: {
     error: 'OLD_PASSWORD_INCORRECT',
     message: 'Mật khẩu cũ không chính xác',
@@ -154,5 +158,41 @@ export const ErrorCode = {
   INVALID_OBJECT_ID: {
     error: 'INVALID_OBJECT_ID',
     message: 'Mã ID không hợp lệ',
+  },
+  CATEGORY_NOT_FOUND: {
+    error: 'CATEGORY_NOT_FOUND',
+    message: 'Không tìm thấy thể loại',
+  },
+  CATEGORY_NAME_EXISTS: {
+    error: 'CATEGORY_NAME_EXISTS',
+    message: 'Tên thể loại đã tồn tại trên hệ thống',
+  },
+  CATEGORY_SLUG_EXISTS: {
+    error: 'CATEGORY_SLUG_EXISTS',
+    message: 'Slug thể loại đã tồn tại trên hệ thống',
+  },
+  TAG_NOT_FOUND: {
+    error: 'TAG_NOT_FOUND',
+    message: 'Không tìm thấy tag',
+  },
+  TAG_NAME_EXISTS: {
+    error: 'TAG_NAME_EXISTS',
+    message: 'Tên tag đã tồn tại trên hệ thống',
+  },
+  TAG_SLUG_EXISTS: {
+    error: 'TAG_SLUG_EXISTS',
+    message: 'Slug tag đã tồn tại trên hệ thống',
+  },
+  STORY_NOT_FOUND: {
+    error: 'STORY_NOT_FOUND',
+    message: 'Không tìm thấy tác phẩm',
+  },
+  STORY_FORBIDDEN: {
+    error: 'STORY_FORBIDDEN',
+    message: 'Bạn không có quyền thao tác trên tác phẩm này',
+  },
+  STORY_SLUG_EXISTS: {
+    error: 'STORY_SLUG_EXISTS',
+    message: 'Đường dẫn (slug) tác phẩm đã tồn tại trên hệ thống',
   },
 };

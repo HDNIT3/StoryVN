@@ -262,7 +262,7 @@ export function HeaderMobileMenu({
                       <button
                         type="button"
                         onClick={() => setIsGenresExpanded(!isGenresExpanded)}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-zinc-800 hover:bg-zinc-50"
                       >
                         <span>{item.label}</span>
                         <div className="relative w-4 h-4">
@@ -308,9 +308,9 @@ export function HeaderMobileMenu({
                       setIsOpen(false);
                       onNavItemClick?.(item);
                     }}
-                    className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    className={`px-3 py-2.5 rounded-xl text-sm transition-colors ${
                       isActive
-                        ? "bg-sky-50 text-sky-600 font-bold"
+                        ? "bg-sky-50 text-sky-600 font-medium"
                         : "text-zinc-800 hover:bg-zinc-50"
                     }`}
                   >
