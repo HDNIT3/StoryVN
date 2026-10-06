@@ -19,6 +19,7 @@ import { RolesGuard } from '../../../common/guards/roles.guard.js';
 import { CreateAuthorRequestDto } from '../dto/create-author-request.dto.js';
 import { QueryAuthorRequestsDto } from '../dto/query-author-requests.dto.js';
 import { ReviewAuthorRequestDto } from '../dto/review-author-request.dto.js';
+import { UpdateAuthorProfileDto } from '../dto/update-author-profile.dto.js';
 import { UpdateAuthorRequestDto } from '../dto/update-author-request.dto.js';
 import { User, UserRole } from '../schemas/user.schema.js';
 import { AuthorRequestsService } from '../services/author-requests.service.js';
@@ -81,6 +82,42 @@ export class AuthorRequestsController {
       success: true,
       message: 'Cập nhật yêu cầu nâng cấp tác giả thành công',
       data: { request },
+    };
+  }
+
+  @ApiOperation({ summary: 'Lấy thông tin hồ sơ tác giả của bản thân (role AUTHOR)' })
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.AUTHOR, UserRole.MANAGER, UserRole.ADMIN)
+  @Get('author-profile')
+  @HttpCode(HttpStatus.OK)
+  async getAuthorProfile(@CurrentUser() user: User & { _id: any }) {
+    const authorProfile = await this.authorRequestsService.getAuthorProfile(
+      user._id.toString(),
+    );
+    return {
+      success: true,
+      message: 'Lấy thông tin hồ sơ tác giả thành công',
+      data: { authorProfile },
+    };
+  }
+
+  @ApiOperation({ summary: 'Chỉnh sửa hồ sơ tác giả (role AUTHOR)' })
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.AUTHOR, UserRole.MANAGER, UserRole.ADMIN)
+  @Put('author-profile')
+  @HttpCode(HttpStatus.OK)
+  async updateAuthorProfile(
+    @CurrentUser() user: User & { _id: any },
+    @Body() dto: UpdateAuthorProfileDto,
+  ) {
+    const authorProfile = await this.authorRequestsService.updateAuthorProfile(
+      user._id.toString(),
+      dto,
+    );
+    return {
+      success: true,
+      message: 'Cập nhật hồ sơ tác giả thành công',
+      data: { authorProfile },
     };
   }
 

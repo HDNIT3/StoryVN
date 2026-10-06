@@ -12,6 +12,7 @@ import { MailService } from '../../mail/mail.service.js';
 import { CreateAuthorRequestDto } from '../dto/create-author-request.dto.js';
 import { QueryAuthorRequestsDto } from '../dto/query-author-requests.dto.js';
 import { ReviewAction, ReviewAuthorRequestDto } from '../dto/review-author-request.dto.js';
+import { UpdateAuthorProfileDto } from '../dto/update-author-profile.dto.js';
 import { UpdateAuthorRequestDto } from '../dto/update-author-request.dto.js';
 import {
   AuthorProfile,
@@ -197,6 +198,69 @@ export class AuthorRequestsService {
     }
 
     return request.save();
+  }
+
+  async updateAuthorProfile(userId: string, dto: UpdateAuthorProfileDto) {
+    const authorProfile = await this.authorProfileModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+
+    if (!authorProfile) {
+      throw new NotFoundException(ErrorCode.AUTHOR_PROFILE_NOT_FOUND);
+    }
+
+    if (
+      dto.penName &&
+      dto.penName.trim().toLowerCase() !== authorProfile.penName.toLowerCase()
+    ) {
+      const trimmedPenName = dto.penName.trim();
+      const existingPenName = await this.authorProfileModel.findOne({
+        penName: { $regex: new RegExp(`^${trimmedPenName}$`, 'i') },
+        userId: { $ne: authorProfile.userId },
+      });
+      if (existingPenName) {
+        throw new BadRequestException(ErrorCode.PEN_NAME_ALREADY_EXISTS);
+      }
+      authorProfile.penName = trimmedPenName;
+    }
+
+    if (dto.biography !== undefined) {
+      authorProfile.biography = dto.biography ? dto.biography.trim() : null;
+    }
+    if (dto.avatarUrl !== undefined) {
+      authorProfile.avatarUrl = dto.avatarUrl ? dto.avatarUrl.trim() : null;
+    }
+    if (dto.website !== undefined) {
+      authorProfile.website = dto.website ? dto.website.trim() : null;
+    }
+    if (dto.socialLinks !== undefined) {
+      authorProfile.socialLinks = dto.socialLinks || {};
+    }
+    if (dto.bankName !== undefined) {
+      authorProfile.bankName = dto.bankName ? dto.bankName.trim() : null;
+    }
+    if (dto.bankAccountNumber !== undefined) {
+      authorProfile.bankAccountNumber = dto.bankAccountNumber
+        ? dto.bankAccountNumber.trim()
+        : null;
+    }
+    if (dto.bankAccountName !== undefined) {
+      authorProfile.bankAccountName = dto.bankAccountName
+        ? dto.bankAccountName.trim().toUpperCase()
+        : null;
+    }
+
+    return authorProfile.save();
+  }
+
+  async getAuthorProfile(userId: string) {
+    const authorProfile = await this.authorProfileModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+    if (!authorProfile) {
+      throw new NotFoundException(ErrorCode.AUTHOR_PROFILE_NOT_FOUND);
+    }
+    return authorProfile;
   }
 
   async findAllRequests(

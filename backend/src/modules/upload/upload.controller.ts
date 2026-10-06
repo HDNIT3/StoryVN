@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -19,6 +20,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
+import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { Roles } from '../../common/decorators/roles.decorator.js';
+import { UserRole } from '../users/schemas/user.schema.js';
 import { RateLimit } from '../../common/guards/rate-limit.guard.js';
 import { UploadService } from './upload.service.js';
 
@@ -65,6 +69,28 @@ export class UploadController {
       success: true,
       message: 'Tải lên hình ảnh thành công',
       data: result,
+    };
+  }
+
+  @ApiOperation({ summary: 'Lấy danh sách tất cả hình ảnh (Cloud & Local) có phân trang' })
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Get('media')
+  @HttpCode(HttpStatus.OK)
+  async getAllMedia(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '40',
+    @Query('source') source: 'all' | 'cloud' | 'local' = 'all',
+  ) {
+    const data = await this.uploadService.getAllMedia(
+      parseInt(page, 10) || 1,
+      parseInt(limit, 10) || 40,
+      source,
+    );
+    return {
+      success: true,
+      message: 'Lấy danh sách hình ảnh thành công',
+      data,
     };
   }
 }

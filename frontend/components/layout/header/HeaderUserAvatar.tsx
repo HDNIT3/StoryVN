@@ -58,14 +58,14 @@ export function HeaderUserAvatar({
         <Link
           href="/dang-nhap"
           onClick={onLoginClick}
-          className="px-2.5 sm:px-4.5 py-1.5 sm:py-2.5 text-xs sm:text-base font-semibold text-zinc-700 hover:text-zinc-950 transition-colors rounded-xl hover:bg-zinc-100 whitespace-nowrap"
+          className="px-2.5 sm:px-4.5 py-1.5 sm:py-2.5 text-xs sm:text-base text-zinc-700 hover:text-zinc-950 transition-colors rounded-xl hover:bg-zinc-100 whitespace-nowrap"
         >
           Đăng nhập
         </Link>
         <Link
           href="/dang-ky"
           onClick={onLoginClick}
-          className="px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-base font-bold text-white bg-sky-500 hover:bg-sky-600 active:bg-sky-700 rounded-full transition-all shadow-xs sm:shadow-sm whitespace-nowrap"
+          className="px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-base font-medium text-white bg-sky-500 hover:bg-sky-600 active:bg-sky-700 rounded-full transition-all shadow-xs sm:shadow-sm whitespace-nowrap"
         >
           Đăng ký
         </Link>
@@ -104,7 +104,7 @@ export function HeaderUserAvatar({
             <span>{initial}</span>
           )}
         </div>
-        <span className="hidden 2xl:block text-xs 2xl:text-sm font-semibold text-zinc-800 max-w-[100px] truncate">
+        <span className="hidden 2xl:block text-xs 2xl:text-sm text-zinc-800 max-w-[100px] truncate">
           {user.name}
         </span>
         <svg
