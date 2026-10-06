@@ -22,14 +22,14 @@ import { UpdateTagDto } from '../dto/update-tag.dto.js';
 import { TagsService } from '../services/tags.service.js';
 
 @ApiTags('Tags')
-@ApiBearerAuth()
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.MANAGER)
 @Controller('tags')
 export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 
   @ApiOperation({ summary: 'Khởi tạo danh sách tag mặc định (Seed Data)' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Post('seed')
   @HttpCode(HttpStatus.OK)
   async seed() {
@@ -42,6 +42,9 @@ export class TagsController {
   }
 
   @ApiOperation({ summary: 'Tạo mới tag' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateTagDto) {
@@ -78,6 +81,9 @@ export class TagsController {
   }
 
   @ApiOperation({ summary: 'Cập nhật thông tin tag theo ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(@Param('id') id: string, @Body() dto: UpdateTagDto) {
@@ -90,6 +96,9 @@ export class TagsController {
   }
 
   @ApiOperation({ summary: 'Xóa tag theo ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string) {

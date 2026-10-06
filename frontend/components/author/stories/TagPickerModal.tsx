@@ -1,91 +1,109 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Button } from "@/components/ui";
 
-const POPULAR_TAGS = [
-  // Chủ đề & Mô típ
-  { name: "Xuyên Không", category: "Mô típ" },
-  { name: "Trọng Sinh", category: "Mô típ" },
-  { name: "Hệ Thống", category: "Mô típ" },
-  { name: "Bàn Tay Vàng", category: "Mô típ" },
-  { name: "Linh Khí Khôi Phục", category: "Mô típ" },
-  { name: "Tận Thế Sinh Tồn", category: "Mô típ" },
-  { name: "Gia Tộc Quản Lý", category: "Mô típ" },
-  { name: "Làm Giàu", category: "Mô típ" },
-  { name: "Thập Niên 70-80", category: "Mô típ" },
-  // Nhân vật & Tính cách
-  { name: "Vô Địch", category: "Nhân vật" },
-  { name: "Cẩu Đạo", category: "Nhân vật" },
-  { name: "Sát Phạt Quyết Đoán", category: "Nhân vật" },
-  { name: "Giả Heo Ăn Hổ", category: "Nhân vật" },
-  { name: "Cơ Trí", category: "Nhân vật" },
-  { name: "Lạnh Lùng", category: "Nhân vật" },
-  { name: "Hài Hước Bựa", category: "Nhân vật" },
-  { name: "Phản Phái", category: "Nhân vật" },
-  { name: "Nữ Cường", category: "Nhân vật" },
-  // Tình cảm
-  { name: "Đơn Nữ Chính", category: "Tình cảm" },
-  { name: "Hậu Cung", category: "Tình cảm" },
-  { name: "Không Nữ Chính", category: "Tình cảm" },
-  { name: "Ngọt Sủng", category: "Tình cảm" },
-  { name: "Ngược Luyến", category: "Tình cảm" },
-  { name: "Cưới Trước Yêu Sau", category: "Tình cảm" },
-  { name: "Thanh Mai Trúc Mã", category: "Tình cảm" },
-  // Kỹ năng & Nghề nghiệp
-  { name: "Luyện Đan", category: "Kỹ năng" },
-  { name: "Luyện Khí", category: "Kỹ năng" },
-  { name: "Trận Pháp", category: "Kỹ năng" },
-  { name: "Ngự Thú Sư", category: "Kỹ năng" },
-  { name: "Kiếm Tu", category: "Kỹ năng" },
-  { name: "Y Thuật", category: "Kỹ năng" },
+export interface TagItemOption {
+  _id?: string;
+  name: string;
+  slug?: string;
+}
+
+const DEFAULT_POPULAR_TAGS: TagItemOption[] = [
+  { name: "Xuyên Không" },
+  { name: "Trọng Sinh" },
+  { name: "Hệ Thống" },
+  { name: "Bàn Tay Vàng" },
+  { name: "Linh Khí Khôi Phục" },
+  { name: "Tận Thế Sinh Tồn" },
+  { name: "Gia Tộc Quản Lý" },
+  { name: "Làm Giàu" },
+  { name: "Thập Niên 70-80" },
+  { name: "Xuyên Sách" },
+  { name: "Vô Địch" },
+  { name: "Cẩu Đạo" },
+  { name: "Sát Phạt Quyết Đoán" },
+  { name: "Giả Heo Ăn Hổ" },
+  { name: "Cơ Trí" },
+  { name: "Lạnh Lùng" },
+  { name: "Hài Hước Bựa" },
+  { name: "Phản Phái" },
+  { name: "Nữ Cường" },
+  { name: "Điềm Đạm" },
+  { name: "Đơn Nữ Chính" },
+  { name: "Hậu Cung" },
+  { name: "Không Nữ Chính" },
+  { name: "Ngọt Sủng" },
+  { name: "Ngược Luyến" },
+  { name: "Cưới Trước Yêu Sau" },
+  { name: "Thanh Mai Trúc Mã" },
+  { name: "Gương Vỡ Lại Lành" },
+  { name: "Luyện Đan" },
+  { name: "Luyện Khí" },
+  { name: "Trận Pháp" },
+  { name: "Ngự Thú Sư" },
+  { name: "Kiếm Tu" },
+  { name: "Y Thuật" },
 ];
 
 interface TagPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
+  availableTags?: TagItemOption[];
   selectedTags: string[];
   onConfirm: (tags: string[]) => void;
+  maxSelect?: number;
 }
 
 export function TagPickerModal({
   isOpen,
   onClose,
-  selectedTags,
+  availableTags = [],
+  selectedTags = [],
   onConfirm,
+  maxSelect = 10,
 }: TagPickerModalProps) {
   const [tempSelected, setTempSelected] = useState<string[]>(selectedTags);
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<string>("ALL");
 
-  // Reset when opened
   React.useEffect(() => {
     if (isOpen) {
       setTempSelected(selectedTags);
       setSearch("");
-      setActiveCategory("ALL");
     }
   }, [isOpen, selectedTags]);
 
-  const categories = ["ALL", "Mô típ", "Nhân vật", "Tình cảm", "Kỹ năng"];
+  const allTags = useMemo(() => {
+    if (availableTags && availableTags.length > 0) {
+      return availableTags;
+    }
+    return DEFAULT_POPULAR_TAGS;
+  }, [availableTags]);
 
   const filteredTags = useMemo(() => {
-    return POPULAR_TAGS.filter((tag) => {
-      const matchSearch =
-        !search.trim() ||
-        tag.name.toLowerCase().includes(search.trim().toLowerCase());
-      const matchCategory =
-        activeCategory === "ALL" || tag.category === activeCategory;
-      return matchSearch && matchCategory;
-    });
-  }, [search, activeCategory]);
+    const q = search.trim().toLowerCase();
+    if (!q) return allTags;
+    return allTags.filter((t) => t.name.toLowerCase().includes(q));
+  }, [allTags, search]);
 
   const handleToggleTag = (name: string) => {
     if (tempSelected.includes(name)) {
-      setTempSelected(tempSelected.filter((t) => t !== name));
+      setTempSelected((prev) => prev.filter((t) => t !== name));
     } else {
-      setTempSelected([...tempSelected, name]);
+      if (tempSelected.length >= maxSelect) {
+        return;
+      }
+      setTempSelected((prev) => [...prev, name]);
     }
+  };
+
+  const handleAddCustomTag = () => {
+    const trimmed = search.trim();
+    if (!trimmed) return;
+    if (!tempSelected.includes(trimmed)) {
+      if (tempSelected.length >= maxSelect) return;
+      setTempSelected((prev) => [...prev, trimmed]);
+    }
+    setSearch("");
   };
 
   const handleApply = () => {
@@ -96,106 +114,121 @@ export function TagPickerModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-2xs animate-in fade-in duration-100">
       <div
-        className="bg-white rounded-xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-xl border border-zinc-200 overflow-hidden"
+        className="bg-white rounded-lg max-w-lg w-full max-h-[85vh] flex flex-col shadow-lg border border-zinc-200 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50/70">
+        <div className="px-4 py-3 border-b border-zinc-200 flex items-center justify-between bg-zinc-50/50">
           <div>
-            <h3 className="text-base font-bold text-zinc-900">Chọn thẻ Tag tác phẩm</h3>
+            <h3 className="text-sm font-bold text-zinc-900">Chọn thẻ tag cho tác phẩm</h3>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Đã chọn: <strong className="text-sky-600 font-semibold">{tempSelected.length}</strong> thẻ
+              Đã chọn: <strong className="text-sky-600 font-semibold">{tempSelected.length}</strong>/{maxSelect} thẻ
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-lg hover:bg-zinc-200 text-zinc-500 flex items-center justify-center transition cursor-pointer text-sm"
+            className="w-7 h-7 rounded hover:bg-zinc-200 text-zinc-500 flex items-center justify-center text-xs cursor-pointer"
           >
             ✕
           </button>
         </div>
 
-        {/* Search & Categories Bar */}
-        <div className="p-3 border-b border-zinc-100 space-y-2.5 bg-white">
-          <div className="relative">
+        {/* Selected Summary Bar */}
+        {tempSelected.length > 0 && (
+          <div className="p-3 bg-sky-50/40 border-b border-zinc-200 flex flex-wrap items-center gap-1.5 text-xs max-h-24 overflow-y-auto">
+            <span className="font-semibold text-zinc-700 mr-1 text-[11px]">Đã chọn:</span>
+            {tempSelected.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-sky-600 text-white font-medium shadow-2xs text-xs"
+              >
+                <span>#{tag}</span>
+                <button
+                  type="button"
+                  onClick={() => handleToggleTag(tag)}
+                  className="text-white/80 hover:text-white font-bold cursor-pointer ml-0.5"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Search Bar */}
+        <div className="p-3 border-b border-zinc-100 bg-white">
+          <div className="flex items-center gap-2">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm kiếm thẻ tag..."
-              className="w-full pl-8 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-xs text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddCustomTag();
+                }
+              }}
+              placeholder="Tìm kiếm hoặc nhập tag mới rồi Enter..."
+              className="flex-1 px-3 py-1.5 bg-zinc-50 border border-zinc-200 rounded text-xs text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
             />
-            <svg
-              className="w-3.5 h-3.5 text-zinc-600 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-
-          {/* Category Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-            {categories.map((cat) => (
+            {search.trim() && (
               <button
-                key={cat}
                 type="button"
-                onClick={() => setActiveCategory(cat)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer whitespace-nowrap ${
-                  activeCategory === cat
-                    ? "bg-zinc-900 text-white"
-                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                }`}
+                onClick={handleAddCustomTag}
+                className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded text-xs font-semibold cursor-pointer shrink-0"
               >
-                {cat === "ALL" ? "Tất cả" : cat}
+                + Thêm &quot;{search.trim()}&quot;
               </button>
-            ))}
+            )}
           </div>
         </div>
 
-        {/* Checkbox Grid List */}
-        <div className="p-4 overflow-y-auto flex-1 max-h-[360px] grid grid-cols-2 gap-2">
-          {filteredTags.length > 0 ? (
-            filteredTags.map((tag) => {
-              const isChecked = tempSelected.includes(tag.name);
+        {/* Tags Grid List */}
+        <div className="p-3 overflow-y-auto flex-1 max-h-[360px]">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {filteredTags.map((tag) => {
+              const isSelected = tempSelected.includes(tag.name);
               return (
-                <label
+                <button
                   key={tag.name}
+                  type="button"
                   onClick={() => handleToggleTag(tag.name)}
-                  className={`flex items-center gap-2.5 p-2 rounded-lg border text-xs cursor-pointer transition select-none ${
-                    isChecked
-                      ? "bg-sky-50/80 border-sky-300 text-sky-900 font-medium"
-                      : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                  className={`flex items-center justify-between p-2 rounded border text-xs cursor-pointer transition select-none text-left ${
+                    isSelected
+                      ? "bg-sky-50/80 border-sky-400 text-sky-900 font-semibold ring-1 ring-sky-400"
+                      : "bg-white border-zinc-200 text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50/60"
                   }`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => {}}
-                    className="rounded text-sky-600 focus:ring-sky-500 w-3.5 h-3.5 cursor-pointer pointer-events-none"
-                  />
-                  <span className="truncate">{tag.name}</span>
-                </label>
+                  <span className="truncate">#{tag.name}</span>
+                  {isSelected && (
+                    <span className="text-sky-600 font-bold ml-1 text-xs shrink-0">✓</span>
+                  )}
+                </button>
               );
-            })
-          ) : (
-            <div className="col-span-2 text-center py-8 text-xs text-zinc-400">
-              Không tìm thấy tag phù hợp với từ khóa &ldquo;{search}&rdquo;
+            })}
+          </div>
+
+          {filteredTags.length === 0 && (
+            <div className="text-center py-8 text-xs text-zinc-400">
+              <p>Không tìm thấy thẻ tag nào cho &quot;{search}&quot;</p>
+              {search.trim() && (
+                <button
+                  type="button"
+                  onClick={handleAddCustomTag}
+                  className="mt-2 text-sky-600 font-semibold hover:underline cursor-pointer"
+                >
+                  + Thêm &quot;{search.trim()}&quot; làm tag mới
+                </button>
+              )}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between gap-2">
+        <div className="px-4 py-3 border-t border-zinc-200 bg-zinc-50/50 flex items-center justify-between">
           <button
             type="button"
             onClick={() => setTempSelected([])}
@@ -204,12 +237,20 @@ export function TagPickerModal({
             Bỏ chọn tất cả
           </button>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={onClose}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-1.5 rounded text-xs font-medium text-zinc-600 hover:bg-zinc-200 transition cursor-pointer"
+            >
               Hủy
-            </Button>
-            <Button size="sm" variant="primary" onClick={handleApply}>
+            </button>
+            <button
+              type="button"
+              onClick={handleApply}
+              className="px-4 py-1.5 rounded text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white transition cursor-pointer shadow-2xs"
+            >
               Xác nhận ({tempSelected.length})
-            </Button>
+            </button>
           </div>
         </div>
       </div>

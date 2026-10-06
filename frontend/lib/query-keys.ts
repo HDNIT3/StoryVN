@@ -37,4 +37,15 @@ export const queryKeys = {
       ["categories", "list", ...(params ? [params] : [])] as const,
     detail: (id: string) => ["categories", "detail", id] as const,
   },
+  stories: {
+    all: ["stories"] as const,
+    myList: (params?: Record<string, any>) =>
+      ["stories", "my", ...(params ? [params] : [])] as const,
+    detail: (id: string) => ["stories", "detail", id] as const,
+  },
+  media: {
+    all: ["media"] as const,
+    list: (params?: Record<string, any>) =>
+      ["media", "list", ...(params ? [params] : [])] as const,
+  },
 } as const;

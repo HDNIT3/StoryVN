@@ -183,4 +183,16 @@ export const ErrorCode = {
     error: 'TAG_SLUG_EXISTS',
     message: 'Slug tag đã tồn tại trên hệ thống',
   },
+  STORY_NOT_FOUND: {
+    error: 'STORY_NOT_FOUND',
+    message: 'Không tìm thấy tác phẩm',
+  },
+  STORY_FORBIDDEN: {
+    error: 'STORY_FORBIDDEN',
+    message: 'Bạn không có quyền thao tác trên tác phẩm này',
+  },
+  STORY_SLUG_EXISTS: {
+    error: 'STORY_SLUG_EXISTS',
+    message: 'Đường dẫn (slug) tác phẩm đã tồn tại trên hệ thống',
+  },
 };

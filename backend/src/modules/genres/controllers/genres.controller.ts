@@ -22,14 +22,14 @@ import { UpdateGenreDto } from '../dto/update-genre.dto.js';
 import { GenresService } from '../services/genres.service.js';
 
 @ApiTags('Categories')
-@ApiBearerAuth()
-@UseGuards(AuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.MANAGER)
 @Controller(['categories', 'genres'])
 export class GenresController {
   constructor(private readonly genresService: GenresService) {}
 
   @ApiOperation({ summary: 'Khởi tạo danh sách thể loại mặc định (Seed Data)' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Post('seed')
   @HttpCode(HttpStatus.OK)
   async seed() {
@@ -42,6 +42,9 @@ export class GenresController {
   }
 
   @ApiOperation({ summary: 'Tạo mới thể loại / danh mục' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateGenreDto) {
@@ -78,6 +81,9 @@ export class GenresController {
   }
 
   @ApiOperation({ summary: 'Cập nhật thông tin thể loại / danh mục theo ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(@Param('id') id: string, @Body() dto: UpdateGenreDto) {
@@ -90,6 +96,9 @@ export class GenresController {
   }
 
   @ApiOperation({ summary: 'Xóa thể loại / danh mục theo ID' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string) {
