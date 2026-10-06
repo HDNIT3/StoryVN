@@ -38,6 +38,8 @@ export class UsersController {
           username: user.username,
           displayName: user.displayName,
           avatarUrl: user.avatarUrl,
+          coverUrl: (user as any).coverUrl || null,
+          bio: (user as any).bio || null,
           role: user.role,
           status: user.status,
           createdAt: user.createdAt,
@@ -47,7 +49,7 @@ export class UsersController {
     };
   }
 
-  @ApiOperation({ summary: 'Cập nhật thông tin hồ sơ cá nhân (tên hiển thị)' })
+  @ApiOperation({ summary: 'Cập nhật thông tin hồ sơ cá nhân (tên hiển thị, tiểu sử, ảnh bìa)' })
   @Patch('profile')
   @HttpCode(HttpStatus.OK)
   async updateProfile(
@@ -68,6 +70,8 @@ export class UsersController {
           username: updatedUser.username,
           displayName: updatedUser.displayName,
           avatarUrl: updatedUser.avatarUrl,
+          coverUrl: updatedUser.coverUrl,
+          bio: updatedUser.bio,
           role: updatedUser.role,
           status: updatedUser.status,
           createdAt: updatedUser.createdAt,
@@ -93,6 +97,26 @@ export class UsersController {
       message: 'Cập nhật ảnh đại diện thành công',
       data: {
         avatarUrl: updatedUser.avatarUrl,
+      },
+    };
+  }
+
+  @ApiOperation({ summary: 'Cập nhật ảnh bìa' })
+  @Patch('cover')
+  @HttpCode(HttpStatus.OK)
+  async updateCover(
+    @CurrentUser() user: User & { _id: any },
+    @Body('coverUrl') coverUrl: string,
+  ) {
+    const updatedUser = await this.usersService.updateCover(
+      user._id.toString(),
+      coverUrl,
+    );
+    return {
+      success: true,
+      message: 'Cập nhật ảnh bìa thành công',
+      data: {
+        coverUrl: updatedUser.coverUrl,
       },
     };
   }

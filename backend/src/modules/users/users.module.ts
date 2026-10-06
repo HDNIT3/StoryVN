@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
+import { OptionalAuthGuard } from '../../common/guards/optional-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { RefreshToken, RefreshTokenSchema } from '../auth/schemas/refresh-token.schema.js';
 import { AdminUsersController } from './controllers/admin-users.controller.js';
@@ -31,6 +32,7 @@ import { UsersService } from './services/users.service.js';
     AdminUsersService,
     AuthorRequestsService,
     AuthGuard,
+    OptionalAuthGuard,
     RolesGuard,
   ],
   exports: [
@@ -39,6 +41,7 @@ import { UsersService } from './services/users.service.js';
     AuthorRequestsService,
     MongooseModule,
     AuthGuard,
+    OptionalAuthGuard,
     RolesGuard,
   ],
 })

@@ -32,6 +32,7 @@ export function HeaderNav({
               key={item.id}
               label={item.label}
               genres={genres}
+              isActive={activeNavId === item.id}
               onGenreClick={onGenreClick}
             />
           );

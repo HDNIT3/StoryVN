@@ -74,7 +74,7 @@ export class UploadController {
 
   @ApiOperation({ summary: 'Lấy danh sách tất cả hình ảnh (Cloud & Local) có phân trang' })
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN)
   @Get('media')
   @HttpCode(HttpStatus.OK)
   async getAllMedia(

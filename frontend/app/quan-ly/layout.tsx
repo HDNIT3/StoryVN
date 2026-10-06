@@ -6,70 +6,206 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import Image from "next/image";
 
-interface SidebarItem {
+/**
+ * =====================================================================
+ * ĐỊNH NGHĨA CẤU TRÚC MENU QUẢN TRỊ (ADMIN NAVIGATION)
+ * =====================================================================
+ */
+export interface SubMenuItem {
   id: string;
   label: string;
   href: string;
-  icon: React.ReactNode;
-  badge?: number;
-  roles: string[];
+  roles?: string[]; // Phân quyền xem submenu (ADMIN, MANAGER), bỏ trống = tất cả
+  badge?: string | number; // Huy hiệu số hoặc text (VD: "Mới", 12)
 }
 
-const SIDEBAR_ITEMS: SidebarItem[] = [
+export interface MenuGroup {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  roles: string[];
+  href?: string; // Nếu là menu đơn lẻ (không có menu con), bấm vào sẽ chuyển trang luôn
+  subItems?: SubMenuItem[]; // Danh sách menu con
+  badge?: string | number;
+}
+
+/**
+ * =====================================================================
+ * HƯỚNG DẪN THÊM MENU CON (SUBMENU) TRONG TƯƠNG LAI:
+ * =====================================================================
+ * 👉 Cách 1: Thêm menu con vào nhóm có sẵn (Quản lý hệ thống, Quản lý người dùng, Quản lý Truyện, Quản lý thanh toán)
+ *    Chỉ cần thêm 1 object vào mảng `subItems` của nhóm đó:
+ *    {
+ *       id: "dinh-danh-duy-nhat",
+ *       label: "Tên hiển thị menu con",
+ *       href: "/quan-ly/duong-dan-cua-ban",
+ *       roles: ["ADMIN", "MANAGER"], // (Tùy chọn)
+ *       badge: "Mới",                // (Tùy chọn)
+ *    }
+ *
+ * 👉 Cách 2: Thêm 1 nhóm quản lý lớn mới:
+ *    Thêm 1 object vào mảng `ADMIN_NAVIGATION` bên dưới.
+ * =====================================================================
+ */
+const ADMIN_NAVIGATION: MenuGroup[] = [
   {
-    id: "nguoi-dung",
+    id: "quan-ly-he-thong",
+    label: "Quản lý hệ thống",
+    roles: ["ADMIN"],
+    icon: (
+      <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.8}
+          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+        />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+    subItems: [
+      {
+        id: "cai-dat-he-thong",
+        label: "Cấu hình chung",
+        href: "/quan-ly/he-thong",
+        roles: ["ADMIN"],
+      },
+      {
+        id: "thu-vien-media",
+        label: "Thư viện ảnh & Media",
+        href: "/quan-ly/media",
+        roles: ["ADMIN"],
+      },
+      {
+        id: "nhat-ky-he-thong",
+        label: "Nhật ký hoạt động (Logs)",
+        href: "/quan-ly/he-thong/nhat-ky",
+        roles: ["ADMIN"],
+      },
+      {
+        id: "sao-luu-du-lieu",
+        label: "Sao lưu & Khôi phục",
+        href: "/quan-ly/he-thong/sao-luu",
+        roles: ["ADMIN"],
+      },
+    ],
+  },
+  {
+    id: "quan-ly-nguoi-dung",
     label: "Quản lý người dùng",
-    href: "/quan-ly/nguoi-dung",
     roles: ["ADMIN", "MANAGER"],
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.8}
+          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+        />
       </svg>
     ),
+    subItems: [
+      {
+        id: "danh-sach-nguoi-dung",
+        label: "Danh sách người dùng",
+        href: "/quan-ly/nguoi-dung",
+        roles: ["ADMIN", "MANAGER"],
+      },
+      {
+        id: "duyet-tac-gia",
+        label: "Duyệt đơn tác giả",
+        href: "/quan-ly/duyet-tac-gia",
+        roles: ["ADMIN", "MANAGER"],
+      },
+      {
+        id: "phan-quyen-vai-tro",
+        label: "Phân quyền & Vai trò",
+        href: "/quan-ly/nguoi-dung/vai-tro",
+        roles: ["ADMIN"],
+      },
+    ],
   },
   {
-    id: "duyet-tac-gia",
-    label: "Duyệt tác giả",
-    href: "/quan-ly/duyet-tac-gia",
+    id: "quan-ly-truyen",
+    label: "Quản lý Truyện",
     roles: ["ADMIN", "MANAGER"],
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.8}
+          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+        />
       </svg>
     ),
+    subItems: [
+      {
+        id: "danh-sach-truyen",
+        label: "Tất cả truyện",
+        href: "/quan-ly/truyen",
+        roles: ["ADMIN", "MANAGER"],
+      },
+      {
+        id: "quan-ly-the-loai",
+        label: "Quản lý thể loại",
+        href: "/quan-ly/the-loai",
+        roles: ["ADMIN", "MANAGER"],
+      },
+      {
+        id: "quan-ly-the-tag",
+        label: "Quản lý thẻ tag",
+        href: "/quan-ly/the-tag",
+        roles: ["ADMIN", "MANAGER"],
+      },
+      {
+        id: "bao-cao-vi-pham",
+        label: "Báo cáo & Vi phạm",
+        href: "/quan-ly/truyen/bao-cao",
+        roles: ["ADMIN", "MANAGER"],
+      },
+    ],
   },
   {
-    id: "the-loai",
-    label: "Quản lý thể loại",
-    href: "/quan-ly/the-loai",
-    roles: ["ADMIN", "MANAGER"],
+    id: "quan-ly-thanh-toan",
+    label: "Quản lý thanh toán",
+    roles: ["ADMIN"],
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.8}
+          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+        />
       </svg>
     ),
-  },
-  {
-    id: "the-tag",
-    label: "Quản lý thẻ tag",
-    href: "/quan-ly/the-tag",
-    roles: ["ADMIN", "MANAGER"],
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-      </svg>
-    ),
-  },
-  {
-    id: "media",
-    label: "Thư viện ảnh",
-    href: "/quan-ly/media",
-    roles: ["ADMIN", "MANAGER"],
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-    ),
+    subItems: [
+      {
+        id: "lich-su-giao-dich",
+        label: "Lịch sử giao dịch",
+        href: "/quan-ly/thanh-toan/giao-dich",
+        roles: ["ADMIN"],
+      },
+      {
+        id: "yeu-cau-rut-tien",
+        label: "Yêu cầu rút tiền",
+        href: "/quan-ly/thanh-toan/rut-tien",
+        roles: ["ADMIN"],
+      },
+      {
+        id: "goi-nap-tien-te",
+        label: "Gói nạp & Xu",
+        href: "/quan-ly/thanh-toan/goi-nap",
+        roles: ["ADMIN"],
+      },
+      {
+        id: "thong-ke-doanh-thu",
+        label: "Thống kê doanh thu",
+        href: "/quan-ly/thanh-toan/doanh-thu",
+        roles: ["ADMIN"],
+      },
+    ],
   },
 ];
 
@@ -88,9 +224,40 @@ function Sidebar({
   const router = useRouter();
   const pathname = usePathname();
 
-  const visibleItems = SIDEBAR_ITEMS.filter(
-    (item) => user && item.roles.includes(user.role)
+  // Quản lý trạng thái đóng / mở của từng nhóm Menu (Accordion)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  // Tự động mở nhóm chứa đường dẫn đang được kích hoạt (active path)
+  useEffect(() => {
+    ADMIN_NAVIGATION.forEach((group) => {
+      if (group.subItems) {
+        const isChildActive = group.subItems.some((sub) =>
+          pathname === sub.href || (sub.href !== "/quan-ly" && pathname.startsWith(sub.href))
+        );
+        if (isChildActive) {
+          setOpenGroups((prev) => ({ ...prev, [group.id]: true }));
+        }
+      }
+    });
+  }, [pathname]);
+
+  // Lọc danh sách menu theo quyền của user
+  const visibleGroups = ADMIN_NAVIGATION.filter(
+    (group) => user && group.roles.includes(user.role)
   );
+
+  const toggleGroup = (groupId: string) => {
+    if (collapsed) {
+      // Khi sidebar đang thu nhỏ, nhấp vào menu nhóm sẽ tự động mở rộng sidebar
+      onToggle();
+      setOpenGroups((prev) => ({ ...prev, [groupId]: true }));
+      return;
+    }
+    setOpenGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -138,7 +305,7 @@ function Sidebar({
             <span className="font-black text-lg tracking-tight text-slate-900">
               Story<span className="text-sky-500">VN</span>{" "}
               <span className="bg-sky-100 text-sky-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-1 uppercase">
-                Admin
+                {user?.role === "ADMIN" ? "Admin" : "Quản lý"}
               </span>
             </span>
           </Link>
@@ -204,35 +371,158 @@ function Sidebar({
           </div>
         )}
 
-        {/* Danh sách điều hướng */}
-        <nav className="flex-1 py-4 overflow-y-auto">
+        {/* Danh sách điều hướng đa cấp (Menu & Submenu) */}
+        <nav className="flex-1 py-4 overflow-y-auto custom-scrollbar">
           <p className={`text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ${collapsed ? "lg:px-2 lg:text-center px-4.5" : "px-4.5"}`}>
             {collapsed ? <span className="hidden lg:inline">·</span> : null}
-            <span className={collapsed ? "lg:hidden" : ""}>Quản lý hệ thống</span>
+            <span className={collapsed ? "lg:hidden" : ""}>
+              {user?.role === "ADMIN" ? "Hệ Thống Quản Trị" : "Khu Vực Quản Lý"}
+            </span>
           </p>
+
           <ul className="space-y-1.5 px-3">
-            {visibleItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
+            {visibleGroups.map((group) => {
+              const hasSubItems = Boolean(group.subItems && group.subItems.length > 0);
+              const isOpen = Boolean(openGroups[group.id]);
+
+              // Kiểm tra xem nhóm này hoặc menu con của nó có đang active không
+              const isGroupActive = hasSubItems
+                ? group.subItems?.some(
+                    (sub) => pathname === sub.href || (sub.href !== "/quan-ly" && pathname.startsWith(sub.href))
+                  )
+                : group.href && pathname.startsWith(group.href);
+
               return (
-                <li key={item.id}>
-                  <Link
-                    href={item.href}
-                    onClick={onMobileClose}
-                    className={`flex items-center gap-3.5 px-3.5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
-                      isActive
-                        ? "bg-sky-500 text-white shadow-sm font-bold"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    }`}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <span className="shrink-0">{item.icon}</span>
-                    <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>{item.label}</span>
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className={`ml-auto bg-sky-100 text-sky-700 text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center ${collapsed ? "lg:hidden" : ""}`}>
-                        {item.badge > 99 ? "99+" : item.badge}
-                      </span>
-                    )}
-                  </Link>
+                <li key={group.id} className="relative">
+                  {hasSubItems ? (
+                    /* Nhóm có menu con: Button toggle accordion */
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.id)}
+                        className={`w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer select-none ${
+                          isGroupActive
+                            ? "bg-sky-50 text-sky-800 font-bold"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        }`}
+                        title={collapsed ? group.label : undefined}
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <span
+                            className={`shrink-0 transition-colors ${
+                              isGroupActive ? "text-sky-600" : "text-slate-500"
+                            }`}
+                          >
+                            {group.icon}
+                          </span>
+                          <span className={`truncate text-left ${collapsed ? "lg:hidden" : ""}`}>
+                            {group.label}
+                          </span>
+                        </div>
+
+                        {/* Mũi tên mở rộng/thu gọn và badge (ẩn khi collapsed trên desktop) */}
+                        <div className={`flex items-center gap-1.5 ${collapsed ? "lg:hidden" : ""}`}>
+                          {group.badge && (
+                            <span className="bg-sky-100 text-sky-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                              {group.badge}
+                            </span>
+                          )}
+                          <svg
+                            className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${
+                              isOpen ? "rotate-90 text-sky-600" : "rotate-0"
+                            }`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </button>
+
+                      {/* Danh sách MENU CON (Submenu) */}
+                      {isOpen && !collapsed && (
+                        <ul className="mt-1 ml-4 pl-3.5 border-l-2 border-slate-200/90 space-y-1 py-1 animate-in fade-in duration-200">
+                          {group.subItems
+                            ?.filter(
+                              (sub) => !sub.roles || (user && sub.roles.includes(user.role))
+                            )
+                            .map((sub) => {
+                              const isSubActive =
+                                pathname === sub.href ||
+                                (sub.href !== "/quan-ly" && pathname.startsWith(sub.href));
+
+                              return (
+                                <li key={sub.id}>
+                                  <Link
+                                    href={sub.href}
+                                    onClick={onMobileClose}
+                                    className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all group/item ${
+                                      isSubActive
+                                        ? "bg-sky-500 text-white font-bold shadow-xs shadow-sky-500/20"
+                                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/90"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <span
+                                        className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${
+                                          isSubActive
+                                            ? "bg-white"
+                                            : "bg-slate-300 group-hover/item:bg-sky-400"
+                                        }`}
+                                      />
+                                      <span className="truncate">{sub.label}</span>
+                                    </div>
+
+                                    {sub.badge && (
+                                      <span
+                                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-1 shrink-0 ${
+                                          isSubActive
+                                            ? "bg-white/20 text-white"
+                                            : "bg-sky-100 text-sky-700"
+                                        }`}
+                                      >
+                                        {sub.badge}
+                                      </span>
+                                    )}
+                                  </Link>
+                                </li>
+                              );
+                            })}
+                        </ul>
+                      )}
+                    </div>
+                  ) : (
+                    /* Nhóm đơn lẻ không có menu con: Link chuyển trang trực tiếp */
+                    <Link
+                      href={group.href || "/quan-ly"}
+                      onClick={onMobileClose}
+                      className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                        isGroupActive
+                          ? "bg-sky-500 text-white font-bold shadow-xs"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      }`}
+                      title={collapsed ? group.label : undefined}
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <span className="shrink-0">{group.icon}</span>
+                        <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>
+                          {group.label}
+                        </span>
+                      </div>
+                      {group.badge && (
+                        <span
+                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                            isGroupActive
+                              ? "bg-white/20 text-white"
+                              : "bg-sky-100 text-sky-700"
+                          } ${collapsed ? "lg:hidden" : ""}`}
+                        >
+                          {group.badge}
+                        </span>
+                      )}
+                    </Link>
+                  )}
                 </li>
               );
             })}
@@ -241,13 +531,17 @@ function Sidebar({
           {/* Phân cách */}
           <div className="mx-4 my-4 border-t border-slate-100" />
 
-          {/* Menu tài khoản */}
+          {/* Menu tài khoản cá nhân */}
+          <p className={`text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ${collapsed ? "lg:px-2 lg:text-center px-4.5" : "px-4.5"}`}>
+            {collapsed ? <span className="hidden lg:inline">·</span> : null}
+            <span className={collapsed ? "lg:hidden" : ""}>Tài khoản</span>
+          </p>
           <ul className="space-y-1.5 px-3">
             <li>
               <Link
                 href="/ho-so"
                 onClick={onMobileClose}
-                className="flex items-center gap-3.5 px-3.5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all"
+                className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all"
                 title={collapsed ? "Hồ sơ cá nhân" : undefined}
               >
                 <svg className="w-5 h-5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -258,11 +552,12 @@ function Sidebar({
             </li>
             <li>
               <button
+                type="button"
                 onClick={() => {
                   onMobileClose();
                   handleLogout();
                 }}
-                className="w-full flex items-center gap-3.5 px-3.5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold text-red-600 hover:bg-red-50 transition-all cursor-pointer"
+                className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all cursor-pointer"
                 title={collapsed ? "Đăng xuất" : undefined}
               >
                 <svg className="w-5 h-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -285,6 +580,7 @@ export default function QuanLyLayout({
 }) {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
@@ -299,9 +595,23 @@ export default function QuanLyLayout({
       } else if (user && user.role !== "ADMIN" && user.role !== "MANAGER") {
         setRedirecting(true);
         router.replace("/ho-so");
+      } else if (user && user.role === "MANAGER") {
+        const isAdminOnlyRoute =
+          pathname.startsWith("/quan-ly/he-thong") ||
+          pathname.startsWith("/quan-ly/media") ||
+          pathname.startsWith("/quan-ly/thanh-toan") ||
+          pathname.startsWith("/quan-ly/nguoi-dung/vai-tro");
+        if (isAdminOnlyRoute) {
+          setRedirecting(true);
+          router.replace("/quan-ly/duyet-tac-gia");
+        } else {
+          setRedirecting(false);
+        }
+      } else {
+        setRedirecting(false);
       }
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, router, pathname]);
 
   if (isLoading || redirecting) {
     return (
@@ -318,6 +628,24 @@ export default function QuanLyLayout({
 
   if (!isAuthenticated || !user) return null;
   if (user.role !== "ADMIN" && user.role !== "MANAGER") return null;
+
+  if (user.role === "MANAGER") {
+    const isAdminOnlyRoute =
+      pathname.startsWith("/quan-ly/he-thong") ||
+      pathname.startsWith("/quan-ly/media") ||
+      pathname.startsWith("/quan-ly/thanh-toan") ||
+      pathname.startsWith("/quan-ly/nguoi-dung/vai-tro");
+    if (isAdminOnlyRoute) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+          <div className="flex flex-col items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-slate-200/80 max-w-xs w-full text-center">
+            <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm font-medium text-slate-600">Đang chuyển hướng...</p>
+          </div>
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/70 flex text-slate-800">

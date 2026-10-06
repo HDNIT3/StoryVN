@@ -8,9 +8,13 @@ import { StoryItem, StoryStatus, StoryVisibility } from "@/types/story";
 import { StoryStatsCards } from "@/components/author/stories/StoryStatsCards";
 import { StoryFilterBar } from "@/components/author/stories/StoryFilterBar";
 import { StoryCardItem } from "@/components/author/stories/StoryCardItem";
+import { AuthorStoryAppealModal } from "@/components/author/stories/AuthorStoryAppealModal";
 
 export default function QuanLyTacPhamPage() {
   const router = useRouter();
+
+  // Appeal Modal
+  const [appealStory, setAppealStory] = useState<StoryItem | null>(null);
 
   // Filters & Search
   const [search, setSearch] = useState("");
@@ -168,6 +172,7 @@ export default function QuanLyTacPhamPage() {
               story={story}
               onEdit={handleOpenEditModal}
               onSubmitReview={handleSubmitReview}
+              onAppeal={setAppealStory}
               isSubmittingReview={updateStoryMutation.isPending}
             />
           ))}
@@ -177,7 +182,7 @@ export default function QuanLyTacPhamPage() {
         <div className="bg-white rounded-lg border border-zinc-200 p-10 sm:p-12 text-center flex flex-col items-center justify-center">
           <div className="w-12 h-12 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
           <h3 className="text-sm sm:text-base font-bold text-zinc-900">
@@ -208,6 +213,13 @@ export default function QuanLyTacPhamPage() {
           </div>
         </div>
       )}
+
+      {/* Modal tác giả gửi phản hồi / khiếu nại */}
+      <AuthorStoryAppealModal
+        open={Boolean(appealStory)}
+        story={appealStory}
+        onClose={() => setAppealStory(null)}
+      />
     </div>
   );
 }

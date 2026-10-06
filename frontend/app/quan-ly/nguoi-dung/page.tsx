@@ -52,7 +52,7 @@ const ROLE_LABEL: Record<string, string> = {
   USER: "Người dùng",
   AUTHOR: "Tác giả",
   MANAGER: "Quản lý",
-  ADMIN: "Admin",
+  ADMIN: "Quản trị viên",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -596,7 +596,7 @@ export default function QuanLyNguoiDungPage() {
             <option value="USER">Người dùng</option>
             <option value="AUTHOR">Tác giả</option>
             <option value="MANAGER">Quản lý</option>
-            <option value="ADMIN">Admin</option>
+            <option value="ADMIN">Quản trị viên</option>
           </select>
 
           {/* Status filter */}

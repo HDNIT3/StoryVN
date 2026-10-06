@@ -56,6 +56,9 @@ export class StoryStats {
 
   @Prop({ type: Number, default: 0, min: 0 })
   wordCount: number;
+
+  @Prop({ type: Number, default: 0, min: 0 })
+  likeCount: number;
 }
 
 export const StoryStatsSchema = SchemaFactory.createForClass(StoryStats);
@@ -135,6 +138,23 @@ export class Story {
 
   @Prop({ type: String, default: null, trim: true })
   rejectReason?: string | null;
+
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: User.name,
+    default: null,
+    index: true,
+  })
+  reviewedBy?: Types.ObjectId | null;
+
+  @Prop({ type: Date, default: null })
+  reviewedAt?: Date | null;
+
+  @Prop({ type: String, default: null, trim: true })
+  authorFeedback?: string | null;
+
+  @Prop({ type: Date, default: null })
+  appealedAt?: Date | null;
 
   @Prop({
     type: String,

@@ -3,6 +3,9 @@ import type { UserApiResponse, UserProfileData } from "../../types/user";
 
 export interface UpdateProfilePayload {
   displayName?: string;
+  bio?: string;
+  coverUrl?: string;
+  avatarUrl?: string;
 }
 
 export interface UpdateAvatarPayload {
@@ -24,7 +27,7 @@ export const userService = {
   },
 
   /**
-   * Cập nhật tên hiển thị (displayName)
+   * Cập nhật thông tin hồ sơ (displayName, bio, coverUrl, avatarUrl)
    */
   updateProfile(payload: UpdateProfilePayload) {
     return api.patch<UserApiResponse<UserProfileData>>("/users/profile", payload);
@@ -35,6 +38,13 @@ export const userService = {
    */
   updateAvatar(payload: UpdateAvatarPayload) {
     return api.patch<UserApiResponse<{ avatarUrl: string }>>("/users/avatar", payload);
+  },
+
+  /**
+   * Cập nhật ảnh bìa qua URL
+   */
+  updateCover(coverUrl: string) {
+    return api.patch<UserApiResponse<{ coverUrl: string }>>("/users/cover", { coverUrl });
   },
 
   /**

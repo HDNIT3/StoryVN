@@ -81,10 +81,10 @@ export function AuthorRequestReviewModal({
               : "Yêu cầu sẽ chuyển sang trạng thái TỪ CHỐI. Người dùng có thể xem lý do và cập nhật lại thông tin để gửi xét duyệt lại."}
           </p>
 
-          {/* Ghi chú của Admin */}
+          {/* Ghi chú kiểm duyệt */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Ghi chú của Ban Quản Trị {isApproved ? "(Không bắt buộc)" : "(Nên ghi rõ lý do)"}
+              Ghi chú kiểm duyệt {isApproved ? "(Không bắt buộc)" : "(Nên ghi rõ lý do)"}
             </label>
             <textarea
               rows={3}

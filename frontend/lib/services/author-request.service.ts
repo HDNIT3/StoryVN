@@ -41,6 +41,25 @@ export const authorRequestService = {
   },
 
   /**
+   * Cập nhật thông tin hồ sơ tác giả (Dành cho tài khoản vai trò AUTHOR)
+   */
+  updateAuthorProfile(payload: {
+    penName?: string;
+    biography?: string;
+    avatarUrl?: string;
+    website?: string;
+    socialLinks?: Record<string, any>;
+    bankName?: string;
+    bankAccountNumber?: string;
+    bankAccountName?: string;
+  }) {
+    return api.put<AuthorRequestApiResponse<{ authorProfile: any }>>(
+      "/users/author-profile",
+      payload
+    );
+  },
+
+  /**
    * Dành cho Quản trị viên/Quản lý: Lấy danh sách toàn bộ các yêu cầu nâng cấp tác giả (kèm phân trang và bộ lọc)
    */
   findAllRequests(params?: QueryAuthorRequestsParams) {

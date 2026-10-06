@@ -1,21 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/context/AuthContext";
 import { useMediaList } from "@/lib/hooks/queries/useMediaQuery";
 import type { MediaItem } from "@/types/upload";
 import { toast } from "@/lib/toast";
 
 export default function QuanLyMediaPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user && user.role !== "ADMIN") {
+      router.replace("/quan-ly/duyet-tac-gia");
+    }
+  }, [user, router]);
+
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(40);
   const [sourceFilter, setSourceFilter] = useState<"all" | "cloud" | "local">("all");
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
 
-  const { data, isLoading, isError, error, refetch, isFetching } = useMediaList({
-    page,
-    limit,
-    source: sourceFilter,
-  });
+  const isAdmin = user?.role === "ADMIN";
+
+  const { data, isLoading, isError, error, refetch, isFetching } = useMediaList(
+    isAdmin
+      ? {
+          page,
+          limit,
+          source: sourceFilter,
+        }
+      : undefined
+  );
+
+  if (user && user.role !== "ADMIN") {
+    return null;
+  }
 
   const items = data?.items || [];
   const total = data?.total || 0;

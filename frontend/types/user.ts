@@ -11,6 +11,8 @@ export interface UserProfile {
   username: string;
   displayName: string;
   avatarUrl?: string | null;
+  coverUrl?: string | null;
+  bio?: string | null;
   role: UserRole;
   status: UserStatus;
   createdAt?: string;
