@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -983,7 +983,7 @@ function Pagination({
 
 // ── Main Home Page ─────────────────────────────────────────────────────────
 
-export default function HomePage() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const urlSearch = searchParams.get("search") || "";
   const urlGenre = searchParams.get("genre") || "";
@@ -1104,5 +1104,13 @@ export default function HomePage() {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-50" />}>
+      <HomeContent />
+    </Suspense>
   );
 }
