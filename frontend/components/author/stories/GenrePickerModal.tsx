@@ -9,30 +9,6 @@ export interface GenreOption {
   description?: string | null;
 }
 
-const DEFAULT_GENRES_FALLBACK: GenreOption[] = [
-  { name: "Tiên Hiệp", slug: "tien-hiep", description: "Tu chân, luyện khí, trường sinh" },
-  { name: "Huyền Huyễn", slug: "huyen-huyen", description: "Dị giới, ma pháp, đấu khí" },
-  { name: "Đô Thị", slug: "do-thi", description: "Hiện đại, thương trường, dị năng" },
-  { name: "Ngôn Tình", slug: "ngon-tinh", description: "Tình cảm lãng mạn, sâu lắng" },
-  { name: "Kiếm Hiệp", slug: "kiem-hiep", description: "Giang hồ, võ lâm, ân oán" },
-  { name: "Khoa Huyễn", slug: "khoa-huyen", description: "Tương lai, cơ giáp, vũ trụ" },
-  { name: "Võng Du", slug: "vong-du", description: "Game thực tế ảo, eSports" },
-  { name: "Dị Giới", slug: "di-gioi", description: "Xuyên việt, sinh thái kỳ bí" },
-  { name: "Linh Dị", slug: "linh-di", description: "Trừ tà, bắt ma, huyền bí" },
-  { name: "Trinh Thám", slug: "trinh-tham", description: "Phá án, đấu trí, suy luận" },
-  { name: "Lịch Sử", slug: "lich-su", description: "Triều đại, mưu lược, quân sự" },
-  { name: "Mạt Thế", slug: "mat-the", description: "Tận thế, zombie, sinh tồn" },
-  { name: "Hài Hước", slug: "hai-huoc", description: "Giải trí, dí dỏm, tiếng cười" },
-  { name: "Đồng Nhân", slug: "dong-nhan", description: "Phóng tác anime, manga, game" },
-  { name: "Cổ Đại", slug: "co-dai", description: "Phương đông cổ xưa, gia tộc" },
-  { name: "Điền Văn", slug: "dien-van", description: "Nông thôn, ấm áp, gia đình" },
-  { name: "Cung Đấu", slug: "cung-dau", description: "Tranh sủng hậu cung, mưu quyền" },
-  { name: "Hào Môn Thế Gia", slug: "hao-mon-the-gia", description: "Tài phiệt, thượng lưu" },
-  { name: "Thanh Xuân Vườn Trường", slug: "thanh-xuan-vuon-truong", description: "Học đường, tuổi trẻ" },
-  { name: "Kỳ Huyễn", slug: "ky-huyen", description: "Ma pháp phương Tây, kỵ sĩ" },
-  { name: "Vô Hạn Lưu", slug: "vo-han-luu", description: "Phó bản sinh tử, không gian luân hồi" },
-];
-
 interface GenrePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -51,8 +27,7 @@ export function GenrePickerModal({
   maxSelect = 5,
 }: GenrePickerModalProps) {
   const allGenres = useMemo(() => {
-    if (availableGenres && availableGenres.length > 0) return availableGenres;
-    return DEFAULT_GENRES_FALLBACK;
+    return availableGenres || [];
   }, [availableGenres]);
 
   const [tempSelected, setTempSelected] = useState<string[]>(selectedGenres || []);

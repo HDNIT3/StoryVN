@@ -7,7 +7,6 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { Header } from "@/components/layout/header";
 import categoryService from "@/lib/services/category.service";
 import { historyService } from "@/lib/services/history.service";
-import { DEFAULT_GENRES } from "./header.constants";
 import type { GenreItem } from "./header.types";
 
 /**
@@ -50,17 +49,11 @@ export function SmartHeader() {
     staleTime: 1000 * 60 * 10, // 10 phút
   });
 
-  const genres: GenreItem[] =
-    categoriesData && categoriesData.length > 0
-      ? categoriesData.map((c) => ({
-          id: c.slug || c._id,
-          name: c.name,
-          href: `/the-loai?genre=${c.slug || c._id}`,
-        }))
-      : DEFAULT_GENRES.map((g) => ({
-          ...g,
-          href: `/the-loai?genre=${g.id}`,
-        }));
+  const genres: GenreItem[] = (categoriesData || []).map((c) => ({
+    id: c.slug || c._id,
+    name: c.name,
+    href: `/the-loai?genre=${c.slug || c._id}`,
+  }));
 
   const handleLogout = async () => {
     await logout();

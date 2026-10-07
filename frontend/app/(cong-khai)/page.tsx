@@ -10,7 +10,6 @@ import {
   usePublicStories,
 } from "@/lib/hooks/queries/usePublicStoryQuery";
 import { useCategories } from "@/lib/hooks/queries/useCategoryQuery";
-import { DEFAULT_GENRES } from "@/components/layout/header/header.constants";
 import type { PublicStoryItem } from "@/types/public-story";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -173,7 +172,7 @@ function HeroSlider({ stories }: { stories: PublicStoryItem[] }) {
 
       {/* Content */}
       <div className="relative h-full flex items-end pb-8 px-6 md:px-10">
-        <div className="flex gap-6 items-end w-full max-w-4xl">
+        <div className="flex gap-6 items-end w-full max-w-5xl 2xl:max-w-6xl">
           {/* Book Cover */}
           <div className="hidden sm:block relative w-28 md:w-36 shrink-0">
             <div className="aspect-[2/3] rounded-lg overflow-hidden shadow-2xl border border-white/10">
@@ -661,18 +660,11 @@ function NewlyPublishedSection() {
   const [sortBy, setSortBy] = useState<"createdAt" | "viewCount">("createdAt");
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Danh mục thể loại
-  const { data: categoriesData } = useCategories({ all: true, isActive: true });
-  const rawItems = categoriesData?.items;
+  // Danh mục thể loại lấy động từ API backend
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories({ all: true, isActive: true });
   const categories = useMemo(() => {
-    if (rawItems && rawItems.length > 0) return rawItems;
-    return DEFAULT_GENRES.map((g) => ({
-      _id: g.id,
-      name: g.name,
-      slug: g.id,
-      description: "",
-    }));
-  }, [rawItems]);
+    return categoriesData?.items || [];
+  }, [categoriesData]);
 
   // Query truyện mới xuất bản theo genre và sort
   const { data: storiesData, isLoading } = usePublicStories({
@@ -1035,7 +1027,7 @@ function HomeContent() {
     <div className="min-h-screen bg-zinc-50">
       {/* ── Hero Section ──────────────────────────────────────────────────── */}
       <section className="w-full bg-white border-b border-zinc-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 py-6">
           <div className="flex gap-5 items-start">
             {/* Hero Slider - chiếm 3/4 */}
             <div className="flex-1 min-w-0">
@@ -1047,7 +1039,7 @@ function HomeContent() {
             </div>
 
             {/* Top View Sidebar - chiếm 1/4 */}
-            <div className="hidden xl:block w-64 shrink-0">
+            <div className="hidden xl:block w-72 2xl:w-80 shrink-0">
               {topViewsLoading ? (
                 <div className="h-[460px] bg-zinc-200 rounded-xl animate-pulse" />
               ) : (
@@ -1059,7 +1051,7 @@ function HomeContent() {
       </section>
 
       {/* ── Main Content ──────────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 py-8 space-y-10">
 
         {/* ── Danh Sách Mới Cập Nhật ── */}
         <LatestUpdatedSection />
