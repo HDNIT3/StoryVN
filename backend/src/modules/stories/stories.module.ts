@@ -16,4 +16,4 @@ import { StoriesService } from './services/stories.service.js';
   providers: [StoriesService],
   exports: [StoriesService, MongooseModule],
 })
-export class StoriesModule {}
+export class StoriesModule { }

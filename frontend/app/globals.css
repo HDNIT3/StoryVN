@@ -78,4 +78,22 @@ body {
   animation: toastProgress 4000ms linear forwards;
 }
 
+/* Bell Ring / Shake Animation khi có thông báo mới */
+@keyframes bellRing {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: rotate(15deg);
+  }
+  20%, 40%, 60%, 80% {
+    transform: rotate(-15deg);
+  }
+}
+
+.animate-bell-ring {
+  transform-origin: top center;
+  animation: bellRing 1.2s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+}
+
 

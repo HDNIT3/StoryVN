@@ -10,6 +10,7 @@ import {
   CreateStoryPayload,
   StoryAgeRating,
   StoryItem,
+  StoryProgressState,
   StoryVisibility,
 } from "@/types/story";
 import { uploadService } from "@/lib/services/upload.service";
@@ -45,6 +46,11 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
   );
   const [authorNote, setAuthorNote] = useState(initialStory?.authorNote || "");
 
+  // Progress state
+  const [progressState, setProgressState] = useState<StoryProgressState>(
+    initialStory?.progressState || "ONGOING"
+  );
+
   // Genres state
   const rawInitialGenres = useMemo(() => {
     if (initialStory?.genreIds && initialStory.genreIds.length > 0) {
@@ -71,9 +77,14 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
   const [selectedTags, setSelectedTags] = useState<string[]>(rawInitialTags);
   const [tagModalOpen, setTagModalOpen] = useState(false);
 
-  // Cover image: chỉ preview khi chọn, upload thật khi bấm lưu
+  // Cover image: hỗ trợ tải tệp từ máy hoặc dán link URL trực tiếp
+  const [coverSourceType, setCoverSourceType] = useState<"file" | "url">(
+    initialStory?.coverUrl ? "url" : "file"
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(initialStory?.coverUrl || "");
+  const [imageUrlInput, setImageUrlInput] = useState<string>(initialStory?.coverUrl || "");
+  const [imageLoadError, setImageLoadError] = useState(false);
   const [cropperOpen, setCropperOpen] = useState(false);
   const [rawImageSrcToCrop, setRawImageSrcToCrop] = useState<string>("");
 
@@ -91,6 +102,8 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
   // Đồng bộ thể loại và thẻ tag từ initialStory khi dữ liệu truyện hoặc API tải xong
   useEffect(() => {
     if (initialStory) {
+      if (initialStory.progressState) setProgressState(initialStory.progressState);
+
       if (initialStory.genreIds && initialStory.genreIds.length > 0) {
         const names = initialStory.genreIds
           .map((g: any) => {
@@ -160,6 +173,8 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
     }
 
     const objectUrl = URL.createObjectURL(file);
+    setImageLoadError(false);
+    setImageUrlInput("");
 
     // Kiểm tra tỉ lệ ảnh: chuẩn là 2:3 (0.6667)
     const img = new Image();
@@ -185,13 +200,23 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
   const handleCropComplete = (croppedFile: File, croppedUrl: string) => {
     setSelectedFile(croppedFile);
     setPreviewUrl(croppedUrl);
+    setImageLoadError(false);
     setCropperOpen(false);
     toast.success("Đã căn chỉnh ảnh bìa theo chuẩn tỉ lệ 2:3!");
+  };
+
+  const handleUrlInputChange = (val: string) => {
+    setImageUrlInput(val);
+    setImageLoadError(false);
+    setSelectedFile(null);
+    setPreviewUrl(val.trim());
   };
 
   const handleRemoveCover = () => {
     setSelectedFile(null);
     setPreviewUrl("");
+    setImageUrlInput("");
+    setImageLoadError(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -219,9 +244,9 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
     }
 
     setIsSubmitting(true);
-    let finalCoverUrl = initialStory?.coverUrl || "";
+    let finalCoverUrl = "";
 
-    // 1. Upload ảnh khi bấm Action
+    // 1. Upload ảnh khi bấm Action nếu chọn từ tệp trong máy
     if (selectedFile) {
       try {
         setIsUploadingImage(true);
@@ -235,8 +260,9 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
       } finally {
         setIsUploadingImage(false);
       }
-    } else if (!previewUrl) {
-      finalCoverUrl = "";
+    } else if (previewUrl?.trim()) {
+      // Nhập trực tiếp đường dẫn URL hoặc giữ nguyên ảnh đã có
+      finalCoverUrl = previewUrl.trim();
     }
 
     // 2. Map thể loại sang Mongo ObjectIds nếu có trong API categories
@@ -276,8 +302,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
       ageRating,
       visibility,
       authorNote: authorNote.trim() || undefined,
-      progressState: "ONGOING",
-      originType: "ORIGINAL",
+      progressState,
     };
 
     // 5. Gửi lên server qua mutation hook
@@ -329,17 +354,17 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
       {/* Main 2-Column Form Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* CỘT TRÁI: THÔNG TIN TÁC PHẨM (2 cols) */}
-        <div className="lg:col-span-2 space-y-5">
+        <div className="lg:col-span-2 space-y-6">
           {/* Box 1: Thông tin cơ bản */}
-          <div className="bg-white rounded-lg border border-zinc-200 p-5 shadow-2xs space-y-4">
-            <h2 className="text-sm font-bold text-zinc-900 border-b border-zinc-100 pb-2">
+          <div className="bg-white rounded-xl border border-zinc-200/90 p-5 sm:p-6 shadow-2xs space-y-5">
+            <h2 className="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3">
               Thông tin tác phẩm
             </h2>
 
             {/* Tên truyện & Slug */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+                <label className="block text-sm font-semibold text-zinc-800 mb-1.5">
                   Tên tác phẩm <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -347,22 +372,22 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
                   value={title}
                   onChange={(e) => handleTitleChange(e.target.value)}
                   placeholder="VD: Vạn Cổ Đệ Nhất Thần"
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-md text-sm text-zinc-900 font-medium focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-medium focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+                <label className="block text-sm font-semibold text-zinc-800 mb-1.5">
                   Đường dẫn (Slug URL)
                 </label>
-                <div className="flex items-center bg-zinc-50 border border-zinc-200 rounded-md px-3 focus-within:ring-1 focus-within:ring-sky-500 focus-within:border-sky-500">
-                  <span className="text-xs text-zinc-400 font-mono select-none">/truyen/</span>
+                <div className="flex items-center bg-zinc-50 border border-zinc-200 rounded-lg px-3 focus-within:ring-1 focus-within:ring-sky-500 focus-within:border-sky-500">
+                  <span className="text-sm text-zinc-400 font-mono select-none">/truyen/</span>
                   <input
                     type="text"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder="van-co-de-nhat-than"
-                    className="w-full py-2 pl-1 pr-1 bg-transparent text-xs text-zinc-900 font-mono focus:outline-hidden"
+                    className="w-full py-2.5 pl-1.5 pr-2 bg-transparent text-sm text-zinc-900 font-mono focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -370,31 +395,46 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
 
             {/* Tóm tắt */}
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-semibold text-zinc-800">
                   Tóm tắt cốt truyện
                 </label>
-                <span className="text-[11px] text-zinc-400">{description.length} ký tự</span>
+                <span className="text-xs text-zinc-400 font-medium">{description.length} ký tự</span>
               </div>
               <textarea
                 rows={5}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Giới thiệu nội dung, bối cảnh và điểm hấp dẫn của tác phẩm..."
-                className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-md text-xs sm:text-sm text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 resize-none leading-relaxed"
+                className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 resize-none leading-relaxed"
               />
             </div>
 
-            {/* Độ tuổi độc giả & Lời ngỏ */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Tiến độ sáng tác & Độ tuổi độc giả */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
+                <label className="block text-sm font-semibold text-zinc-800 mb-1.5">
+                  Tình trạng tiến độ
+                </label>
+                <select
+                  value={progressState}
+                  onChange={(e) => setProgressState(e.target.value as StoryProgressState)}
+                  className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-medium focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 cursor-pointer"
+                >
+                  <option value="ONGOING">Đang ra (Đang cập nhật chương)</option>
+                  <option value="COMPLETED">Đã hoàn thành (Trọn bộ)</option>
+                  <option value="ON_HOLD">Tạm ngưng ra chương</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-zinc-800 mb-1.5">
                   Độ tuổi độc giả
                 </label>
                 <select
                   value={ageRating}
                   onChange={(e) => setAgeRating(e.target.value as StoryAgeRating)}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-md text-xs sm:text-sm text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 cursor-pointer"
+                  className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-medium focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 cursor-pointer"
                 >
                   <option value="ALL">Mọi lứa tuổi (ALL)</option>
                   <option value="13+">13+ (Thiếu niên)</option>
@@ -402,52 +442,53 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
                   <option value="18+">18+ (Cảnh báo nhạy cảm)</option>
                 </select>
               </div>
+            </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1">
-                  Lời ngỏ tác giả / Lịch ra chương
-                </label>
-                <input
-                  type="text"
-                  value={authorNote}
-                  onChange={(e) => setAuthorNote(e.target.value)}
-                  placeholder="VD: Cố định 2 chương/ngày lúc 20:00..."
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-md text-xs sm:text-sm text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
-                />
-              </div>
+            {/* Lời ngỏ tác giả / Lịch ra chương */}
+            <div>
+              <label className="block text-sm font-semibold text-zinc-800 mb-1.5">
+                Lời ngỏ tác giả / Lịch ra chương
+              </label>
+              <input
+                type="text"
+                value={authorNote}
+                onChange={(e) => setAuthorNote(e.target.value)}
+                placeholder="VD: Cố định 2 chương/ngày lúc 20:00..."
+                className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+              />
             </div>
           </div>
 
           {/* Box 2: Thể loại & Thẻ Tag (Có Modal chọn đầy đủ) */}
-          <div className="bg-white rounded-lg border border-zinc-200 p-5 shadow-2xs space-y-4">
-            <h2 className="text-sm font-bold text-zinc-900 border-b border-zinc-100 pb-2">
+          <div className="bg-white rounded-xl border border-zinc-200/90 p-5 sm:p-6 shadow-2xs space-y-4">
+            <h2 className="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3">
               Thể loại & Thẻ Tag
             </h2>
 
             {/* Thể loại */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider">
+                <label className="block text-sm font-semibold text-zinc-800">
                   Thể loại ({selectedGenres.length})
                 </label>
                 <button
                   type="button"
                   onClick={() => setGenreModalOpen(true)}
-                  className="text-xs text-sky-600 hover:text-sky-700 font-semibold cursor-pointer flex items-center gap-1"
+                  className="text-xs sm:text-sm text-sky-600 hover:text-sky-700 font-semibold cursor-pointer flex items-center gap-1"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   <span>Chọn thể loại</span>
                 </button>
               </div>
 
-              <div className="min-h-[42px] p-2.5 bg-zinc-50 border border-zinc-200 rounded-md flex flex-wrap items-center gap-1.5">
+              <div className="min-h-[46px] p-2.5 bg-zinc-50 border border-zinc-200 rounded-lg flex flex-wrap items-center gap-1.5">
                 {selectedGenres.length > 0 ? (
                   selectedGenres.map((genre) => (
                     <span
                       key={genre}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-zinc-200 rounded text-xs text-zinc-800 font-medium"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-zinc-200 rounded-md text-xs sm:text-sm text-zinc-800 font-medium"
                     >
                       <span>{genre}</span>
                       <button
@@ -462,7 +503,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
                 ) : (
                   <span
                     onClick={() => setGenreModalOpen(true)}
-                    className="text-xs text-zinc-400 cursor-pointer hover:text-zinc-600 px-1"
+                    className="text-sm text-zinc-400 cursor-pointer hover:text-zinc-600 px-1"
                   >
                     Bấm vào đây để chọn thể loại cho tác phẩm...
                   </span>
@@ -473,27 +514,27 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
             {/* Thẻ Tag */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider">
+                <label className="block text-sm font-semibold text-zinc-800">
                   Thẻ Tag ({selectedTags.length})
                 </label>
                 <button
                   type="button"
                   onClick={() => setTagModalOpen(true)}
-                  className="text-xs text-sky-600 hover:text-sky-700 font-semibold cursor-pointer flex items-center gap-1"
+                  className="text-xs sm:text-sm text-sky-600 hover:text-sky-700 font-semibold cursor-pointer flex items-center gap-1"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   <span>Chọn thẻ tag</span>
                 </button>
               </div>
 
-              <div className="min-h-[42px] p-2.5 bg-zinc-50 border border-zinc-200 rounded-md flex flex-wrap items-center gap-1.5">
+              <div className="min-h-[46px] p-2.5 bg-zinc-50 border border-zinc-200 rounded-lg flex flex-wrap items-center gap-1.5">
                 {selectedTags.length > 0 ? (
                   selectedTags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-zinc-200 rounded text-xs text-zinc-700 font-medium"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-zinc-200 rounded-md text-xs sm:text-sm text-zinc-700 font-medium"
                     >
                       <span>#{tag}</span>
                       <button
@@ -508,7 +549,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
                 ) : (
                   <span
                     onClick={() => setTagModalOpen(true)}
-                    className="text-xs text-zinc-400 cursor-pointer hover:text-zinc-600 px-1"
+                    className="text-sm text-zinc-400 cursor-pointer hover:text-zinc-600 px-1"
                   >
                     Bấm vào đây để chọn các thẻ tag cho tác phẩm...
                   </span>
@@ -519,134 +560,229 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
         </div>
 
         {/* CỘT PHẢI: ẢNH BÌA & XUẤT BẢN (1 col) */}
-        <div className="space-y-5">
+        <div className="space-y-6">
           {/* Box 3: Ảnh bìa tác phẩm */}
-          <div className="bg-white rounded-lg border border-zinc-200 p-5 shadow-2xs space-y-3.5">
-            <h2 className="text-sm font-bold text-zinc-900 border-b border-zinc-100 pb-2">
-              Ảnh bìa tác phẩm
-            </h2>
+          <div className="bg-white rounded-xl border border-zinc-200/90 p-5 sm:p-6 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <h2 className="text-base font-bold text-zinc-900">
+                Ảnh bìa tác phẩm
+              </h2>
+              {/* Tab chuyển đổi chế độ nạp ảnh */}
+              <div className="inline-flex p-0.5 bg-zinc-100 rounded-lg text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setCoverSourceType("file")}
+                  className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
+                    coverSourceType === "file"
+                      ? "bg-white text-zinc-900 shadow-2xs"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  Tải từ máy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCoverSourceType("url")}
+                  className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
+                    coverSourceType === "url"
+                      ? "bg-white text-zinc-900 shadow-2xs"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  Dán link URL
+                </button>
+              </div>
+            </div>
 
             {/* Preview Box - Chuẩn tỉ lệ 2:3 */}
-            <div className="w-full max-w-[200px] mx-auto aspect-[2/3] rounded-md overflow-hidden border border-zinc-200 bg-zinc-100 flex items-center justify-center relative shadow-2xs group">
-              {previewUrl ? (
+            <div className="w-full max-w-[200px] mx-auto aspect-[2/3] rounded-lg overflow-hidden border border-zinc-200 bg-zinc-100 flex items-center justify-center relative shadow-2xs group">
+              {previewUrl && !imageLoadError ? (
                 <>
                   <img
                     src={previewUrl}
                     alt="Ảnh bìa xem trước"
                     className="w-full h-full object-cover"
+                    onError={() => setImageLoadError(true)}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                    {selectedFile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRawImageSrcToCrop(previewUrl);
+                          setCropperOpen(true);
+                        }}
+                        className="px-3 py-1.5 bg-white/95 text-zinc-900 rounded-md text-xs font-semibold shadow-md hover:bg-white transition cursor-pointer pointer-events-auto flex items-center gap-1.5"
+                      >
+                        <svg className="w-3.5 h-3.5 text-zinc-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879a3 3 0 11-4.242-4.242 3 3 0 014.242 0M7 7l10 10" />
+                        </svg>
+                        <span>Cắt ảnh</span>
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : imageLoadError ? (
+                <div className="p-3 text-center text-red-500 flex flex-col items-center justify-center">
+                  <svg className="w-8 h-8 mb-2 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span className="text-xs font-semibold">Link ảnh không hợp lệ</span>
+                  <span className="text-2xs text-zinc-400 mt-1">Không tải được hình từ URL đã nhập</span>
+                </div>
+              ) : (
+                <div className="p-3 text-center text-zinc-400 flex flex-col items-center justify-center">
+                  <svg className="w-8 h-8 mb-2 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-zinc-600">Chưa có ảnh bìa</span>
+                  <span className="text-xs text-zinc-400 mt-0.5">Tỉ lệ chuẩn 2:3 (VD: 600×900)</span>
+                </div>
+              )}
+            </div>
+
+            {/* Chế độ 1: Tải tệp từ máy */}
+            {coverSourceType === "file" && (
+              <div className="space-y-2.5">
+                <input
+                  ref={fileInputRef}
+                  id={coverInputId}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 px-3 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer text-center"
+                  >
+                    {selectedFile ? "Thay đổi tệp" : "Chọn ảnh từ máy"}
+                  </button>
+
+                  {selectedFile && (
                     <button
                       type="button"
                       onClick={() => {
                         setRawImageSrcToCrop(previewUrl);
                         setCropperOpen(true);
                       }}
-                      className="px-2.5 py-1.5 bg-white/95 text-zinc-900 rounded text-xs font-semibold shadow-md hover:bg-white transition cursor-pointer pointer-events-auto"
+                      title="Cắt ảnh theo chuẩn 2:3"
+                      className="px-3 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer flex items-center gap-1"
                     >
-                      ✂ Cắt ảnh
+                      <svg className="w-3.5 h-3.5 text-sky-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879a3 3 0 11-4.242-4.242 3 3 0 014.242 0M7 7l10 10" />
+                      </svg>
+                      <span>Cắt ảnh</span>
+                    </button>
+                  )}
+
+                  {previewUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveCover}
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer"
+                    >
+                      Gỡ
+                    </button>
+                  )}
+                </div>
+
+                {selectedFile && (
+                  <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                    <span>✓</span>
+                    <span>Đã chọn: {selectedFile.name} (chỉ upload khi bấm lưu)</span>
+                  </p>
+                )}
+
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Hỗ trợ JPG, PNG, WEBP tối đa 5MB. Ảnh sẽ tự động tải lên khi bạn nhấn Lưu / Gửi duyệt.
+                </p>
+              </div>
+            )}
+
+            {/* Chế độ 2: Dán liên kết URL ảnh */}
+            {coverSourceType === "url" && (
+              <div className="space-y-2.5">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-zinc-700">
+                    Đường dẫn ảnh trực tiếp (URL)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="url"
+                      value={imageUrlInput}
+                      onChange={(e) => handleUrlInputChange(e.target.value)}
+                      placeholder="https://example.com/anh-bia.jpg"
+                      className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-xs sm:text-sm text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 pr-14"
+                    />
+                    {imageUrlInput && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveCover}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400 hover:text-red-500 font-medium px-1.5 py-0.5 rounded cursor-pointer transition"
+                      >
+                        Xóa
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {previewUrl && !selectedFile && !imageLoadError && (
+                  <div className="flex items-center justify-between text-xs text-zinc-500 pt-0.5">
+                    <span className="text-emerald-600 font-medium flex items-center gap-1">
+                      <span>✓</span> Đang sử dụng liên kết ảnh
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCover}
+                      className="text-red-600 hover:underline cursor-pointer"
+                    >
+                      Gỡ ảnh
                     </button>
                   </div>
-                </>
-              ) : (
-                <div className="p-3 text-center text-zinc-400 flex flex-col items-center justify-center">
-                  <svg className="w-8 h-8 mb-1.5 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-xs font-medium">Chưa có ảnh bìa</span>
-                  <span className="text-[10px] text-zinc-400 mt-0.5">Tỉ lệ chuẩn 2:3 (VD: 600×900)</span>
-                </div>
-              )}
-            </div>
-
-            {/* Upload Input & Actions */}
-            <div className="space-y-2">
-              <input
-                ref={fileInputRef}
-                id={coverInputId}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex-1 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-md text-xs font-semibold transition cursor-pointer text-center"
-                >
-                  {previewUrl ? "Thay đổi ảnh" : "Chọn ảnh từ máy"}
-                </button>
-
-                {previewUrl && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRawImageSrcToCrop(previewUrl);
-                      setCropperOpen(true);
-                    }}
-                    title="Cắt ảnh theo chuẩn 2:3"
-                    className="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1"
-                  >
-                    <span>Cắt ảnh</span>
-                  </button>
                 )}
 
-                {previewUrl && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveCover}
-                    className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-md text-xs font-medium transition cursor-pointer"
-                  >
-                    Gỡ
-                  </button>
-                )}
-              </div>
-
-              {selectedFile && (
-                <p className="text-[11px] text-emerald-600 font-medium">
-                  ✓ Đã chọn: {selectedFile.name} (chỉ upload khi bấm lưu)
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Nhập liên kết hình ảnh công khai trên internet. Ảnh sẽ được hiển thị trực tiếp mà không cần tải lên máy chủ.
                 </p>
-              )}
-
-              <p className="text-[11px] text-zinc-400 leading-normal">
-                Hỗ trợ file JPG, PNG, WEBP tối đa 5MB. Ảnh sẽ được tự động lưu lên máy chủ khi bạn bấm nút hành động.
-              </p>
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Box 4: Chế độ hiển thị & Nút hành động */}
-          <div className="bg-white rounded-lg border border-zinc-200 p-5 shadow-2xs space-y-4">
-            <h2 className="text-sm font-bold text-zinc-900 border-b border-zinc-100 pb-2">
+          <div className="bg-white rounded-xl border border-zinc-200/90 p-5 sm:p-6 shadow-2xs space-y-4">
+            <h2 className="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3">
               Chế độ hiển thị
             </h2>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => setVisibility("PUBLIC")}
-                className={`p-2.5 rounded-md border text-left transition cursor-pointer ${
+                className={`p-3 rounded-lg border text-left transition cursor-pointer ${
                   visibility === "PUBLIC"
-                    ? "border-sky-500 bg-sky-50/50"
+                    ? "border-sky-500 bg-sky-50/50 ring-1 ring-sky-500"
                     : "border-zinc-200 hover:bg-zinc-50"
                 }`}
               >
-                <div className="text-xs font-bold text-zinc-900">Công khai</div>
-                <div className="text-[11px] text-zinc-500 mt-0.5">Hiển thị cho độc giả</div>
+                <div className="text-sm font-bold text-zinc-900">Công khai</div>
+                <div className="text-xs text-zinc-500 mt-0.5">Hiển thị cho độc giả</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setVisibility("PRIVATE")}
-                className={`p-2.5 rounded-md border text-left transition cursor-pointer ${
+                className={`p-3 rounded-lg border text-left transition cursor-pointer ${
                   visibility === "PRIVATE"
-                    ? "border-sky-500 bg-sky-50/50"
+                    ? "border-sky-500 bg-sky-50/50 ring-1 ring-sky-500"
                     : "border-zinc-200 hover:bg-zinc-50"
                 }`}
               >
-                <div className="text-xs font-bold text-zinc-900">Riêng tư</div>
-                <div className="text-[11px] text-zinc-500 mt-0.5">Chỉ bạn xem được</div>
+                <div className="text-sm font-bold text-zinc-900">Riêng tư</div>
+                <div className="text-xs text-zinc-500 mt-0.5">Chỉ bạn xem được</div>
               </button>
             </div>
 
@@ -656,7 +792,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
                 type="button"
                 disabled={isSubmitting || createStoryMutation.isPending || updateStoryMutation.isPending}
                 onClick={() => handleSubmit("SUBMIT")}
-                className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-xs sm:text-sm font-semibold transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-semibold transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center justify-center gap-1.5"
               >
                 {isSubmitting || createStoryMutation.isPending || updateStoryMutation.isPending ? (
                   <>
@@ -672,7 +808,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
                 type="button"
                 disabled={isSubmitting || createStoryMutation.isPending || updateStoryMutation.isPending}
                 onClick={() => handleSubmit("DRAFT")}
-                className="w-full py-2 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-md text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+                className="w-full py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-lg text-sm font-semibold transition cursor-pointer disabled:opacity-50"
               >
                 Lưu bản nháp
               </button>
