@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import Image from "next/image";
+import { NotificationBell } from "@/components/layout/header/NotificationBell";
 
 interface SidebarItem {
   id: string;
@@ -371,6 +372,9 @@ export default function QuanLyLayout({
               <span className="hidden xs:inline">Về trang chủ</span>
               <span className="xs:hidden">Trang chủ</span>
             </Link>
+
+            {/* Notification Bell */}
+            <NotificationBell size="md" />
 
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-sky-500 flex items-center justify-center text-xs sm:text-base font-bold text-white shadow-xs shrink-0">
               {user.avatarUrl ? (

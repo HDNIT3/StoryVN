@@ -13,6 +13,7 @@ import { StoriesModule } from './modules/stories/stories.module.js';
 import { TagsModule } from './modules/tags/tags.module.js';
 import { UploadModule } from './modules/upload/upload.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { UsersModule } from './modules/users/users.module.js';
     GenresModule,
     TagsModule,
     StoriesModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [
