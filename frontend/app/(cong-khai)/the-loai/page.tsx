@@ -7,32 +7,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { usePublicStories } from "@/lib/hooks/queries/usePublicStoryQuery";
 import { useCategories } from "@/lib/hooks/queries/useCategoryQuery";
 import type { PublicStoryItem } from "@/types/public-story";
-import { DEFAULT_GENRES } from "@/components/layout/header/header.constants";
-
-// Map emoji/icon gợi ý cho các thể loại phổ biến
-const GENRE_EMOJIS: Record<string, string> = {
-  "tien-hiep": "⚔️",
-  "huyen-huyen": "🌌",
-  "do-thi": "🏙️",
-  "ngon-tinh": "💖",
-  "trong-sinh": "🔄",
-  "kiem-hiep": "🗡️",
-  "khoa-huyen": "🚀",
-  "vong-du": "🎮",
-  "di-gioi": "🔮",
-  "lanh-chua-xay-thanh": "🏰",
-  "tong-mon-xay-dung": "🏯",
-  "dam-my": "🌸",
-  "bach-hop": "🌺",
-  "mat-the": "🧟",
-  "xuyen-nhanh": "⚡",
-  "dong-nhan": "🎭",
-  "hai-huoc": "😂",
-  "co-dai": "📜",
-  "cung-dau": "👑",
-  "dien-van": "🌾",
-  "hao-mon-the-gia": "💎",
-};
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
@@ -76,8 +50,10 @@ function StoryCard({ story }: { story: PublicStoryItem }) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-4xl">
-            📖
+          <div className="absolute inset-0 flex items-center justify-center text-zinc-300">
+            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
@@ -151,17 +127,7 @@ function TheLoaiContent() {
   });
 
   const categories = useMemo(() => {
-    const items = categoriesData?.items;
-    if (items && items.length > 0) {
-      return items;
-    }
-    return DEFAULT_GENRES.map((g) => ({
-      _id: g.id,
-      name: g.name,
-      slug: g.id,
-      description: "",
-      isActive: true,
-    }));
+    return categoriesData?.items || [];
   }, [categoriesData]);
 
   // Thông tin thể loại hiện tại đang chọn
@@ -198,10 +164,9 @@ function TheLoaiContent() {
   return (
     <div className="min-h-screen bg-zinc-50 pb-16">
       {/* ── Header Banner ─────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-sky-900 text-white py-10 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-indigo-950">
-        <div className="max-w-7xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-sky-200 font-semibold">
-            <span>🏷️</span>
+      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-sky-900 text-white py-10 sm:py-14 border-b border-indigo-950">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-sky-200 font-semibold">
             <span>Khám Phá Toàn Diện</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
@@ -215,12 +180,12 @@ function TheLoaiContent() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 -mt-6">
         {/* ── Category Chips Bar ───────────────────────────────────────────── */}
         <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-md p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
-            <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
-              <span>📂</span> Danh Mục Thể Loại ({categories.length})
+            <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+              Danh Mục Thể Loại {categories.length > 0 ? `(${categories.length})` : ""}
             </span>
             {selectedGenre && (
               <button
@@ -233,42 +198,48 @@ function TheLoaiContent() {
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
-            {/* Chip Tất cả */}
-            <button
-              type="button"
-              onClick={() => handleSelectGenre("")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                !selectedGenre
-                  ? "bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200"
-                  : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
-              }`}
-            >
-              🌟 Tất cả thể loại
-            </button>
+          {categoriesLoading ? (
+            <div className="flex flex-wrap gap-2 animate-pulse py-1">
+              {Array.from({ length: 14 }).map((_, i) => (
+                <div key={i} className="h-7 w-24 bg-zinc-200/80 rounded-xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
+              {/* Chip Tất cả */}
+              <button
+                type="button"
+                onClick={() => handleSelectGenre("")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                  !selectedGenre
+                    ? "bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200"
+                    : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                }`}
+              >
+                Tất cả thể loại
+              </button>
 
-            {categories.map((cat) => {
-              const catKey = cat.slug || cat._id;
-              const isSelected = selectedGenre === catKey || selectedGenre === cat._id || selectedGenre === cat.name;
-              const emoji = GENRE_EMOJIS[catKey] || "📖";
+              {categories.map((cat) => {
+                const catKey = cat.slug || cat._id;
+                const isSelected = selectedGenre === catKey || selectedGenre === cat._id || selectedGenre === cat.name;
 
-              return (
-                <button
-                  key={cat._id}
-                  type="button"
-                  onClick={() => handleSelectGenre(cat.slug || cat._id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border ${
-                    isSelected
-                      ? "bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200"
-                      : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100"
-                  }`}
-                >
-                  <span>{emoji}</span>
-                  <span>{cat.name}</span>
-                </button>
-              );
-            })}
-          </div>
+                return (
+                  <button
+                    key={cat._id}
+                    type="button"
+                    onClick={() => handleSelectGenre(cat.slug || cat._id)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer border ${
+                      isSelected
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200 font-semibold"
+                        : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100 font-medium"
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* ── Toolbar & Filters ────────────────────────────────────────────── */}
@@ -305,12 +276,12 @@ function TheLoaiContent() {
               }}
               className="text-xs rounded-xl border border-zinc-200 px-3 py-1.5 bg-white text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer"
             >
-              <option value="viewCount">🔥 Nhiều xem nhất</option>
-              <option value="likeCount">❤️ Nhiều like nhất</option>
-              <option value="ratingAverage">⭐ Đánh giá cao</option>
-              <option value="followCount">🔖 Nhiều theo dõi</option>
-              <option value="updatedAt">🕒 Mới cập nhật</option>
-              <option value="chapterCount">📚 Nhiều chương</option>
+              <option value="viewCount">Nhiều xem nhất</option>
+              <option value="likeCount">Nhiều like nhất</option>
+              <option value="ratingAverage">Đánh giá cao</option>
+              <option value="followCount">Nhiều theo dõi</option>
+              <option value="updatedAt">Mới cập nhật</option>
+              <option value="chapterCount">Nhiều chương</option>
             </select>
 
             {/* Tiến độ */}
@@ -333,8 +304,8 @@ function TheLoaiContent() {
         {/* ── Story Grid ───────────────────────────────────────────────────── */}
         <div className="mt-6">
           {storiesLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {Array.from({ length: 10 }).map((_, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+              {Array.from({ length: 14 }).map((_, i) => (
                 <div key={i} className="animate-pulse bg-white p-3 rounded-2xl border border-zinc-200">
                   <div className="aspect-[2/3] bg-zinc-200 rounded-xl mb-3" />
                   <div className="h-4 bg-zinc-200 rounded w-3/4 mb-2" />
@@ -344,8 +315,10 @@ function TheLoaiContent() {
             </div>
           ) : stories.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-3xl border border-zinc-200 p-8 shadow-xs">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto mb-3 text-3xl shadow-inner">
-                🔍
+              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
+                </svg>
               </div>
               <h3 className="text-base font-bold text-zinc-800">Không tìm thấy truyện phù hợp</h3>
               <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
@@ -360,7 +333,7 @@ function TheLoaiContent() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 sm:gap-5">
               {stories.map((story) => (
                 <StoryCard key={story._id} story={story} />
               ))}

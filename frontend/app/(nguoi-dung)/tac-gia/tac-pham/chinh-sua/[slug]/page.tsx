@@ -22,7 +22,7 @@ export default function ChinhSuaTacPhamPage() {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-center">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 py-12 flex flex-col items-center justify-center">
         <div className="w-8 h-8 border-2 border-sky-600 border-t-transparent rounded-full animate-spin mb-3" />
         <p className="text-xs text-zinc-500">Đang tải thông tin tác phẩm...</p>
       </div>
@@ -31,7 +31,7 @@ export default function ChinhSuaTacPhamPage() {
 
   if (isError || !story) {
     return (
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 py-12 text-center">
         <h2 className="text-base font-bold text-zinc-900 mb-2">
           Không tìm thấy tác phẩm
         </h2>

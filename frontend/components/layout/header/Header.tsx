@@ -40,7 +40,7 @@ export function Header({
         sticky ? "sticky top-0 z-40 backdrop-blur-md bg-white/95" : ""
       } ${className}`}
     >
-      <div className="w-full max-w-[1600px] mx-auto px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 h-15 sm:h-18 flex items-center justify-between gap-2 sm:gap-3 lg:gap-4">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 h-15 sm:h-18 flex items-center justify-between gap-2 sm:gap-3 lg:gap-4">
         {/* Left Side: Logo & Desktop Navigation */}
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 xl:gap-5 shrink-0">
           <HeaderLogo {...logo} />

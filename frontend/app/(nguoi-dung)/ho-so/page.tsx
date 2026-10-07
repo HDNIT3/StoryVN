@@ -917,7 +917,7 @@ export default function HoSoPage() {
   const authorProfile = authorData?.authorProfile;
 
   return (
-    <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 py-6 sm:py-10 space-y-6">
       {/* ─── Modals ─── */}
       {showEditProfile && (
         <EditProfileModal

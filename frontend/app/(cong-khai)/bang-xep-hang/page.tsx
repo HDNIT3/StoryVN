@@ -252,8 +252,8 @@ function BangXepHangContent() {
   return (
     <div className="min-h-screen bg-zinc-50 pb-16">
       {/* ── Hero Banner ─────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white py-10 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-indigo-950">
-        <div className="max-w-6xl mx-auto space-y-3">
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white py-10 sm:py-14 border-b border-indigo-950">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-amber-300 font-semibold">
             <span>🏆</span>
             <span>Bảng Vinh Danh StoryVN</span>
@@ -267,7 +267,7 @@ function BangXepHangContent() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 space-y-6">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 -mt-6 space-y-6">
         {/* ── Ranking Tabs Bar ─────────────────────────────────────────────── */}
         <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-md p-2.5 sm:p-3 flex items-center justify-between gap-2 overflow-x-auto">
           {RANKING_TABS.map((tab) => {

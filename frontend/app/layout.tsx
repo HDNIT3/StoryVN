@@ -15,9 +15,37 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://storyvn.eastasia.cloudapp.azure.com").replace(/\/$/, "");
+
 export const metadata: Metadata = {
-  title: "StoryVN — Web Đọc Truyện Online",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "StoryVN — Web Đọc Truyện Online",
+    template: "%s | StoryVN",
+  },
   description: "Nền tảng đọc truyện chữ, truyện dịch online mới nhất và hấp dẫn nhất",
+  openGraph: {
+    title: "StoryVN — Web Đọc Truyện Online",
+    description: "Nền tảng đọc truyện chữ, truyện dịch online mới nhất và hấp dẫn nhất",
+    url: siteUrl,
+    siteName: "StoryVN",
+    type: "website",
+    locale: "vi_VN",
+    images: [
+      {
+        url: "/icon/iconweb.png",
+        width: 512,
+        height: 512,
+        alt: "StoryVN Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "StoryVN — Web Đọc Truyện Online",
+    description: "Nền tảng đọc truyện chữ, truyện dịch online mới nhất và hấp dẫn nhất",
+    images: ["/icon/iconweb.png"],
+  },
   icons: {
     icon: "/icon/iconweb.png",
     shortcut: "/icon/iconweb.png",
