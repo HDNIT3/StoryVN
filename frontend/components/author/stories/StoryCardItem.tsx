@@ -51,6 +51,24 @@ export function StoryCardItem({
 
   const statusConfig = statusBadgeConfig[story.status] || statusBadgeConfig.DRAFT;
 
+  const progressBadgeConfig: Record<string, { label: string; bg: string; text: string }> = {
+    ONGOING: {
+      label: "Đang ra",
+      bg: "bg-sky-50 border-sky-200",
+      text: "text-sky-700",
+    },
+    COMPLETED: {
+      label: "Hoàn thành",
+      bg: "bg-teal-50 border-teal-200",
+      text: "text-teal-700",
+    },
+    ON_HOLD: {
+      label: "Tạm ngưng",
+      bg: "bg-zinc-100 border-zinc-200",
+      text: "text-zinc-600",
+    },
+  };
+
   const formatNumber = (num?: number) => {
     if (!num) return "0";
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
@@ -132,6 +150,17 @@ export function StoryCardItem({
             >
               {story.visibility === "PUBLIC" ? "Công khai" : "Riêng tư"}
             </span>
+
+            {/* Progress Badge */}
+            {story.progressState && (
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${
+                  progressBadgeConfig[story.progressState]?.bg || "bg-zinc-100 border-zinc-200"
+                } ${progressBadgeConfig[story.progressState]?.text || "text-zinc-700"}`}
+              >
+                {progressBadgeConfig[story.progressState]?.label || story.progressState}
+              </span>
+            )}
 
             {formattedDate && (
               <span className="text-xs text-zinc-400 ml-auto hidden sm:inline">

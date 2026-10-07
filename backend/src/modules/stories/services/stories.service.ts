@@ -21,7 +21,6 @@ import {
   Story,
   StoryAgeRating,
   StoryDocument,
-  StoryOriginType,
   StoryProgressState,
   StoryStatus,
   StoryVisibility,
@@ -33,7 +32,7 @@ export class StoriesService {
     @InjectModel(Story.name) private readonly storyModel: Model<StoryDocument>,
     @InjectModel(AuthorProfile.name)
     private readonly authorProfileModel: Model<AuthorProfileDocument>,
-  ) {}
+  ) { }
 
   async createStory(
     authorId: Types.ObjectId,
@@ -75,7 +74,6 @@ export class StoriesService {
       tagIds,
       ageRating: dto.ageRating || StoryAgeRating.ALL,
       progressState: dto.progressState || StoryProgressState.ONGOING,
-      originType: dto.originType || StoryOriginType.ORIGINAL,
       status,
       visibility: dto.visibility || StoryVisibility.PUBLIC,
       authorNote: dto.authorNote?.trim() || '',
@@ -214,10 +212,6 @@ export class StoriesService {
 
     if (dto.progressState !== undefined) {
       story.progressState = dto.progressState;
-    }
-
-    if (dto.originType !== undefined) {
-      story.originType = dto.originType;
     }
 
     if (dto.visibility !== undefined) {

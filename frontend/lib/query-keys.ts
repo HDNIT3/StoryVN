@@ -48,4 +48,10 @@ export const queryKeys = {
     list: (params?: Record<string, any>) =>
       ["media", "list", ...(params ? [params] : [])] as const,
   },
+  notifications: {
+    all: ["notifications"] as const,
+    list: (params?: Record<string, any>) =>
+      ["notifications", "list", ...(params ? [params] : [])] as const,
+    unreadCount: ["notifications", "unread-count"] as const,
+  },
 } as const;
