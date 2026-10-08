@@ -195,4 +195,12 @@ export const ErrorCode = {
     error: 'STORY_SLUG_EXISTS',
     message: 'Đường dẫn (slug) tác phẩm đã tồn tại trên hệ thống',
   },
+  STORY_NOT_PENDING: {
+    error: 'STORY_NOT_PENDING',
+    message: 'Tác phẩm không ở trạng thái chờ duyệt',
+  },
+  STORY_REJECT_REASON_REQUIRED: {
+    error: 'STORY_REJECT_REASON_REQUIRED',
+    message: 'Vui lòng cung cấp lý do từ chối tác phẩm',
+  },
 };
