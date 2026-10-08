@@ -9,6 +9,8 @@ import { AuthProvider } from "@/lib/context/AuthContext";
 import { ToastContainer } from "@/components/ui/Toast";
 import { toast } from "@/lib/toast";
 
+import { useRealtimeNotifications } from "@/lib/hooks/useRealtimeNotifications";
+
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
@@ -32,6 +34,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <AuthProvider>
           <AuthLogoutListener />
+          <RealtimeNotificationListener />
           {children}
           <ToastContainer />
         </AuthProvider>
@@ -41,6 +44,12 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       )}
     </QueryClientProvider>
   );
+}
+
+// Lắng nghe thông báo SSE thời gian thực khi user đã đăng nhập
+function RealtimeNotificationListener() {
+  useRealtimeNotifications();
+  return null;
 }
 
 // Lắng nghe event auth:logout khi 401 không refresh được
