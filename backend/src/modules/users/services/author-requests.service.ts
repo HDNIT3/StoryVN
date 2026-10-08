@@ -9,9 +9,11 @@ import { Model, Types } from 'mongoose';
 import { buildPaginationMeta, PaginatedResult } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
 import { MailService } from '../../mail/mail.service.js';
+import { NotificationsService } from '../../notifications/notifications.service.js';
 import { CreateAuthorRequestDto } from '../dto/create-author-request.dto.js';
 import { QueryAuthorRequestsDto } from '../dto/query-author-requests.dto.js';
 import { ReviewAction, ReviewAuthorRequestDto } from '../dto/review-author-request.dto.js';
+import { UpdateAuthorProfileDto } from '../dto/update-author-profile.dto.js';
 import { UpdateAuthorRequestDto } from '../dto/update-author-request.dto.js';
 import {
   AuthorProfile,
@@ -23,7 +25,8 @@ import {
   AuthorRequestDocument,
   AuthorRequestStatus,
 } from '../schemas/author-request.schema.js';
-import { User, UserDocument, UserRole } from '../schemas/user.schema.js';
+import { NotificationType } from '../../notifications/schemas/notification.schema.js';
+import { User, UserDocument, UserRole, UserStatus } from '../schemas/user.schema.js';
 
 @Injectable()
 export class AuthorRequestsService {
@@ -37,6 +40,7 @@ export class AuthorRequestsService {
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
     private mailService: MailService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async createRequest(userId: string, dto: CreateAuthorRequestDto) {
@@ -74,6 +78,8 @@ export class AuthorRequestsService {
       status: AuthorRequestStatus.REJECTED,
     });
 
+    let savedRequest: AuthorRequestDocument;
+
     if (previousRejected) {
       previousRejected.penName = trimmedPenName;
       previousRejected.biography = dto.biography ? dto.biography.trim() : null;
@@ -92,28 +98,47 @@ export class AuthorRequestsService {
       previousRejected.adminNote = null;
       previousRejected.processedBy = null;
       previousRejected.processedAt = null;
-      return previousRejected.save();
+      savedRequest = await previousRejected.save();
+    } else {
+      const newRequest = new this.authorRequestModel({
+        userId: user._id,
+        penName: trimmedPenName,
+        biography: dto.biography ? dto.biography.trim() : null,
+        avatarUrl: dto.avatarUrl || user.avatarUrl || null,
+        website: dto.website ? dto.website.trim() : null,
+        socialLinks: dto.socialLinks || {},
+        bankName: dto.bankName ? dto.bankName.trim() : null,
+        bankAccountNumber: dto.bankAccountNumber
+          ? dto.bankAccountNumber.trim()
+          : null,
+        bankAccountName: dto.bankAccountName
+          ? dto.bankAccountName.trim().toUpperCase()
+          : null,
+        reason: dto.reason ? dto.reason.trim() : null,
+        status: AuthorRequestStatus.PENDING,
+      });
+      savedRequest = await newRequest.save();
     }
 
-    const newRequest = new this.authorRequestModel({
-      userId: user._id,
-      penName: trimmedPenName,
-      biography: dto.biography ? dto.biography.trim() : null,
-      avatarUrl: dto.avatarUrl || user.avatarUrl || null,
-      website: dto.website ? dto.website.trim() : null,
-      socialLinks: dto.socialLinks || {},
-      bankName: dto.bankName ? dto.bankName.trim() : null,
-      bankAccountNumber: dto.bankAccountNumber
-        ? dto.bankAccountNumber.trim()
-        : null,
-      bankAccountName: dto.bankAccountName
-        ? dto.bankAccountName.trim().toUpperCase()
-        : null,
-      reason: dto.reason ? dto.reason.trim() : null,
-      status: AuthorRequestStatus.PENDING,
-    });
+    // Gửi thông báo đến Admin và Manager
+    this.notifyAdminsAboutAuthorRequest(
+      user,
+      trimmedPenName,
+      savedRequest._id.toString(),
+    ).catch(() => {});
 
-    return newRequest.save();
+    // Gửi thông báo xác nhận cho chính người gửi đơn
+    this.notificationsService
+      .create({
+        userId: user._id.toString(),
+        type: NotificationType.MODERATION,
+        title: '⏳ Đã gửi đơn đăng ký tác giả',
+        message: `Đơn đăng ký tác giả với bút danh "${trimmedPenName}" của bạn đã được gửi thành công và đang chờ xét duyệt.`,
+        referenceId: savedRequest._id.toString(),
+      })
+      .catch(() => {});
+
+    return savedRequest;
   }
 
   async getAuthorProfileAndRequestStatus(userId: string) {
@@ -189,14 +214,91 @@ export class AuthorRequestsService {
     }
     if (dto.reason !== undefined) request.reason = dto.reason ? dto.reason.trim() : null;
 
-    if (request.status === AuthorRequestStatus.REJECTED) {
+    const wasRejected = request.status === AuthorRequestStatus.REJECTED;
+    if (wasRejected) {
       request.status = AuthorRequestStatus.PENDING;
       request.adminNote = null;
       request.processedBy = null;
       request.processedAt = null;
     }
 
-    return request.save();
+    const saved = await request.save();
+
+    if (wasRejected) {
+      const user = await this.userModel.findById(userId);
+      if (user) {
+        this.notifyAdminsAboutAuthorRequest(
+          user,
+          request.penName,
+          saved._id.toString(),
+        ).catch(() => {});
+      }
+    }
+
+    return saved;
+  }
+
+  async updateAuthorProfile(userId: string, dto: UpdateAuthorProfileDto) {
+    const authorProfile = await this.authorProfileModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+
+    if (!authorProfile) {
+      throw new NotFoundException(ErrorCode.AUTHOR_PROFILE_NOT_FOUND);
+    }
+
+    if (
+      dto.penName &&
+      dto.penName.trim().toLowerCase() !== authorProfile.penName.toLowerCase()
+    ) {
+      const trimmedPenName = dto.penName.trim();
+      const existingPenName = await this.authorProfileModel.findOne({
+        penName: { $regex: new RegExp(`^${trimmedPenName}$`, 'i') },
+        userId: { $ne: authorProfile.userId },
+      });
+      if (existingPenName) {
+        throw new BadRequestException(ErrorCode.PEN_NAME_ALREADY_EXISTS);
+      }
+      authorProfile.penName = trimmedPenName;
+    }
+
+    if (dto.biography !== undefined) {
+      authorProfile.biography = dto.biography ? dto.biography.trim() : null;
+    }
+    if (dto.avatarUrl !== undefined) {
+      authorProfile.avatarUrl = dto.avatarUrl ? dto.avatarUrl.trim() : null;
+    }
+    if (dto.website !== undefined) {
+      authorProfile.website = dto.website ? dto.website.trim() : null;
+    }
+    if (dto.socialLinks !== undefined) {
+      authorProfile.socialLinks = dto.socialLinks || {};
+    }
+    if (dto.bankName !== undefined) {
+      authorProfile.bankName = dto.bankName ? dto.bankName.trim() : null;
+    }
+    if (dto.bankAccountNumber !== undefined) {
+      authorProfile.bankAccountNumber = dto.bankAccountNumber
+        ? dto.bankAccountNumber.trim()
+        : null;
+    }
+    if (dto.bankAccountName !== undefined) {
+      authorProfile.bankAccountName = dto.bankAccountName
+        ? dto.bankAccountName.trim().toUpperCase()
+        : null;
+    }
+
+    return authorProfile.save();
+  }
+
+  async getAuthorProfile(userId: string) {
+    const authorProfile = await this.authorProfileModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+    if (!authorProfile) {
+      throw new NotFoundException(ErrorCode.AUTHOR_PROFILE_NOT_FOUND);
+    }
+    return authorProfile;
   }
 
   async findAllRequests(
@@ -284,7 +386,7 @@ export class AuthorRequestsService {
           bankAccountName: request.bankAccountName,
           status: AuthorProfileStatus.ACTIVE,
         },
-        { upsert: true, new: true },
+        { upsert: true, returnDocument: 'after' },
       );
 
       request.status = AuthorRequestStatus.APPROVED;
@@ -304,6 +406,11 @@ export class AuthorRequestsService {
             `Gửi email duyệt tác giả thất bại tới ${targetUser.email}: ${err.message}`,
           ),
         );
+
+      // Tạo thông báo in-app
+      this.notificationsService
+        .notifyAuthorRequestResult(targetUser._id.toString(), true, request.penName)
+        .catch(() => {});
 
       return {
         message: 'Chấp thuận yêu cầu và đã nâng cấp quyền AUTHOR thành công',
@@ -329,10 +436,55 @@ export class AuthorRequestsService {
           ),
         );
 
+      // Tạo thông báo in-app
+      this.notificationsService
+        .notifyAuthorRequestResult(
+          targetUser._id.toString(),
+          false,
+          request.penName,
+          dto.adminNote?.trim(),
+        )
+        .catch(() => {});
+
       return {
         message: 'Từ chối yêu cầu nâng cấp tác giả thành công',
         request,
       };
+    }
+  }
+
+  /**
+   * Helper gửi thông báo tới tất cả ADMIN và MANAGER có trạng thái ACTIVE
+   */
+  private async notifyAdminsAboutAuthorRequest(
+    applicantUser: UserDocument,
+    penName: string,
+    requestId: string,
+  ): Promise<void> {
+    try {
+      const adminsAndManagers = await this.userModel
+        .find(
+          {
+            role: { $in: [UserRole.ADMIN, UserRole.MANAGER] },
+            status: UserStatus.ACTIVE,
+          },
+          '_id',
+        )
+        .lean();
+
+      const adminIds = adminsAndManagers.map((u) => u._id.toString());
+      if (adminIds.length > 0) {
+        await this.notificationsService.notifyNewAuthorRequestToAdmins(
+          adminIds,
+          applicantUser.displayName || applicantUser.username,
+          penName,
+          applicantUser._id.toString(),
+          requestId,
+        );
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Lỗi gửi thông báo đơn tác giả tới Admin/Manager: ${msg}`);
     }
   }
 }

@@ -1,5 +1,10 @@
 import api from "../api";
-import type { UploadApiResponse, UploadResult } from "../../types/upload";
+import type {
+  MediaApiResponse,
+  QueryMediaParams,
+  UploadApiResponse,
+  UploadResult,
+} from "../../types/upload";
 
 export const uploadService = {
   /**
@@ -38,6 +43,22 @@ export const uploadService = {
 
     const query = folder ? `?folder=${encodeURIComponent(folder)}` : "";
     return api.upload<UploadApiResponse>(`/upload/image${query}`, formData);
+  },
+
+  /**
+   * Lấy danh sách tất cả hình ảnh (Cloud & Local) có phân trang
+   */
+  async getAllMedia(
+    params?: QueryMediaParams
+  ): Promise<MediaApiResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.source) searchParams.append("source", params.source);
+
+    const queryString = searchParams.toString();
+    const endpoint = queryString ? `/upload/media?${queryString}` : "/upload/media";
+    return api.get<MediaApiResponse>(endpoint);
   },
 };
 

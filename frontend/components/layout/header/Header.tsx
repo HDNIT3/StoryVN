@@ -40,9 +40,9 @@ export function Header({
         sticky ? "sticky top-0 z-40 backdrop-blur-md bg-white/95" : ""
       } ${className}`}
     >
-      <div className="w-full max-w-[1600px] mx-auto px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 h-15 sm:h-18 flex items-center justify-between gap-2 sm:gap-3 lg:gap-4">
+      <div className="w-full px-3 sm:px-5 md:px-7 lg:px-10 xl:px-12 2xl:px-16 h-15 sm:h-18 flex items-center justify-between gap-3 sm:gap-4 lg:gap-6">
         {/* Left Side: Logo & Desktop Navigation */}
-        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 xl:gap-5 shrink-0">
+        <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 xl:gap-8 shrink-0">
           <HeaderLogo {...logo} />
 
           {/* Desktop Navigation (visible on xl screens) */}
@@ -58,12 +58,12 @@ export function Header({
         </div>
 
         {/* Center: Search Bar (visible on lg and xl screens) */}
-        <div className="hidden lg:flex items-center justify-center flex-1 max-w-[180px] xl:max-w-[240px] 2xl:max-w-xs mx-1 sm:mx-2 min-w-0">
+        <div className="hidden lg:flex items-center justify-center flex-1 max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-2 sm:mx-4 min-w-0">
           <HeaderSearch className="w-full" {...search} />
         </div>
 
         {/* Right Side: User Actions & Mobile Menu */}
-        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
           <HeaderActions
             isLoggedIn={isLoggedIn}
             user={user}

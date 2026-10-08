@@ -6,6 +6,7 @@ import Image from "next/image";
 import { NavItem, GenreItem as GenreItemType, UserProfile, WalletInfo, BookmarkInfo } from "./header.types";
 import { DEFAULT_NAV_ITEMS, DEFAULT_GENRES } from "./header.constants";
 import { HeaderSearch } from "./HeaderSearch";
+import { NotificationBell } from "./NotificationBell";
 
 const ROLE_LABEL: Record<string, string> = {
   USER: "Người dùng",
@@ -215,6 +216,9 @@ export function HeaderMobileMenu({
                       <span className="text-xs font-bold">{bookmark.count || 0}</span>
                     </Link>
                   )}
+
+                  {/* Notification Bell - mobile */}
+                  <NotificationBell size="sm" mobileDrawerMode={true} />
                 </div>
               </div>
             ) : (
@@ -262,7 +266,7 @@ export function HeaderMobileMenu({
                       <button
                         type="button"
                         onClick={() => setIsGenresExpanded(!isGenresExpanded)}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-zinc-800 hover:bg-zinc-50"
                       >
                         <span>{item.label}</span>
                         <div className="relative w-4 h-4">
@@ -308,9 +312,9 @@ export function HeaderMobileMenu({
                       setIsOpen(false);
                       onNavItemClick?.(item);
                     }}
-                    className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    className={`px-3 py-2.5 rounded-xl text-sm transition-colors ${
                       isActive
-                        ? "bg-sky-50 text-sky-600 font-bold"
+                        ? "bg-sky-50 text-sky-600 font-medium"
                         : "text-zinc-800 hover:bg-zinc-50"
                     }`}
                   >
