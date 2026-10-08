@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import Image from "next/image";
+import { NotificationBell } from "@/components/layout/header/NotificationBell";
+import { useAdminStoryCounts } from "@/lib/hooks/queries/useAdminStoryQuery";
 
 interface SidebarItem {
   id: string;
@@ -24,6 +26,17 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+  },
+  {
+    id: "truyen",
+    label: "Quản lý Truyện",
+    href: "/quan-ly/truyen",
+    roles: ["ADMIN", "MANAGER"],
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
       </svg>
     ),
   },
@@ -88,9 +101,22 @@ function Sidebar({
   const router = useRouter();
   const pathname = usePathname();
 
+  // Lấy số lượng truyện chờ duyệt để hiển thị badge trên menu
+  const { data: storyCounts } = useAdminStoryCounts();
+  const pendingStoryCount = storyCounts?.pending ?? 0;
+
   const visibleItems = SIDEBAR_ITEMS.filter(
     (item) => user && item.roles.includes(user.role)
-  );
+  ).map((item) => {
+    if (item.id === "truyen") {
+      return {
+        ...item,
+        label: "Quản lý Truyện",
+        badge: pendingStoryCount,
+      };
+    }
+    return item;
+  });
 
   const handleLogout = async () => {
     await logout();
@@ -225,10 +251,25 @@ function Sidebar({
                     }`}
                     title={collapsed ? item.label : undefined}
                   >
-                    <span className="shrink-0">{item.icon}</span>
+                    <div className="relative shrink-0">
+                      {item.icon}
+                      {collapsed && item.badge !== undefined && item.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full ring-2 ring-white animate-pulse" />
+                      )}
+                    </div>
                     <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className={`ml-auto bg-sky-100 text-sky-700 text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center ${collapsed ? "lg:hidden" : ""}`}>
+                      <span
+                        className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center ${
+                          collapsed ? "lg:hidden" : ""
+                        } ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : item.id === "truyen"
+                            ? "bg-amber-100 text-amber-800 border border-amber-300 font-extrabold shadow-2xs animate-pulse"
+                            : "bg-sky-100 text-sky-700"
+                        }`}
+                      >
                         {item.badge > 99 ? "99+" : item.badge}
                       </span>
                     )}
@@ -371,6 +412,9 @@ export default function QuanLyLayout({
               <span className="hidden xs:inline">Về trang chủ</span>
               <span className="xs:hidden">Trang chủ</span>
             </Link>
+
+            {/* Notification Bell */}
+            <NotificationBell size="md" />
 
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-sky-500 flex items-center justify-center text-xs sm:text-base font-bold text-white shadow-xs shrink-0">
               {user.avatarUrl ? (

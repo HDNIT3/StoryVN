@@ -30,13 +30,6 @@ export enum StoryProgressState {
   ON_HOLD = 'ON_HOLD',     // Tạm ngưng
 }
 
-// Nguồn gốc truyện (nếu có tính năng sưu tầm / dịch)
-export enum StoryOriginType {
-  ORIGINAL = 'ORIGINAL',       // Tự sáng tác
-  TRANSLATED = 'TRANSLATED',   // Truyện dịch
-  CONVERT = 'CONVERT',         // Convert / Sưu tầm
-}
-
 @Schema({ _id: false })
 export class StoryStats {
   @Prop({ type: Number, default: 0, min: 0 })
@@ -113,14 +106,6 @@ export class Story {
     index: true,
   })
   progressState: StoryProgressState;
-
-  @Prop({
-    type: String,
-    enum: StoryOriginType,
-    default: StoryOriginType.ORIGINAL,
-    index: true,
-  })
-  originType: StoryOriginType;
 
   @Prop({
     type: String,

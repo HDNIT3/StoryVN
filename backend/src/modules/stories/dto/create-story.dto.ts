@@ -10,7 +10,6 @@ import {
 } from 'class-validator';
 import {
   StoryAgeRating,
-  StoryOriginType,
   StoryProgressState,
   StoryStatus,
   StoryVisibility,
@@ -108,15 +107,6 @@ export class CreateStoryDto {
   @IsOptional()
   @IsEnum(StoryProgressState, { message: 'Tiến độ sáng tác không hợp lệ' })
   progressState?: StoryProgressState;
-
-  @ApiPropertyOptional({
-    enum: StoryOriginType,
-    default: StoryOriginType.ORIGINAL,
-    description: 'Nguồn gốc tác phẩm',
-  })
-  @IsOptional()
-  @IsEnum(StoryOriginType, { message: 'Nguồn gốc tác phẩm không hợp lệ' })
-  originType?: StoryOriginType;
 
   @ApiPropertyOptional({
     enum: StoryStatus,

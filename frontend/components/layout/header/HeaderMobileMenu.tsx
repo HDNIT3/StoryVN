@@ -6,6 +6,7 @@ import Image from "next/image";
 import { NavItem, GenreItem as GenreItemType, UserProfile, WalletInfo, BookmarkInfo } from "./header.types";
 import { DEFAULT_NAV_ITEMS, DEFAULT_GENRES } from "./header.constants";
 import { HeaderSearch } from "./HeaderSearch";
+import { NotificationBell } from "./NotificationBell";
 
 const ROLE_LABEL: Record<string, string> = {
   USER: "Người dùng",
@@ -215,6 +216,9 @@ export function HeaderMobileMenu({
                       <span className="text-xs font-bold">{bookmark.count || 0}</span>
                     </Link>
                   )}
+
+                  {/* Notification Bell - mobile */}
+                  <NotificationBell size="sm" mobileDrawerMode={true} />
                 </div>
               </div>
             ) : (

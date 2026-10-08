@@ -24,6 +24,10 @@ export const queryKeys = {
     authorRequests: (params?: Record<string, any>) =>
       ["admin", "author-requests", ...(params ? [params] : [])] as const,
     authorRequestStats: ["admin", "author-requests", "stats"] as const,
+    stories: (params?: Record<string, any>) =>
+      ["admin", "stories", ...(params ? [params] : [])] as const,
+    storyCounts: ["admin", "stories", "counts"] as const,
+    storyDetail: (id: string) => ["admin", "stories", "detail", id] as const,
   },
   tags: {
     all: ["tags"] as const,
@@ -47,5 +51,11 @@ export const queryKeys = {
     all: ["media"] as const,
     list: (params?: Record<string, any>) =>
       ["media", "list", ...(params ? [params] : [])] as const,
+  },
+  notifications: {
+    all: ["notifications"] as const,
+    list: (params?: Record<string, any>) =>
+      ["notifications", "list", ...(params ? [params] : [])] as const,
+    unreadCount: ["notifications", "unread-count"] as const,
   },
 } as const;
