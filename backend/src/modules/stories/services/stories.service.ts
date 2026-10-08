@@ -240,4 +240,49 @@ export class StoriesService {
       .populate('tagIds', 'name slug')
       .exec()) as StoryDocument;
   }
+
+  async getMyCounts(authorId: Types.ObjectId): Promise<{
+    all: number;
+    pending: number;
+    published: number;
+    rejected: number;
+    draft: number;
+  }> {
+    const countsAggregate = await this.storyModel.aggregate([
+      {
+        $match: {
+          authorId: new Types.ObjectId(authorId),
+        },
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const counts = {
+      all: 0,
+      pending: 0,
+      published: 0,
+      rejected: 0,
+      draft: 0,
+    };
+
+    countsAggregate.forEach((item) => {
+      counts.all += item.count;
+      if (item._id === StoryStatus.PENDING_REVIEW) {
+        counts.pending = item.count;
+      } else if (item._id === StoryStatus.PUBLISHED) {
+        counts.published = item.count;
+      } else if (item._id === StoryStatus.REJECTED) {
+        counts.rejected = item.count;
+      } else if (item._id === StoryStatus.DRAFT) {
+        counts.draft = item.count;
+      }
+    });
+
+    return counts;
+  }
 }

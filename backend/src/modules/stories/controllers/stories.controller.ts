@@ -66,6 +66,19 @@ export class StoriesController {
   }
 
   @Roles(UserRole.AUTHOR, UserRole.ADMIN)
+  @Get('my/counts')
+  @HttpCode(HttpStatus.OK)
+  async getMyCounts(@CurrentUser() user: any) {
+    const data = await this.storiesService.getMyCounts(user._id);
+
+    return {
+      success: true,
+      message: 'Lấy số lượng thống kê tác phẩm của tác giả thành công',
+      data,
+    };
+  }
+
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN)
   @Patch('my/:id')
   @HttpCode(HttpStatus.OK)
   async updateMyStory(
