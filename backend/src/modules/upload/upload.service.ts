@@ -21,6 +21,27 @@ export interface UploadResult {
   storage: 'cloud' | 'local';
 }
 
+export interface MediaItem {
+  id: string;
+  url: string;
+  thumbnailUrl?: string;
+  name: string;
+  size?: number;
+  format?: string;
+  width?: number;
+  height?: number;
+  source: 'cloud' | 'local';
+  createdAt: string;
+}
+
+export interface PaginatedMedia {
+  items: MediaItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 @Injectable()
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
@@ -152,5 +173,138 @@ export class UploadService {
       mimeType: file.mimetype,
       storage: 'local',
     };
+  }
+
+  /**
+   * Lấy danh sách tất cả hình ảnh (Cloudinary & Local) với phân trang
+   */
+  async getAllMedia(
+    page: number = 1,
+    limit: number = 40,
+    source: 'all' | 'cloud' | 'local' = 'all',
+  ): Promise<PaginatedMedia> {
+    const promises: Promise<MediaItem[]>[] = [];
+
+    if (source === 'all' || source === 'local') {
+      promises.push(this.getLocalImages());
+    }
+    if (source === 'all' || source === 'cloud') {
+      promises.push(this.getCloudinaryImages());
+    }
+
+    const results = await Promise.all(promises);
+    const allImages = results.flat();
+
+    // Sắp xếp ảnh mới nhất lên đầu
+    allImages.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    const total = allImages.length;
+    const totalPages = Math.ceil(total / limit) || 1;
+    const currentPage = Math.max(1, Math.min(page, totalPages));
+    const offset = (currentPage - 1) * limit;
+    const paginatedItems = allImages.slice(offset, offset + limit);
+
+    return {
+      items: paginatedItems,
+      total,
+      page: currentPage,
+      limit,
+      totalPages,
+    };
+  }
+
+  private async getLocalImages(): Promise<MediaItem[]> {
+    const uploadsRoot = path.join(process.cwd(), 'uploads');
+    const appUrl = (this.configService.get<string>('APP_URL') || '').replace(/\/$/, '');
+    const items: MediaItem[] = [];
+
+    const walkDir = async (dir: string) => {
+      try {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            await walkDir(fullPath);
+          } else if (entry.isFile()) {
+            const ext = path.extname(entry.name).toLowerCase();
+            if (['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif'].includes(ext)) {
+              const stat = await fs.stat(fullPath);
+              const relative = path.relative(process.cwd(), fullPath).replace(/\\/g, '/');
+              const relUrl = `/${relative}`;
+              const fullUrl = appUrl ? `${appUrl}${relUrl}` : relUrl;
+              items.push({
+                id: `local-${entry.name}`,
+                url: fullUrl,
+                thumbnailUrl: fullUrl,
+                name: entry.name,
+                size: stat.size,
+                format: ext.replace('.', ''),
+                source: 'local',
+                createdAt: stat.mtime.toISOString(),
+              });
+            }
+          }
+        }
+      } catch {
+        // bỏ qua nếu thư mục chưa tồn tại
+      }
+    };
+
+    await walkDir(uploadsRoot);
+    return items;
+  }
+
+  private async getCloudinaryImages(): Promise<MediaItem[]> {
+    try {
+      const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME');
+      const apiKey = this.configService.get<string>('CLOUDINARY_API_KEY');
+      const apiSecret = this.configService.get<string>('CLOUDINARY_API_SECRET');
+
+      if (!cloudName || !apiKey || !apiSecret) {
+        return [];
+      }
+
+      cloudinary.config({
+        cloud_name: cloudName,
+        api_key: apiKey,
+        api_secret: apiSecret,
+      });
+
+      const res = await cloudinary.api.resources({
+        type: 'upload',
+        resource_type: 'image',
+        max_results: 500,
+      });
+
+      if (!res.resources || !Array.isArray(res.resources)) {
+        return [];
+      }
+
+      return res.resources.map((r: any) => {
+        const secureUrl = r.secure_url;
+        let thumbUrl = secureUrl;
+        if (secureUrl.includes('/upload/')) {
+          thumbUrl = secureUrl.replace('/upload/', '/upload/c_fill,w_300,h_300,q_auto,f_auto/');
+        }
+
+        return {
+          id: r.public_id,
+          url: secureUrl,
+          thumbnailUrl: thumbUrl,
+          name: path.basename(r.public_id),
+          size: r.bytes,
+          format: r.format,
+          width: r.width,
+          height: r.height,
+          source: 'cloud',
+          createdAt: r.created_at || new Date().toISOString(),
+        };
+      });
+    } catch (err) {
+      this.logger.error('Lỗi khi lấy danh sách ảnh từ Cloudinary:', err);
+      return [];
+    }
   }
 }

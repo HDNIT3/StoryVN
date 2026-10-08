@@ -6,6 +6,7 @@ import { DEFAULT_USER, DEFAULT_WALLET, DEFAULT_BOOKMARK } from "./header.constan
 import { HeaderBookmark } from "./HeaderBookmark";
 import { HeaderWallet } from "./HeaderWallet";
 import { HeaderUserAvatar } from "./HeaderUserAvatar";
+import { NotificationBell } from "./NotificationBell";
 
 export function HeaderActions({
   isLoggedIn = true,
@@ -28,6 +29,11 @@ export function HeaderActions({
         />
       )}
 
+      {/* Notification Bell */}
+      {isLoggedIn && (
+        <NotificationBell size="md" />
+      )}
+
       {/* Wallet coin pill */}
       {isLoggedIn && (
         <HeaderWallet
@@ -46,3 +52,4 @@ export function HeaderActions({
     </div>
   );
 }
+

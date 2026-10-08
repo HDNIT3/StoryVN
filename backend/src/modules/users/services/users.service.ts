@@ -59,7 +59,7 @@ export class UsersService {
     return this.userModel.findByIdAndUpdate(
       userId,
       { $inc: { versionToken: 1 } },
-      { new: true },
+      { returnDocument: 'after' },
     );
   }
 
@@ -73,7 +73,7 @@ export class UsersService {
         passwordHash,
         $inc: { versionToken: 1 },
       },
-      { new: true },
+      { returnDocument: 'after' },
     );
   }
 

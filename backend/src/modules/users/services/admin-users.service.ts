@@ -258,7 +258,7 @@ export class AdminUsersService {
         {
           status: ManagerProfileStatus.ACTIVE,
         },
-        { upsert: true, new: true, setDefaultsOnInsert: true },
+        { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
       );
     } else if (previousRole === UserRole.MANAGER) {
       await this.managerProfileModel.findOneAndUpdate(

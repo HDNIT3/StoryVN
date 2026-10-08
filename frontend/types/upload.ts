@@ -16,3 +16,36 @@ export interface UploadApiResponse {
   message: string;
   data: UploadResult;
 }
+
+export interface MediaItem {
+  id: string;
+  url: string;
+  thumbnailUrl?: string;
+  name: string;
+  size?: number;
+  format?: string;
+  width?: number;
+  height?: number;
+  source: "cloud" | "local";
+  createdAt: string;
+}
+
+export interface PaginatedMedia {
+  items: MediaItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface QueryMediaParams {
+  page?: number;
+  limit?: number;
+  source?: "all" | "cloud" | "local";
+}
+
+export interface MediaApiResponse {
+  success: boolean;
+  message: string;
+  data: PaginatedMedia;
+}
