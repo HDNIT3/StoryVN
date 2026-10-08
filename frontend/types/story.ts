@@ -89,3 +89,49 @@ export interface StoryApiResponse<T = any> {
   message: string;
   data: T;
 }
+
+export interface AdminStoryAuthor {
+  _id: string;
+  displayName: string;
+  username: string;
+  email: string;
+  avatarUrl?: string | null;
+  role: string;
+  createdAt?: string;
+}
+
+export interface AdminStoryItem extends Omit<StoryItem, "authorId"> {
+  authorId?: AdminStoryAuthor | any;
+  authorProfile?: {
+    penName?: string;
+    bio?: string;
+    storyCount?: number;
+    level?: number;
+  } | null;
+}
+
+export interface AdminStoryCounts {
+  all: number;
+  pending: number;
+  published: number;
+  rejected: number;
+  draft: number;
+  hidden: number;
+}
+
+export interface QueryAdminStoriesParams {
+  status?: StoryStatus;
+  visibility?: StoryVisibility;
+  genreId?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface PaginatedAdminStories {
+  items: AdminStoryItem[];
+  pagination: PaginationMeta;
+}
+

@@ -346,109 +346,148 @@ export default function DangKyTacGiaPage() {
   const isAuthor = statusData?.isAuthor ?? false;
 
   return (
-    <div className="max-w-4xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10">
-      {/* Page header */}
-      <div className="mb-6 sm:mb-8">
-        <div className="flex items-center gap-3 mb-3">
-          <button
-            onClick={() => router.back()}
-            className="text-zinc-400 hover:text-zinc-700 p-1.5 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 truncate">Đăng ký Tác giả</h1>
-            <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 truncate">
-              Chia sẻ tác phẩm của bạn với hàng nghìn độc giả trên StoryVN
-            </p>
-          </div>
-        </div>
-
-        {/* Benefits banner */}
-        {!isAuthor && !hasExistingRequest && (
-          <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-4 sm:p-5 text-white">
-            <h2 className="font-bold text-base sm:text-lg mb-2">✨ Quyền lợi khi là Tác giả</h2>
-            <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 text-xs sm:text-sm">
-              <div className="flex items-center gap-2">
-                <span>📖</span> <span>Đăng tải tác phẩm</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>💰</span> <span>Nhận nhuận bút</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>👥</span> <span>Xây dựng fan base</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>🏆</span> <span>Huy hiệu Tác giả</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
+    <div className="w-full max-w-[1600px] mx-auto px-3.5 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 py-6 sm:py-10">
       {/* Loading */}
       {isLoadingStatus ? (
-        <div className="flex flex-col items-center py-16 gap-3">
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
           <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-zinc-400">Đang kiểm tra trạng thái...</p>
         </div>
-      ) : (
+      ) : isAuthor && statusData ? (
+        /* Đã là tác giả: Hiển thị thẻ chúc mừng và hồ sơ toàn diện */
         <div className="space-y-6">
-          {/* Status card nếu đã có yêu cầu */}
-          {(hasExistingRequest || isAuthor) && statusData && (
-            <RequestStatusCard
-              data={statusData}
-              onEdit={() => setShowEditForm(true)}
-            />
-          )}
-
-          {/* Form: hiển thị nếu chưa có request HOẶC đang edit */}
-          {(!hasExistingRequest || showEditForm) && !isAuthor && (
-            <>
-              {showEditForm && (
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-bold text-zinc-900">Chỉnh sửa yêu cầu</h2>
-                  <button
-                    onClick={() => setShowEditForm(false)}
-                    className="text-sm text-zinc-400 hover:text-zinc-700 flex items-center gap-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Hủy
-                  </button>
-                </div>
-              )}
-
-              <AuthorRequestForm
-                initialData={
-                  showEditForm && statusData?.request
-                    ? {
-                        penName: statusData.request.penName,
-                        biography: statusData.request.biography ?? "",
-                        website: statusData.request.website ?? "",
-                        bankName: statusData.request.bankName ?? "",
-                        bankAccountNumber: statusData.request.bankAccountNumber ?? "",
-                        bankAccountName: statusData.request.bankAccountName ?? "",
-                        reason: statusData.request.reason ?? "",
-                      }
-                    : undefined
-                }
-                onSubmit={showEditForm ? handleUpdate : handleCreate}
-                isLoading={isSubmitting}
-                isEditing={showEditForm}
-              />
-            </>
-          )}
-
-          {/* Trạng thái PENDING - không cho edit thêm */}
-          {hasExistingRequest && statusData?.request?.status === "PENDING" && !showEditForm && (
-            <div className="text-center text-sm text-zinc-400 py-4">
-              Yêu cầu đang được xét duyệt. Vui lòng chờ phản hồi từ quản trị viên.
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="text-zinc-400 hover:text-zinc-700 p-2 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
+              title="Quay lại"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-zinc-900">Không gian Tác giả</h1>
+              <p className="text-xs sm:text-sm text-zinc-500">Tài khoản của bạn đã được chứng nhận Tác giả chính thức</p>
             </div>
-          )}
+          </div>
+          <RequestStatusCard data={statusData} onEdit={() => setShowEditForm(true)} />
+        </div>
+      ) : (
+        /* Chưa là tác giả hoặc đang chỉnh sửa: Layout 2 cột tản đều toàn width */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Cột trái: Header + Quyền lợi tác giả */}
+          <div className="lg:col-span-5 xl:col-span-4 space-y-6">
+            <div className="bg-white rounded-2xl border border-zinc-200 shadow-xs p-5 sm:p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => router.back()}
+                  className="text-zinc-400 hover:text-zinc-700 p-1.5 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
+                  title="Quay lại"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-xl font-bold text-zinc-900 truncate">Đăng ký Tác giả</h1>
+                  <p className="text-xs text-zinc-500 truncate">StoryVN Creator Program</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-zinc-600 leading-relaxed">
+                Trở thành tác giả trên StoryVN để tiếp cận hàng ngàn bạn đọc yêu mến tiểu thuyết, xây dựng cộng đồng người theo dõi và phát triển tác phẩm của riêng bạn.
+              </p>
+
+              {/* Benefits banner */}
+              <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl p-4 sm:p-5 text-white space-y-3 shadow-xs">
+                <h2 className="font-bold text-sm sm:text-base flex items-center gap-2">
+                  <span>✨</span> Quyền lợi khi là Tác giả
+                </h2>
+                <div className="grid grid-cols-1 gap-2.5 text-xs sm:text-sm">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base">📖</span>
+                    <span>Đăng tải và quản lý không giới hạn tác phẩm</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base">💰</span>
+                    <span>Cơ chế chia sẻ doanh thu và nhận ủng hộ</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base">👥</span>
+                    <span>Tương tác trực tiếp và xây dựng fan base</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base">🏆</span>
+                    <span>Huy hiệu Tác giả chính thức trên hồ sơ</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 text-xs text-zinc-500 space-y-1">
+                <p className="font-semibold text-zinc-700">Lưu ý khi gửi hồ sơ:</p>
+                <p>• Hồ sơ xét duyệt thường hoàn tất trong vòng 24 - 48 giờ.</p>
+                <p>• Vui lòng cung cấp đúng thông tin để ban quản trị liên hệ hỗ trợ.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Cột phải: Form hoặc Trạng thái hiện tại */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+            {/* Status card nếu đã có yêu cầu */}
+            {hasExistingRequest && statusData && (
+              <RequestStatusCard
+                data={statusData}
+                onEdit={() => setShowEditForm(true)}
+              />
+            )}
+
+            {/* Form: hiển thị nếu chưa có request HOẶC đang edit */}
+            {(!hasExistingRequest || showEditForm) && !isAuthor && (
+              <div className="space-y-4">
+                {showEditForm && (
+                  <div className="flex items-center justify-between bg-white rounded-xl border border-zinc-200 p-4">
+                    <h2 className="text-sm font-bold text-zinc-900">Chỉnh sửa thông tin đăng ký</h2>
+                    <button
+                      onClick={() => setShowEditForm(false)}
+                      className="text-xs text-zinc-500 hover:text-zinc-800 font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Hủy bỏ
+                    </button>
+                  </div>
+                )}
+
+                <AuthorRequestForm
+                  initialData={
+                    showEditForm && statusData?.request
+                      ? {
+                          penName: statusData.request.penName,
+                          biography: statusData.request.biography ?? "",
+                          website: statusData.request.website ?? "",
+                          bankName: statusData.request.bankName ?? "",
+                          bankAccountNumber: statusData.request.bankAccountNumber ?? "",
+                          bankAccountName: statusData.request.bankAccountName ?? "",
+                          reason: statusData.request.reason ?? "",
+                        }
+                      : undefined
+                  }
+                  onSubmit={showEditForm ? handleUpdate : handleCreate}
+                  isLoading={isSubmitting}
+                  isEditing={showEditForm}
+                />
+              </div>
+            )}
+
+            {/* Trạng thái PENDING - không cho edit thêm */}
+            {hasExistingRequest && statusData?.request?.status === "PENDING" && !showEditForm && (
+              <div className="text-center text-sm text-zinc-500 bg-white rounded-2xl border border-zinc-200 p-8">
+                Yêu cầu của bạn đang được xét duyệt. Ban quản trị StoryVN sẽ sớm phản hồi kết quả!
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -24,6 +24,10 @@ export const queryKeys = {
     authorRequests: (params?: Record<string, any>) =>
       ["admin", "author-requests", ...(params ? [params] : [])] as const,
     authorRequestStats: ["admin", "author-requests", "stats"] as const,
+    stories: (params?: Record<string, any>) =>
+      ["admin", "stories", ...(params ? [params] : [])] as const,
+    storyCounts: ["admin", "stories", "counts"] as const,
+    storyDetail: (id: string) => ["admin", "stories", "detail", id] as const,
   },
   tags: {
     all: ["tags"] as const,
