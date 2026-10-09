@@ -209,3 +209,45 @@ export interface PaginatedAuthorStories {
   items: AuthorStoryItem[];
   pagination: PaginationMeta;
 }
+
+/** Số liệu thống kê cộng đồng sáng tác StoryVN */
+export interface AuthorCommunityStats {
+  totalAuthors: number;
+  totalStories: number;
+  totalChapters: number;
+}
+
+/** Tác giả trong danh sách cộng đồng */
+export interface AuthorListItem {
+  _id: string;
+  userId: string;
+  username: string;
+  displayName: string;
+  penName: string;
+  avatarUrl?: string | null;
+  biography?: string | null;
+  genres: Array<{ _id: string; name: string; slug: string }>;
+  followerCount: number;
+  storyCount: number;
+  totalViews: number;
+  joinedAt?: string;
+  latestStoryUpdatedAt?: string;
+}
+
+/** Tham số lọc và phân trang danh sách tác giả */
+export interface QueryAuthorsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: "featured" | "newest" | "updated" | "stories";
+  genreId?: string;
+  progressState?: string;
+  hasBio?: "all" | "yes" | "no";
+}
+
+/** Danh sách tác giả có phân trang */
+export interface PaginatedAuthorsList {
+  items: AuthorListItem[];
+  pagination: PaginationMeta;
+}
+

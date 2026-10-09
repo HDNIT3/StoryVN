@@ -52,6 +52,9 @@ export const queryKeys = {
     latestUpdated: (params?: Record<string, any>) =>
       ["stories", "latest-updated", ...(params ? [params] : [])] as const,
     detail: (id: string) => ["stories", "detail", id] as const,
+    bySlug: (slug: string) => ["stories", "by-slug", slug] as const,
+    sameGenre: (slug: string, limit?: number) =>
+      ["stories", "same-genre", slug, limit || 6] as const,
   },
   media: {
     all: ["media"] as const,
@@ -66,6 +69,9 @@ export const queryKeys = {
   },
   author: {
     all: ["author"] as const,
+    communityStats: ["author", "community-stats"] as const,
+    list: (params?: Record<string, any>) =>
+      ["author", "list", ...(params ? [params] : [])] as const,
     profile: (username: string) => ["author", "profile", username] as const,
     stories: (username: string, params?: Record<string, any>) =>
       ["author", "stories", username, ...(params ? [params] : [])] as const,

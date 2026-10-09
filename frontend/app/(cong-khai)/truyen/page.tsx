@@ -285,7 +285,7 @@ function StoriesContent() {
 
   return (
     <div className="min-h-screen bg-[#fafaf8] py-5 sm:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="w-full px-3 sm:px-5 md:px-7 lg:px-10 xl:px-12 2xl:px-16">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 mb-4 sm:mb-6 select-none">
           <Link href="/" className="hover:text-emerald-700 transition-colors">

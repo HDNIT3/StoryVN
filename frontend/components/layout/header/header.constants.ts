@@ -26,6 +26,7 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
     hasDropdown: true,
     dropdownType: "genres",
   },
+  { id: "tac-gia", label: "Tác Giả", href: "/tac-gia" },
   { id: "bang-xep-hang", label: "Bảng Xếp Hạng", href: "/bang-xep-hang" },
   { id: "dien-dan", label: "Diễn Đàn", href: "/dien-dan" },
 ];

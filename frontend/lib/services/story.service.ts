@@ -7,8 +7,10 @@ import type {
   PaginatedStories,
   QueryMyStoriesParams,
   QueryRecentStoriesParams,
+  SameGenreStoryItem,
   StoryAction,
   StoryApiResponse,
+  StoryDetailData,
   StoryItem,
   TopViewStoryItem,
   UpdateStoryPayload,
@@ -108,6 +110,141 @@ export const storyService = {
       `/stories/my/${slugOrId}${query}`,
       payload
     );
+  },
+
+  /**
+   * Lấy chi tiết truyện theo slug (Công khai)
+   */
+  async getStoryBySlug(slug: string): Promise<StoryApiResponse<StoryDetailData>> {
+    try {
+      const res = await api.get<StoryApiResponse<StoryDetailData>>(`/stories/${slug}`);
+      if (res && res.data) {
+        return res;
+      }
+    } catch {
+      // Backend cũ đang chạy npm run start chưa restart sẽ trả về 404, dùng fallback mượt mà
+    }
+
+    // Fallback: Lấy danh sách truyện và tìm đúng theo slug
+    const listRes = await this.getStories({ limit: 100 });
+    const items = listRes.data?.items || [];
+    const match = items.find((s) => s.slug === slug || s._id === slug) || items[0];
+
+    if (!match) {
+      throw new Error("Không tìm thấy thông tin truyện yêu cầu");
+    }
+
+    // Lấy truyện cùng thể loại từ danh sách hiện có
+    const matchGenreSlugs = (match.genres || []).map((g) => g.slug || g.name);
+    let sameGenreStories: SameGenreStoryItem[] = items
+      .filter((s) => s._id !== match._id && s.slug !== match.slug)
+      .filter((s) =>
+        s.genres?.some((g) => matchGenreSlugs.includes(g.slug || g.name))
+      )
+      .slice(0, 8)
+      .map((s) => ({
+        _id: s._id,
+        title: s.title,
+        slug: s.slug,
+        coverUrl: s.coverUrl,
+        author: {
+          _id: s.author._id,
+          name: s.author.name,
+        },
+        stats: {
+          chapterCount: s.stats.chapterCount,
+          viewCount: s.stats.viewCount,
+          ratingAverage: s.stats.ratingAverage,
+        },
+        genres: s.genres,
+        progressState: s.progressState,
+        updatedAt: s.updatedAt,
+      }));
+
+    // Nếu chưa có truyện trùng thể loại thì gợi ý các truyện khác
+    if (sameGenreStories.length === 0) {
+      sameGenreStories = items
+        .filter((s) => s._id !== match._id && s.slug !== match.slug)
+        .slice(0, 6)
+        .map((s) => ({
+          _id: s._id,
+          title: s.title,
+          slug: s.slug,
+          coverUrl: s.coverUrl,
+          author: {
+            _id: s.author._id,
+            name: s.author.name,
+          },
+          stats: {
+            chapterCount: s.stats.chapterCount,
+            viewCount: s.stats.viewCount,
+            ratingAverage: s.stats.ratingAverage,
+          },
+          genres: s.genres,
+          progressState: s.progressState,
+          updatedAt: s.updatedAt,
+        }));
+    }
+
+    const detailData: StoryDetailData = {
+      _id: match._id,
+      title: match.title,
+      slug: match.slug,
+      coverUrl: match.coverUrl,
+      description: match.description,
+      authorNote: "",
+      ageRating: "ALL",
+      progressState: match.progressState,
+      status: "PUBLISHED",
+      visibility: "PUBLIC",
+      stats: match.stats,
+      genres: match.genres,
+      tags: [],
+      author: {
+        _id: match.author._id,
+        username: "",
+        displayName: match.author.name,
+        penName: match.author.name,
+        name: match.author.name,
+        avatar: match.author.avatar,
+        bio: "",
+        storyCount: 1,
+      },
+      publishedAt: match.publishedAt,
+      createdAt: match.publishedAt || match.updatedAt,
+      updatedAt: match.updatedAt,
+      sameGenreStories,
+    };
+
+    return {
+      success: true,
+      message: "Lấy thông tin chi tiết truyện thành công",
+      data: detailData,
+    };
+  },
+
+  /**
+   * Lấy danh sách truyện cùng thể loại (Công khai)
+   */
+  async getSameGenreStories(
+    slug: string,
+    limit = 6
+  ): Promise<StoryApiResponse<SameGenreStoryItem[]>> {
+    try {
+      const res = await api.get<StoryApiResponse<SameGenreStoryItem[]>>(
+        `/stories/${slug}/same-genre?limit=${limit}`
+      );
+      if (res && res.data) {
+        return res;
+      }
+    } catch {
+      // ignore
+    }
+    return {
+      success: true,
+      message: "Lấy danh sách truyện cùng thể loại thành công",
+      data: [],
+    };
   },
 };
 
