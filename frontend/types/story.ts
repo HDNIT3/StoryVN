@@ -84,6 +84,29 @@ export interface PaginatedStories {
   pagination: PaginationMeta;
 }
 
+export interface RecentUpdatedStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  genres: PopulatedRef[];
+  genre: string;
+  latestChapter: string;
+  author: string;
+  updatedAt: string;
+}
+
+export interface QueryRecentStoriesParams {
+  genreId?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedRecentStories {
+  items: RecentUpdatedStoryItem[];
+  pagination: PaginationMeta;
+}
+
 export interface StoryApiResponse<T = any> {
   success: boolean;
   message: string;
@@ -133,5 +156,102 @@ export interface QueryAdminStoriesParams {
 export interface PaginatedAdminStories {
   items: AdminStoryItem[];
   pagination: PaginationMeta;
+}
+
+export interface TopViewStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl?: string | null;
+  author: string;
+  viewCount: number;
+}
+
+export type StorySortOption = "published" | "updated" | "views" | "chapters" | "rating";
+
+export interface FilterStoriesParams {
+  search?: string;
+  genre?: string;
+  progressState?: StoryProgressState;
+  sortBy?: StorySortOption;
+  page?: number;
+  limit?: number;
+}
+
+export interface FilteredStoryAuthor {
+  _id: string | null;
+  name: string;
+  avatar?: string | null;
+}
+
+export interface FilteredStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl?: string | null;
+  description: string;
+  progressState: StoryProgressState;
+  stats: StoryStats;
+  author: FilteredStoryAuthor;
+  genres: PopulatedRef[];
+  publishedAt?: string | null;
+  updatedAt: string;
+}
+
+export interface PaginatedFilteredStories {
+  items: FilteredStoryItem[];
+  pagination: PaginationMeta;
+}
+
+export interface StoryDetailAuthor {
+  _id: string | null;
+  username: string;
+  displayName: string;
+  penName: string;
+  name: string;
+  avatar?: string | null;
+  bio?: string;
+  storyCount?: number;
+}
+
+export interface SameGenreStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl?: string | null;
+  author: {
+    _id: string | null;
+    name: string;
+    username?: string | null;
+  };
+  stats: {
+    chapterCount: number;
+    viewCount: number;
+    ratingAverage: number;
+  };
+  genres: PopulatedRef[];
+  progressState?: StoryProgressState;
+  updatedAt: string;
+}
+
+export interface StoryDetailData {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl?: string | null;
+  description: string;
+  authorNote?: string;
+  ageRating?: StoryAgeRating;
+  progressState?: StoryProgressState;
+  status: StoryStatus;
+  visibility: StoryVisibility;
+  stats: StoryStats;
+  genres: PopulatedRef[];
+  tags: PopulatedRef[];
+  author: StoryDetailAuthor;
+  publishedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  sameGenreStories?: SameGenreStoryItem[];
 }
 
