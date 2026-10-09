@@ -64,4 +64,10 @@ export const queryKeys = {
       ["notifications", "list", ...(params ? [params] : [])] as const,
     unreadCount: ["notifications", "unread-count"] as const,
   },
+  author: {
+    all: ["author"] as const,
+    profile: (username: string) => ["author", "profile", username] as const,
+    stories: (username: string, params?: Record<string, any>) =>
+      ["author", "stories", username, ...(params ? [params] : [])] as const,
+  },
 } as const;
