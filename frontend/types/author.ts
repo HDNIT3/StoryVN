@@ -141,3 +141,113 @@ export interface AuthorRequestApiResponse<T = any> {
   message: string;
   data: T;
 }
+
+/** Thông tin tài khoản ngân hàng để độc giả ủng hộ (Donate / Tip) */
+export interface AuthorDonateInfo {
+  bankName?: string | null;
+  bankAccountNumber?: string | null;
+  bankAccountName?: string | null;
+}
+
+/** Dữ liệu hồ sơ công khai của tác giả */
+export interface PublicAuthorProfile {
+  _id: string;
+  username: string;
+  displayName: string;
+  penName: string;
+  avatarUrl?: string | null;
+  biography?: string | null;
+  website?: string | null;
+  socialLinks?: Record<string, any>;
+  followerCount: number;
+  storyCount: number;
+  totalViews: number;
+  ratingAverage: number;
+  counts: {
+    all: number;
+    ongoing: number;
+    completed: number;
+    onHold: number;
+  };
+  joinedAt: string;
+  donateInfo?: AuthorDonateInfo;
+}
+
+/** Thẻ truyện công khai của tác giả */
+export interface AuthorStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl?: string | null;
+  description?: string;
+  genres: Array<{ _id: string; name: string; slug: string }>;
+  tags: Array<{ _id: string; name: string; slug: string }>;
+  ageRating: string;
+  progressState: string;
+  stats: {
+    viewCount: number;
+    followCount: number;
+    ratingAverage: number;
+    ratingCount: number;
+    chapterCount: number;
+    wordCount: number;
+  };
+  updatedAt: string;
+  publishedAt?: string;
+}
+
+/** Tham số lọc và phân trang tác phẩm của tác giả */
+export interface QueryAuthorPublicStoriesParams {
+  page?: number;
+  limit?: number;
+  progressState?: string;
+  sortBy?: "latest" | "views" | "rating" | "chapters";
+}
+
+/** Danh sách tác phẩm công khai của tác giả có phân trang */
+export interface PaginatedAuthorStories {
+  items: AuthorStoryItem[];
+  pagination: PaginationMeta;
+}
+
+/** Số liệu thống kê cộng đồng sáng tác StoryVN */
+export interface AuthorCommunityStats {
+  totalAuthors: number;
+  totalStories: number;
+  totalChapters: number;
+}
+
+/** Tác giả trong danh sách cộng đồng */
+export interface AuthorListItem {
+  _id: string;
+  userId: string;
+  username: string;
+  displayName: string;
+  penName: string;
+  avatarUrl?: string | null;
+  biography?: string | null;
+  genres: Array<{ _id: string; name: string; slug: string }>;
+  followerCount: number;
+  storyCount: number;
+  totalViews: number;
+  joinedAt?: string;
+  latestStoryUpdatedAt?: string;
+}
+
+/** Tham số lọc và phân trang danh sách tác giả */
+export interface QueryAuthorsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: "featured" | "newest" | "updated" | "stories";
+  genreId?: string;
+  progressState?: string;
+  hasBio?: "all" | "yes" | "no";
+}
+
+/** Danh sách tác giả có phân trang */
+export interface PaginatedAuthorsList {
+  items: AuthorListItem[];
+  pagination: PaginationMeta;
+}
+
