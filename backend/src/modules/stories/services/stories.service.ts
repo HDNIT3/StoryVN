@@ -509,6 +509,7 @@ export class StoriesService {
 
       filter.$or = [
         { title: regex },
+        { slug: regex },
         ...(authorUserIds.length > 0 ? [{ authorId: { $in: authorUserIds } }] : []),
       ];
     }
@@ -620,6 +621,266 @@ export class StoriesService {
       items,
       pagination: buildPaginationMeta(totalItems, query.page, query.limit),
     };
+  }
+
+  /**
+   * Lấy chi tiết truyện theo slug (hoặc ObjectId dự phòng) cho độc giả công khai
+   * Kèm thông tin tác giả và danh sách truyện cùng thể loại
+   */
+  async getStoryBySlug(slug: string): Promise<any> {
+    const cleanSlug = slug?.trim();
+    if (!cleanSlug) {
+      throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    const isObjectId = Types.ObjectId.isValid(cleanSlug);
+    const filter: any = {
+      status: StoryStatus.PUBLISHED,
+      visibility: StoryVisibility.PUBLIC,
+      ...(isObjectId
+        ? { $or: [{ slug: cleanSlug }, { _id: new Types.ObjectId(cleanSlug) }] }
+        : { slug: cleanSlug }),
+    };
+
+    const story = await this.storyModel
+      .findOne(filter)
+      .populate('genreIds', 'name slug')
+      .populate('tagIds', 'name slug')
+      .populate('authorId', 'displayName username avatar email')
+      .lean()
+      .exec();
+
+    if (!story) {
+      throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    const authorUser = story.authorId as any;
+    const authorUserId = authorUser?._id;
+    let authorProfile: any = null;
+    if (authorUserId) {
+      authorProfile = await this.authorProfileModel
+        .findOne({ userId: authorUserId })
+        .lean()
+        .exec();
+    }
+
+    const authorName =
+      authorProfile?.penName ||
+      authorUser?.displayName ||
+      authorUser?.username ||
+      'Tác giả ẩn danh';
+
+    const rawGenres = (story.genreIds as any[]) || [];
+    const genres = rawGenres.map((g: any) => ({
+      _id: g._id,
+      name: g.name,
+      slug: g.slug,
+    }));
+
+    const rawTags = (story.tagIds as any[]) || [];
+    const tags = rawTags.map((t: any) => ({
+      _id: t._id,
+      name: t.name,
+      slug: t.slug,
+    }));
+
+    // Lấy danh sách truyện có cùng thể loại
+    const genreObjectIds = rawGenres.map((g: any) => g._id).filter(Boolean);
+    let sameGenreStories: any[] = [];
+    if (genreObjectIds.length > 0) {
+      const sameGenreList = await this.storyModel
+        .find({
+          _id: { $ne: story._id },
+          status: StoryStatus.PUBLISHED,
+          visibility: StoryVisibility.PUBLIC,
+          genreIds: { $in: genreObjectIds },
+        })
+        .select('title slug coverUrl stats authorId genreIds updatedAt progressState')
+        .sort({ 'stats.viewCount': -1, updatedAt: -1 })
+        .limit(8)
+        .populate('genreIds', 'name slug')
+        .populate('authorId', 'displayName username')
+        .lean()
+        .exec();
+
+      const sameGenreAuthorUserIds = Array.from(
+        new Set(
+          sameGenreList
+            .map((s) => (s.authorId as any)?._id?.toString() || s.authorId?.toString())
+            .filter(Boolean),
+        ),
+      );
+
+      let sameGenreProfileMap = new Map<string, any>();
+      if (sameGenreAuthorUserIds.length > 0) {
+        const sameGenreProfiles = await this.authorProfileModel
+          .find({
+            userId: { $in: sameGenreAuthorUserIds.map((id) => new Types.ObjectId(id)) },
+          })
+          .select('userId penName')
+          .lean()
+          .exec();
+        sameGenreProfileMap = new Map(sameGenreProfiles.map((p) => [p.userId.toString(), p]));
+      }
+
+      sameGenreStories = sameGenreList.map((item) => {
+        const aUser = item.authorId as any;
+        const aIdStr = aUser?._id?.toString() || aUser?.toString();
+        const aProf = aIdStr ? sameGenreProfileMap.get(aIdStr) : null;
+        const itemAuthorName =
+          aProf?.penName || aUser?.displayName || aUser?.username || 'Tác giả ẩn danh';
+
+        return {
+          _id: item._id,
+          title: item.title,
+          slug: item.slug,
+          coverUrl: item.coverUrl || null,
+          author: {
+            _id: aUser?._id || null,
+            name: itemAuthorName,
+            username: aUser?.username || null,
+          },
+          stats: {
+            chapterCount: item.stats?.chapterCount ?? 0,
+            viewCount: item.stats?.viewCount ?? 0,
+            ratingAverage: item.stats?.ratingAverage ?? 0,
+          },
+          genres: ((item.genreIds as any[]) || []).map((g: any) => ({
+            _id: g._id,
+            name: g.name,
+            slug: g.slug,
+          })),
+          progressState: item.progressState,
+          updatedAt: item.updatedAt,
+        };
+      });
+    }
+
+    return {
+      _id: story._id,
+      title: story.title,
+      slug: story.slug,
+      coverUrl: story.coverUrl || null,
+      description: story.description || '',
+      authorNote: story.authorNote || '',
+      ageRating: story.ageRating,
+      progressState: story.progressState,
+      status: story.status,
+      visibility: story.visibility,
+      stats: {
+        chapterCount: story.stats?.chapterCount ?? 0,
+        viewCount: story.stats?.viewCount ?? 0,
+        followCount: story.stats?.followCount ?? 0,
+        ratingAverage: story.stats?.ratingAverage ?? 0,
+        ratingCount: story.stats?.ratingCount ?? 0,
+        wordCount: story.stats?.wordCount ?? 0,
+      },
+      genres,
+      tags,
+      author: {
+        _id: authorUser?._id || null,
+        username: authorUser?.username || '',
+        displayName: authorUser?.displayName || '',
+        penName: authorProfile?.penName || authorUser?.displayName || authorUser?.username || 'Tác giả',
+        name: authorName,
+        avatar: authorUser?.avatar || null,
+        bio: authorProfile?.bio || '',
+        storyCount: authorProfile?.storyCount ?? 0,
+      },
+      publishedAt: story.publishedAt || story.createdAt,
+      createdAt: story.createdAt,
+      updatedAt: story.updatedAt,
+      sameGenreStories,
+    };
+  }
+
+  /**
+   * Lấy danh sách truyện cùng thể loại theo slug
+   */
+  async getSameGenreStories(slug: string, limit = 6): Promise<any[]> {
+    const cleanSlug = slug?.trim();
+    if (!cleanSlug) return [];
+
+    const isObjectId = Types.ObjectId.isValid(cleanSlug);
+    const filter: any = {
+      status: StoryStatus.PUBLISHED,
+      visibility: StoryVisibility.PUBLIC,
+      ...(isObjectId
+        ? { $or: [{ slug: cleanSlug }, { _id: new Types.ObjectId(cleanSlug) }] }
+        : { slug: cleanSlug }),
+    };
+
+    const targetStory = await this.storyModel.findOne(filter).select('_id genreIds').lean().exec();
+    if (!targetStory || !targetStory.genreIds?.length) return [];
+
+    const take = Math.min(Math.max(Number(limit) || 6, 1), 20);
+
+    const sameGenreList = await this.storyModel
+      .find({
+        _id: { $ne: targetStory._id },
+        status: StoryStatus.PUBLISHED,
+        visibility: StoryVisibility.PUBLIC,
+        genreIds: { $in: targetStory.genreIds },
+      })
+      .select('title slug coverUrl stats authorId genreIds updatedAt progressState')
+      .sort({ 'stats.viewCount': -1, updatedAt: -1 })
+      .limit(take)
+      .populate('genreIds', 'name slug')
+      .populate('authorId', 'displayName username')
+      .lean()
+      .exec();
+
+    const authorUserIds = Array.from(
+      new Set(
+        sameGenreList
+          .map((s) => (s.authorId as any)?._id?.toString() || s.authorId?.toString())
+          .filter(Boolean),
+      ),
+    );
+
+    let profileMap = new Map<string, any>();
+    if (authorUserIds.length > 0) {
+      const profiles = await this.authorProfileModel
+        .find({
+          userId: { $in: authorUserIds.map((id) => new Types.ObjectId(id)) },
+        })
+        .select('userId penName')
+        .lean()
+        .exec();
+      profileMap = new Map(profiles.map((p) => [p.userId.toString(), p]));
+    }
+
+    return sameGenreList.map((item) => {
+      const aUser = item.authorId as any;
+      const aIdStr = aUser?._id?.toString() || aUser?.toString();
+      const aProf = aIdStr ? profileMap.get(aIdStr) : null;
+      const itemAuthorName =
+        aProf?.penName || aUser?.displayName || aUser?.username || 'Tác giả ẩn danh';
+
+      return {
+        _id: item._id,
+        title: item.title,
+        slug: item.slug,
+        coverUrl: item.coverUrl || null,
+        author: {
+          _id: aUser?._id || null,
+          name: itemAuthorName,
+          username: aUser?.username || null,
+        },
+        stats: {
+          chapterCount: item.stats?.chapterCount ?? 0,
+          viewCount: item.stats?.viewCount ?? 0,
+          ratingAverage: item.stats?.ratingAverage ?? 0,
+        },
+        genres: ((item.genreIds as any[]) || []).map((g: any) => ({
+          _id: g._id,
+          name: g.name,
+          slug: g.slug,
+        })),
+        progressState: item.progressState,
+        updatedAt: item.updatedAt,
+      };
+    });
   }
 }
 

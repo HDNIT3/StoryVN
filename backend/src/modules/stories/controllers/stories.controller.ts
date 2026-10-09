@@ -163,4 +163,42 @@ export class StoriesController {
       data,
     };
   }
+
+  @ApiOperation({
+    summary: 'Lấy danh sách truyện cùng thể loại theo slug (Công khai)',
+  })
+  @Public()
+  @Get(':slug/same-genre')
+  @HttpCode(HttpStatus.OK)
+  async getSameGenreStories(
+    @Param('slug') slug: string,
+    @Query('limit') limitQuery?: string,
+  ) {
+    const limit = limitQuery ? parseInt(limitQuery, 10) : 6;
+    const data = await this.storiesService.getSameGenreStories(slug, limit);
+
+    return {
+      success: true,
+      message: 'Lấy danh sách truyện cùng thể loại thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Lấy chi tiết truyện theo slug (Công khai)',
+    description: 'Trả về toàn bộ thông tin cơ bản của truyện, tác giả và danh sách truyện cùng thể loại',
+  })
+  @Public()
+  @Get(':slug')
+  @HttpCode(HttpStatus.OK)
+  async getStoryBySlug(@Param('slug') slug: string) {
+    const data = await this.storiesService.getStoryBySlug(slug);
+
+    return {
+      success: true,
+      message: 'Lấy thông tin chi tiết truyện thành công',
+      data,
+    };
+  }
 }
+

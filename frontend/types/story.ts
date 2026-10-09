@@ -203,3 +203,55 @@ export interface PaginatedFilteredStories {
   pagination: PaginationMeta;
 }
 
+export interface StoryDetailAuthor {
+  _id: string | null;
+  username: string;
+  displayName: string;
+  penName: string;
+  name: string;
+  avatar?: string | null;
+  bio?: string;
+  storyCount?: number;
+}
+
+export interface SameGenreStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl?: string | null;
+  author: {
+    _id: string | null;
+    name: string;
+    username?: string | null;
+  };
+  stats: {
+    chapterCount: number;
+    viewCount: number;
+    ratingAverage: number;
+  };
+  genres: PopulatedRef[];
+  progressState?: StoryProgressState;
+  updatedAt: string;
+}
+
+export interface StoryDetailData {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl?: string | null;
+  description: string;
+  authorNote?: string;
+  ageRating?: StoryAgeRating;
+  progressState?: StoryProgressState;
+  status: StoryStatus;
+  visibility: StoryVisibility;
+  stats: StoryStats;
+  genres: PopulatedRef[];
+  tags: PopulatedRef[];
+  author: StoryDetailAuthor;
+  publishedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  sameGenreStories?: SameGenreStoryItem[];
+}
+

@@ -16,8 +16,14 @@ import {
   QueryAuthorStoriesDto,
 } from '../dto/query-author-stories.dto.js';
 import {
+  AuthorBioFilter,
+  AuthorSortOption,
+  QueryAuthorsDto,
+} from '../dto/query-authors.dto.js';
+import {
   AuthorProfile,
   AuthorProfileDocument,
+  AuthorProfileStatus,
 } from '../schemas/author-profile.schema.js';
 import { User, UserDocument, UserStatus } from '../schemas/user.schema.js';
 
@@ -328,4 +334,388 @@ export class AuthorsService {
       pagination: buildPaginationMeta(totalItems, page, limit),
     };
   }
+
+  /**
+   * Thống kê cộng đồng sáng tác (Header Stats):
+   * - totalAuthors: Số tác giả đã đăng truyện
+   * - totalStories: Số tác phẩm đang lưu giữ
+   * - totalChapters: Số chương đã xuất bản
+   */
+  async getCommunityStats() {
+    const [publishedAuthorIds, totalStories, chaptersResult] = await Promise.all([
+      this.storyModel.distinct('authorId', {
+        status: StoryStatus.PUBLISHED,
+        visibility: StoryVisibility.PUBLIC,
+      }),
+      this.storyModel.countDocuments({
+        status: StoryStatus.PUBLISHED,
+        visibility: StoryVisibility.PUBLIC,
+      }),
+      this.storyModel.aggregate([
+        {
+          $match: {
+            status: StoryStatus.PUBLISHED,
+            visibility: StoryVisibility.PUBLIC,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalChapters: { $sum: '$stats.chapterCount' },
+          },
+        },
+      ]),
+    ]);
+
+    const totalChapters = chaptersResult[0]?.totalChapters ?? 0;
+
+    return {
+      totalAuthors: publishedAuthorIds.length,
+      totalStories,
+      totalChapters,
+    };
+  }
+
+  /**
+   * Lấy danh sách tác giả công khai (kèm bộ lọc tìm kiếm, thể loại, tiến độ, tiểu sử, sắp xếp & phân trang)
+   */
+  async getAuthorsList(query: QueryAuthorsDto): Promise<PaginatedResult<any>> {
+    const page = Math.max(Number(query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(query.limit) || 12, 1), 50);
+    const skip = (page - 1) * limit;
+
+    // 1. Lọc theo thể loại & trạng thái tiến độ truyện (nếu có)
+    let authorIdFilter: Types.ObjectId[] | null = null;
+
+    if (query.genreId) {
+      let targetGenreId: Types.ObjectId | null = null;
+      if (Types.ObjectId.isValid(query.genreId)) {
+        targetGenreId = new Types.ObjectId(query.genreId);
+      } else {
+        const genre = await this.genreModel
+          .findOne({ slug: query.genreId })
+          .lean()
+          .exec();
+        if (genre) targetGenreId = genre._id;
+      }
+
+      if (targetGenreId) {
+        const ids = await this.storyModel.distinct('authorId', {
+          genreIds: targetGenreId,
+          status: StoryStatus.PUBLISHED,
+          visibility: StoryVisibility.PUBLIC,
+        });
+        authorIdFilter = ids.map((id: any) => new Types.ObjectId(id));
+      } else {
+        authorIdFilter = [];
+      }
+    }
+
+    if (query.progressState) {
+      const ids = await this.storyModel.distinct('authorId', {
+        progressState: query.progressState,
+        status: StoryStatus.PUBLISHED,
+        visibility: StoryVisibility.PUBLIC,
+      });
+      const progressObjectIds = ids.map((id: any) => new Types.ObjectId(id));
+
+      if (authorIdFilter !== null) {
+        const idSet = new Set(progressObjectIds.map((id) => id.toString()));
+        authorIdFilter = authorIdFilter.filter((id) => idSet.has(id.toString()));
+      } else {
+        authorIdFilter = progressObjectIds;
+      }
+    }
+
+    // Nếu đã lọc theo thể loại / tiến độ mà không có tác giả nào phù hợp
+    if (authorIdFilter !== null && authorIdFilter.length === 0) {
+      return {
+        items: [],
+        pagination: buildPaginationMeta(0, page, limit),
+      };
+    }
+
+    // 2. Loại bỏ các tài khoản User bị BANNED
+    const bannedUsers = await this.userModel
+      .find({ status: UserStatus.BANNED })
+      .select('_id')
+      .lean()
+      .exec();
+    const bannedUserIds = bannedUsers.map((u) => u._id);
+
+    // 3. Xây dựng bộ lọc chính trên AuthorProfile
+    const profileFilter: any = {
+      status: AuthorProfileStatus.ACTIVE,
+    };
+
+    if (bannedUserIds.length > 0) {
+      profileFilter.userId = { $nin: bannedUserIds };
+    }
+
+    if (authorIdFilter !== null) {
+      profileFilter.userId = {
+        ...(profileFilter.userId || {}),
+        $in: authorIdFilter,
+      };
+    }
+
+    // Lọc theo tiểu sử (hasBio)
+    if (query.hasBio === AuthorBioFilter.YES) {
+      profileFilter.biography = { $exists: true, $nin: ['', null] };
+    } else if (query.hasBio === AuthorBioFilter.NO) {
+      profileFilter.$or = [
+        { biography: null },
+        { biography: '' },
+        { biography: { $exists: false } },
+      ];
+    }
+
+    // Lọc theo từ khóa tìm kiếm (search)
+    if (query.search) {
+      const rawSearch = decodeURIComponent(query.search).trim();
+      if (rawSearch) {
+        const escaped = rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const searchRegex = new RegExp(escaped, 'i');
+        const targetSlug = toSlug(rawSearch);
+
+        const matchedUsers = await this.userModel
+          .find({
+            $or: [
+              { username: { $regex: searchRegex } },
+              { displayName: { $regex: searchRegex } },
+            ],
+            status: { $ne: UserStatus.BANNED },
+          })
+          .select('_id')
+          .lean()
+          .exec();
+
+        const matchedUserIds = matchedUsers.map((u) => u._id);
+
+        const searchConditions: any[] = [
+          { penName: { $regex: searchRegex } },
+        ];
+        if (matchedUserIds.length > 0) {
+          searchConditions.push({ userId: { $in: matchedUserIds } });
+        }
+
+        // Tìm thêm theo slug không dấu nếu người dùng gõ slug (vd: 'nhi-can')
+        if (targetSlug) {
+          const allProfiles = await this.authorProfileModel
+            .find({ status: AuthorProfileStatus.ACTIVE })
+            .select('_id penName')
+            .lean()
+            .exec();
+          const slugMatchedIds = allProfiles
+            .filter((p) => toSlug(p.penName).includes(targetSlug))
+            .map((p) => p._id);
+          if (slugMatchedIds.length > 0) {
+            searchConditions.push({ _id: { $in: slugMatchedIds } });
+          }
+        }
+
+        if (profileFilter.$or) {
+          profileFilter.$and = [
+            { $or: profileFilter.$or },
+            { $or: searchConditions },
+          ];
+          delete profileFilter.$or;
+        } else {
+          profileFilter.$or = searchConditions;
+        }
+      }
+    }
+
+    // 4. Sắp xếp (Sorting)
+    const sort: any = {};
+    let customOrderUserIds: string[] | null = null;
+
+    switch (query.sortBy) {
+      case AuthorSortOption.NEWEST:
+        sort.createdAt = -1;
+        break;
+      case AuthorSortOption.STORIES:
+        sort.storyCount = -1;
+        sort.totalViews = -1;
+        sort.createdAt = -1;
+        break;
+      case AuthorSortOption.UPDATED: {
+        const recentStories = await this.storyModel.aggregate([
+          {
+            $match: {
+              status: StoryStatus.PUBLISHED,
+              visibility: StoryVisibility.PUBLIC,
+            },
+          },
+          { $sort: { updatedAt: -1 } },
+          {
+            $group: {
+              _id: '$authorId',
+              latestStoryUpdate: { $first: '$updatedAt' },
+            },
+          },
+          { $sort: { latestStoryUpdate: -1 } },
+        ]);
+        customOrderUserIds = recentStories.map((r) => r._id.toString());
+        sort.updatedAt = -1;
+        break;
+      }
+      case AuthorSortOption.FEATURED:
+      default:
+        sort.totalViews = -1;
+        sort.followerCount = -1;
+        sort.storyCount = -1;
+        sort.createdAt = -1;
+        break;
+    }
+
+    let profiles: any[] = [];
+    let totalItems = 0;
+
+    if (query.sortBy === AuthorSortOption.UPDATED && customOrderUserIds) {
+      const allMatchedProfiles = await this.authorProfileModel
+        .find(profileFilter)
+        .lean()
+        .exec();
+
+      totalItems = allMatchedProfiles.length;
+
+      const orderMap = new Map<string, number>();
+      customOrderUserIds.forEach((uid, index) => {
+        orderMap.set(uid, index);
+      });
+
+      allMatchedProfiles.sort((a, b) => {
+        const orderA = orderMap.has(a.userId.toString())
+          ? orderMap.get(a.userId.toString())!
+          : 999999;
+        const orderB = orderMap.has(b.userId.toString())
+          ? orderMap.get(b.userId.toString())!
+          : 999999;
+        if (orderA !== orderB) return orderA - orderB;
+        return (
+          new Date(b.updatedAt || 0).getTime() -
+          new Date(a.updatedAt || 0).getTime()
+        );
+      });
+
+      profiles = allMatchedProfiles.slice(skip, skip + limit);
+    } else {
+      [profiles, totalItems] = await Promise.all([
+        this.authorProfileModel
+          .find(profileFilter)
+          .sort(sort)
+          .skip(skip)
+          .limit(limit)
+          .lean()
+          .exec(),
+        this.authorProfileModel.countDocuments(profileFilter),
+      ]);
+    }
+
+    if (profiles.length === 0) {
+      return {
+        items: [],
+        pagination: buildPaginationMeta(totalItems, page, limit),
+      };
+    }
+
+    // 5. Nạp thông tin User và Top thể loại cho các tác giả ở trang hiện tại
+    const targetUserIds = profiles.map((p) => p.userId);
+
+    const [users, stories] = await Promise.all([
+      this.userModel
+        .find({ _id: { $in: targetUserIds } })
+        .select('_id username displayName avatarUrl createdAt')
+        .lean()
+        .exec(),
+      this.storyModel
+        .find({
+          authorId: { $in: targetUserIds },
+          status: StoryStatus.PUBLISHED,
+          visibility: StoryVisibility.PUBLIC,
+        })
+        .select('authorId genreIds updatedAt stats.viewCount stats.chapterCount')
+        .populate('genreIds', 'name slug')
+        .lean()
+        .exec(),
+    ]);
+
+    const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+
+    const storiesByAuthor = new Map<string, any[]>();
+    stories.forEach((s) => {
+      const aId = s.authorId.toString();
+      if (!storiesByAuthor.has(aId)) storiesByAuthor.set(aId, []);
+      storiesByAuthor.get(aId)!.push(s);
+    });
+
+    const items = profiles.map((p) => {
+      const user = userMap.get(p.userId.toString());
+      const authorStories = storiesByAuthor.get(p.userId.toString()) || [];
+
+      // Tính top thể loại của tác giả
+      const genreCounts = new Map<string, { genre: any; count: number }>();
+      let latestStoryUpdate: Date | null = null;
+      let totalViewsFromStories = 0;
+
+      authorStories.forEach((s) => {
+        totalViewsFromStories += s.stats?.viewCount || 0;
+        if (s.updatedAt) {
+          const sUpdate = new Date(s.updatedAt);
+          if (!latestStoryUpdate || sUpdate > latestStoryUpdate) {
+            latestStoryUpdate = sUpdate;
+          }
+        }
+        (s.genreIds || []).forEach((g: any) => {
+          if (g && g._id) {
+            const gId = g._id.toString();
+            const existing = genreCounts.get(gId);
+            if (existing) {
+              existing.count += 1;
+            } else {
+              genreCounts.set(gId, {
+                genre: { _id: g._id, name: g.name, slug: g.slug },
+                count: 1,
+              });
+            }
+          }
+        });
+      });
+
+      const topGenres = Array.from(genreCounts.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3)
+        .map((item) => item.genre);
+
+      const effectiveStoryCount =
+        p.storyCount && p.storyCount > 0 ? p.storyCount : authorStories.length;
+      const effectiveTotalViews =
+        p.totalViews && p.totalViews > 0
+          ? p.totalViews
+          : totalViewsFromStories;
+
+      return {
+        _id: p._id,
+        userId: user?._id || p.userId,
+        username: user?.username || '',
+        displayName: user?.displayName || '',
+        penName: p.penName || user?.displayName || user?.username || '',
+        avatarUrl: p.avatarUrl || user?.avatarUrl || null,
+        biography: p.biography || '',
+        genres: topGenres,
+        followerCount: p.followerCount || 0,
+        storyCount: effectiveStoryCount,
+        totalViews: effectiveTotalViews,
+        joinedAt: p.createdAt || user?.createdAt,
+        latestStoryUpdatedAt: latestStoryUpdate || p.updatedAt,
+      };
+    });
+
+    return {
+      items,
+      pagination: buildPaginationMeta(totalItems, page, limit),
+    };
+  }
 }
+
