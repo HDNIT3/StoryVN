@@ -43,8 +43,14 @@ export const queryKeys = {
   },
   stories: {
     all: ["stories"] as const,
+    filtered: (params?: Record<string, any>) =>
+      ["stories", "filtered", ...(params ? [params] : [])] as const,
+    topViews: (limit?: number) =>
+      ["stories", "top-views", limit || 10] as const,
     myList: (params?: Record<string, any>) =>
       ["stories", "my", ...(params ? [params] : [])] as const,
+    latestUpdated: (params?: Record<string, any>) =>
+      ["stories", "latest-updated", ...(params ? [params] : [])] as const,
     detail: (id: string) => ["stories", "detail", id] as const,
   },
   media: {

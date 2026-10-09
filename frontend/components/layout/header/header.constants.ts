@@ -18,6 +18,7 @@ export const DEFAULT_LOGO: LogoProps = {
 
 export const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: "home", label: "Trang Chủ", href: "/" },
+  { id: "truyen", label: "Truyện", href: "/truyen" },
   {
     id: "the-loai",
     label: "Thể Loại",
