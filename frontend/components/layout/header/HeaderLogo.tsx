@@ -17,11 +17,11 @@ export function HeaderLogo({
   return (
     <Link
       href={href}
-      className={`inline-flex items-center gap-2 sm:gap-2.5 group transition-transform active:scale-95 shrink-0 ${className}`}
+      className={`inline-flex items-center gap-1.5 sm:gap-2.5 group transition-transform active:scale-95 shrink-0 ${className}`}
       aria-label={`${title}${suffix} - ${subtitle}`}
     >
       {/* Brand Icon Box */}
-      <div className="relative w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 shrink-0 rounded-xl overflow-hidden shadow-xs group-hover:shadow-md transition-shadow border border-zinc-100">
+      <div className="relative w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 shrink-0 rounded-xl overflow-hidden shadow-xs group-hover:shadow-md transition-shadow border border-zinc-100">
         <Image
           src={iconSrc}
           alt={`${title}${suffix} Icon`}
@@ -34,7 +34,7 @@ export function HeaderLogo({
 
       {/* Brand Typography */}
       <div className="flex flex-col select-none">
-        <span className="text-lg sm:text-xl md:text-2xl font-black tracking-tight leading-none text-zinc-900 flex items-center">
+        <span className="text-base sm:text-xl md:text-2xl font-black tracking-tight leading-none text-zinc-900 flex items-center">
           {title}
           <span className="text-sky-500 ml-0.5">{suffix}</span>
         </span>

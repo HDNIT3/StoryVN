@@ -23,11 +23,11 @@ export function HeaderBookmark({
 
   const content = (
     <div
-      className={`relative p-1.5 sm:p-2 rounded-full hover:bg-zinc-100 text-zinc-700 transition-colors select-none group cursor-pointer shrink-0 ${className}`}
+      className={`relative p-1 sm:p-2 rounded-full hover:bg-zinc-100 text-zinc-700 transition-colors select-none group cursor-pointer shrink-0 ${className}`}
       title="Tủ truyện đã lưu"
       aria-label={`Tủ truyện: ${count} truyện đã lưu`}
     >
-      <div className="relative w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0 transition-transform group-hover:scale-105">
+      <div className="relative w-4 h-4 sm:w-5 sm:h-5 shrink-0 transition-transform group-hover:scale-105">
         <Image
           src={iconSrc}
           alt="Icon tủ truyện"
@@ -39,7 +39,7 @@ export function HeaderBookmark({
 
       {/* Badge Count */}
       {count > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-[20px] px-1 bg-sky-500 text-white text-[10px] sm:text-[11px] font-bold rounded-full flex items-center justify-center shadow-xs ring-2 ring-white">
+        <span className="absolute -top-0.5 -right-0.5 min-w-[15px] sm:min-w-[20px] h-[15px] sm:h-[20px] px-0.5 sm:px-1 bg-sky-500 text-white text-[9px] sm:text-[11px] font-bold rounded-full flex items-center justify-center shadow-xs ring-1.5 sm:ring-2 ring-white">
           {count > 99 ? "99+" : count}
         </span>
       )}
