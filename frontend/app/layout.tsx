@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://story-vn.vercel.app"
+  ),
   title: "StoryVN — Web Đọc Truyện Online",
   description: "Nền tảng đọc truyện chữ, truyện dịch online mới nhất và hấp dẫn nhất",
   icons: {
