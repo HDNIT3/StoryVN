@@ -184,9 +184,9 @@ export default function AuthorsPage() {
             2. BỘ LỌC TÌM KIẾM (FILTER BAR)
         ═════════════════════════════════════════════════════════════ */}
         <section className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 items-end">
             {/* Cột 1: Tìm tác giả (Search Input) */}
-            <div className="lg:col-span-2 space-y-1.5">
+            <div className="space-y-1.5">
               <label
                 htmlFor="search-author"
                 className="block text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"
@@ -295,34 +295,40 @@ export default function AuthorsPage() {
               </select>
             </div>
 
-            {/* Cột 5: Tiểu sử & Cụm nút bấm */}
-            <div className="space-y-1.5 flex flex-col justify-end">
+            {/* Cột 5: Tiểu sử */}
+            <div className="space-y-1.5">
               <label
                 htmlFor="filter-bio"
                 className="block text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider"
               >
                 TIỂU SỬ
               </label>
-              <div className="flex items-center gap-2">
-                <select
-                  id="filter-bio"
-                  value={selectedBio}
-                  onChange={(e) => {
-                    setSelectedBio(e.target.value as any);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#8b181b]/30 cursor-pointer shadow-none"
-                >
-                  <option value="all">Tất cả tác giả</option>
-                  <option value="yes">Đã có tiểu sử</option>
-                  <option value="no">Chưa có tiểu sử</option>
-                </select>
+              <select
+                id="filter-bio"
+                value={selectedBio}
+                onChange={(e) => {
+                  setSelectedBio(e.target.value as any);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2.5 rounded-xl text-sm bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#8b181b]/30 cursor-pointer shadow-none"
+              >
+                <option value="all">Tất cả tác giả</option>
+                <option value="yes">Đã có tiểu sử</option>
+                <option value="no">Chưa có tiểu sử</option>
+              </select>
+            </div>
 
+            {/* Cột 6: Thao tác (Áp dụng & Đặt lại) */}
+            <div className="space-y-1.5 flex flex-col justify-end">
+              <span className="block text-[11px] font-bold text-transparent select-none uppercase tracking-wider hidden xl:block">
+                THAO TÁC
+              </span>
+              <div className="flex items-center gap-2 w-full">
                 {/* Nút Áp dụng */}
                 <button
                   type="button"
                   onClick={handleApplyFilters}
-                  className="px-4 py-2.5 rounded-xl font-semibold text-sm bg-[#8b181b] hover:bg-[#721316] text-white transition-all shadow-sm shadow-[#8b181b]/20 whitespace-nowrap cursor-pointer hover:scale-[1.02]"
+                  className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm bg-[#8b181b] hover:bg-[#721316] text-white transition-all shadow-sm shadow-[#8b181b]/20 whitespace-nowrap cursor-pointer hover:scale-[1.02] text-center"
                 >
                   Áp dụng
                 </button>
@@ -331,7 +337,7 @@ export default function AuthorsPage() {
                 <button
                   type="button"
                   onClick={handleResetFilters}
-                  className="px-3.5 py-2.5 rounded-xl font-medium text-sm border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors whitespace-nowrap cursor-pointer"
+                  className="px-3.5 py-2.5 rounded-xl font-medium text-sm border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors whitespace-nowrap cursor-pointer text-center"
                   title="Đặt lại bộ lọc"
                 >
                   Đặt lại
