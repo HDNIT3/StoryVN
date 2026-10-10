@@ -20,7 +20,7 @@ export function HeaderActions({
   className = "",
 }: HeaderActionsProps) {
   return (
-    <div className={`flex items-center gap-1 xs:gap-1.5 sm:gap-2 md:gap-2.5 shrink-0 ${className}`}>
+    <div className={`flex items-center gap-1 sm:gap-2 md:gap-2.5 shrink-0 ${className}`}>
       {/* Bookmark ribbon with badge */}
       {isLoggedIn && (
         <HeaderBookmark
