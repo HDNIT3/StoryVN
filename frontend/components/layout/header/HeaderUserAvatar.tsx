@@ -89,9 +89,9 @@ export function HeaderUserAvatar({
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-label="Menu tài khoản"
-        className="flex items-center gap-1 sm:gap-1.5 p-0.5 sm:p-1 pr-1 sm:pr-2 rounded-full hover:bg-zinc-100 transition-all group cursor-pointer"
+        className="flex items-center gap-1 sm:gap-1.5 p-0.5 sm:p-1 pr-0.5 sm:pr-2 rounded-full hover:bg-zinc-100 transition-all group cursor-pointer shrink-0"
       >
-        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-sky-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center overflow-hidden ring-2 ring-sky-200 group-hover:ring-sky-400 transition-all select-none shadow-xs shrink-0">
+        <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-sky-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center overflow-hidden ring-2 ring-sky-200 group-hover:ring-sky-400 transition-all select-none shadow-xs shrink-0">
           {user.avatarUrl && !user.avatarUrl.includes("avatar-h.svg") ? (
             <Image
               src={user.avatarUrl}
@@ -108,7 +108,7 @@ export function HeaderUserAvatar({
           {user.name}
         </span>
         <svg
-          className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`hidden sm:block w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -119,7 +119,7 @@ export function HeaderUserAvatar({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 sm:w-68 max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-zinc-100 p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2 w-64 sm:w-68 max-w-[calc(100vw-20px)] bg-white rounded-2xl shadow-2xl border border-zinc-100 p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150">
           {/* User Info Header */}
           <div className="px-3 py-3 border-b border-zinc-100 mb-1.5">
             <div className="flex items-center gap-3">

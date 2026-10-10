@@ -89,15 +89,15 @@ export function HeaderMobileMenu({
   const isAuthor = roleKey === "AUTHOR";
 
   return (
-    <div className="xl:hidden flex items-center">
+    <div className="xl:hidden flex items-center shrink-0">
       {/* Mobile / Tablet Toggle Button */}
       <button
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="Mở menu di động"
-        className="p-1.5 sm:p-2 rounded-xl text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+        className="p-1 sm:p-2 rounded-xl text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
       >
-        <div className="relative w-6 h-6">
+        <div className="relative w-5 h-5 sm:w-6 sm:h-6">
           <Image
             src="/icon/menu.svg"
             alt="Menu"

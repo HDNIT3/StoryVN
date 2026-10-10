@@ -40,7 +40,7 @@ export function Header({
         sticky ? "sticky top-0 z-40 backdrop-blur-md bg-white/95" : ""
       } ${className}`}
     >
-      <div className="w-full px-3 sm:px-5 md:px-7 lg:px-10 xl:px-12 2xl:px-16 h-15 sm:h-18 flex items-center justify-between gap-3 sm:gap-4 lg:gap-6">
+      <div className="w-full px-2.5 sm:px-5 md:px-7 lg:px-10 xl:px-12 2xl:px-16 h-15 sm:h-18 flex items-center justify-between gap-1.5 sm:gap-4 lg:gap-6">
         {/* Left Side: Logo & Desktop Navigation */}
         <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 xl:gap-8 shrink-0">
           <HeaderLogo {...logo} />
@@ -63,7 +63,7 @@ export function Header({
         </div>
 
         {/* Right Side: User Actions & Mobile Menu */}
-        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
           <HeaderActions
             isLoggedIn={isLoggedIn}
             user={user}

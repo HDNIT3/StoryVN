@@ -311,19 +311,19 @@ export function NotificationBell({
   // ── Sizing ─────────────────────────────────────────────────────
   const iconSize = {
     sm: "w-4 h-4",
-    md: "w-5 h-5",
+    md: "w-4 h-4 sm:w-5 sm:h-5",
     lg: "w-6 h-6",
   }[size];
 
   const buttonSize = {
     sm: "w-7 h-7",
-    md: "w-8 h-8 sm:w-9 sm:h-9",
+    md: "w-7 h-7 sm:w-9 sm:h-9",
     lg: "w-10 h-10",
   }[size];
 
   const badgeSize = {
     sm: "text-[9px] min-w-[14px] h-[14px] -top-0.5 -right-0.5",
-    md: "text-[10px] min-w-[16px] h-[16px] -top-1 -right-1",
+    md: "text-[9px] sm:text-[10px] min-w-[15px] sm:min-w-[16px] h-[15px] sm:h-[16px] -top-0.5 -right-0.5 sm:-top-1 sm:-right-1",
     lg: "text-xs min-w-[18px] h-[18px] -top-1 -right-1",
   }[size];
 
