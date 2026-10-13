@@ -1,0 +1,72 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Min,
+} from 'class-validator';
+import { ChapterAction } from './create-chapter.dto.js';
+
+export class UpdateChapterDto {
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'Số thứ tự chương',
+  })
+  @IsOptional()
+  @IsInt({ message: 'chapterNumber phải là số nguyên' })
+  @Min(1, { message: 'chapterNumber phải lớn hơn hoặc bằng 1' })
+  chapterNumber?: number;
+
+  @ApiPropertyOptional({
+    example: 'Chương 1: Tiêu đề cập nhật',
+    description: 'Tiêu đề chương',
+  })
+  @IsOptional()
+  @IsString({ message: 'Tiêu đề chương phải là chuỗi' })
+  @Length(1, 255, { message: 'Tiêu đề chương phải từ 1 đến 255 ký tự' })
+  title?: string;
+
+  @ApiPropertyOptional({
+    example: 'Nội dung cập nhật mới...',
+    description: 'Nội dung chương',
+  })
+  @IsOptional()
+  @IsString({ message: 'Nội dung chương phải là chuỗi' })
+  content?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Chương có miễn phí không',
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'isFree phải là kiểu boolean' })
+  isFree?: boolean;
+
+  @ApiPropertyOptional({
+    example: 10,
+    description: 'Giá xu mở khóa',
+  })
+  @IsOptional()
+  @IsInt({ message: 'coinPrice phải là số nguyên' })
+  @Min(0, { message: 'coinPrice không được là số âm' })
+  coinPrice?: number;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Ràng buộc mua chương trước',
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'requirePreviousChapter phải là kiểu boolean' })
+  requirePreviousChapter?: boolean;
+
+  @ApiPropertyOptional({
+    enum: ChapterAction,
+    description: 'Hành động: DRAFT (lưu nháp) hoặc SUBMIT (gửi duyệt kiểm duyệt)',
+  })
+  @IsOptional()
+  @IsEnum(ChapterAction, { message: 'action phải là DRAFT hoặc SUBMIT' })
+  action?: ChapterAction;
+}
