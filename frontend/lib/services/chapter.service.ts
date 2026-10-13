@@ -1,0 +1,98 @@
+import api from '../api';
+import type {
+  ChapterItem,
+  ChapterStatsData,
+  CreateChapterPayload,
+  QueryChaptersParams,
+  ReorderChaptersPayload,
+  StoryChaptersResponse,
+  UpdateChapterPayload,
+} from '../../types/chapter';
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
+export const chapterService = {
+  /**
+   * Lấy danh sách chương của tác phẩm (UC-16)
+   */
+  async getChapters(
+    params: QueryChaptersParams
+  ): Promise<ApiResponse<StoryChaptersResponse>> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('storyId', params.storyId);
+    if (params.status) searchParams.append('status', params.status);
+    if (params.sortBy) searchParams.append('sortBy', params.sortBy);
+    if (params.order) searchParams.append('order', params.order);
+    if (params.page) searchParams.append('page', params.page.toString());
+    if (params.limit) searchParams.append('limit', params.limit.toString());
+
+    return api.get<ApiResponse<StoryChaptersResponse>>(
+      `/chapters?${searchParams.toString()}`
+    );
+  },
+
+  /**
+   * Lấy chi tiết một chương truyện (UC-16)
+   */
+  async getChapterDetail(id: string): Promise<ApiResponse<ChapterItem>> {
+    return api.get<ApiResponse<ChapterItem>>(`/chapters/${id}`);
+  },
+
+  /**
+   * Tạo chương mới (UC-14 & UC-15)
+   */
+  async createChapter(
+    payload: CreateChapterPayload
+  ): Promise<ApiResponse<ChapterItem>> {
+    return api.post<ApiResponse<ChapterItem>>('/chapters', payload);
+  },
+
+  /**
+   * Chỉnh sửa chương truyện (UC-15 & UC-16)
+   */
+  async updateChapter(
+    id: string,
+    payload: UpdateChapterPayload
+  ): Promise<ApiResponse<ChapterItem>> {
+    return api.patch<ApiResponse<ChapterItem>>(`/chapters/${id}`, payload);
+  },
+
+  /**
+   * Xóa chương truyện (UC-16)
+   */
+  async deleteChapter(
+    id: string
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return api.delete<ApiResponse<{ success: boolean; message: string }>>(
+      `/chapters/${id}`
+    );
+  },
+
+  /**
+   * Sắp xếp lại thứ tự các chương (UC-16)
+   */
+  async reorderChapters(
+    storyId: string,
+    payload: ReorderChaptersPayload
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return api.patch<ApiResponse<{ success: boolean; message: string }>>(
+      `/chapters/stories/${storyId}/reorder`,
+      payload
+    );
+  },
+
+  /**
+   * Xem thống kê chi tiết các chương trong truyện (UC-16)
+   */
+  async getStoryChaptersStats(
+    storyId: string
+  ): Promise<ApiResponse<ChapterStatsData>> {
+    return api.get<ApiResponse<ChapterStatsData>>(
+      `/chapters/stories/${storyId}/stats`
+    );
+  },
+};

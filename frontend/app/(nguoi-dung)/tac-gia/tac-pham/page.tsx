@@ -84,13 +84,14 @@ export default function QuanLyTacPhamPage() {
   };
 
   return (
-    <div className="w-full px-3.5 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 py-6 sm:py-8">
-
-
+    <div className="w-full px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 max-w-7xl mx-auto">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight flex items-center gap-2">
+            <svg className="w-6 h-6 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
             Quản lý tác phẩm
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
@@ -98,18 +99,30 @@ export default function QuanLyTacPhamPage() {
           </p>
         </div>
 
-        <Link
-          href="/tac-gia/dang-ky"
-          className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-3 py-1.5 rounded-md transition font-medium"
-        >
-          <svg className="w-3.5 h-3.5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <span>Hồ sơ tác giả</span>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/tac-gia/dang-ky"
+            className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-3 py-2 rounded-lg transition font-medium"
+          >
+            <svg className="w-3.5 h-3.5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span>Hồ sơ tác giả</span>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+
+          <Link
+            href="/tac-gia/tac-pham/them-moi"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-white bg-sky-600 hover:bg-sky-700 px-4 py-2 rounded-lg transition font-semibold shadow-xs"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Viết truyện mới</span>
+          </Link>
+        </div>
       </div>
 
       {/* Overview Statistics Cards */}
@@ -135,9 +148,9 @@ export default function QuanLyTacPhamPage() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-lg border border-zinc-200 p-5 flex flex-col md:flex-row gap-5 animate-pulse"
+              className="bg-white rounded-xl border border-zinc-200 p-5 flex flex-col md:flex-row gap-5 animate-pulse"
             >
-              <div className="w-full md:w-32 h-44 bg-zinc-200 rounded-md shrink-0" />
+              <div className="w-full md:w-32 h-44 bg-zinc-200 rounded-lg shrink-0" />
               <div className="flex-1 space-y-3">
                 <div className="h-4 bg-zinc-200 rounded w-1/4" />
                 <div className="h-6 bg-zinc-200 rounded w-1/2" />
@@ -148,7 +161,7 @@ export default function QuanLyTacPhamPage() {
           ))}
         </div>
       ) : isError ? (
-        <div className="bg-white rounded-lg border border-red-200 p-8 text-center">
+        <div className="bg-white rounded-xl border border-red-200 p-8 text-center">
           <p className="text-sm font-semibold text-red-600">
             {(error as any)?.message || "Không thể tải danh sách tác phẩm"}
           </p>
@@ -174,8 +187,8 @@ export default function QuanLyTacPhamPage() {
         </div>
       ) : (
         /* Empty State */
-        <div className="bg-white rounded-lg border border-zinc-200 p-10 sm:p-12 text-center flex flex-col items-center justify-center">
-          <div className="w-12 h-12 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3">
+        <div className="bg-white rounded-xl border border-zinc-200 p-10 sm:p-12 text-center flex flex-col items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>

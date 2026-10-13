@@ -203,4 +203,28 @@ export const ErrorCode = {
     error: 'STORY_REJECT_REASON_REQUIRED',
     message: 'Vui lòng cung cấp lý do từ chối tác phẩm',
   },
+  CHAPTER_NOT_FOUND: {
+    error: 'CHAPTER_NOT_FOUND',
+    message: 'Không tìm thấy chương truyện',
+  },
+  CHAPTER_NUMBER_EXISTS: {
+    error: 'CHAPTER_NUMBER_EXISTS',
+    message: 'Số thứ tự chương đã tồn tại trong tác phẩm này',
+  },
+  CHAPTER_FORBIDDEN: {
+    error: 'CHAPTER_FORBIDDEN',
+    message: 'Bạn không có quyền thao tác trên chương truyện này',
+  },
+  CHAPTER_COIN_INVALID: {
+    error: 'CHAPTER_COIN_INVALID',
+    message: 'Giá xu phải là số nguyên dương lớn hơn 0 khi chương ở chế độ trả phí',
+  },
+  CHAPTER_CANNOT_DELETE: {
+    error: 'CHAPTER_CANNOT_DELETE',
+    message: 'Không thể xóa chương đã phát hành hoặc có dữ liệu liên quan',
+  },
+  CHAPTER_STORY_NOT_FOUND: {
+    error: 'CHAPTER_STORY_NOT_FOUND',
+    message: 'Tác phẩm được chỉ định không tồn tại hoặc bạn không có quyền truy cập',
+  },
 };
