@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMyStories } from "@/lib/hooks/queries/useStoryQuery";
@@ -9,6 +9,20 @@ import { ChapterRichTextEditor } from "@/components/author/chapters/ChapterRichT
 import { StoryPickerDropdown } from "@/components/author/chapters/StoryPickerDropdown";
 import { StoryItem } from "@/types/story";
 import { ChapterAction } from "@/types/chapter";
+
+const LOCAL_STORAGE_DRAFT_KEY = "author_new_chapter_draft";
+
+interface LocalChapterDraft {
+  storyId: string;
+  storyTitle?: string;
+  chapterNumber: number;
+  title: string;
+  content: string;
+  isFree: boolean;
+  coinPrice: number;
+  requirePrevious: boolean;
+  savedAt: number;
+}
 
 export default function ThemMoiChuongPage() {
   const router = useRouter();
@@ -24,9 +38,11 @@ export default function ThemMoiChuongPage() {
 
   // Selected story
   const [selectedStoryId, setSelectedStoryId] = useState<string>("");
+  const isStoryInitializedRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (stories.length > 0) {
+    if (stories.length > 0 && !isStoryInitializedRef.current) {
+      isStoryInitializedRef.current = true;
       if (storyParam) {
         const found = stories.find(
           (s) => s.slug === storyParam || s._id === storyParam || s.id === storyParam
@@ -36,11 +52,9 @@ export default function ThemMoiChuongPage() {
           return;
         }
       }
-      if (!selectedStoryId) {
-        setSelectedStoryId(stories[0]._id || stories[0].id || "");
-      }
+      setSelectedStoryId(stories[0]._id || stories[0].id || "");
     }
-  }, [stories, storyParam, selectedStoryId]);
+  }, [stories, storyParam]);
 
   const currentStory = useMemo(
     () => stories.find((s) => (s._id || s.id) === selectedStoryId),
@@ -64,6 +78,33 @@ export default function ThemMoiChuongPage() {
   const [requirePrevious, setRequirePrevious] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Local draft states
+  const [draftData, setDraftData] = useState<LocalChapterDraft | null>(null);
+  const [showDraftModal, setShowDraftModal] = useState<boolean>(false);
+  const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
+  const [storySwitchNotice, setStorySwitchNotice] = useState<{ title: string } | null>(null);
+  const [editorKey, setEditorKey] = useState<number>(0);
+  const isSubmittedRef = useRef<boolean>(false);
+
+  // Check draft in LocalStorage on initial load
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_DRAFT_KEY);
+      if (raw) {
+        const parsed: LocalChapterDraft = JSON.parse(raw);
+        const hasContent =
+          (parsed.title && parsed.title.trim().length > 0) ||
+          (parsed.content && parsed.content.trim().length > 0 && parsed.content !== "<p></p>");
+        if (hasContent) {
+          setDraftData(parsed);
+          setShowDraftModal(true);
+        }
+      }
+    } catch (e) {
+      console.warn("Lỗi đọc draft từ LocalStorage:", e);
+    }
+  }, []);
+
   // Auto assign next chapter number when chapters load
   useEffect(() => {
     if (existingChapters.length > 0) {
@@ -73,6 +114,95 @@ export default function ThemMoiChuongPage() {
       setChapterNumber(1);
     }
   }, [existingChapters]);
+
+  // Auto-save draft to LocalStorage with debounce
+  useEffect(() => {
+    const hasContent =
+      (title && title.trim().length > 0) ||
+      (content && content.trim().length > 0 && content !== "<p></p>");
+
+    if (!hasContent) return;
+
+    const timer = setTimeout(() => {
+      try {
+        const draft: LocalChapterDraft = {
+          storyId: selectedStoryId,
+          storyTitle: currentStory?.title || "",
+          chapterNumber,
+          title,
+          content,
+          isFree,
+          coinPrice,
+          requirePrevious,
+          savedAt: Date.now(),
+        };
+        localStorage.setItem(LOCAL_STORAGE_DRAFT_KEY, JSON.stringify(draft));
+        setLastSavedTime(new Date());
+      } catch (e) {
+        console.warn("Không thể lưu bản nháp vào LocalStorage:", e);
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [selectedStoryId, currentStory, chapterNumber, title, content, isFree, coinPrice, requirePrevious]);
+
+  // Prevent accidental tab closing / reload when writing
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const hasContent =
+        (title && title.trim().length > 0) ||
+        (content && content.trim().length > 0 && content !== "<p></p>");
+
+      if (hasContent && !isSubmittedRef.current) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [title, content]);
+
+  // Restore draft handler
+  const handleRestoreDraft = () => {
+    if (!draftData) return;
+    if (draftData.storyId) {
+      setSelectedStoryId(draftData.storyId);
+      const matched = stories.find((s) => (s._id || s.id) === draftData.storyId);
+      if (matched?.slug) {
+        window.history.replaceState(null, "", `/tac-gia/chuong-truyen/them-moi?story=${matched.slug}`);
+      }
+    }
+    if (draftData.title) {
+      setTitle(draftData.title);
+    }
+    if (draftData.content) {
+      setContent(draftData.content);
+      const text = draftData.content.replace(/<[^>]*>/g, " ").trim();
+      setWordCount(text ? text.split(/\s+/).length : 0);
+    }
+    if (typeof draftData.isFree === "boolean") {
+      setIsFree(draftData.isFree);
+    }
+    if (typeof draftData.coinPrice === "number") {
+      setCoinPrice(draftData.coinPrice);
+    }
+    if (typeof draftData.requirePrevious === "boolean") {
+      setRequirePrevious(draftData.requirePrevious);
+    }
+    setEditorKey((k) => k + 1);
+    setLastSavedTime(new Date(draftData.savedAt));
+    setShowDraftModal(false);
+  };
+
+  // Discard draft handler
+  const handleDiscardDraft = () => {
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_DRAFT_KEY);
+    } catch (e) {
+      console.warn(e);
+    }
+    setDraftData(null);
+    setShowDraftModal(false);
+  };
 
   const createChapterMutation = useCreateChapter();
 
@@ -102,6 +232,7 @@ export default function ThemMoiChuongPage() {
   const handleSubmit = async (action: ChapterAction) => {
     if (!validateForm() || !selectedStoryId) return;
 
+    isSubmittedRef.current = true;
     await createChapterMutation.mutateAsync({
       storyId: selectedStoryId,
       chapterNumber,
@@ -112,6 +243,12 @@ export default function ThemMoiChuongPage() {
       requirePreviousChapter: isFree ? false : requirePrevious,
       action,
     });
+
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_DRAFT_KEY);
+    } catch (e) {
+      console.warn(e);
+    }
 
     const storySlug = currentStory?.slug || selectedStoryId;
     router.push(`/tac-gia/chuong-truyen?story=${storySlug}`);
@@ -154,16 +291,24 @@ export default function ThemMoiChuongPage() {
 
       {/* Main Container */}
       <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 sm:p-7 space-y-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <svg className="w-5 h-5 text-sky-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Soạn thảo chương mới
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Nhập tiêu đề, nội dung và cấu hình xu để xuất bản hoặc lưu nháp chương truyện.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              <svg className="w-5 h-5 text-sky-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Soạn thảo chương mới
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Nhập tiêu đề, nội dung và cấu hình xu để xuất bản hoặc lưu nháp chương truyện.
+            </p>
+          </div>
+          {lastSavedTime && (
+            <div className="inline-flex items-center gap-2 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 rounded-xl self-start sm:self-center shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Đã lưu nháp {lastSavedTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+            </div>
+          )}
         </div>
 
         {/* Story Selector with rich image preview */}
@@ -182,9 +327,36 @@ export default function ThemMoiChuongPage() {
               stories={stories}
               selectedStoryId={selectedStoryId}
               onSelectStory={(story: StoryItem) => {
-                setSelectedStoryId(story._id || story.id || "");
+                const newId = story._id || story.id || "";
+                if (newId && newId !== selectedStoryId) {
+                  setSelectedStoryId(newId);
+                  setStorySwitchNotice({ title: story.title });
+                  if (story.slug) {
+                    window.history.replaceState(null, "", `/tac-gia/chuong-truyen/them-moi?story=${story.slug}`);
+                  }
+                }
               }}
             />
+          )}
+          {storySwitchNotice && (
+            <div className="mt-3 flex items-center justify-between p-3 bg-sky-50 border border-sky-200 rounded-xl text-xs text-sky-900 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2 min-w-0">
+                <svg className="w-4 h-4 text-sky-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="truncate">
+                  Đã chuyển sang tác phẩm <strong>&ldquo;{storySwitchNotice.title}&rdquo;</strong>. Tiêu đề và nội dung được giữ nguyên, số thứ tự chương đang được cập nhật tự động.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStorySwitchNotice(null)}
+                className="text-sky-500 hover:text-sky-700 p-1 text-xs font-bold shrink-0 ml-2"
+                title="Đóng thông báo"
+              >
+                ✕
+              </button>
+            </div>
           )}
           {errors.story && (
             <span className="text-xs text-rose-500 mt-1 block">{errors.story}</span>
@@ -248,6 +420,7 @@ export default function ThemMoiChuongPage() {
             Nội dung chương truyện <span className="text-rose-500">*</span>
           </label>
           <ChapterRichTextEditor
+            key={editorKey}
             content={content}
             onChange={(html, count) => {
               setContent(html);
@@ -382,6 +555,64 @@ export default function ThemMoiChuongPage() {
           </div>
         </div>
       </div>
+
+      {/* Draft Recovery Modal */}
+      {showDraftModal && draftData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl border border-slate-200 max-w-md w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-sky-50 text-sky-600 rounded-xl shrink-0">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Phát hiện bản nháp chưa lưu
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Hệ thống tìm thấy một chương truyện bạn đang viết dở trước đó. Bạn có muốn khôi phục lại nội dung không?
+                </p>
+              </div>
+            </div>
+
+            {/* Draft Summary Card */}
+            <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80 text-xs space-y-1.5 text-slate-600">
+              {draftData.storyTitle && (
+                <div>
+                  <span className="font-semibold text-slate-700">Tác phẩm:</span> {draftData.storyTitle}
+                </div>
+              )}
+              <div>
+                <span className="font-semibold text-slate-700">Tiêu đề:</span>{" "}
+                <span className="font-medium text-slate-900">{draftData.title || "(Chưa đặt tiêu đề)"}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-slate-700">Thời gian lưu:</span>{" "}
+                {new Date(draftData.savedAt).toLocaleString("vi-VN")}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleDiscardDraft}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+              >
+                Bỏ qua & Viết mới
+              </button>
+              <button
+                type="button"
+                onClick={handleRestoreDraft}
+                className="px-4 py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-xl transition shadow-xs"
+              >
+                Khôi phục bản nháp
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
