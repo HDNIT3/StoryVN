@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { storyService } from "@/lib/services/story.service";
+import { chapterService } from "@/lib/services/chapter.service";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "@/lib/toast";
 import type { SameGenreStoryItem, StoryAgeRating, StoryProgressState } from "@/types/story";
@@ -139,6 +140,19 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
 
   const story = storyRes?.data;
   const sameGenreStories: SameGenreStoryItem[] = story?.sameGenreStories || [];
+
+  // Query danh sách chương (chỉ fetch khi tab chapters active)
+  const {
+    data: chaptersRes,
+    isLoading: isLoadingChapters,
+    isError: isErrorChapters,
+  } = useQuery({
+    queryKey: queryKeys.chapters.bySlug(slugParam, { order: 'asc' }),
+    queryFn: () => chapterService.getChaptersBySlug(slugParam, { order: 'asc' }),
+    enabled: !!slugParam && activeTab === 'chapters',
+  });
+
+  const chapters = chaptersRes?.data?.items || [];
 
   // Handler chia sẻ liên kết truyện (Hỗ trợ Web Share API trên di động + Copy link dự phòng)
   const handleShare = async () => {
@@ -558,17 +572,69 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
 
                 {/* TAB 2: DANH SÁCH CHƯƠNG */}
                 {activeTab === "chapters" && (
-                  <div className="py-8 text-center">
-                    <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center">
-                      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                    </div>
-                    <h3 className="text-base font-bold text-zinc-900 mb-1">Chưa có chương nào được xuất bản</h3>
-                    <p className="text-sm text-zinc-500 max-w-sm mx-auto">
-                      Tác phẩm đang trong quá trình sáng tác và cập nhật nội dung. Hãy bấm &quot;Theo dõi&quot; để nhận thông báo sớm nhất!
-                    </p>
-                  </div>
+                  <>
+                    {/* Loading state */}
+                    {isLoadingChapters && (
+                      <div className="py-8 text-center text-zinc-500">
+                        Đang tải danh sách chương...
+                      </div>
+                    )}
+
+                    {/* Error state */}
+                    {isErrorChapters && (
+                      <div className="py-8 text-center text-rose-600">
+                        Không thể tải danh sách chương. Vui lòng thử lại sau.
+                      </div>
+                    )}
+
+                    {/* Empty state */}
+                    {!isLoadingChapters && !isErrorChapters && chapters.length === 0 && (
+                      <div className="py-8 text-center">
+                        <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center">
+                          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                          </svg>
+                        </div>
+                        <h3 className="text-base font-bold text-zinc-900 mb-1">Chưa có chương nào được xuất bản</h3>
+                        <p className="text-sm text-zinc-500 max-w-sm mx-auto">
+                          Tác phẩm đang trong quá trình sáng tác và cập nhật nội dung. Hãy bấm &quot;Theo dõi&quot; để nhận thông báo sớm nhất!
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Chapter list */}
+                    {!isLoadingChapters && !isErrorChapters && chapters.length > 0 && (
+                      <div className="space-y-2">
+                        {chapters.map((chapter) => (
+                          <Link
+                            key={chapter._id}
+                            href={`/truyen/${slugParam}/chuong/${chapter.chapterNumber}`}
+                            className="group flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-50 border border-transparent hover:border-zinc-200/60 transition-all duration-200"
+                          >
+                            {/* Chapter number badge */}
+                            <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-sm flex items-center justify-center shrink-0 border border-emerald-200/60 group-hover:bg-emerald-100 transition-colors">
+                              {chapter.chapterNumber}
+                            </div>
+
+                            {/* Chapter title */}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-semibold text-zinc-900 group-hover:text-emerald-700 truncate transition-colors">
+                                {chapter.title}
+                              </h4>
+                              <p className="text-xs text-zinc-500 mt-0.5">
+                                {formatDate(chapter.createdAt)}
+                              </p>
+                            </div>
+
+                            {/* Arrow indicator */}
+                            <svg className="w-4 h-4 text-zinc-400 group-hover:text-emerald-600 transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* TAB 3: THÔNG TIN TÁC GIẢ */}
