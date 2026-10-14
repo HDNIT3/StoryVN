@@ -26,16 +26,13 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request>();
+
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (isPublic) {
-      return true;
-    }
-
-    const request = context.switchToHttp().getRequest<Request>();
     const authHeader = request.headers.authorization;
     let token: string | undefined;
 
@@ -43,6 +40,30 @@ export class AuthGuard implements CanActivate {
       token = authHeader.substring(7).trim();
     } else if (request.query && typeof request.query.token === 'string') {
       token = request.query.token.trim();
+    }
+
+    if (isPublic) {
+      if (token) {
+        try {
+          const isBlacklisted = await this.redisService.get(`blacklist:token:${token}`);
+          if (!isBlacklisted) {
+            const secret =
+              this.configService.get<string>('JWT_SECRET') ||
+              'storyvn_jwt_secret_key_super_secret_2026_auth_service';
+            const payload = await this.jwtService.verifyAsync(token, { secret });
+            if (payload?.sub && (!payload.tokenType || payload.tokenType === 'access')) {
+              const user = await this.usersService.findById(payload.sub);
+              if (user && user.status !== UserStatus.BANNED) {
+                (request as any).user = user;
+                (request as any).token = token;
+              }
+            }
+          }
+        } catch (err: any) {
+          console.error('[AuthGuard isPublic] error decoding token:', err?.message || err);
+        }
+      }
+      return true;
     }
 
     if (!token) {
