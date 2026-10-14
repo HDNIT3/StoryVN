@@ -60,6 +60,8 @@ export const queryKeys = {
     all: ["chapters"] as const,
     byStory: (params: Record<string, any>) =>
       ["chapters", "by-story", params] as const,
+    bySlug: (slug: string, params?: Record<string, any>) =>
+      ["chapters", "by-slug", slug, ...(params ? [params] : [])] as const,
     detail: (id: string) => ["chapters", "detail", id] as const,
     stats: (storyId: string) => ["chapters", "stats", storyId] as const,
   },
