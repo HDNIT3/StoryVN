@@ -481,4 +481,47 @@ export class ChaptersService {
         .slice(0, 5),
     };
   }
+
+  /**
+   * Lấy danh sách chương theo slug truyện (công khai, mọi role).
+   * Trả về TẤT CẢ chương kể cả chưa được duyệt.
+   */
+  async getChaptersBySlug(
+    slug: string,
+    options?: { page?: number; limit?: number; order?: 'asc' | 'desc' },
+  ) {
+    const story = await this.storyModel.findOne({ slug }).lean();
+    if (!story) {
+      throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    const filter = { storyId: story._id };
+    const sortOrder = options?.order === 'desc' ? -1 : 1;
+
+    const total = await this.chapterModel.countDocuments(filter);
+
+    let queryBuilder = this.chapterModel
+      .find(filter)
+      .select('chapterNumber title createdAt updatedAt')
+      .sort({ chapterNumber: sortOrder });
+
+    if (options?.page && options?.limit) {
+      const skip = (options.page - 1) * options.limit;
+      queryBuilder = queryBuilder.skip(skip).limit(options.limit);
+    }
+
+    const items = await queryBuilder.lean();
+
+    return {
+      items,
+      total,
+      page: options?.page || 1,
+      limit: options?.limit || total,
+      story: {
+        _id: story._id,
+        title: story.title,
+        slug: story.slug,
+      },
+    };
+  }
 }

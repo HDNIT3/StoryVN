@@ -79,6 +79,33 @@ export class ChaptersController {
   }
 
   @ApiOperation({
+    summary: 'Lấy danh sách chương theo slug truyện (Công khai)',
+    description:
+      'Trả về danh sách tất cả chương (kể cả chưa duyệt) với: số chương, tên, ngày tạo, ngày cập nhật',
+  })
+  @Public()
+  @Get('story/:slug')
+  @HttpCode(HttpStatus.OK)
+  async getChaptersBySlug(
+    @Param('slug') slug: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('order') order?: 'asc' | 'desc',
+  ) {
+    const data = await this.chaptersService.getChaptersBySlug(slug, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      order: order || 'asc',
+    });
+
+    return {
+      success: true,
+      message: 'Lấy danh sách chương thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
     summary: 'Sắp xếp lại thứ tự các chương - UC-16',
     description: 'Cập nhật lại số thứ tự (chapterNumber) cho các chương trong truyện',
   })
