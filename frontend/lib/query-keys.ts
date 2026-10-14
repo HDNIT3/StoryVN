@@ -56,6 +56,13 @@ export const queryKeys = {
     sameGenre: (slug: string, limit?: number) =>
       ["stories", "same-genre", slug, limit || 6] as const,
   },
+  chapters: {
+    all: ["chapters"] as const,
+    byStory: (params: Record<string, any>) =>
+      ["chapters", "by-story", params] as const,
+    detail: (id: string) => ["chapters", "detail", id] as const,
+    stats: (storyId: string) => ["chapters", "stats", storyId] as const,
+  },
   media: {
     all: ["media"] as const,
     list: (params?: Record<string, any>) =>
