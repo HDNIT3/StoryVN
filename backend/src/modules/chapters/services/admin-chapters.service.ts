@@ -463,4 +463,48 @@ export class AdminChaptersService {
       chapter: await this.findById(chapter._id.toString()),
     };
   }
+
+  /**
+   * Chuyển chương truyện (bị từ chối) quay lại chờ duyệt (chuyển sang PENDING_REVIEW và gửi thông báo)
+   */
+  async resetPendingChapter(id: string, reviewerId: string): Promise<any> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
+    }
+
+    const chapter = await this.chapterModel.findById(id);
+    if (!chapter) {
+      throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    const story = await this.storyModel.findById(chapter.storyId);
+    if (!story) {
+      throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    chapter.status = ChapterStatus.PENDING_REVIEW;
+    chapter.rejectReason = null;
+    await chapter.save();
+
+    await this.updateStoryChapterCount(story._id);
+
+    try {
+      await this.notificationsService.create({
+        userId: story.authorId.toString(),
+        type: NotificationType.MODERATION,
+        title: '⏳ Chương truyện được chuyển về chờ duyệt',
+        message: `Chương ${chapter.chapterNumber}: "${chapter.title}" thuộc tác phẩm "${story.title}" đã được ban quản lý đưa trở lại hàng đợi chờ duyệt.`,
+        storyId: story._id.toString(),
+        chapterId: chapter._id.toString(),
+        actorId: reviewerId,
+      });
+    } catch {
+      // Bỏ qua lỗi gửi notification nếu có
+    }
+
+    return {
+      message: 'Đã chuyển chương truyện về trạng thái chờ duyệt',
+      chapter: await this.findById(chapter._id.toString()),
+    };
+  }
 }

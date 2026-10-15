@@ -502,7 +502,7 @@ export class ChaptersService {
 
     let queryBuilder = this.chapterModel
       .find(filter)
-      .select('chapterNumber title createdAt updatedAt')
+      .select('chapterNumber title viewCount createdAt updatedAt')
       .sort({ chapterNumber: sortOrder });
 
     if (options?.page && options?.limit) {
@@ -566,14 +566,16 @@ export class ChaptersService {
       }
     }
 
-    // Tăng lượt đọc ngầm (atomic increment)
+    // Tăng lượt đọc ngầm (atomic increment, không cập nhật updatedAt)
     await this.chapterModel.updateOne(
       { _id: chapter._id },
       { $inc: { viewCount: 1 } },
+      { timestamps: false },
     );
     await this.storyModel.updateOne(
       { _id: story._id },
       { $inc: { 'stats.viewCount': 1 } },
+      { timestamps: false },
     );
 
     // Tìm chương trước và chương sau (chỉ lấy published nếu là độc giả thường)

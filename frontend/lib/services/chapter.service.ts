@@ -103,7 +103,7 @@ export const chapterService = {
     slug: string,
     params?: { page?: number; limit?: number; order?: 'asc' | 'desc' }
   ): Promise<ApiResponse<{
-    items: { _id: string; chapterNumber: number; title: string; createdAt: string; updatedAt: string }[];
+    items: { _id: string; chapterNumber: number; title: string; viewCount?: number; createdAt: string; updatedAt: string }[];
     total: number;
     page: number;
     limit: number;

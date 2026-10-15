@@ -185,3 +185,29 @@ export function useUnhideChapter() {
     },
   });
 }
+
+/**
+ * Mutation Chuyển chương truyện bị từ chối quay lại chờ duyệt (PENDING_REVIEW)
+ */
+export function useResetPendingChapter() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await adminChapterService.resetPending(id);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(
+        `Đã chuyển Chương ${data.chapterNumber}${data.title ? `: "${data.title}"` : ""} quay lại chờ duyệt thành công!`
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chapters.all });
+    },
+    onError: (err: any) => {
+      toast.error(
+        err?.response?.data?.message || err?.message || "Chuyển về chờ duyệt thất bại"
+      );
+    },
+  });
+}

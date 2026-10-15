@@ -12,6 +12,7 @@ interface Props {
   onUnpublish: (chapter: AdminChapterItem) => void;
   onHide?: (chapter: AdminChapterItem) => void;
   onUnhide?: (chapter: AdminChapterItem) => void;
+  onResetPending?: (chapter: AdminChapterItem) => void;
 }
 
 function StoryThumb({ src, alt }: { src?: string | null; alt: string }) {
@@ -112,6 +113,7 @@ export function ChapterTable({
   onUnpublish,
   onHide,
   onUnhide,
+  onResetPending,
 }: Props) {
   if (isLoading) {
     return (
@@ -380,17 +382,19 @@ export function ChapterTable({
                         </button>
                       )}
 
-                      {/* Nút Sửa / Chờ nâng cấp */}
-                      <button
-                        type="button"
-                        onClick={() => alert("Chức năng chỉnh sửa trực tiếp đang Chờ nâng cấp!")}
-                        className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition-all cursor-pointer"
-                        title="Chỉnh sửa (Chờ nâng cấp)"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
+                      {/* 4. Nếu đang REJECTED (Bị từ chối): Nút đưa quay lại hàng đợi chờ duyệt */}
+                      {ch.status === "REJECTED" && onResetPending && (
+                        <button
+                          type="button"
+                          onClick={() => onResetPending(ch)}
+                          className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                          title="Chuyển về chờ duyệt lại"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
