@@ -95,4 +95,57 @@ export const chapterService = {
       `/chapters/stories/${storyId}/stats`
     );
   },
+
+  /**
+   * Lấy danh sách chương theo slug truyện (công khai, mọi role)
+   */
+  async getChaptersBySlug(
+    slug: string,
+    params?: { page?: number; limit?: number; order?: 'asc' | 'desc' }
+  ): Promise<ApiResponse<{
+    items: { _id: string; chapterNumber: number; title: string; createdAt: string; updatedAt: string }[];
+    total: number;
+    page: number;
+    limit: number;
+    story: { _id: string; title: string; slug: string };
+  }>> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.order) searchParams.append('order', params.order);
+
+    const qs = searchParams.toString();
+    return api.get(`/chapters/story/${slug}${qs ? `?${qs}` : ''}`);
+  },
+
+  /**
+   * Lấy chi tiết nội dung chương để đọc theo slug truyện và số chương
+   */
+  async getChapterReadingBySlugAndNumber(
+    slug: string,
+    chapterNumber: number | string
+  ): Promise<ApiResponse<{
+    _id: string;
+    chapterNumber: number;
+    title: string;
+    content: string;
+    viewCount: number;
+    wordCount: number;
+    isFree: boolean;
+    coinPrice: number;
+    createdAt: string;
+    updatedAt: string;
+    story: {
+      _id: string;
+      title: string;
+      slug: string;
+      coverUrl?: string;
+      author: string;
+    };
+    prevChapter?: { chapterNumber: number; title: string } | null;
+    nextChapter?: { chapterNumber: number; title: string } | null;
+    chaptersList: { chapterNumber: number; title: string }[];
+  }>> {
+    return api.get(`/chapters/story/${slug}/chapter/${chapterNumber}`);
+  },
 };
