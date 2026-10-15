@@ -205,4 +205,26 @@ export class AdminChaptersController {
       data: data.chapter,
     };
   }
+
+  @ApiOperation({
+    summary:
+      'Chuyển chương truyện (bị từ chối) quay lại hàng đợi chờ duyệt (chuyển sang PENDING_REVIEW)',
+  })
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Patch(':id/reset-pending')
+  @HttpCode(HttpStatus.OK)
+  async resetPendingChapter(
+    @Param('id') id: string,
+    @CurrentUser() reviewer: User & { _id: any },
+  ) {
+    const data = await this.adminChaptersService.resetPendingChapter(
+      id,
+      reviewer._id.toString(),
+    );
+    return {
+      success: true,
+      message: data.message,
+      data: data.chapter,
+    };
+  }
 }
