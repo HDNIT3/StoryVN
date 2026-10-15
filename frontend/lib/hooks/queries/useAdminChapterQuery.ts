@@ -137,3 +137,51 @@ export function useUnpublishChapter() {
     },
   });
 }
+
+/**
+ * Mutation Ẩn chương truyện khỏi công khai (chuyển sang HIDDEN)
+ */
+export function useHideChapter() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const res = await adminChapterService.hide(id, reason);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(
+        `Đã ẩn Chương ${data.chapterNumber}${data.title ? `: "${data.title}"` : ""} khỏi công khai!`
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chapters.all });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || err?.message || "Ẩn chương thất bại");
+    },
+  });
+}
+
+/**
+ * Mutation Mở lại chương truyện bị ẩn (chuyển sang PUBLISHED)
+ */
+export function useUnhideChapter() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await adminChapterService.unhide(id);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(
+        `Đã mở lại Chương ${data.chapterNumber}${data.title ? `: "${data.title}"` : ""} hiển thị công khai!`
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chapters.all });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || err?.message || "Mở lại chương thất bại");
+    },
+  });
+}

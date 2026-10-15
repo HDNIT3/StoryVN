@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { chapterService } from "@/lib/services/chapter.service";
 import { queryKeys } from "@/lib/query-keys";
-import { cleanVietnameseText } from "@/lib/utils/vietnamese";
 
 function formatDate(dateStr?: string | null): string {
   if (!dateStr) return "—";
@@ -277,7 +276,7 @@ export default function ChapterReadingPage({
           )}
 
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#2c2725] font-serif">
-            {`Chương ${chapter.chapterNumber}${chapter.title ? `: ${cleanVietnameseText(chapter.title)}` : ""}`}
+            {`Chương ${chapter.chapterNumber}${chapter.title ? `: ${chapter.title}` : ""}`}
           </h1>
 
           {/* Badges thông tin: Đăng ngày, số từ, lượt đọc y hệt mẫu ảnh */}
@@ -378,7 +377,7 @@ export default function ChapterReadingPage({
           style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
           dangerouslySetInnerHTML={{
             __html: chapter.content
-              ? cleanVietnameseText(chapter.content)
+              ? chapter.content
               : "<p class='text-stone-400 italic'>(Chương này hiện chưa có nội dung văn bản)</p>",
           }}
         />

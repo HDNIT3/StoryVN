@@ -161,4 +161,48 @@ export class AdminChaptersController {
       data: data.chapter,
     };
   }
+
+  @ApiOperation({
+    summary: 'Ẩn chương truyện khỏi công khai (chuyển sang HIDDEN và gửi thông báo)',
+  })
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Patch(':id/hide')
+  @HttpCode(HttpStatus.OK)
+  async hideChapter(
+    @Param('id') id: string,
+    @CurrentUser() reviewer: User & { _id: any },
+    @Body() dto?: AdminChapterModerationReasonDto,
+  ) {
+    const data = await this.adminChaptersService.hideChapter(
+      id,
+      reviewer._id.toString(),
+      dto,
+    );
+    return {
+      success: true,
+      message: data.message,
+      data: data.chapter,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Mở lại chương truyện bị ẩn (chuyển về PUBLISHED và gửi thông báo)',
+  })
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Patch(':id/unhide')
+  @HttpCode(HttpStatus.OK)
+  async unhideChapter(
+    @Param('id') id: string,
+    @CurrentUser() reviewer: User & { _id: any },
+  ) {
+    const data = await this.adminChaptersService.unhideChapter(
+      id,
+      reviewer._id.toString(),
+    );
+    return {
+      success: true,
+      message: data.message,
+      data: data.chapter,
+    };
+  }
 }

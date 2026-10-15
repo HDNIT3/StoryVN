@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import type { AdminChapterItem } from "@/types/chapter";
 
-export type ChapterActionType = "REJECT" | "UNPUBLISH";
+export type ChapterActionType = "REJECT" | "UNPUBLISH" | "HIDE";
 
 interface Props {
   isOpen: boolean;
@@ -67,6 +67,19 @@ export function ChapterActionModal({
         "Nội dung cần kiểm duyệt lại do khiếu nại bản quyền",
       ],
     },
+    HIDE: {
+      title: "Ẩn chương truyện",
+      badgeColor: "bg-purple-100 text-purple-800",
+      btnColor: "bg-purple-600 hover:bg-purple-700 text-white",
+      btnText: "Xác nhận ẩn chương",
+      requireReason: false,
+      description: `${chapterDisplay} sẽ bị ẩn khỏi toàn bộ độc giả (chuyển sang trạng thái Đã ẩn). Bạn có thể mở lại hiển thị công khai bất cứ lúc nào.`,
+      sampleReasons: [
+        "Tạm ẩn chương để rà soát vi phạm tiêu chuẩn cộng đồng",
+        "Có tranh chấp bản quyền hoặc khiếu nại từ độc giả",
+        "Tác giả yêu cầu ẩn tạm thời",
+      ],
+    },
   }[actionType];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,7 +101,7 @@ export function ChapterActionModal({
             <span
               className={`text-xs font-bold px-2 py-0.5 rounded-full ${config.badgeColor}`}
             >
-              {actionType === "REJECT" ? "Từ chối" : "Gỡ duyệt"}
+              {actionType === "REJECT" ? "Từ chối" : actionType === "HIDE" ? "Ẩn chương" : "Gỡ duyệt"}
             </span>
             <h3 className="text-base font-bold text-slate-800">{config.title}</h3>
           </div>

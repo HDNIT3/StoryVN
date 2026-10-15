@@ -47,7 +47,7 @@ export function ChapterFilterBar({
   }, [search]);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+    <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/70 shadow-2xs p-2.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
       {/* Tìm kiếm */}
       <div className="relative flex-1 min-w-[240px]">
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -60,7 +60,7 @@ export function ChapterFilterBar({
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
           placeholder="Tìm tiêu đề chương, số chương hoặc tên tác phẩm..."
-          className="w-full pl-10 pr-9 py-2 text-xs md:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-slate-800 placeholder:text-slate-400"
+          className="w-full pl-9 pr-9 py-2 text-xs md:text-sm bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 placeholder:text-slate-400"
         />
         {localSearch && (
           <button
@@ -86,7 +86,7 @@ export function ChapterFilterBar({
             <select
               value={selectedStoryId}
               onChange={(e) => onStoryChange(e.target.value)}
-              className="appearance-none pl-3 pr-8 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-slate-700 cursor-pointer max-w-[200px] truncate"
+              className="appearance-none pl-3 pr-8 py-2 text-xs font-medium bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 cursor-pointer max-w-[200px] truncate"
             >
               <option value="">Tất cả tác phẩm</option>
               {storyOptions.map((st) => (
@@ -108,7 +108,7 @@ export function ChapterFilterBar({
           <select
             value={sortBy}
             onChange={(e) => onSortByChange(e.target.value)}
-            className="appearance-none pl-3 pr-8 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-slate-700 cursor-pointer"
+            className="appearance-none pl-3 pr-8 py-2 text-xs font-medium bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 cursor-pointer"
           >
             <option value="createdAt">Ngày tạo</option>
             <option value="updatedAt">Ngày cập nhật</option>
@@ -127,7 +127,7 @@ export function ChapterFilterBar({
         <button
           type="button"
           onClick={onSortOrderToggle}
-          className="p-2 text-slate-600 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+          className="p-2 text-slate-600 bg-slate-50/70 border border-slate-200/80 rounded-xl hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
           title={sortOrder === "asc" ? "Tăng dần (Click để giảm dần)" : "Giảm dần (Click để tăng dần)"}
         >
           {sortOrder === "asc" ? (
@@ -146,11 +146,11 @@ export function ChapterFilterBar({
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="p-2 text-slate-600 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-50"
+          className="p-2 text-slate-600 bg-slate-50/70 border border-slate-200/80 rounded-xl hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-50"
           title="Làm mới danh sách"
         >
           <svg
-            className={`w-4 h-4 ${isRefreshing ? "animate-spin text-sky-600" : ""}`}
+            className={`w-4 h-4 ${isRefreshing ? "animate-spin text-blue-600" : ""}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

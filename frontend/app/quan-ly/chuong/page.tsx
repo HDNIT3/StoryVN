@@ -9,6 +9,8 @@ import {
   useApproveChapter,
   useRejectChapter,
   useUnpublishChapter,
+  useHideChapter,
+  useUnhideChapter,
 } from "@/lib/hooks/queries/useAdminChapterQuery";
 import { useAdminStories } from "@/lib/hooks/queries/useAdminStoryQuery";
 import {
@@ -95,6 +97,8 @@ function QuanLyChuongContent() {
   const approveMutation = useApproveChapter();
   const rejectMutation = useRejectChapter();
   const unpublishMutation = useUnpublishChapter();
+  const hideMutation = useHideChapter();
+  const unhideMutation = useUnhideChapter();
 
   const chapters = chaptersData?.items ?? [];
   const pagination = chaptersData?.pagination;
@@ -161,6 +165,23 @@ function QuanLyChuongContent() {
     });
   };
 
+  // Thao tác mở modal ẩn chương
+  const handleOpenHide = (chapter: AdminChapterItem) => {
+    setActionModal({
+      isOpen: true,
+      actionType: "HIDE",
+      chapter,
+    });
+  };
+
+  // Thao tác mở lại chương bị ẩn
+  const handleUnhide = async (chapter: AdminChapterItem) => {
+    await unhideMutation.mutateAsync(chapter._id);
+    if (detailChapter?._id === chapter._id) {
+      setDetailChapter(null);
+    }
+  };
+
   // Xác nhận xử lý từ modal
   const handleActionSubmit = async (reason: string) => {
     if (!actionModal.chapter || !actionModal.actionType) return;
@@ -170,6 +191,8 @@ function QuanLyChuongContent() {
       await rejectMutation.mutateAsync({ id: chapter._id, reason });
     } else if (actionType === "UNPUBLISH") {
       await unpublishMutation.mutateAsync({ id: chapter._id, reason });
+    } else if (actionType === "HIDE") {
+      await hideMutation.mutateAsync({ id: chapter._id, reason });
     }
 
     setActionModal({ isOpen: false, actionType: null, chapter: null });
@@ -185,12 +208,12 @@ function QuanLyChuongContent() {
         <div>
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <span>Kiểm duyệt & Quản lý Chương</span>
-            <span className="text-xs px-2.5 py-0.5 font-bold rounded-full bg-sky-100 text-sky-700">
+            <span className="text-[11px] px-2.5 py-0.5 font-bold rounded-full bg-gradient-to-r from-sky-500 to-purple-600 text-white shadow-2xs">
               Admin / Manager
             </span>
           </h1>
           <p className="text-xs md:text-sm text-slate-500 mt-1">
-            Duyệt chương mới do tác giả đăng tải, kiểm tra nội dung và quản lý trạng thái xuất bản
+            Duyệt chương mới do tác giả đăng tải, kiểm tra nội dung và quản lý trọng thời xuất bản
           </p>
         </div>
       </div>
@@ -225,6 +248,8 @@ function QuanLyChuongContent() {
         onApprove={handleApprove}
         onReject={handleOpenReject}
         onUnpublish={handleOpenUnpublish}
+        onHide={handleOpenHide}
+        onUnhide={handleUnhide}
       />
 
       {/* Phân trang */}
@@ -242,6 +267,8 @@ function QuanLyChuongContent() {
         onApprove={handleApprove}
         onReject={handleOpenReject}
         onUnpublish={handleOpenUnpublish}
+        onHide={handleOpenHide}
+        onUnhide={handleUnhide}
       />
 
       {/* Modal Nhập lý do (Từ chối, Gỡ duyệt) */}
