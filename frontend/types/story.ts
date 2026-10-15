@@ -91,6 +91,7 @@ export interface RecentUpdatedStoryItem {
   genres: PopulatedRef[];
   genre: string;
   latestChapter: string;
+  latestChapterNumber?: number | null;
   author: string;
   updatedAt: string;
 }

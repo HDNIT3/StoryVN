@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro, Geist_Mono } from "next/font/google";
+import { Be_Vietnam_Pro, Geist_Mono, Merriweather } from "next/font/google";
 import "./globals.css";
 import { ClientProviders } from "./providers";
 
@@ -7,6 +7,13 @@ const beVietnamPro = Be_Vietnam_Pro({
   weight: ["300", "400", "500", "600", "700", "800"],
   subsets: ["latin", "vietnamese"],
   variable: "--font-be-vietnam-pro",
+  display: "swap",
+});
+
+const merriweather = Merriweather({
+  weight: ["300", "400", "700", "900"],
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-merriweather",
   display: "swap",
 });
 
@@ -36,7 +43,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${beVietnamPro.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${beVietnamPro.variable} ${merriweather.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
         <ClientProviders>{children}</ClientProviders>

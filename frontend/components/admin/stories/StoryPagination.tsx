@@ -41,7 +41,7 @@ export function StoryPagination({ page, totalPages, onPageChange }: Props) {
                   onClick={() => onPageChange(p)}
                   className={`w-8 h-8 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                     isCurrent
-                      ? "bg-sky-500 text-white shadow-xs"
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-2xs"
                       : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
                 >

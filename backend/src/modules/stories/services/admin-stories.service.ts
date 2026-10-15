@@ -384,6 +384,7 @@ export class AdminStoriesService {
     }
 
     story.visibility = StoryVisibility.PUBLIC;
+    story.rejectReason = null;
     await story.save();
 
     // Gửi thông báo mở lại công khai

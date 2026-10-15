@@ -96,3 +96,38 @@ export interface StoryChaptersResponse {
     totalViews: number;
   } | null;
 }
+
+export interface AdminChapterItem extends ChapterItem {
+  storyId: any; // populated story object containing title, slug, coverUrl, authorId
+}
+
+export interface AdminChapterCounts {
+  all: number;
+  pending: number;
+  published: number;
+  rejected: number;
+  draft: number;
+  hidden: number;
+}
+
+export interface QueryAdminChaptersParams {
+  storyId?: string;
+  status?: ChapterStatus;
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: 'createdAt' | 'updatedAt' | 'chapterNumber' | 'title' | 'viewCount';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedAdminChapters {
+  items: AdminChapterItem[];
+  pagination: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+

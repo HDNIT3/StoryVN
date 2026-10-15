@@ -4,7 +4,9 @@ import { Chapter, ChapterSchema } from './schemas/chapter.schema.js';
 import { Story, StorySchema } from '../stories/schemas/story.schema.js';
 import { User, UserSchema } from '../users/schemas/user.schema.js';
 import { ChaptersController } from './controllers/chapters.controller.js';
+import { AdminChaptersController } from './controllers/admin-chapters.controller.js';
 import { ChaptersService } from './services/chapters.service.js';
+import { AdminChaptersService } from './services/admin-chapters.service.js';
 
 @Module({
   imports: [
@@ -14,8 +16,9 @@ import { ChaptersService } from './services/chapters.service.js';
       { name: User.name, schema: UserSchema },
     ]),
   ],
-  controllers: [ChaptersController],
-  providers: [ChaptersService],
-  exports: [ChaptersService, MongooseModule],
+  controllers: [ChaptersController, AdminChaptersController],
+  providers: [ChaptersService, AdminChaptersService],
+  exports: [ChaptersService, AdminChaptersService, MongooseModule],
 })
 export class ChaptersModule {}
+

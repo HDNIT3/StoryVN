@@ -162,16 +162,16 @@ export default function QuanLyTruyenPage() {
       {/* Tiêu đề trang */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5 drop-shadow-md">
             Quản lý Truyện
             {counts && counts.pending > 0 && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
-                <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-200 border border-amber-400/40 animate-pulse backdrop-blur-xs">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
                 {counts.pending} tác phẩm cần duyệt
               </span>
             )}
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-200/90 font-medium mt-1 drop-shadow-xs">
             Kiểm duyệt tác phẩm mới, theo dõi trạng thái xuất bản, gỡ duyệt và quản lý hiển thị công khai.
           </p>
         </div>
