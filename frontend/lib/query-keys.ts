@@ -28,6 +28,11 @@ export const queryKeys = {
       ["admin", "stories", ...(params ? [params] : [])] as const,
     storyCounts: ["admin", "stories", "counts"] as const,
     storyDetail: (id: string) => ["admin", "stories", "detail", id] as const,
+    chapters: (params?: Record<string, any>) =>
+      ["admin", "chapters", ...(params ? [params] : [])] as const,
+    chapterCounts: (storyId?: string) =>
+      ["admin", "chapters", "counts", ...(storyId ? [storyId] : [])] as const,
+    chapterDetail: (id: string) => ["admin", "chapters", "detail", id] as const,
   },
   tags: {
     all: ["tags"] as const,
@@ -62,6 +67,8 @@ export const queryKeys = {
       ["chapters", "by-story", params] as const,
     bySlug: (slug: string, params?: Record<string, any>) =>
       ["chapters", "by-slug", slug, ...(params ? [params] : [])] as const,
+    reading: (slug: string, chapterNumber: number | string) =>
+      ["chapters", "reading", slug, String(chapterNumber)] as const,
     detail: (id: string) => ["chapters", "detail", id] as const,
     stats: (storyId: string) => ["chapters", "stats", storyId] as const,
   },

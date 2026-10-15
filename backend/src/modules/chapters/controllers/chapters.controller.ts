@@ -106,6 +106,33 @@ export class ChaptersController {
   }
 
   @ApiOperation({
+    summary: 'Lấy chi tiết một chương theo slug truyện và số chương (Công khai)',
+    description:
+      'Trả về nội dung chương, tiêu đề, số chương, lượt xem, kèm thông tin truyện và chương trước/sau',
+  })
+  @Public()
+  @Get('story/:slug/chapter/:chapterNumber')
+  @HttpCode(HttpStatus.OK)
+  async getChapterBySlugAndNumber(
+    @Param('slug') slug: string,
+    @Param('chapterNumber') chapterNumber: string,
+    @CurrentUser() user: any,
+  ) {
+    const data = await this.chaptersService.getChapterByStorySlugAndNumber(
+      slug,
+      parseInt(chapterNumber, 10),
+      user?._id,
+      user?.role,
+    );
+
+    return {
+      success: true,
+      message: 'Lấy nội dung chương thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
     summary: 'Sắp xếp lại thứ tự các chương - UC-16',
     description: 'Cập nhật lại số thứ tự (chapterNumber) cho các chương trong truyện',
   })

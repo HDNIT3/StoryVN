@@ -227,4 +227,12 @@ export const ErrorCode = {
     error: 'CHAPTER_STORY_NOT_FOUND',
     message: 'Tác phẩm được chỉ định không tồn tại hoặc bạn không có quyền truy cập',
   },
+  CHAPTER_NOT_PENDING: {
+    error: 'CHAPTER_NOT_PENDING',
+    message: 'Chương truyện không ở trạng thái chờ duyệt',
+  },
+  CHAPTER_REJECT_REASON_REQUIRED: {
+    error: 'CHAPTER_REJECT_REASON_REQUIRED',
+    message: 'Vui lòng cung cấp lý do từ chối phê duyệt chương',
+  },
 };

@@ -7,6 +7,7 @@ import { AdminStoriesController } from './controllers/admin-stories.controller.j
 import { StoriesController } from './controllers/stories.controller.js';
 import { Story, StorySchema } from './schemas/story.schema.js';
 import { AdminStoriesService } from './services/admin-stories.service.js';
+import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema.js';
 import { StoriesService } from './services/stories.service.js';
 
 @Module({
@@ -16,6 +17,7 @@ import { StoriesService } from './services/stories.service.js';
       { name: AuthorProfile.name, schema: AuthorProfileSchema },
       { name: User.name, schema: UserSchema },
       { name: Genre.name, schema: GenreSchema },
+      { name: Chapter.name, schema: ChapterSchema },
     ]),
   ],
   controllers: [StoriesController, AdminStoriesController],

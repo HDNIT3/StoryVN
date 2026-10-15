@@ -48,6 +48,16 @@ export default function HomePage() {
     },
   });
 
+  const { data: latestUpdatedData, isLoading: isLoadingLatest } = useQuery({
+    queryKey: queryKeys.stories.latestUpdated({ limit: 12 }),
+    queryFn: async () => {
+      const res = await storyService.getLatestUpdated({ limit: 12 });
+      return res.data;
+    },
+  });
+
+  const latestStories = latestUpdatedData?.items || [];
+
   return (
     <div className="min-h-screen bg-[#fafaf8] py-6 sm:py-10">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -247,6 +257,99 @@ export default function HomePage() {
             </div>
           </div>
         )}
+
+        {/* BẢNG CHƯƠNG MỚI NHẤT (MỚI CẬP NHẬT) - GIỐNG MẪU ẢNH */}
+        <div className="mt-14 space-y-4">
+          {/* Header Bảng */}
+          <div className="flex items-end justify-between pb-2 border-b border-zinc-200/80">
+            <div>
+              <span className="text-[11px] font-bold tracking-widest text-[#a83226] uppercase block mb-1">
+                MỚI NHẤT
+              </span>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight">
+                Mới cập nhật
+              </h2>
+            </div>
+
+            <Link
+              href="/truyen"
+              className="text-xs sm:text-sm font-bold text-[#a83226] hover:underline transition-colors"
+            >
+              Tất cả
+            </Link>
+          </div>
+
+          {/* Bảng Dữ Liệu */}
+          {isLoadingLatest ? (
+            <div className="bg-white rounded-2xl border border-zinc-200/80 p-8 text-center text-zinc-400 text-sm">
+              <div className="w-6 h-6 border-2 border-zinc-400 border-t-zinc-800 rounded-full animate-spin mx-auto mb-2" />
+              Đang tải danh sách chương mới cập nhật...
+            </div>
+          ) : latestStories.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-zinc-200/80 p-8 text-center text-zinc-400 text-xs">
+              Chưa có chương truyện nào mới cập nhật.
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <tbody className="divide-y divide-zinc-200/80 text-xs sm:text-sm">
+                    {latestStories.map((item) => {
+                      const dateObj = item.updatedAt ? new Date(item.updatedAt) : new Date();
+                      const dateStr = !isNaN(dateObj.getTime())
+                        ? `${String(dateObj.getDate()).padStart(2, "0")}/${String(dateObj.getMonth() + 1).padStart(2, "0")} ${String(dateObj.getHours()).padStart(2, "0")}:${String(dateObj.getMinutes()).padStart(2, "0")}`
+                        : "—";
+
+                      const chapterLink = item.latestChapterNumber
+                        ? `/truyen/${item.slug}/chuong/${item.latestChapterNumber}`
+                        : `/truyen/${item.slug}`;
+
+                      return (
+                        <tr
+                          key={item._id}
+                          className="hover:bg-zinc-50/80 transition-colors group"
+                        >
+                          {/* Cột 1: Thể loại */}
+                          <td className="py-3 px-3 sm:px-5 text-zinc-500 font-medium whitespace-nowrap w-24 sm:w-32">
+                            <span className="truncate block max-w-[100px] sm:max-w-[120px]" title={item.genre || "Chưa phân loại"}>
+                              {item.genre || "Chưa phân loại"}
+                            </span>
+                          </td>
+
+                          {/* Cột 2: Tên truyện */}
+                          <td className="py-3 px-3 sm:px-5 font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors max-w-[160px] sm:max-w-xs">
+                            <Link href={`/truyen/${item.slug}`} className="truncate block" title={item.title}>
+                              {item.title}
+                            </Link>
+                          </td>
+
+                          {/* Cột 3: Tên / Số chương mới */}
+                          <td className="py-3 px-3 sm:px-5 text-zinc-600 group-hover:text-zinc-900 max-w-[180px] sm:max-w-sm">
+                            <Link href={chapterLink} className="truncate block hover:underline" title={item.latestChapter}>
+                              {item.latestChapter || "Chưa có chương"}
+                            </Link>
+                          </td>
+
+                          {/* Cột 4: Tác giả */}
+                          <td className="py-3 px-3 sm:px-5 text-zinc-500 font-medium whitespace-nowrap w-28 sm:w-36">
+                            <span className="truncate block max-w-[110px] sm:max-w-[130px]" title={item.author}>
+                              {item.author}
+                            </span>
+                          </td>
+
+                          {/* Cột 5: Ngày giờ cập nhật */}
+                          <td className="py-3 px-3 sm:px-5 text-zinc-500 tabular-nums text-right whitespace-nowrap w-24 sm:w-28 text-xs">
+                            {dateStr}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

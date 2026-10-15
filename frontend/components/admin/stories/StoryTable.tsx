@@ -245,9 +245,13 @@ export function StoryTable({
                   {/* Cột Thống kê */}
                   <td className="py-3.5 px-4 text-center">
                     <div className="inline-flex flex-col items-center">
-                      <span className="font-bold text-slate-800 text-xs">
-                        {story.stats?.chapterCount ?? 0} chương
-                      </span>
+                      <a
+                        href={`/quan-ly/chuong?storyId=${story._id}`}
+                        className="font-bold text-sky-600 hover:text-sky-700 hover:underline text-xs"
+                        title="Xem và quản lý các chương của tác phẩm này"
+                      >
+                        {story.stats?.chapterCount ?? 0} chương ↗
+                      </a>
                       <span className="text-[11px] text-slate-400">
                         {story.stats?.viewCount?.toLocaleString() ?? 0} lượt xem
                       </span>
