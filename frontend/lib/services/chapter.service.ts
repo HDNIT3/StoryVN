@@ -117,4 +117,35 @@ export const chapterService = {
     const qs = searchParams.toString();
     return api.get(`/chapters/story/${slug}${qs ? `?${qs}` : ''}`);
   },
+
+  /**
+   * Lấy chi tiết nội dung chương để đọc theo slug truyện và số chương
+   */
+  async getChapterReadingBySlugAndNumber(
+    slug: string,
+    chapterNumber: number | string
+  ): Promise<ApiResponse<{
+    _id: string;
+    chapterNumber: number;
+    title: string;
+    content: string;
+    viewCount: number;
+    wordCount: number;
+    isFree: boolean;
+    coinPrice: number;
+    createdAt: string;
+    updatedAt: string;
+    story: {
+      _id: string;
+      title: string;
+      slug: string;
+      coverUrl?: string;
+      author: string;
+    };
+    prevChapter?: { chapterNumber: number; title: string } | null;
+    nextChapter?: { chapterNumber: number; title: string } | null;
+    chaptersList: { chapterNumber: number; title: string }[];
+  }>> {
+    return api.get(`/chapters/story/${slug}/chapter/${chapterNumber}`);
+  },
 };
