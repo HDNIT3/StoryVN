@@ -13,6 +13,7 @@ interface Props {
   onUnpublish: (chapter: AdminChapterItem) => void;
   onHide?: (chapter: AdminChapterItem) => void;
   onUnhide?: (chapter: AdminChapterItem) => void;
+  onResetPending?: (chapter: AdminChapterItem) => void;
 }
 
 export function ChapterDetailModal({
@@ -24,6 +25,7 @@ export function ChapterDetailModal({
   onUnpublish,
   onHide,
   onUnhide,
+  onResetPending,
 }: Props) {
   const [fontSize, setFontSize] = useState<"sm" | "base" | "lg">("base");
 
@@ -315,6 +317,20 @@ export function ChapterDetailModal({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
                 <span>Mở lại công khai</span>
+              </button>
+            )}
+
+            {/* Nếu đang REJECTED: Nút Chuyển về chờ duyệt */}
+            {currentChapter.status === "REJECTED" && onResetPending && (
+              <button
+                type="button"
+                onClick={() => onResetPending(currentChapter)}
+                className="px-4 py-2 text-xs font-bold text-amber-800 bg-amber-50 border border-amber-300 hover:bg-amber-100 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Chuyển về chờ duyệt</span>
               </button>
             )}
           </div>
