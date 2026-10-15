@@ -11,6 +11,7 @@ import {
   useUnpublishChapter,
   useHideChapter,
   useUnhideChapter,
+  useResetPendingChapter,
 } from "@/lib/hooks/queries/useAdminChapterQuery";
 import { useAdminStories } from "@/lib/hooks/queries/useAdminStoryQuery";
 import {
@@ -99,6 +100,7 @@ function QuanLyChuongContent() {
   const unpublishMutation = useUnpublishChapter();
   const hideMutation = useHideChapter();
   const unhideMutation = useUnhideChapter();
+  const resetPendingMutation = useResetPendingChapter();
 
   const chapters = chaptersData?.items ?? [];
   const pagination = chaptersData?.pagination;
@@ -142,6 +144,14 @@ function QuanLyChuongContent() {
   // Thao tác phê duyệt ngay
   const handleApprove = async (chapter: AdminChapterItem) => {
     await approveMutation.mutateAsync(chapter._id);
+    if (detailChapter?._id === chapter._id) {
+      setDetailChapter(null);
+    }
+  };
+
+  // Thao tác chuyển chương bị từ chối quay lại chờ duyệt
+  const handleResetPending = async (chapter: AdminChapterItem) => {
+    await resetPendingMutation.mutateAsync(chapter._id);
     if (detailChapter?._id === chapter._id) {
       setDetailChapter(null);
     }
@@ -250,6 +260,7 @@ function QuanLyChuongContent() {
         onUnpublish={handleOpenUnpublish}
         onHide={handleOpenHide}
         onUnhide={handleUnhide}
+        onResetPending={handleResetPending}
       />
 
       {/* Phân trang */}
@@ -269,6 +280,7 @@ function QuanLyChuongContent() {
         onUnpublish={handleOpenUnpublish}
         onHide={handleOpenHide}
         onUnhide={handleUnhide}
+        onResetPending={handleResetPending}
       />
 
       {/* Modal Nhập lý do (Từ chối, Gỡ duyệt) */}

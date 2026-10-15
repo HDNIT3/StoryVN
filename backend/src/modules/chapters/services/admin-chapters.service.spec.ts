@@ -32,8 +32,8 @@ describe('AdminChaptersService', () => {
     status,
     isFree: true,
     coinPrice: 0,
-    rejectReason: null,
-    publishedAt: null,
+    rejectReason: null as string | null,
+    publishedAt: null as Date | null,
     save: vi.fn().mockResolvedValue(true),
   });
 
@@ -182,6 +182,28 @@ describe('AdminChaptersService', () => {
       expect(chapterDoc.save).toHaveBeenCalled();
       expect(mockNotificationsService.create).toHaveBeenCalled();
       expect(res.chapter.status).toBe(ChapterStatus.DRAFT);
+    });
+  });
+
+  describe('resetPendingChapter', () => {
+    it('Chuyển chương truyện từ chối quay lại PENDING_REVIEW thành công', async () => {
+      const chapterDoc = createMockChapterDoc(ChapterStatus.REJECTED);
+      chapterDoc.rejectReason = 'Lý do cũ';
+      mockChapterModel.findById.mockReturnValueOnce(Promise.resolve(chapterDoc));
+
+      vi.spyOn(service, 'findById').mockResolvedValueOnce({
+        ...chapterDoc,
+        status: ChapterStatus.PENDING_REVIEW,
+        rejectReason: null,
+      } as any);
+
+      const res = await service.resetPendingChapter(chapterId.toString(), reviewerId);
+
+      expect(chapterDoc.status).toBe(ChapterStatus.PENDING_REVIEW);
+      expect(chapterDoc.rejectReason).toBeNull();
+      expect(chapterDoc.save).toHaveBeenCalled();
+      expect(mockNotificationsService.create).toHaveBeenCalled();
+      expect(res.chapter.status).toBe(ChapterStatus.PENDING_REVIEW);
     });
   });
 });
