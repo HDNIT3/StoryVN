@@ -152,7 +152,7 @@ export function StoryTable({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+    <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/70 shadow-2xs overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -261,12 +261,23 @@ export function StoryTable({
                   {/* Cột Trạng thái */}
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     {renderStatusBadge(story.status)}
-                    {story.rejectReason && story.status === "REJECTED" && (
+                    {story.rejectReason && (
                       <p
-                        className="text-[11px] text-rose-500 max-w-[140px] truncate mt-0.5"
+                        className={`text-[11px] max-w-[140px] truncate mt-0.5 ${
+                          story.visibility === "PRIVATE"
+                            ? "text-purple-600"
+                            : story.status === "DRAFT"
+                            ? "text-amber-700"
+                            : "text-rose-500"
+                        }`}
                         title={story.rejectReason}
                       >
-                        Lý do: {story.rejectReason}
+                        {story.visibility === "PRIVATE"
+                          ? "Lý do ẩn: "
+                          : story.status === "DRAFT"
+                          ? "Lý do gỡ: "
+                          : "Lý do: "}
+                        {story.rejectReason}
                       </p>
                     )}
                   </td>
@@ -290,68 +301,68 @@ export function StoryTable({
                   {/* Cột Thao tác */}
                   <td className="py-3.5 px-4 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
-                      {/* Xem chi tiết */}
+                      {/* Xem chi tiết (Xanh dương / Mắt) */}
                       <button
                         type="button"
                         onClick={() => onViewDetail(story)}
-                        className="p-1.5 text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                        className="w-7 h-7 rounded-lg bg-sky-100/70 text-sky-700 hover:bg-sky-200 flex items-center justify-center transition-all cursor-pointer"
                         title="Xem chi tiết tác phẩm"
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       </button>
 
-                      {/* Nếu Đang Chờ duyệt -> Hiện nút Duyệt và Từ chối */}
+                      {/* Khi đang PENDING_REVIEW: Nút Phê duyệt (Xanh lá) và Từ chối (Đỏ) */}
                       {isPending && (
                         <>
                           <button
                             type="button"
                             onClick={() => onApprove(story)}
-                            className="p-1.5 text-emerald-600 hover:text-white hover:bg-emerald-500 rounded-lg transition-colors cursor-pointer border border-emerald-200"
+                            className="w-7 h-7 rounded-lg bg-emerald-100/70 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center transition-all cursor-pointer"
                             title="Phê duyệt tác phẩm"
                           >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M5 13l4 4L19 7" />
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                             </svg>
                           </button>
                           <button
                             type="button"
                             onClick={() => onReject(story)}
-                            className="p-1.5 text-rose-600 hover:text-white hover:bg-rose-500 rounded-lg transition-colors cursor-pointer border border-rose-200"
-                            title="Từ chối phê duyệt"
+                            className="w-7 h-7 rounded-lg bg-rose-100/80 text-rose-600 hover:bg-rose-200 flex items-center justify-center transition-all cursor-pointer"
+                            title="Từ chối phê duyệt tác phẩm"
                           >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 18L18 6M6 6l12 12" />
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
                         </>
                       )}
 
-                      {/* Nếu Đã xuất bản -> Nút Gỡ duyệt */}
+                      {/* Khi đã PUBLISHED: Nút Gỡ duyệt (Cam) */}
                       {isPublished && (
                         <button
                           type="button"
                           onClick={() => onUnpublish(story)}
-                          className="p-1.5 text-amber-600 hover:text-white hover:bg-amber-500 rounded-lg transition-colors cursor-pointer"
+                          className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 flex items-center justify-center transition-all cursor-pointer"
                           title="Gỡ duyệt tác phẩm (chuyển về bản nháp)"
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                           </svg>
                         </button>
                       )}
 
-                      {/* Ẩn public hoặc Mở lại public */}
+                      {/* Nút Ẩn / Mở lại công khai */}
                       {isPrivate ? (
                         <button
                           type="button"
                           onClick={() => onUnhide(story)}
-                          className="p-1.5 text-purple-600 hover:text-white hover:bg-purple-500 rounded-lg transition-colors cursor-pointer"
-                          title="Mở lại hiển thị công khai"
+                          className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center transition-all cursor-pointer"
+                          title="Mở lại hiển thị công khai (Bỏ ẩn)"
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
@@ -360,10 +371,10 @@ export function StoryTable({
                         <button
                           type="button"
                           onClick={() => onHide(story)}
-                          className="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
-                          title="Cấm / Ẩn tác phẩm khỏi chế độ công khai"
+                          className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 flex items-center justify-center transition-all cursor-pointer"
+                          title="Ẩn khỏi chế độ công khai (Chuyển sang Riêng tư)"
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                           </svg>
                         </button>

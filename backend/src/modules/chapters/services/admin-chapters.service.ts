@@ -178,10 +178,10 @@ export class AdminChaptersService {
         counts.published = item.count;
       } else if (item._id === ChapterStatus.REJECTED) {
         counts.rejected = item.count;
-      } else if (item._id === ChapterStatus.DRAFT) {
-        counts.draft = item.count;
       } else if (item._id === ChapterStatus.HIDDEN) {
         counts.hidden = item.count;
+      } else if (item._id === ChapterStatus.DRAFT) {
+        counts.draft = item.count;
       }
     }
 
@@ -363,6 +363,103 @@ export class AdminChaptersService {
 
     return {
       message: 'Gỡ duyệt chương truyện thành công (đã chuyển về DRAFT)',
+      chapter: await this.findById(chapter._id.toString()),
+    };
+  }
+
+  /**
+   * Ẩn chương truyện (chuyển sang HIDDEN và gửi thông báo)
+   */
+  async hideChapter(
+    id: string,
+    reviewerId: string,
+    dto?: AdminChapterModerationReasonDto,
+  ): Promise<any> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
+    }
+
+    const chapter = await this.chapterModel.findById(id);
+    if (!chapter) {
+      throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    const story = await this.storyModel.findById(chapter.storyId);
+    if (!story) {
+      throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    const reason = dto?.reason?.trim() || null;
+    chapter.status = ChapterStatus.HIDDEN;
+    if (reason) {
+      chapter.rejectReason = reason;
+    }
+    await chapter.save();
+
+    await this.updateStoryChapterCount(story._id);
+
+    try {
+      await this.notificationsService.create({
+        userId: story.authorId.toString(),
+        type: NotificationType.MODERATION,
+        title: '🔒 Chương truyện đã bị tạm ẩn',
+        message: `Chương ${chapter.chapterNumber}: "${chapter.title}" thuộc tác phẩm "${story.title}" đã bị ban quản trị ẩn khỏi hệ thống.${
+          reason ? ` Lý do: ${reason}` : ''
+        }`,
+        storyId: story._id.toString(),
+        chapterId: chapter._id.toString(),
+        actorId: reviewerId,
+      });
+    } catch {
+      // Bỏ qua lỗi gửi notification
+    }
+
+    return {
+      message: 'Đã ẩn chương truyện thành công',
+      chapter: await this.findById(chapter._id.toString()),
+    };
+  }
+
+  /**
+   * Mở lại chương truyện bị ẩn (chuyển về PUBLISHED nếu đã từng xuất bản hoặc DRAFT)
+   */
+  async unhideChapter(id: string, reviewerId: string): Promise<any> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
+    }
+
+    const chapter = await this.chapterModel.findById(id);
+    if (!chapter) {
+      throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    const story = await this.storyModel.findById(chapter.storyId);
+    if (!story) {
+      throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    chapter.status = ChapterStatus.PUBLISHED;
+    chapter.rejectReason = null;
+    await chapter.save();
+
+    await this.updateStoryChapterCount(story._id);
+
+    try {
+      await this.notificationsService.create({
+        userId: story.authorId.toString(),
+        type: NotificationType.MODERATION,
+        title: '🌐 Chương truyện đã được mở lại',
+        message: `Chương ${chapter.chapterNumber}: "${chapter.title}" thuộc tác phẩm "${story.title}" đã được hiển thị công khai trở lại.`,
+        storyId: story._id.toString(),
+        chapterId: chapter._id.toString(),
+        actorId: reviewerId,
+      });
+    } catch {
+      // Bỏ qua lỗi
+    }
+
+    return {
+      message: 'Đã mở lại chương truyện thành công',
       chapter: await this.findById(chapter._id.toString()),
     };
   }

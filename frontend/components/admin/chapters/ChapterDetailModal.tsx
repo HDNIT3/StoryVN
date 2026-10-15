@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import type { AdminChapterItem } from "@/types/chapter";
 import { useAdminChapterDetail } from "@/lib/hooks/queries/useAdminChapterQuery";
-import { cleanVietnameseText } from "@/lib/utils/vietnamese";
 
 interface Props {
   chapter: AdminChapterItem | null;
@@ -12,6 +11,8 @@ interface Props {
   onApprove: (chapter: AdminChapterItem) => void;
   onReject: (chapter: AdminChapterItem) => void;
   onUnpublish: (chapter: AdminChapterItem) => void;
+  onHide?: (chapter: AdminChapterItem) => void;
+  onUnhide?: (chapter: AdminChapterItem) => void;
 }
 
 export function ChapterDetailModal({
@@ -21,6 +22,8 @@ export function ChapterDetailModal({
   onApprove,
   onReject,
   onUnpublish,
+  onHide,
+  onUnhide,
 }: Props) {
   const [fontSize, setFontSize] = useState<"sm" | "base" | "lg">("base");
 
@@ -123,7 +126,33 @@ export function ChapterDetailModal({
           <div className="flex items-center gap-4 flex-wrap">
             <span className="flex items-center gap-1.5">
               <span className="text-slate-400">Trạng thái:</span>
-              <span className="font-bold text-slate-800">{currentChapter.status}</span>
+              <span className="font-bold">
+                {currentChapter.status === "PENDING_REVIEW" && (
+                  <span className="px-2 py-0.5 rounded-full text-amber-700 bg-amber-100 border border-amber-300 text-[11px]">
+                    Chờ duyệt
+                  </span>
+                )}
+                {currentChapter.status === "PUBLISHED" && (
+                  <span className="px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-100 border border-emerald-300 text-[11px]">
+                    Đã xuất bản
+                  </span>
+                )}
+                {currentChapter.status === "REJECTED" && (
+                  <span className="px-2 py-0.5 rounded-full text-rose-700 bg-rose-100 border border-rose-300 text-[11px]">
+                    Bị từ chối
+                  </span>
+                )}
+                {currentChapter.status === "DRAFT" && (
+                  <span className="px-2 py-0.5 rounded-full text-slate-700 bg-slate-100 border border-slate-300 text-[11px]">
+                    Bản nháp
+                  </span>
+                )}
+                {currentChapter.status === "HIDDEN" && (
+                  <span className="px-2 py-0.5 rounded-full text-purple-700 bg-purple-100 border border-purple-300 text-[11px]">
+                    Đã ẩn
+                  </span>
+                )}
+              </span>
             </span>
             <span className="flex items-center gap-1.5">
               <span className="text-slate-400">Thiết lập đọc:</span>
@@ -157,14 +186,32 @@ export function ChapterDetailModal({
           </div>
         </div>
 
-        {/* Thông báo lý do từ chối trước đó nếu có */}
+        {/* Thông báo lý do theo trạng thái nếu có */}
         {currentChapter.rejectReason && (
-          <div className="mx-6 mt-4 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 shrink-0 text-xs text-rose-800">
-            <svg className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className={`mx-6 mt-4 p-3.5 rounded-2xl flex items-start gap-2.5 shrink-0 text-xs ${
+            currentChapter.status === "HIDDEN"
+              ? "bg-purple-50 border border-purple-200 text-purple-800"
+              : currentChapter.status === "DRAFT"
+              ? "bg-amber-50 border border-amber-200 text-amber-800"
+              : "bg-rose-50 border border-rose-200 text-rose-800"
+          }`}>
+            <svg className={`w-4 h-4 shrink-0 mt-0.5 ${
+              currentChapter.status === "HIDDEN"
+                ? "text-purple-600"
+                : currentChapter.status === "DRAFT"
+                ? "text-amber-600"
+                : "text-rose-600"
+            }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <div>
-              <span className="font-bold">Lý do từ chối trước đây: </span>
+              <span className="font-bold">
+                {currentChapter.status === "HIDDEN"
+                  ? "Lý do tạm ẩn từ ban quản trị: "
+                  : currentChapter.status === "DRAFT"
+                  ? "Lý do gỡ duyệt: "
+                  : "Lý do từ chối trước đây: "}
+              </span>
               <span>{currentChapter.rejectReason}</span>
             </div>
           </div>
@@ -181,7 +228,7 @@ export function ChapterDetailModal({
             <div
               className={`prose max-w-none [&_p]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:mb-2 ${fontSizes[fontSize]}`}
               dangerouslySetInnerHTML={{
-                __html: cleanVietnameseText(contentText),
+                __html: contentText,
               }}
             />
           ) : (
@@ -228,17 +275,46 @@ export function ChapterDetailModal({
               </>
             )}
 
-            {/* Gỡ duyệt nếu PUBLISHED */}
+            {/* Nếu PUBLISHED: Có nút Ẩn chương và Gỡ duyệt */}
             {isPublished && (
+              <>
+                {onHide && (
+                  <button
+                    type="button"
+                    onClick={() => onHide(currentChapter)}
+                    className="px-4 py-2 text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    </svg>
+                    <span>Ẩn chương</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onUnpublish(currentChapter)}
+                  className="px-4 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  <span>Gỡ về nháp</span>
+                </button>
+              </>
+            )}
+
+            {/* Nếu đang HIDDEN: Nút Mở lại hiển thị */}
+            {currentChapter.status === "HIDDEN" && onUnhide && (
               <button
                 type="button"
-                onClick={() => onUnpublish(currentChapter)}
-                className="px-4 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                onClick={() => onUnhide(currentChapter)}
+                className="px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                <span>Gỡ duyệt (chuyển về nháp)</span>
+                <span>Mở lại công khai</span>
               </button>
             )}
           </div>

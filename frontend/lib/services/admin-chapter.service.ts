@@ -99,4 +99,27 @@ export const adminChapterService = {
       { reason: reason?.trim() || undefined },
     );
   },
+
+  /**
+   * Ẩn chương truyện khỏi công khai (chuyển sang HIDDEN)
+   */
+  async hide(
+    id: string,
+    reason?: string,
+  ): Promise<ApiResponse<AdminChapterItem>> {
+    return api.patch<ApiResponse<AdminChapterItem>>(
+      `/admin/chapters/${id}/hide`,
+      { reason: reason?.trim() || undefined },
+    );
+  },
+
+  /**
+   * Mở lại chương truyện bị ẩn (chuyển sang PUBLISHED)
+   */
+  async unhide(id: string): Promise<ApiResponse<AdminChapterItem>> {
+    return api.patch<ApiResponse<AdminChapterItem>>(
+      `/admin/chapters/${id}/unhide`,
+      {},
+    );
+  },
 };
