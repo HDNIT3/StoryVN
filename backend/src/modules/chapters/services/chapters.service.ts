@@ -481,4 +481,166 @@ export class ChaptersService {
         .slice(0, 5),
     };
   }
+
+  /**
+   * Lấy danh sách chương theo slug truyện (công khai, mọi role).
+   * Trả về TẤT CẢ chương kể cả chưa được duyệt.
+   */
+  async getChaptersBySlug(
+    slug: string,
+    options?: { page?: number; limit?: number; order?: 'asc' | 'desc' },
+  ) {
+    const story = await this.storyModel.findOne({ slug }).lean();
+    if (!story) {
+      throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    const filter = { storyId: story._id };
+    const sortOrder = options?.order === 'desc' ? -1 : 1;
+
+    const total = await this.chapterModel.countDocuments(filter);
+
+    let queryBuilder = this.chapterModel
+      .find(filter)
+      .select('chapterNumber title createdAt updatedAt')
+      .sort({ chapterNumber: sortOrder });
+
+    if (options?.page && options?.limit) {
+      const skip = (options.page - 1) * options.limit;
+      queryBuilder = queryBuilder.skip(skip).limit(options.limit);
+    }
+
+    const items = await queryBuilder.lean();
+
+    return {
+      items,
+      total,
+      page: options?.page || 1,
+      limit: options?.limit || total,
+      story: {
+        _id: story._id,
+        title: story.title,
+        slug: story.slug,
+      },
+    };
+  }
+
+  /**
+   * Lấy chi tiết một chương truyện để đọc (Công khai)
+   * Kèm tăng view, tính số từ, lấy thông tin chương trước / chương sau
+   */
+  async getChapterByStorySlugAndNumber(
+    slug: string,
+    chapterNumber: number,
+    userId?: string | Types.ObjectId,
+    userRole?: string,
+  ) {
+    const story = await this.storyModel
+      .findOne({ slug })
+      .select('title slug coverUrl authorId status visibility')
+      .populate('authorId', 'displayName username')
+      .lean();
+
+    if (!story) {
+      throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    const chapter = await this.chapterModel.findOne({
+      storyId: story._id,
+      chapterNumber,
+    });
+
+    if (!chapter) {
+      throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    // Nếu chương không phải PUBLISHED, cần quyền sở hữu hoặc Manager/Admin
+    if (chapter.status !== ChapterStatus.PUBLISHED) {
+      const isOwner =
+        userId && (story.authorId as any)?._id?.toString() === userId.toString();
+      const isAdminOrManager =
+        userRole === UserRole.ADMIN || userRole === UserRole.MANAGER;
+
+      if (!isOwner && !isAdminOrManager) {
+        throw new ForbiddenException(ErrorCode.CHAPTER_FORBIDDEN);
+      }
+    }
+
+    // Tăng lượt đọc ngầm (atomic increment)
+    await this.chapterModel.updateOne(
+      { _id: chapter._id },
+      { $inc: { viewCount: 1 } },
+    );
+    await this.storyModel.updateOne(
+      { _id: story._id },
+      { $inc: { 'stats.viewCount': 1 } },
+    );
+
+    // Tìm chương trước và chương sau (chỉ lấy published nếu là độc giả thường)
+    const navFilter: any = { storyId: story._id };
+    if (chapter.status === ChapterStatus.PUBLISHED) {
+      navFilter.status = ChapterStatus.PUBLISHED;
+    }
+
+    const [prevChapter, nextChapter, allChaptersList] = await Promise.all([
+      this.chapterModel
+        .findOne({
+          ...navFilter,
+          chapterNumber: { $lt: chapterNumber },
+        })
+        .sort({ chapterNumber: -1 })
+        .select('chapterNumber title')
+        .lean(),
+      this.chapterModel
+        .findOne({
+          ...navFilter,
+          chapterNumber: { $gt: chapterNumber },
+        })
+        .sort({ chapterNumber: 1 })
+        .select('chapterNumber title')
+        .lean(),
+      this.chapterModel
+        .find(navFilter)
+        .sort({ chapterNumber: 1 })
+        .select('chapterNumber title')
+        .lean(),
+    ]);
+
+    const wordCount = chapter.content
+      ? chapter.content.trim().split(/\s+/).length
+      : 0;
+
+    return {
+      _id: chapter._id,
+      chapterNumber: chapter.chapterNumber,
+      title: chapter.title,
+      content: chapter.content,
+      viewCount: (chapter.viewCount || 0) + 1,
+      wordCount,
+      isFree: chapter.isFree,
+      coinPrice: chapter.coinPrice,
+      createdAt: chapter.createdAt,
+      updatedAt: chapter.updatedAt,
+      story: {
+        _id: story._id,
+        title: story.title,
+        slug: story.slug,
+        coverUrl: story.coverUrl,
+        author:
+          (story.authorId as any)?.displayName ||
+          (story.authorId as any)?.username ||
+          'Tác giả',
+      },
+      prevChapter: prevChapter
+        ? { chapterNumber: prevChapter.chapterNumber, title: prevChapter.title }
+        : null,
+      nextChapter: nextChapter
+        ? { chapterNumber: nextChapter.chapterNumber, title: nextChapter.title }
+        : null,
+      chaptersList: allChaptersList.map((c) => ({
+        chapterNumber: c.chapterNumber,
+        title: c.title,
+      })),
+    };
+  }
 }

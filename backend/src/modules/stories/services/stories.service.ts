@@ -21,6 +21,11 @@ import { QueryMyStoriesDto } from '../dto/query-my-stories.dto.js';
 import { QueryRecentStoriesDto } from '../dto/query-recent-stories.dto.js';
 import { UpdateStoryDto } from '../dto/update-story.dto.js';
 import {
+  Chapter,
+  ChapterDocument,
+  ChapterStatus,
+} from '../../chapters/schemas/chapter.schema.js';
+import {
   Story,
   StoryAgeRating,
   StoryDocument,
@@ -37,6 +42,8 @@ export class StoriesService {
     private readonly authorProfileModel: Model<AuthorProfileDocument>,
     @InjectModel(Genre.name)
     private readonly genreModel: Model<GenreDocument>,
+    @InjectModel(Chapter.name)
+    private readonly chapterModel: Model<ChapterDocument>,
   ) { }
 
   async createStory(
@@ -348,6 +355,28 @@ export class StoriesService {
       profileMap = new Map(profiles.map((p) => [p.userId.toString(), p]));
     }
 
+    // Lấy chương mới nhất của các truyện này
+    const storyIds = stories.map((s) => s._id);
+    let latestChapterMap = new Map<string, any>();
+    if (storyIds.length > 0) {
+      const latestChapters = await this.chapterModel
+        .find({
+          storyId: { $in: storyIds },
+          status: ChapterStatus.PUBLISHED,
+        })
+        .select('storyId chapterNumber title createdAt')
+        .sort({ chapterNumber: -1 })
+        .lean()
+        .exec();
+
+      for (const ch of latestChapters) {
+        const sId = ch.storyId.toString();
+        if (!latestChapterMap.has(sId)) {
+          latestChapterMap.set(sId, ch);
+        }
+      }
+    }
+
     const items = stories.map((story) => {
       const authorUser = story.authorId as any;
       const authorUserIdStr = authorUser?._id?.toString() || authorUser?.toString();
@@ -367,6 +396,11 @@ export class StoriesService {
       const genreNames = rawGenres.map((g: any) => g.name || '').filter(Boolean);
       const primaryGenre = genreNames.length > 0 ? genreNames[0] : 'Chưa phân loại';
 
+      const latestChap = latestChapterMap.get(story._id.toString());
+      const latestChapterText = latestChap
+        ? `Chương ${latestChap.chapterNumber}: ${latestChap.title || ''}`.trim()
+        : 'Chưa có chương';
+
       return {
         _id: story._id,
         // Tên truyện
@@ -377,14 +411,15 @@ export class StoriesService {
         genres,
         genre: primaryGenre,
 
-        // Số chương (hiện chưa có chương)
-        latestChapter: 'Chưa có chương',
+        // Chương mới nhất
+        latestChapter: latestChapterText,
+        latestChapterNumber: latestChap ? latestChap.chapterNumber : null,
 
         // Tác giả
         author: authorName,
 
-        // Ngày giờ cập nhật
-        updatedAt: story.updatedAt,
+        // Ngày giờ cập nhật (ưu tiên thời gian chương mới nhất nếu có)
+        updatedAt: latestChap?.createdAt || story.updatedAt,
       };
     });
 

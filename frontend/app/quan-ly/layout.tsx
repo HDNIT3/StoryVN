@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/context/AuthContext";
 import Image from "next/image";
 import { NotificationBell } from "@/components/layout/header/NotificationBell";
 import { useAdminStoryCounts } from "@/lib/hooks/queries/useAdminStoryQuery";
+import { useAdminChapterCounts } from "@/lib/hooks/queries/useAdminChapterQuery";
 
 interface SidebarItem {
   id: string;
@@ -37,6 +38,17 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    ),
+  },
+  {
+    id: "chuong",
+    label: "Duyệt & Quản lý Chương",
+    href: "/quan-ly/chuong",
+    roles: ["ADMIN", "MANAGER"],
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
   },
@@ -101,9 +113,11 @@ function Sidebar({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Lấy số lượng truyện chờ duyệt để hiển thị badge trên menu
+  // Lấy số lượng truyện & chương chờ duyệt để hiển thị badge trên menu
   const { data: storyCounts } = useAdminStoryCounts();
+  const { data: chapterCounts } = useAdminChapterCounts();
   const pendingStoryCount = storyCounts?.pending ?? 0;
+  const pendingChapterCount = chapterCounts?.pending ?? 0;
 
   const visibleItems = SIDEBAR_ITEMS.filter(
     (item) => user && item.roles.includes(user.role)
@@ -113,6 +127,12 @@ function Sidebar({
         ...item,
         label: "Quản lý Truyện",
         badge: pendingStoryCount,
+      };
+    }
+    if (item.id === "chuong") {
+      return {
+        ...item,
+        badge: pendingChapterCount,
       };
     }
     return item;
@@ -137,58 +157,63 @@ function Sidebar({
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 lg:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 bg-[#0f172a]/30 backdrop-blur-xs z-50 lg:hidden animate-in fade-in duration-200"
           onClick={onMobileClose}
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-full flex flex-col bg-white text-slate-700 border-r border-slate-200/80 transition-all duration-300 z-50 shadow-lg lg:shadow-xs ${
+        className={`fixed top-0 left-0 h-full flex flex-col bg-slate-900/75 backdrop-blur-2xl text-slate-100 border-r border-white/10 transition-all duration-300 z-50 shadow-2xl ${
           /* Mobile: drawer overlay */
           mobileOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0"
         } ${
           /* Desktop */
-          collapsed ? "lg:w-20" : "lg:w-72"
+          collapsed ? "lg:w-20" : "lg:w-68"
         }`}
       >
-        {/* Logo + Nút thu gọn / Đóng */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-slate-100">
+        {/* Header Logo + Collapse */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <Link
-            href="/quan-ly/duyet-tac-gia"
+            href="/quan-ly/truyen"
             onClick={onMobileClose}
-            className={`flex items-center gap-3 ${collapsed ? "lg:hidden" : ""}`}
+            className={`flex items-center gap-2.5 ${collapsed ? "lg:hidden" : ""}`}
           >
-            <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-xs border border-slate-100">
-              <Image src="/icon/iconweb.png" alt="StoryVN" width={40} height={40} className="object-cover w-full h-full" />
+            {/* Logo Icon */}
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-purple-600 p-0.5 shadow-md flex items-center justify-center text-white shrink-0 ring-1 ring-white/20">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
             </div>
-            <span className="font-black text-lg tracking-tight text-slate-900">
-              Story<span className="text-sky-500">VN</span>{" "}
-              <span className="bg-sky-100 text-sky-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-1 uppercase">
-                Admin
+            <span className="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5 drop-shadow-xs">
+              StoryVN
+              <span className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                ADMIN
               </span>
             </span>
           </Link>
 
           {collapsed && (
-            <div className="hidden lg:flex w-10 h-10 rounded-xl overflow-hidden items-center justify-center mx-auto shadow-xs border border-slate-100">
-              <Image src="/icon/iconweb.png" alt="StoryVN" width={40} height={40} className="object-cover w-full h-full" />
+            <div className="hidden lg:flex w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 items-center justify-center mx-auto text-white shadow-xs">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
             </div>
           )}
 
-          {/* Desktop Collapse Toggle */}
+          {/* Desktop Toggle Button */}
           <button
             onClick={onToggle}
-            className={`hidden lg:flex text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg p-2 transition-colors cursor-pointer ${
+            className={`hidden lg:flex text-slate-300 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition-colors cursor-pointer ${
               collapsed ? "mx-auto mt-2" : ""
             }`}
             aria-label="Thu gọn menu"
             title={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {collapsed ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
               )}
             </svg>
           </button>
@@ -196,7 +221,7 @@ function Sidebar({
           {/* Mobile Close Button */}
           <button
             onClick={onMobileClose}
-            className="lg:hidden text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg p-2 transition-colors cursor-pointer"
+            className="lg:hidden text-slate-300 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition-colors cursor-pointer"
             aria-label="Đóng menu"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -205,115 +230,119 @@ function Sidebar({
           </button>
         </div>
 
-        {/* Thông tin người dùng thu nhỏ */}
+        {/* User Card Pill với viền phát sáng hồng tím giống hình mẫu */}
         {user && (
-          <div className={`px-4 py-3.5 border-b border-slate-100 flex items-center gap-3 bg-slate-50/70 ${collapsed ? "lg:hidden" : ""}`}>
-            <div className="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center text-base font-bold shrink-0 shadow-xs">
-              {user.avatarUrl ? (
-                <Image
-                  src={user.avatarUrl}
-                  alt={user.displayName}
-                  width={40}
-                  height={40}
-                  className="rounded-xl object-cover"
-                />
-              ) : (
-                avatarInitial
-              )}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-bold text-slate-900 truncate">{user.displayName}</p>
-              <p className="text-xs text-sky-600 font-semibold mt-0.5">
-                {roleLabel[user.role] || user.role}
-              </p>
+          <div className={`px-3 py-2 ${collapsed ? "lg:hidden" : ""}`}>
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2.5 flex items-center gap-3 border border-white/20 shadow-md">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-400 text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-xs ring-1 ring-white/30">
+                {user.avatarUrl ? (
+                  <Image
+                    src={user.avatarUrl}
+                    alt={user.displayName}
+                    width={36}
+                    height={36}
+                    className="rounded-xl object-cover w-full h-full"
+                  />
+                ) : (
+                  avatarInitial
+                )}
+              </div>
+              <div className="overflow-hidden min-w-0">
+                <p className="text-xs font-bold text-white truncate drop-shadow-xs">{user.displayName}</p>
+                <p className="text-[10px] text-slate-300 font-medium">
+                  {roleLabel[user.role] || user.role}
+                </p>
+              </div>
             </div>
           </div>
         )}
 
         {/* Danh sách điều hướng */}
-        <nav className="flex-1 py-4 overflow-y-auto">
-          <p className={`text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ${collapsed ? "lg:px-2 lg:text-center px-4.5" : "px-4.5"}`}>
-            {collapsed ? <span className="hidden lg:inline">·</span> : null}
-            <span className={collapsed ? "lg:hidden" : ""}>Quản lý hệ thống</span>
-          </p>
-          <ul className="space-y-1.5 px-3">
-            {visibleItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
-              return (
-                <li key={item.id}>
-                  <Link
-                    href={item.href}
-                    onClick={onMobileClose}
-                    className={`flex items-center gap-3.5 px-3.5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
-                      isActive
-                        ? "bg-sky-500 text-white shadow-sm font-bold"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    }`}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <div className="relative shrink-0">
-                      {item.icon}
-                      {collapsed && item.badge !== undefined && item.badge > 0 && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full ring-2 ring-white animate-pulse" />
+        <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
+          <div>
+            <p className={`text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2 ${collapsed ? "lg:text-center px-1" : "px-3"}`}>
+              {collapsed ? "···" : "Quản lý hệ thống"}
+            </p>
+            <ul className="space-y-1">
+              {visibleItems.map((item) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={item.href}
+                      onClick={onMobileClose}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-[13px] font-medium transition-all ${
+                        isActive
+                          ? "bg-gradient-to-r from-sky-500 via-blue-600 to-purple-600 text-white shadow-md shadow-blue-500/25 font-bold"
+                          : "text-slate-200 hover:bg-white/15 hover:text-white"
+                      }`}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <div className={`shrink-0 ${isActive ? "text-white" : "text-slate-300"}`}>
+                        {item.icon}
+                      </div>
+                      <span className={`truncate font-semibold ${collapsed ? "lg:hidden" : ""}`}>{item.label}</span>
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span
+                          className={`ml-auto text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
+                            collapsed ? "lg:hidden" : ""
+                          } ${
+                            isActive
+                              ? "bg-white/25 text-white"
+                              : "bg-purple-500/30 text-purple-200 border border-purple-400/30"
+                          }`}
+                        >
+                          {item.badge > 99 ? "99+" : item.badge}
+                        </span>
                       )}
-                    </div>
-                    <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>{item.label}</span>
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span
-                        className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center ${
-                          collapsed ? "lg:hidden" : ""
-                        } ${
-                          isActive
-                            ? "bg-white/20 text-white"
-                            : item.id === "truyen"
-                            ? "bg-amber-100 text-amber-800 border border-amber-300 font-extrabold shadow-2xs animate-pulse"
-                            : "bg-sky-100 text-sky-700"
-                        }`}
-                      >
-                        {item.badge > 99 ? "99+" : item.badge}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
 
-          {/* Phân cách */}
-          <div className="mx-4 my-4 border-t border-slate-100" />
-
-          {/* Menu tài khoản */}
-          <ul className="space-y-1.5 px-3">
-            <li>
-              <Link
-                href="/ho-so"
-                onClick={onMobileClose}
-                className="flex items-center gap-3.5 px-3.5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all"
-                title={collapsed ? "Hồ sơ cá nhân" : undefined}
-              >
-                <svg className="w-5 h-5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className={collapsed ? "lg:hidden" : ""}>Hồ sơ cá nhân</span>
-              </Link>
-            </li>
-            <li>
-              <button
-                onClick={() => {
-                  onMobileClose();
-                  handleLogout();
-                }}
-                className="w-full flex items-center gap-3.5 px-3.5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold text-red-600 hover:bg-red-50 transition-all cursor-pointer"
-                title={collapsed ? "Đăng xuất" : undefined}
-              >
-                <svg className="w-5 h-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span className={collapsed ? "lg:hidden" : ""}>Đăng xuất</span>
-              </button>
-            </li>
-          </ul>
+          {/* Nhóm tài khoản */}
+          <div className="pt-2 border-t border-white/10">
+            <ul className="space-y-1">
+              <li>
+                <Link
+                  href="/ho-so"
+                  onClick={onMobileClose}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-[13px] font-semibold text-slate-200 hover:bg-white/15 hover:text-white transition-all"
+                  title={collapsed ? "Hồ sơ cá nhân" : undefined}
+                >
+                  <svg className="w-5 h-5 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span className={collapsed ? "lg:hidden" : ""}>Hồ sơ cá nhân</span>
+                </Link>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    onMobileClose();
+                    handleLogout();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-[13px] font-semibold text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-all cursor-pointer"
+                  title={collapsed ? "Đăng xuất" : undefined}
+                >
+                  <svg className="w-5 h-5 shrink-0 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span className={collapsed ? "lg:hidden" : ""}>Đăng xuất</span>
+                </button>
+              </li>
+            </ul>
+          </div>
         </nav>
+
+        {/* Nút tròn đen footer giống ảnh */}
+        <div className="p-3">
+          <div className="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
+            N
+          </div>
+        </div>
       </aside>
     </>
   );
@@ -346,9 +375,9 @@ export default function QuanLyLayout({
 
   if (isLoading || redirecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="flex flex-col items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-slate-200/80 max-w-xs w-full text-center">
-          <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#eaeff5] p-4">
+        <div className="flex flex-col items-center gap-4 bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-sm border border-slate-200/80 max-w-xs w-full text-center">
+          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-medium text-slate-600">
             {redirecting ? "Đang chuyển hướng..." : "Đang tải dữ liệu..."}
           </p>
@@ -361,7 +390,7 @@ export default function QuanLyLayout({
   if (user.role !== "ADMIN" && user.role !== "MANAGER") return null;
 
   return (
-    <div className="min-h-screen bg-slate-50/70 flex text-slate-800">
+    <div className="min-h-screen admin-striped-bg flex text-slate-800 antialiased font-sans">
       {/* Sidebar */}
       <Sidebar
         collapsed={collapsed}
@@ -373,16 +402,16 @@ export default function QuanLyLayout({
       {/* Main Content Area */}
       <div
         className={`flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300 ${
-          collapsed ? "lg:ml-20" : "lg:ml-72"
+          collapsed ? "lg:ml-20" : "lg:ml-68"
         }`}
       >
-        {/* Top bar */}
-        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 flex items-center justify-between gap-3">
+        {/* Top bar với hiệu ứng kính mờ tối & viền tinh tế */}
+        <header className="sticky top-0 z-40 admin-striped-header px-4 sm:px-8 py-3.5 flex items-center justify-between gap-3 border-b border-white/10 shadow-md">
           {/* Mobile hamburger + Page Title */}
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer shrink-0"
+              className="lg:hidden p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
               aria-label="Mở menu điều hướng"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -390,43 +419,38 @@ export default function QuanLyLayout({
               </svg>
             </button>
 
-            <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate">
-                {user.role === "ADMIN" ? "Bảng Quản trị Hệ thống" : "Bảng Quản lý Nội dung"}
-              </h2>
-              <p className="hidden xs:block text-[11px] text-slate-500 mt-0.5 truncate">
-                StoryVN Management Portal
-              </p>
-            </div>
+            <h2 className="text-sm sm:text-base font-bold text-white tracking-wide truncate drop-shadow-sm">
+              {user.role === "ADMIN" ? "Bảng Quản trị Hệ thống" : "Bảng Quản lý Nội dung"}
+            </h2>
           </div>
 
-          {/* Right actions */}
-          <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
+          {/* Right actions: nút Trang chủ viền bo tròn xám + Avatar tròn đỏ cam */}
+          <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/"
-              className="text-xs sm:text-sm font-semibold text-slate-700 hover:text-sky-600 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border border-slate-200 hover:bg-sky-50/50 hover:border-sky-200 transition-colors"
+              className="text-xs font-semibold text-slate-200 hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 shadow-xs transition-all backdrop-blur-md"
             >
-              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              <span className="hidden xs:inline">Về trang chủ</span>
-              <span className="xs:hidden">Trang chủ</span>
+              <span>Trang chủ</span>
             </Link>
 
             {/* Notification Bell */}
             <NotificationBell size="md" />
 
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-sky-500 flex items-center justify-center text-xs sm:text-base font-bold text-white shadow-xs shrink-0">
+            {/* Avatar chữ H nền hồng đỏ tròn */}
+            <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-xs font-bold text-white shadow-xs shrink-0 cursor-pointer overflow-hidden ring-2 ring-white">
               {user.avatarUrl ? (
                 <Image
                   src={user.avatarUrl}
                   alt={user.displayName}
-                  width={40}
-                  height={40}
-                  className="rounded-xl object-cover w-full h-full"
+                  width={32}
+                  height={32}
+                  className="rounded-full object-cover w-full h-full"
                 />
               ) : (
-                (user.displayName || "A").charAt(0).toUpperCase()
+                (user.displayName || "H").charAt(0).toUpperCase()
               )}
             </div>
           </div>
