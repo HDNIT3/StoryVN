@@ -654,10 +654,27 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
                                 {displayTitle}
                               </span>
 
-                              {/* Ngày tháng */}
-                              <span className="text-xs sm:text-sm font-medium text-zinc-500 shrink-0 tabular-nums">
-                                {formatDate(chapter.createdAt)}
-                              </span>
+                              {/* Thông tin bên phải: Lượt đọc & Ngày cập nhật */}
+                              <div className="flex items-center gap-3.5 sm:gap-6 shrink-0">
+                                {/* Số lượt đọc */}
+                                <span
+                                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-zinc-400 group-hover:text-emerald-700 transition-colors"
+                                  title={`${(chapter.viewCount || 0).toLocaleString("vi-VN")} lượt đọc`}
+                                >
+                                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-zinc-400 group-hover:text-emerald-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                  <span className="tabular-nums">
+                                    {formatNumber(chapter.viewCount || 0)}
+                                  </span>
+                                </span>
+
+                                {/* Ngày tạo */}
+                                <span className="text-xs sm:text-sm font-medium text-zinc-500 tabular-nums">
+                                  {formatDate(chapter.createdAt)}
+                                </span>
+                              </div>
                             </Link>
                           );
                         })}
