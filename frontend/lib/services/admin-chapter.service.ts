@@ -122,4 +122,14 @@ export const adminChapterService = {
       {},
     );
   },
+
+  /**
+   * Chuyển chương truyện (bị từ chối) quay lại hàng đợi chờ duyệt (PENDING_REVIEW)
+   */
+  async resetPending(id: string): Promise<ApiResponse<AdminChapterItem>> {
+    return api.patch<ApiResponse<AdminChapterItem>>(
+      `/admin/chapters/${id}/reset-pending`,
+      {},
+    );
+  },
 };
