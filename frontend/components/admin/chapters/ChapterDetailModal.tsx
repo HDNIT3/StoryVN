@@ -41,11 +41,21 @@ export function ChapterDetailModal({
   const author = story && typeof story.authorId === "object" ? story.authorId : null;
   const authorName = author?.displayName || author?.username || "Chưa xác định";
 
-  const isPending = currentChapter.status === "PENDING_REVIEW";
-  const isPublished = currentChapter.status === "PUBLISHED";
+  const pendingUpdate = (currentChapter as any).pendingUpdate;
+  const isPendingUpdateReview =
+    currentChapter.status === "PUBLISHED" &&
+    pendingUpdate?.status === "PENDING_REVIEW";
 
-  // Đếm từ ước tính
-  const contentText = currentChapter.content || "";
+  const isPending = currentChapter.status === "PENDING_REVIEW" || isPendingUpdateReview;
+  const isPublished = currentChapter.status === "PUBLISHED" && !isPendingUpdateReview;
+
+  // Nếu đang duyệt bản cập nhật, ưu tiên hiển thị nội dung và tiêu đề của pendingUpdate
+  const displayTitle = isPendingUpdateReview
+    ? pendingUpdate.title || currentChapter.title
+    : currentChapter.title;
+  const contentText = isPendingUpdateReview
+    ? pendingUpdate.content || ""
+    : currentChapter.content || "";
   const wordCount = contentText ? contentText.trim().split(/\s+/).length : 0;
 
   const fontSizes = {
@@ -64,8 +74,13 @@ export function ChapterDetailModal({
               <span className="font-bold text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-lg text-xs">
                 Chương {currentChapter.chapterNumber}
               </span>
+              {isPendingUpdateReview && (
+                <span className="font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md text-[10px]">
+                  Bản sửa đổi chờ duyệt
+                </span>
+              )}
               <h2 className="text-base md:text-lg font-bold text-slate-800 truncate">
-                {currentChapter.title || `Chương ${currentChapter.chapterNumber}`}
+                {displayTitle || `Chương ${currentChapter.chapterNumber}`}
               </h2>
             </div>
             {story && (
@@ -187,6 +202,19 @@ export function ChapterDetailModal({
             )}
           </div>
         </div>
+
+        {/* Banner thông báo nếu đang duyệt bản sửa đổi của chương PUBLISHED */}
+        {isPendingUpdateReview && (
+          <div className="mx-6 mt-4 p-3.5 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-start gap-2.5 text-xs text-indigo-900 shrink-0">
+            <svg className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <strong className="font-bold block mb-0.5">Duyệt bản chỉnh sửa của chương đã xuất bản:</strong>
+              Bạn đang xem nội dung chỉnh sửa mới do tác giả gửi lên. Bản phát hành hiện tại của chương vẫn đang phục vụ độc giả bình thường. Khi bạn bấm &quot;Phê duyệt xuất bản&quot;, nội dung mới này sẽ chính thức thay thế bản cũ.
+            </div>
+          </div>
+        )}
 
         {/* Thông báo lý do theo trạng thái nếu có */}
         {currentChapter.rejectReason && (

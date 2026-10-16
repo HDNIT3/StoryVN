@@ -18,6 +18,11 @@ import {
   ChapterDocument,
   ChapterStatus,
 } from '../schemas/chapter.schema.js';
+import {
+  ChapterUpdate,
+  ChapterUpdateDocument,
+  ChapterUpdateStatus,
+} from '../schemas/chapter-update.schema.js';
 import { AdminChapterModerationReasonDto } from '../dto/admin-chapter-moderation-reason.dto.js';
 import { AdminQueryChaptersDto } from '../dto/admin-query-chapters.dto.js';
 import { AdminRejectChapterDto } from '../dto/admin-reject-chapter.dto.js';
@@ -27,25 +32,45 @@ export class AdminChaptersService {
   constructor(
     @InjectModel(Chapter.name)
     private readonly chapterModel: Model<ChapterDocument>,
+    @InjectModel(ChapterUpdate.name)
+    private readonly chapterUpdateModel: Model<ChapterUpdateDocument>,
     @InjectModel(Story.name)
     private readonly storyModel: Model<StoryDocument>,
     private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
-   * Helper cập nhật số lượng chương trong Story
+   * Helper cập nhật số lượng chương hiển thị cho độc giả trong Story.
+   * Chỉ đếm chương PUBLISHED mà scheduledAt <= now hoặc null.
    */
   private async updateStoryChapterCount(storyId: Types.ObjectId): Promise<number> {
-    const totalChapters = await this.chapterModel.countDocuments({
-      storyId,
-      status: {
-        $in: [
-          ChapterStatus.PUBLISHED,
-          ChapterStatus.PENDING_REVIEW,
-          ChapterStatus.DRAFT,
+    const now = new Date();
+    // Tìm chương đầu tiên chưa được phát hành tới độc giả (để đảm bảo không đếm nhảy cóc)
+    const firstUnreleased = await this.chapterModel
+      .findOne({
+        storyId,
+        $or: [
+          { status: { $ne: ChapterStatus.PUBLISHED } },
+          { scheduledAt: { $gt: now } },
         ],
-      },
-    });
+      })
+      .sort({ chapterNumber: 1 })
+      .lean();
+
+    const countFilter: any = {
+      storyId,
+      status: ChapterStatus.PUBLISHED,
+      $or: [
+        { scheduledAt: null },
+        { scheduledAt: { $lte: now } },
+      ],
+    };
+
+    if (firstUnreleased) {
+      countFilter.chapterNumber = { $lt: firstUnreleased.chapterNumber };
+    }
+
+    const totalChapters = await this.chapterModel.countDocuments(countFilter);
 
     await this.storyModel.updateOne(
       { _id: storyId },
@@ -66,7 +91,19 @@ export class AdminChaptersService {
       filter.storyId = new Types.ObjectId(query.storyId);
     }
 
-    if (query.status) {
+    if (query.status === ChapterStatus.PENDING_REVIEW) {
+      const pendingUpdates = await this.chapterUpdateModel
+        .find({ status: ChapterUpdateStatus.PENDING_REVIEW })
+        .select('chapterId')
+        .lean();
+      const pendingChapterIds = pendingUpdates.map((u) => u.chapterId);
+
+      const statusCond: any = pendingChapterIds.length > 0
+        ? { $or: [{ status: ChapterStatus.PENDING_REVIEW }, { _id: { $in: pendingChapterIds } }] }
+        : { status: ChapterStatus.PENDING_REVIEW };
+
+      Object.assign(filter, statusCond);
+    } else if (query.status) {
       filter.status = query.status;
     }
 
@@ -89,7 +126,12 @@ export class AdminChaptersService {
         orConditions.push({ storyId: { $in: matchedStoryIds } });
       }
 
-      filter.$or = orConditions;
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: orConditions }];
+        delete filter.$or;
+      } else {
+        filter.$or = orConditions;
+      }
     }
 
     const sortMap: Record<string, string> = {
@@ -128,8 +170,30 @@ export class AdminChaptersService {
       this.chapterModel.countDocuments(filter),
     ]);
 
+    // Đính kèm thông tin pendingUpdate nếu có cho từng item
+    const chapterIds = items.map((i) => i._id);
+    const pendingUpdates = await this.chapterUpdateModel
+      .find({
+        chapterId: { $in: chapterIds },
+        status: ChapterUpdateStatus.PENDING_REVIEW,
+      })
+      .lean();
+    const updateMap = new Map(
+      pendingUpdates.map((u) => [u.chapterId.toString(), u]),
+    );
+
+    const enrichedItems = items.map((item: any) => {
+      const pending = updateMap.get(item._id.toString());
+      return pending
+        ? Object.assign({}, item, {
+            pendingUpdate: pending,
+            isPendingUpdateReview: true,
+          })
+        : item;
+    });
+
     return {
-      items,
+      items: enrichedItems,
       pagination: buildPaginationMeta(totalItems, page, limit),
     };
   }
@@ -185,6 +249,19 @@ export class AdminChaptersService {
       }
     }
 
+    // Đếm thêm số lượng bản sửa đổi ChapterUpdate đang chờ duyệt
+    const updateFilter: Record<string, any> = {
+      status: ChapterUpdateStatus.PENDING_REVIEW,
+    };
+    if (storyId && Types.ObjectId.isValid(storyId)) {
+      updateFilter.storyId = new Types.ObjectId(storyId);
+    }
+    const pendingUpdatesCount = await this.chapterUpdateModel.countDocuments(
+      updateFilter,
+    );
+    counts.pending += pendingUpdatesCount;
+    total += pendingUpdatesCount;
+
     counts.all = total;
     return counts;
   }
@@ -214,7 +291,23 @@ export class AdminChaptersService {
       throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
     }
 
-    return chapter;
+    const pendingUpdate = await this.chapterUpdateModel
+      .findOne({
+        chapterId: chapter._id,
+        status: {
+          $in: [
+            ChapterUpdateStatus.PENDING_REVIEW,
+            ChapterUpdateStatus.DRAFT,
+            ChapterUpdateStatus.REJECTED,
+          ],
+        },
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return Object.assign({}, chapter, {
+      pendingUpdate: pendingUpdate || null,
+    });
   }
 
   /**
@@ -235,9 +328,91 @@ export class AdminChaptersService {
       throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
     }
 
+    // Trường hợp A: Chương đã PUBLISHED và đang có bản sửa ChapterUpdate chờ duyệt
+    const pendingUpdate = await this.chapterUpdateModel
+      .findOne({
+        chapterId: chapter._id,
+        status: ChapterUpdateStatus.PENDING_REVIEW,
+      })
+      .sort({ createdAt: -1 });
+
+    if (pendingUpdate && chapter.status === ChapterStatus.PUBLISHED) {
+      if (pendingUpdate.title) chapter.title = pendingUpdate.title;
+      if (pendingUpdate.content) chapter.content = pendingUpdate.content;
+      if (pendingUpdate.isFree !== undefined) chapter.isFree = pendingUpdate.isFree;
+      if (pendingUpdate.coinPrice !== undefined) chapter.coinPrice = pendingUpdate.coinPrice;
+      if (pendingUpdate.requirePreviousChapter !== undefined) {
+        chapter.requirePreviousChapter = pendingUpdate.requirePreviousChapter;
+      }
+      chapter.rejectReason = null;
+      await chapter.save();
+
+      pendingUpdate.status = ChapterUpdateStatus.APPROVED;
+      pendingUpdate.reviewerId = new Types.ObjectId(reviewerId);
+      pendingUpdate.reviewedAt = new Date();
+      await pendingUpdate.save();
+
+      try {
+        await this.notificationsService.create({
+          userId: story.authorId.toString(),
+          type: NotificationType.MODERATION,
+          title: '🎉 Bản chỉnh sửa chương đã được phê duyệt!',
+          message: `Bản chỉnh sửa của Chương ${chapter.chapterNumber}: "${chapter.title}" của tác phẩm "${story.title}" đã được duyệt và cập nhật thành công.`,
+          storyId: story._id.toString(),
+          chapterId: chapter._id.toString(),
+          actorId: reviewerId,
+        });
+      } catch {}
+
+      return {
+        message: 'Phê duyệt bản chỉnh sửa chương thành công',
+        chapter: await this.findById(chapter._id.toString()),
+      };
+    }
+
+    // Trường hợp B: Duyệt chương mới / chương chưa PUBLISHED
+    // RÀNG BUỘC NGHIỆP VỤ: Kiểm tra toàn bộ các chương trước đó. Tất cả phải đã ở trạng thái PUBLISHED!
+    const unapprovedPrevChapter = await this.chapterModel
+      .findOne({
+        storyId: chapter.storyId,
+        chapterNumber: { $lt: chapter.chapterNumber },
+        status: { $ne: ChapterStatus.PUBLISHED },
+      })
+      .sort({ chapterNumber: 1 })
+      .lean();
+
+    if (unapprovedPrevChapter) {
+      const statusLabels: Record<string, string> = {
+        [ChapterStatus.PENDING_REVIEW]: 'Đang chờ duyệt',
+        [ChapterStatus.DRAFT]: 'Bản nháp',
+        [ChapterStatus.REJECTED]: 'Bị từ chối',
+        [ChapterStatus.HIDDEN]: 'Tạm ẩn',
+      };
+      const prevStatusLabel =
+        statusLabels[unapprovedPrevChapter.status] || 'Chưa xuất bản';
+
+      throw new BadRequestException(
+        `Không thể phê duyệt Chương ${chapter.chapterNumber} vì Chương ${unapprovedPrevChapter.chapterNumber} chưa được xuất bản (đang ở trạng thái: ${prevStatusLabel}). Vui lòng phê duyệt các chương trước theo đúng thứ tự liên tục.`,
+      );
+    }
+
+    // Kiểm tra tính liên tục (không bị khuyết số chương trước đó)
+    const prevCount = await this.chapterModel.countDocuments({
+      storyId: chapter.storyId,
+      chapterNumber: { $lt: chapter.chapterNumber },
+      status: ChapterStatus.PUBLISHED,
+    });
+
+    if (prevCount !== chapter.chapterNumber - 1) {
+      throw new BadRequestException(
+        `Không thể phê duyệt Chương ${chapter.chapterNumber} vì danh sách chương trước đó không liên tục (thiếu chương). Vui lòng kiểm tra lại thứ tự chương của tác phẩm.`,
+      );
+    }
+
+    const now = new Date();
     chapter.status = ChapterStatus.PUBLISHED;
     chapter.rejectReason = null;
-    chapter.publishedAt = new Date();
+    chapter.scheduledAt = chapter.scheduledAt || now;
     await chapter.save();
 
     await this.updateStoryChapterCount(story._id);
@@ -283,6 +458,39 @@ export class AdminChaptersService {
     const story = await this.storyModel.findById(chapter.storyId);
     if (!story) {
       throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    // Trường hợp A: Từ chối bản sửa ChapterUpdate của chương đã PUBLISHED
+    const pendingUpdate = await this.chapterUpdateModel
+      .findOne({
+        chapterId: chapter._id,
+        status: ChapterUpdateStatus.PENDING_REVIEW,
+      })
+      .sort({ createdAt: -1 });
+
+    if (pendingUpdate && chapter.status === ChapterStatus.PUBLISHED) {
+      pendingUpdate.status = ChapterUpdateStatus.REJECTED;
+      pendingUpdate.rejectReason = dto.reason.trim();
+      pendingUpdate.reviewerId = new Types.ObjectId(reviewerId);
+      pendingUpdate.reviewedAt = new Date();
+      await pendingUpdate.save();
+
+      try {
+        await this.notificationsService.create({
+          userId: story.authorId.toString(),
+          type: NotificationType.MODERATION,
+          title: '❌ Bản chỉnh sửa chương bị từ chối phê duyệt',
+          message: `Bản chỉnh sửa Chương ${chapter.chapterNumber}: "${chapter.title}" của tác phẩm "${story.title}" đã bị từ chối. Lý do: ${dto.reason.trim()}`,
+          storyId: story._id.toString(),
+          chapterId: chapter._id.toString(),
+          actorId: reviewerId,
+        });
+      } catch {}
+
+      return {
+        message: 'Từ chối bản chỉnh sửa chương thành công (bản phát hành vẫn hoạt động)',
+        chapter: await this.findById(chapter._id.toString()),
+      };
     }
 
     chapter.status = ChapterStatus.REJECTED;
@@ -334,9 +542,25 @@ export class AdminChaptersService {
       throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
     }
 
+    // RÀNG BUỘC NGHIỆP VỤ: Không thể gỡ duyệt nếu có chương phía sau vẫn đang xuất bản
+    const publishedLaterChapter = await this.chapterModel
+      .findOne({
+        storyId: chapter.storyId,
+        chapterNumber: { $gt: chapter.chapterNumber },
+        status: ChapterStatus.PUBLISHED,
+      })
+      .sort({ chapterNumber: -1 })
+      .lean();
+
+    if (publishedLaterChapter) {
+      throw new BadRequestException(
+        `Không thể gỡ duyệt Chương ${chapter.chapterNumber} vì Chương ${publishedLaterChapter.chapterNumber} phía sau đang xuất bản. Vui lòng gỡ duyệt theo thứ tự từ chương lớn nhất trở về trước.`,
+      );
+    }
+
     const reason = dto?.reason?.trim() || null;
     chapter.status = ChapterStatus.DRAFT;
-    chapter.publishedAt = null;
+    chapter.scheduledAt = null;
     if (reason) {
       chapter.rejectReason = reason;
     }
@@ -362,7 +586,7 @@ export class AdminChaptersService {
     }
 
     return {
-      message: 'Gỡ duyệt chương truyện thành công (đã chuyển về DRAFT)',
+      message: 'Gỡ duyệt chương truyện thành công (đã chuyển về bản nháp)',
       chapter: await this.findById(chapter._id.toString()),
     };
   }

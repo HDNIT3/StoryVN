@@ -45,18 +45,18 @@ export function ChapterStats({ currentFilter, onFilterChange, counts }: Props) {
         </svg>
       ),
       colorClasses: {
-        active: "border-sky-400/80 bg-sky-50/40 shadow-xs ring-2 ring-sky-300/40",
-        inactive: "border-transparent bg-white/70 hover:bg-white hover:border-slate-200",
-        iconBg: "bg-sky-100",
+        active: "border-sky-400/80 bg-sky-50/40 shadow-xs ring-1 ring-sky-300/40",
+        inactive: "border-slate-200 bg-white hover:border-slate-300",
+        iconBg: "bg-white border border-sky-400/80 shadow-2xs",
         iconText: "text-sky-600",
-        badgeBg: "bg-sky-100",
-        badgeText: "text-sky-700",
+        badgeBg: "bg-slate-100",
+        badgeText: "text-slate-700",
       },
     },
     {
       tab: "PENDING_REVIEW",
       label: "Chờ xét duyệt",
-      description: "Chờ admin một giá gửi duyệt",
+      description: "Chờ duyệt xuất bản",
       count: counts?.pending ?? 0,
       icon: (
         <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -65,10 +65,10 @@ export function ChapterStats({ currentFilter, onFilterChange, counts }: Props) {
       ),
       colorClasses: {
         active: "border-amber-400 bg-amber-50/50 shadow-sm ring-1 ring-amber-300/50",
-        inactive: "border-transparent bg-white/70 hover:bg-white hover:border-amber-200",
-        iconBg: "bg-amber-100",
+        inactive: "border-slate-200 bg-white hover:border-amber-300",
+        iconBg: "bg-white border border-amber-400 shadow-2xs",
         iconText: "text-amber-600",
-        badgeBg: "bg-amber-100",
+        badgeBg: "bg-amber-50 border border-amber-200",
         badgeText: "text-amber-800",
       },
     },
@@ -83,11 +83,11 @@ export function ChapterStats({ currentFilter, onFilterChange, counts }: Props) {
         </svg>
       ),
       colorClasses: {
-        active: "border-emerald-400 bg-emerald-50/40 shadow-xs ring-2 ring-emerald-300/40",
-        inactive: "border-transparent bg-white/70 hover:bg-white hover:border-emerald-200",
-        iconBg: "bg-emerald-100",
+        active: "border-emerald-400 bg-emerald-50/40 shadow-xs ring-1 ring-emerald-300/40",
+        inactive: "border-slate-200 bg-white hover:border-slate-300",
+        iconBg: "bg-white border border-emerald-400 shadow-2xs",
         iconText: "text-emerald-600",
-        badgeBg: "bg-emerald-100",
+        badgeBg: "bg-emerald-50 border border-emerald-200",
         badgeText: "text-emerald-700",
       },
     },
@@ -102,11 +102,11 @@ export function ChapterStats({ currentFilter, onFilterChange, counts }: Props) {
         </svg>
       ),
       colorClasses: {
-        active: "border-rose-400 bg-rose-50/40 shadow-xs ring-2 ring-rose-300/40",
-        inactive: "border-transparent bg-white/70 hover:bg-white hover:border-rose-200",
-        iconBg: "bg-rose-100",
+        active: "border-rose-400 bg-rose-50/40 shadow-xs ring-1 ring-rose-300/40",
+        inactive: "border-slate-200 bg-white hover:border-rose-200",
+        iconBg: "bg-white border border-rose-400 shadow-2xs",
         iconText: "text-rose-600",
-        badgeBg: "bg-rose-100",
+        badgeBg: "bg-rose-50 border border-rose-200",
         badgeText: "text-rose-700",
       },
     },
@@ -121,11 +121,11 @@ export function ChapterStats({ currentFilter, onFilterChange, counts }: Props) {
         </svg>
       ),
       colorClasses: {
-        active: "border-purple-400 bg-purple-50/40 shadow-xs ring-2 ring-purple-300/40",
-        inactive: "border-transparent bg-white/70 hover:bg-white hover:border-purple-200",
-        iconBg: "bg-purple-100",
+        active: "border-purple-400 bg-purple-50/40 shadow-xs ring-1 ring-purple-300/40",
+        inactive: "border-slate-200 bg-white hover:border-purple-200",
+        iconBg: "bg-white border border-purple-400 shadow-2xs",
         iconText: "text-purple-600",
-        badgeBg: "bg-purple-100",
+        badgeBg: "bg-purple-50 border border-purple-200",
         badgeText: "text-purple-700",
       },
     },
@@ -140,11 +140,11 @@ export function ChapterStats({ currentFilter, onFilterChange, counts }: Props) {
         </svg>
       ),
       colorClasses: {
-        active: "border-slate-400 bg-slate-100/70 shadow-xs ring-2 ring-slate-300/40",
-        inactive: "border-transparent bg-white/70 hover:bg-white hover:border-slate-200",
-        iconBg: "bg-slate-100",
+        active: "border-slate-400 bg-slate-100/70 shadow-xs ring-1 ring-slate-300/40",
+        inactive: "border-slate-200 bg-white hover:border-slate-300",
+        iconBg: "bg-white border border-slate-400 shadow-2xs",
         iconText: "text-slate-600",
-        badgeBg: "bg-slate-100",
+        badgeBg: "bg-slate-100 border border-slate-200",
         badgeText: "text-slate-700",
       },
     },
@@ -159,13 +159,13 @@ export function ChapterStats({ currentFilter, onFilterChange, counts }: Props) {
             key={card.tab}
             type="button"
             onClick={() => onFilterChange(card.tab)}
-            className={`flex flex-col text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden backdrop-blur-xs group shadow-2xs ${
+            className={`flex flex-col text-left p-3.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden group shadow-2xs ${
               isActive ? card.colorClasses.active : card.colorClasses.inactive
             }`}
           >
             <div className="flex items-center justify-between gap-2 mb-2.5">
               <div
-                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 shrink-0 ${card.colorClasses.iconBg} ${card.colorClasses.iconText}`}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 shrink-0 ${card.colorClasses.iconBg} ${card.colorClasses.iconText}`}
               >
                 {card.icon}
               </div>

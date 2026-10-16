@@ -2,6 +2,7 @@ import api from '../api';
 import type {
   ChapterItem,
   ChapterStatsData,
+  ChapterUpdateItem,
   CreateChapterPayload,
   QueryChaptersParams,
   ReorderChaptersPayload,
@@ -43,6 +44,51 @@ export const chapterService = {
   },
 
   /**
+   * Lấy lịch sử các bản sửa đổi của chương (UC-15 & UC-16)
+   */
+  async getChapterHistory(id: string): Promise<ApiResponse<ChapterUpdateItem[]>> {
+    return api.get<ApiResponse<ChapterUpdateItem[]>>(`/chapters/${id}/history`);
+  },
+
+  /**
+   * Lấy danh sách tất cả lịch sử chỉnh sửa chương của tác giả (UC-15 & UC-16)
+   */
+  async getAllChapterHistory(params?: {
+    storyId?: string;
+    chapterId?: string;
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<
+    ApiResponse<{
+      items: ChapterUpdateItem[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>
+  > {
+    const searchParams = new URLSearchParams();
+    if (params?.storyId) searchParams.append('storyId', params.storyId);
+    if (params?.chapterId) searchParams.append('chapterId', params.chapterId);
+    if (params?.status && params.status !== 'ALL') searchParams.append('status', params.status);
+    if (params?.search) searchParams.append('search', params.search);
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+
+    return api.get<
+      ApiResponse<{
+        items: ChapterUpdateItem[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      }>
+    >(`/chapters/history?${searchParams.toString()}`);
+  },
+
+  /**
    * Tạo chương mới (UC-14 & UC-15)
    */
   async createChapter(
@@ -59,6 +105,18 @@ export const chapterService = {
     payload: UpdateChapterPayload
   ): Promise<ApiResponse<ChapterItem>> {
     return api.patch<ApiResponse<ChapterItem>>(`/chapters/${id}`, payload);
+  },
+
+  /**
+   * Gửi duyệt hàng loạt các chương truyện
+   */
+  async bulkSubmitChapters(
+    chapterIds: string[]
+  ): Promise<ApiResponse<{ submittedCount: number; message: string }>> {
+    return api.post<ApiResponse<{ submittedCount: number; message: string }>>(
+      '/chapters/bulk-submit',
+      { chapterIds }
+    );
   },
 
   /**
