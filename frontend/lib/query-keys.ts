@@ -71,6 +71,7 @@ export const queryKeys = {
       ["chapters", "reading", slug, String(chapterNumber)] as const,
     detail: (id: string) => ["chapters", "detail", id] as const,
     stats: (storyId: string) => ["chapters", "stats", storyId] as const,
+    history: (chapterId: string) => ["chapters", "history", chapterId] as const,
   },
   media: {
     all: ["media"] as const,

@@ -301,11 +301,11 @@ export function StoryTable({
                   {/* Cột Thao tác */}
                   <td className="py-3.5 px-4 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
-                      {/* Xem chi tiết (Xanh dương / Mắt) */}
+                      {/* Xem chi tiết */}
                       <button
                         type="button"
                         onClick={() => onViewDetail(story)}
-                        className="w-7 h-7 rounded-lg bg-sky-100/70 text-sky-700 hover:bg-sky-200 flex items-center justify-center transition-all cursor-pointer"
+                        className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                         title="Xem chi tiết tác phẩm"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -314,13 +314,13 @@ export function StoryTable({
                         </svg>
                       </button>
 
-                      {/* Khi đang PENDING_REVIEW: Nút Phê duyệt (Xanh lá) và Từ chối (Đỏ) */}
+                      {/* Khi đang PENDING_REVIEW: Nút Phê duyệt và Từ chối */}
                       {isPending && (
                         <>
                           <button
                             type="button"
                             onClick={() => onApprove(story)}
-                            className="w-7 h-7 rounded-lg bg-emerald-100/70 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center transition-all cursor-pointer"
+                            className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                             title="Phê duyệt tác phẩm"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -330,7 +330,7 @@ export function StoryTable({
                           <button
                             type="button"
                             onClick={() => onReject(story)}
-                            className="w-7 h-7 rounded-lg bg-rose-100/80 text-rose-600 hover:bg-rose-200 flex items-center justify-center transition-all cursor-pointer"
+                            className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                             title="Từ chối phê duyệt tác phẩm"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -340,12 +340,12 @@ export function StoryTable({
                         </>
                       )}
 
-                      {/* Khi đã PUBLISHED: Nút Gỡ duyệt (Cam) */}
+                      {/* Khi đã PUBLISHED: Nút Gỡ duyệt */}
                       {isPublished && (
                         <button
                           type="button"
                           onClick={() => onUnpublish(story)}
-                          className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 flex items-center justify-center transition-all cursor-pointer"
+                          className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                           title="Gỡ duyệt tác phẩm (chuyển về bản nháp)"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -359,7 +359,7 @@ export function StoryTable({
                         <button
                           type="button"
                           onClick={() => onUnhide(story)}
-                          className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center transition-all cursor-pointer"
+                          className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                           title="Mở lại hiển thị công khai (Bỏ ẩn)"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -371,7 +371,7 @@ export function StoryTable({
                         <button
                           type="button"
                           onClick={() => onHide(story)}
-                          className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 flex items-center justify-center transition-all cursor-pointer"
+                          className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                           title="Ẩn khỏi chế độ công khai (Chuyển sang Riêng tư)"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

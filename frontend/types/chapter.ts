@@ -5,7 +5,25 @@ export type ChapterStatus =
   | 'HIDDEN'
   | 'REJECTED';
 
-export type ChapterAction = 'DRAFT' | 'SUBMIT';
+export type ChapterAction = 'DRAFT' | 'SUBMIT' | 'DISCARD_UPDATE';
+
+export interface ChapterUpdateItem {
+  _id: string;
+  chapterId: string | { _id: string; chapterNumber?: number; title?: string; status?: ChapterStatus };
+  storyId: string | { _id: string; title?: string; slug?: string; coverUrl?: string };
+  authorId: string | { _id: string; displayName?: string; username?: string; avatarUrl?: string };
+  title: string;
+  content: string;
+  isFree: boolean;
+  coinPrice: number;
+  requirePreviousChapter: boolean;
+  status: 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  rejectReason?: string | null;
+  reviewerId?: string | { _id: string; displayName?: string; username?: string; avatarUrl?: string } | null;
+  reviewedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export interface ChapterItem {
   _id: string;
@@ -19,8 +37,10 @@ export interface ChapterItem {
   coinPrice: number;
   requirePreviousChapter: boolean;
   viewCount: number;
+  scheduledAt?: string | null;
   publishedAt?: string | null;
   rejectReason?: string | null;
+  pendingUpdate?: ChapterUpdateItem | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +54,7 @@ export interface CreateChapterPayload {
   coinPrice?: number;
   requirePreviousChapter?: boolean;
   action?: ChapterAction;
+  scheduledAt?: string | null;
 }
 
 export interface UpdateChapterPayload {
@@ -44,6 +65,16 @@ export interface UpdateChapterPayload {
   coinPrice?: number;
   requirePreviousChapter?: boolean;
   action?: ChapterAction;
+  scheduledAt?: string | null;
+}
+
+export interface BulkSubmitChaptersPayload {
+  chapterIds: string[];
+}
+
+export interface BulkSubmitChaptersResponse {
+  submittedCount: number;
+  message: string;
 }
 
 export interface QueryChaptersParams {
@@ -99,6 +130,7 @@ export interface StoryChaptersResponse {
 
 export interface AdminChapterItem extends ChapterItem {
   storyId: any; // populated story object containing title, slug, coverUrl, authorId
+  isPendingUpdateReview?: boolean;
 }
 
 export interface AdminChapterCounts {
