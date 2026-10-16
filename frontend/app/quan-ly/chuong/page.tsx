@@ -218,9 +218,6 @@ function QuanLyChuongContent() {
         <div>
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <span>Kiểm duyệt & Quản lý Chương</span>
-            <span className="text-[11px] px-2.5 py-0.5 font-bold rounded-full bg-gradient-to-r from-sky-500 to-purple-600 text-white shadow-2xs">
-              Admin / Manager
-            </span>
           </h1>
           <p className="text-xs md:text-sm text-slate-500 mt-1">
             Duyệt chương mới do tác giả đăng tải, kiểm tra nội dung và quản lý trọng thời xuất bản

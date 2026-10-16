@@ -50,11 +50,11 @@ export function StoryPickerDropdown({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="w-full flex items-center justify-between gap-3 p-2.5 sm:p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl shadow-xs transition text-left group"
+        className="w-full flex items-center justify-between gap-3 p-2.5 sm:p-3 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-lg shadow-2xs transition text-left group"
       >
         <div className="flex items-center gap-3 min-w-0">
           {/* Cover Thumbnail */}
-          <div className="w-10 h-14 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-xs relative">
+          <div className="w-10 h-14 rounded-md overflow-hidden bg-zinc-100 shrink-0 border border-zinc-200/80 shadow-2xs relative">
             {selectedStory?.coverUrl ? (
               <img
                 src={selectedStory.coverUrl}
@@ -72,10 +72,10 @@ export function StoryPickerDropdown({
 
           {/* Info */}
           <div className="min-w-0">
-            <h4 className="text-sm font-bold text-slate-900 group-hover:text-sky-600 transition truncate">
+            <h4 className="text-sm font-bold text-zinc-900 group-hover:text-sky-600 transition truncate">
               {selectedStory?.title || "Chọn tác phẩm..."}
             </h4>
-            <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+            <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500">
               <span className="font-semibold text-sky-600">
                 {selectedStory?.stats?.chapterCount || 0} chương
               </span>
@@ -92,7 +92,7 @@ export function StoryPickerDropdown({
         </div>
 
         {/* Chevron Icon */}
-        <div className="p-1 rounded-lg text-slate-400 group-hover:text-slate-700 transition shrink-0">
+        <div className="p-1 rounded text-zinc-400 group-hover:text-zinc-700 transition shrink-0">
           <svg
             className={`w-5 h-5 transition-transform duration-200 ${
               isOpen ? "rotate-180" : ""
@@ -109,12 +109,12 @@ export function StoryPickerDropdown({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 w-full bg-white rounded-2xl border border-slate-200 shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute left-0 top-full mt-2 w-full bg-white rounded-lg border border-zinc-200 shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
           {/* Search Bar */}
-          <div className="p-3 border-b border-slate-100 bg-slate-50/70">
+          <div className="p-3 border-b border-zinc-200 bg-zinc-50/70">
             <div className="relative">
               <svg
-                className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
+                className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -132,15 +132,15 @@ export function StoryPickerDropdown({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 autoFocus
-                className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
+                className="w-full bg-white border border-zinc-200 rounded-md pl-9 pr-3 py-1.5 text-xs sm:text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition-colors"
               />
             </div>
           </div>
 
           {/* Stories List */}
-          <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 p-1">
+          <div className="max-h-72 overflow-y-auto divide-y divide-zinc-100 p-1">
             {filteredStories.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-400">
+              <div className="p-6 text-center text-xs text-zinc-400">
                 Không tìm thấy tác phẩm nào khớp từ khóa.
               </div>
             ) : (
@@ -156,14 +156,14 @@ export function StoryPickerDropdown({
                       onSelectStory(story);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition ${
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-md text-left transition ${
                       isSelected
                         ? "bg-sky-50/80 border border-sky-200"
-                        : "hover:bg-slate-50"
+                        : "hover:bg-zinc-50"
                     }`}
                   >
                     {/* Cover Thumbnail with Image */}
-                    <div className="w-10 h-14 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200 relative">
+                    <div className="w-10 h-14 rounded-md overflow-hidden bg-zinc-100 shrink-0 border border-zinc-200 relative">
                       {story.coverUrl ? (
                         <img
                           src={story.coverUrl}
@@ -183,23 +183,23 @@ export function StoryPickerDropdown({
                     <div className="min-w-0 flex-1">
                       <h5
                         className={`text-xs sm:text-sm font-bold truncate ${
-                          isSelected ? "text-sky-700" : "text-slate-800"
+                          isSelected ? "text-sky-700" : "text-zinc-800"
                         }`}
                       >
                         {story.title}
                       </h5>
-                      <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
-                        <span className="font-semibold text-slate-700">
+                      <div className="flex items-center gap-2 mt-1 text-[11px] text-zinc-500">
+                        <span className="font-semibold text-zinc-700">
                           {story.stats?.chapterCount || 0} chương
                         </span>
                         <span>•</span>
                         <span
-                          className={`px-1.5 py-0.2 rounded font-medium ${
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${
                             story.status === "PUBLISHED"
-                              ? "bg-emerald-50 text-emerald-700"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : story.status === "PENDING_REVIEW"
-                              ? "bg-amber-50 text-amber-700"
-                              : "bg-slate-100 text-slate-600"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-zinc-100 text-zinc-600 border-zinc-200"
                           }`}
                         >
                           {story.status === "PUBLISHED"

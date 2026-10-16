@@ -257,7 +257,7 @@ export function StoryCardItem({
             <button
               type="button"
               onClick={() => onEdit(story)}
-              className="px-3 py-1.5 rounded text-xs font-medium bg-zinc-100 hover:bg-zinc-200 text-zinc-800 transition cursor-pointer"
+              className="px-3 py-1.5 rounded-md text-xs font-medium border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white transition shadow-2xs cursor-pointer"
             >
               Chỉnh sửa
             </button>
