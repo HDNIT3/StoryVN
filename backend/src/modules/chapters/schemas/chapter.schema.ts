@@ -83,11 +83,18 @@ export class Chapter {
   })
   viewCount: number;
 
+  /**
+   * Thời điểm chương hiển thị cho độc giả.
+   * - Khi admin duyệt mà tác giả không đặt lịch: scheduledAt = now (hiện ngay).
+   * - Khi admin duyệt mà tác giả có đặt lịch: scheduledAt = ngày tác giả chọn.
+   * - Reader filter: status = PUBLISHED AND scheduledAt <= now.
+   */
   @Prop({
     type: Date,
     default: null,
+    index: true,
   })
-  publishedAt?: Date | null;
+  scheduledAt?: Date | null;
 
   @Prop({
     type: String,
