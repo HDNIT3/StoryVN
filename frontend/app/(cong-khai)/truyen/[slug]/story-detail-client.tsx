@@ -142,7 +142,7 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
   const story = storyRes?.data;
   const sameGenreStories: SameGenreStoryItem[] = story?.sameGenreStories || [];
 
-  // Query danh sách chương (chỉ fetch khi tab chapters active)
+  // Query danh sách chương (fetch ngay khi có slug để đồng bộ số lượng và tab mượt mà)
   const {
     data: chaptersRes,
     isLoading: isLoadingChapters,
@@ -150,10 +150,12 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
   } = useQuery({
     queryKey: queryKeys.chapters.bySlug(slugParam, { order: chapterOrder }),
     queryFn: () => chapterService.getChaptersBySlug(slugParam, { order: chapterOrder, limit: 200 }),
-    enabled: !!slugParam && activeTab === 'chapters',
+    enabled: !!slugParam,
   });
 
   const chapters = chaptersRes?.data?.items || [];
+  const publicChapterCount =
+    chaptersRes?.data?.total ?? story?.stats?.chapterCount ?? 0;
 
   // Handler chia sẻ liên kết truyện (Hỗ trợ Web Share API trên di động + Copy link dự phòng)
   const handleShare = async () => {
@@ -422,7 +424,7 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
                     <div className="text-center border-l border-zinc-200/60">
                       <div className="text-xs text-zinc-500 font-medium">Số chương</div>
                       <div className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5">
-                        {story.stats?.chapterCount || 0}
+                        {publicChapterCount}
                       </div>
                     </div>
                   </div>
@@ -505,7 +507,7 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
                       : "border-transparent text-zinc-500 hover:text-zinc-800"
                   }`}
                 >
-                  Danh sách chương ({story.stats?.chapterCount || 0})
+                  Danh sách chương ({publicChapterCount})
                 </button>
                 <button
                   type="button"
@@ -587,7 +589,7 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
 
                       <div className="flex items-center gap-3 self-end sm:self-auto">
                         <span className="text-sm font-semibold text-zinc-500">
-                          {chaptersRes?.data?.total || chapters.length || story.stats?.chapterCount || 0} chương
+                          {publicChapterCount} chương
                         </span>
 
                         {/* Nút đảo thứ tự Chương cũ / Chương mới */}

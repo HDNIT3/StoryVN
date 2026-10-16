@@ -647,11 +647,10 @@ function StoriesContent() {
 
                     {/* Cột thống kê & Nút thao tác bên phải card */}
                     <div className="sm:w-36 shrink-0 flex flex-col justify-between sm:items-end border-t sm:border-t-0 sm:border-l sm:border-zinc-100 pt-3 sm:pt-0 sm:pl-4 text-xs">
-                      {/* Thống kê: Yêu cầu của bạn: Chương chưa làm để UI "0 chương" */}
                       <div className="space-y-1.5 text-zinc-600 sm:text-right w-full">
                         <div className="flex sm:justify-end items-center gap-1.5 text-zinc-700">
                           <BookIcon className="w-3.5 h-3.5 text-zinc-400" />
-                          <span className="font-medium">0 chương</span>
+                          <span className="font-medium">{story.stats?.chapterCount ?? 0} chương</span>
                         </div>
                         <div className="flex sm:justify-end items-center gap-1.5 text-zinc-500">
                           <EyeIcon className="w-3.5 h-3.5 text-zinc-400" />

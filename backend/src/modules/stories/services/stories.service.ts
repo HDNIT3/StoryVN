@@ -610,52 +610,95 @@ export class StoriesService {
       profileMap = new Map(profiles.map((p) => [p.userId.toString(), p]));
     }
 
-    // 7. Format dữ liệu trả về cho Frontend
-    const items = stories.map((story) => {
-      const authorUser = story.authorId as any;
-      const authorUserIdStr = authorUser?._id?.toString() || authorUser?.toString();
-      const authorProfile = authorUserIdStr ? profileMap.get(authorUserIdStr) : null;
-      const authorName =
-        authorProfile?.penName ||
-        authorUser?.displayName ||
-        authorUser?.username ||
-        'Tác giả ẩn danh';
+    // 7. Format dữ liệu trả về cho Frontend (đồng bộ chapterCount chuẩn xác theo thời gian thực)
+    const items = await Promise.all(
+      stories.map(async (story) => {
+        const liveChapterCount = await this.getLiveContinuousChapterCount(story._id);
+        if (story.stats?.chapterCount !== liveChapterCount) {
+          await this.storyModel.updateOne(
+            { _id: story._id },
+            { 'stats.chapterCount': liveChapterCount },
+          );
+        }
 
-      const rawGenres = (story.genreIds as any[]) || [];
-      const genres = rawGenres.map((g: any) => ({
-        _id: g._id,
-        name: g.name,
-        slug: g.slug,
-      }));
+        const authorUser = story.authorId as any;
+        const authorUserIdStr = authorUser?._id?.toString() || authorUser?.toString();
+        const authorProfile = authorUserIdStr ? profileMap.get(authorUserIdStr) : null;
+        const authorName =
+          authorProfile?.penName ||
+          authorUser?.displayName ||
+          authorUser?.username ||
+          'Tác giả ẩn danh';
 
-      return {
-        _id: story._id,
-        title: story.title,
-        slug: story.slug,
-        coverUrl: story.coverUrl || null,
-        description: story.description || '',
-        progressState: story.progressState,
-        stats: {
-          chapterCount: story.stats?.chapterCount ?? 0,
-          viewCount: story.stats?.viewCount ?? 0,
-          ratingAverage: story.stats?.ratingAverage ?? 0,
-          ratingCount: story.stats?.ratingCount ?? 0,
-        },
-        author: {
-          _id: authorUser?._id || null,
-          name: authorName,
-          avatar: authorUser?.avatar || null,
-        },
-        genres,
-        publishedAt: story.publishedAt || story.createdAt,
-        updatedAt: story.updatedAt,
-      };
-    });
+        const rawGenres = (story.genreIds as any[]) || [];
+        const genres = rawGenres.map((g: any) => ({
+          _id: g._id,
+          name: g.name,
+          slug: g.slug,
+        }));
+
+        return {
+          _id: story._id,
+          title: story.title,
+          slug: story.slug,
+          coverUrl: story.coverUrl || null,
+          description: story.description || '',
+          progressState: story.progressState,
+          stats: {
+            chapterCount: liveChapterCount,
+            viewCount: story.stats?.viewCount ?? 0,
+            ratingAverage: story.stats?.ratingAverage ?? 0,
+            ratingCount: story.stats?.ratingCount ?? 0,
+          },
+          author: {
+            _id: authorUser?._id || null,
+            name: authorName,
+            avatar: authorUser?.avatar || null,
+          },
+          genres,
+          publishedAt: story.publishedAt || story.createdAt,
+          updatedAt: story.updatedAt,
+        };
+      }),
+    );
 
     return {
       items,
       pagination: buildPaginationMeta(totalItems, query.page, query.limit),
     };
+  }
+
+  /**
+   * Tính toán số lượng chương đã phát hành thực tế tới độc giả theo chuỗi liên tục
+   * (Chỉ tính các chương PUBLISHED có scheduledAt <= now và không bị ngắt quãng bởi chương chưa phát hành)
+   */
+  async getLiveContinuousChapterCount(storyId: Types.ObjectId): Promise<number> {
+    const now = new Date();
+    const firstUnreleased = await this.chapterModel
+      .findOne({
+        storyId,
+        $or: [
+          { status: { $ne: ChapterStatus.PUBLISHED } },
+          { scheduledAt: { $gt: now } },
+        ],
+      })
+      .sort({ chapterNumber: 1 })
+      .lean();
+
+    const countFilter: any = {
+      storyId,
+      status: ChapterStatus.PUBLISHED,
+      $or: [
+        { scheduledAt: null },
+        { scheduledAt: { $lte: now } },
+      ],
+    };
+
+    if (firstUnreleased) {
+      countFilter.chapterNumber = { $lt: firstUnreleased.chapterNumber };
+    }
+
+    return this.chapterModel.countDocuments(countFilter);
   }
 
   /**
@@ -791,6 +834,14 @@ export class StoriesService {
       });
     }
 
+    const liveChapterCount = await this.getLiveContinuousChapterCount(story._id);
+    if (story.stats?.chapterCount !== liveChapterCount) {
+      await this.storyModel.updateOne(
+        { _id: story._id },
+        { 'stats.chapterCount': liveChapterCount },
+      );
+    }
+
     return {
       _id: story._id,
       title: story.title,
@@ -803,7 +854,7 @@ export class StoriesService {
       status: story.status,
       visibility: story.visibility,
       stats: {
-        chapterCount: story.stats?.chapterCount ?? 0,
+        chapterCount: liveChapterCount,
         viewCount: story.stats?.viewCount ?? 0,
         followCount: story.stats?.followCount ?? 0,
         ratingAverage: story.stats?.ratingAverage ?? 0,

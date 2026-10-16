@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsDateString,
   IsEnum,
   IsInt,
   IsOptional,
@@ -67,6 +68,14 @@ export class UpdateChapterDto {
     description: 'Hành động: DRAFT (lưu nháp) hoặc SUBMIT (gửi duyệt kiểm duyệt)',
   })
   @IsOptional()
-  @IsEnum(ChapterAction, { message: 'action phải là DRAFT hoặc SUBMIT' })
+  @IsEnum(ChapterAction, { message: 'action phải là DRAFT, SUBMIT hoặc DISCARD_UPDATE' })
   action?: ChapterAction;
+
+  @ApiPropertyOptional({
+    example: '2026-10-20T08:00:00.000Z',
+    description: 'Ngày giờ lên lịch hiển thị chương cho độc giả (ISO string)',
+  })
+  @IsOptional()
+  @IsDateString({}, { message: 'scheduledAt phải là định dạng ISO date string' })
+  scheduledAt?: string | null;
 }
