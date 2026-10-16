@@ -19,6 +19,7 @@ import { AuthGuard } from '../../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../../common/guards/roles.guard.js';
 import { UserRole } from '../../users/schemas/user.schema.js';
 import { ChaptersService } from '../services/chapters.service.js';
+import { BulkSubmitChaptersDto } from '../dto/bulk-submit-chapters.dto.js';
 import { CreateChapterDto } from '../dto/create-chapter.dto.js';
 import { QueryChaptersDto } from '../dto/query-chapters.dto.js';
 import { ReorderChaptersDto } from '../dto/reorder-chapters.dto.js';
@@ -51,6 +52,30 @@ export class ChaptersController {
           ? 'Tạo chương và gửi yêu cầu phê duyệt thành công'
           : 'Lưu bản nháp chương truyện thành công',
       data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Gửi duyệt hàng loạt các chương truyện (Tác giả)',
+    description: 'Tác giả gửi phê duyệt cùng lúc nhiều chương truyện ở trạng thái DRAFT hoặc REJECTED',
+  })
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN)
+  @Post('bulk-submit')
+  @HttpCode(HttpStatus.OK)
+  async bulkSubmit(
+    @CurrentUser() user: any,
+    @Body() dto: BulkSubmitChaptersDto,
+  ) {
+    const result = await this.chaptersService.bulkSubmitChapters(
+      user._id,
+      dto.chapterIds,
+      user.role,
+    );
+
+    return {
+      success: true,
+      message: result.message,
+      data: result,
     };
   }
 
@@ -182,6 +207,42 @@ export class ChaptersController {
   }
 
   @ApiOperation({
+    summary: 'Lấy danh sách tất cả lịch sử chỉnh sửa chương của tác giả - UC-15 & UC-16',
+    description: 'Tác giả xem toàn bộ các bản chỉnh sửa chương (ChapterUpdate) có thể lọc theo truyện, chương, trạng thái',
+  })
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN, UserRole.MANAGER)
+  @Get('history')
+  @HttpCode(HttpStatus.OK)
+  async getAllChapterUpdatesHistory(
+    @CurrentUser() user: any,
+    @Query('storyId') storyId?: string,
+    @Query('chapterId') chapterId?: string,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const data = await this.chaptersService.getAllChapterUpdatesHistory(
+      user._id,
+      user.role,
+      {
+        storyId,
+        chapterId,
+        status,
+        search,
+        page: page ? parseInt(page, 10) : 1,
+        limit: limit ? parseInt(limit, 10) : 20,
+      },
+    );
+
+    return {
+      success: true,
+      message: 'Lấy danh sách lịch sử sửa đổi thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
     summary: 'Lấy chi tiết một chương truyện - UC-16',
   })
   @Public()
@@ -200,6 +261,30 @@ export class ChaptersController {
     return {
       success: true,
       message: 'Lấy chi tiết chương truyện thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Lấy lịch sử các bản sửa đổi của chương - UC-15 & UC-16',
+    description: 'Tác giả hoặc Quản lý xem toàn bộ các bản sửa đổi (ChapterUpdate) của chương truyện',
+  })
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN, UserRole.MANAGER)
+  @Get(':id/history')
+  @HttpCode(HttpStatus.OK)
+  async getChapterHistory(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ) {
+    const data = await this.chaptersService.getChapterUpdatesHistory(
+      id,
+      user._id,
+      user.role,
+    );
+
+    return {
+      success: true,
+      message: 'Lấy lịch sử sửa đổi chương thành công',
       data,
     };
   }

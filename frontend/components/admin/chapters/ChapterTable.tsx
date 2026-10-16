@@ -163,8 +163,12 @@ export function ChapterTable({
                 author?.displayName || author?.username || "Chưa xác định";
               const authorEmail = author?.email || "";
               const authorAvatar = author?.avatarUrl;
-              const isPending = ch.status === "PENDING_REVIEW";
-              const isPublished = ch.status === "PUBLISHED";
+              const isPendingUpdateReview = Boolean(
+                ch.isPendingUpdateReview ||
+                (ch.status === "PUBLISHED" && ch.pendingUpdate?.status === "PENDING_REVIEW")
+              );
+              const isPending = ch.status === "PENDING_REVIEW" || isPendingUpdateReview;
+              const isPublished = ch.status === "PUBLISHED" && !isPendingUpdateReview;
 
               const timeStr = formatDate(ch.createdAt);
 
@@ -186,6 +190,11 @@ export function ChapterTable({
                           <span className="font-bold text-sky-700 bg-sky-100/70 px-2 py-0.5 rounded-md text-[11px]">
                             Chương {ch.chapterNumber}
                           </span>
+                          {isPendingUpdateReview && (
+                            <span className="font-bold text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-md text-[10px]">
+                              Bản sửa
+                            </span>
+                          )}
                           <button
                             type="button"
                             onClick={() => onViewDetail(ch)}
@@ -255,7 +264,12 @@ export function ChapterTable({
 
                   {/* Cột Trạng thái */}
                   <td className="py-3 px-4 text-center whitespace-nowrap">
-                    {ch.status === "PENDING_REVIEW" ? (
+                    {isPendingUpdateReview ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        Bản sửa chờ duyệt
+                      </span>
+                    ) : ch.status === "PENDING_REVIEW" ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                         Chờ duyệt
                       </span>
@@ -302,11 +316,11 @@ export function ChapterTable({
                   {/* Cột Thao tác: 4 nút vuông/tròn bo góc nhỏ xíu: Xanh mắt, Xanh tick/Cấm, Vàng sửa, Đỏ xoá */}
                   <td className="py-3 px-4 text-center">
                     <div className="flex items-center justify-center gap-1.5">
-                      {/* Nút Xem chi tiết nội dung chương (Icon Cuộn sách / Văn bản - Xanh lam) */}
+                      {/* Nút Xem chi tiết nội dung chương */}
                       <button
                         type="button"
                         onClick={() => onViewDetail(ch)}
-                        className="w-7 h-7 rounded-lg bg-sky-100/70 text-sky-700 hover:bg-sky-200 flex items-center justify-center transition-all cursor-pointer"
+                        className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                         title="Xem nội dung chi tiết chương"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -314,14 +328,14 @@ export function ChapterTable({
                         </svg>
                       </button>
 
-                      {/* 1. Nếu đang PENDING_REVIEW: Hiện nút Phê duyệt (Xanh) và Từ chối (Đỏ) */}
+                      {/* 1. Nếu đang PENDING_REVIEW hoặc có bản sửa chờ duyệt: Hiện nút Phê duyệt và Từ chối */}
                       {isPending && (
                         <>
                           <button
                             type="button"
                             onClick={() => onApprove(ch)}
-                            className="w-7 h-7 rounded-lg bg-emerald-100/70 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center transition-all cursor-pointer"
-                            title="Phê duyệt xuất bản chương"
+                            className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            title={isPendingUpdateReview ? "Phê duyệt bản chỉnh sửa chương" : "Phê duyệt xuất bản chương"}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -330,8 +344,8 @@ export function ChapterTable({
                           <button
                             type="button"
                             onClick={() => onReject(ch)}
-                            className="w-7 h-7 rounded-lg bg-rose-100/80 text-rose-600 hover:bg-rose-200 flex items-center justify-center transition-all cursor-pointer"
-                            title="Từ chối chương (kèm lý do)"
+                            className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            title={isPendingUpdateReview ? "Từ chối bản chỉnh sửa chương (kèm lý do)" : "Từ chối chương (kèm lý do)"}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -340,14 +354,14 @@ export function ChapterTable({
                         </>
                       )}
 
-                      {/* 2. Nếu đã PUBLISHED: Hiện nút Ẩn chương (Tím) và nút Gỡ về Bản nháp (Cam) */}
+                      {/* 2. Nếu đã PUBLISHED: Hiện nút Ẩn chương và nút Gỡ về Bản nháp */}
                       {isPublished && (
                         <>
                           {onHide && (
                             <button
                               type="button"
                               onClick={() => onHide(ch)}
-                              className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 flex items-center justify-center transition-all cursor-pointer"
+                              className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                               title="Ẩn chương khỏi độc giả"
                             >
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -358,7 +372,7 @@ export function ChapterTable({
                           <button
                             type="button"
                             onClick={() => onUnpublish(ch)}
-                            className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 flex items-center justify-center transition-all cursor-pointer"
+                            className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                             title="Gỡ duyệt chương (về bản nháp)"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -368,12 +382,12 @@ export function ChapterTable({
                         </>
                       )}
 
-                      {/* 3. Nếu đang bị HIDDEN (Đã ẩn): Nút Mở lại hiển thị công khai (Màu Xanh lá + Icon Mở khóa/Bỏ ẩn) */}
+                      {/* 3. Nếu đang bị HIDDEN (Đã ẩn): Nút Mở lại hiển thị công khai */}
                       {ch.status === "HIDDEN" && onUnhide && (
                         <button
                           type="button"
                           onClick={() => onUnhide(ch)}
-                          className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center transition-all cursor-pointer"
+                          className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                           title="Bỏ ẩn - Mở lại hiển thị công khai cho độc giả"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -387,7 +401,7 @@ export function ChapterTable({
                         <button
                           type="button"
                           onClick={() => onResetPending(ch)}
-                          className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                          className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                           title="Chuyển về chờ duyệt lại"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

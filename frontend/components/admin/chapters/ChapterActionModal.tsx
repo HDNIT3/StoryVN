@@ -34,18 +34,25 @@ export function ChapterActionModal({
 
   if (!isOpen || !actionType || !chapter) return null;
 
+  const isUpdateReview = Boolean(
+    chapter.isPendingUpdateReview ||
+    (chapter.status === "PUBLISHED" && (chapter as any).pendingUpdate?.status === "PENDING_REVIEW")
+  );
+
   const chapterDisplay = `Chương ${chapter.chapterNumber}${
     chapter.title ? `: "${chapter.title}"` : ""
   }`;
 
   const config = {
     REJECT: {
-      title: "Từ chối duyệt chương truyện",
+      title: isUpdateReview ? "Từ chối bản chỉnh sửa chương truyện" : "Từ chối duyệt chương truyện",
       badgeColor: "bg-rose-100 text-rose-700",
       btnColor: "bg-rose-600 hover:bg-rose-700 text-white",
       btnText: "Xác nhận từ chối",
       requireReason: true,
-      description: `Vui lòng nhập lý do từ chối ${chapterDisplay}. Lý do này sẽ được thông báo ngay tới tác giả kèm thông tin cụ thể để sửa chữa.`,
+      description: isUpdateReview
+        ? `Vui lòng nhập lý do từ chối bản chỉnh sửa của ${chapterDisplay}. Độc giả vẫn tiếp tục đọc bản chính hiện tại, và tác giả sẽ nhận được thông báo để chỉnh sửa lại.`
+        : `Vui lòng nhập lý do từ chối ${chapterDisplay}. Lý do này sẽ được thông báo ngay tới tác giả kèm thông tin cụ thể để sửa chữa.`,
       sampleReasons: [
         "Nội dung chương chứa ngôn từ thô tục, phản cảm hoặc quá nhạy cảm",
         "Độ dài chương quá ngắn, chưa đủ nội dung tiêu chuẩn",
