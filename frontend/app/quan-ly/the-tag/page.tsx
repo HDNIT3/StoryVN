@@ -15,6 +15,7 @@ import { TagTable } from "@/components/admin/tags/TagTable";
 import { TagFormModal } from "@/components/admin/tags/TagFormModal";
 import { TagDeleteModal } from "@/components/admin/tags/TagDeleteModal";
 import { TagPagination } from "@/components/admin/tags/TagPagination";
+import { AdminStatCard } from "@/components/admin/common/AdminStatCard";
 
 export default function QuanLyTagPage() {
   const [page, setPage] = useState(1);
@@ -43,6 +44,12 @@ export default function QuanLyTagPage() {
     sortOrder: "desc",
   });
 
+  // Query tất cả thẻ tag để tính toán số liệu thống kê cho StatCards
+  const { data: allTagsData } = useTags({
+    page: 1,
+    limit: 100,
+  });
+
   const createMutation = useCreateTag();
   const updateMutation = useUpdateTag();
   const deleteMutation = useDeleteTag();
@@ -51,6 +58,11 @@ export default function QuanLyTagPage() {
   const items = data?.items ?? [];
   const totalPages = data?.pagination?.totalPages ?? 1;
   const totalItems = data?.pagination?.totalItems ?? items.length;
+
+  const allItems = allTagsData?.items ?? items;
+  const totalTags = allTagsData?.pagination?.totalItems ?? allItems.length;
+  const activeCount = allItems.filter((t) => t.isActive).length;
+  const inactiveCount = allItems.filter((t) => !t.isActive).length;
 
   // Xử lý đổi filter hoặc search -> reset về trang 1
   const handleSearchChange = (val: string) => {
@@ -183,6 +195,56 @@ export default function QuanLyTagPage() {
             Thêm thẻ tag
           </Button>
         </div>
+      </div>
+
+      {/* ── Stat Cards (Đồng bộ chuẩn 100% như trang quản lý người dùng) ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <AdminStatCard
+          label="Tổng thẻ tag"
+          value={totalTags}
+          color="border-sky-100 text-sky-800"
+          isActive={statusFilter === "ALL"}
+          onClick={() => handleStatusFilterChange("ALL")}
+          icon={
+            <svg className="w-6 h-6 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+          }
+        />
+        <AdminStatCard
+          label="Đang hoạt động"
+          value={activeCount}
+          color="border-emerald-100 text-emerald-800"
+          isActive={statusFilter === "ACTIVE"}
+          onClick={() => handleStatusFilterChange("ACTIVE")}
+          icon={
+            <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        />
+        <AdminStatCard
+          label="Đang ẩn / Khóa"
+          value={inactiveCount}
+          color="border-amber-100 text-amber-800"
+          isActive={statusFilter === "INACTIVE"}
+          onClick={() => handleStatusFilterChange("INACTIVE")}
+          icon={
+            <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+            </svg>
+          }
+        />
+        <AdminStatCard
+          label="Hiển thị theo trang"
+          value={items.length}
+          color="border-purple-100 text-purple-800"
+          icon={
+            <svg className="w-6 h-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+          }
+        />
       </div>
 
       {/* Thanh tìm kiếm & Bộ lọc */}
