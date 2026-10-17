@@ -27,14 +27,6 @@ export class UpdateAuthorProfileDto {
   biography?: string;
 
   @ApiPropertyOptional({
-    example: 'https://example.com/avatar.jpg',
-    description: 'URL ảnh đại diện tác giả',
-  })
-  @IsOptional()
-  @IsString({ message: 'Avatar URL phải là chuỗi ký tự' })
-  avatarUrl?: string;
-
-  @ApiPropertyOptional({
     example: 'https://authorblog.vn',
     description: 'Website cá nhân',
   })

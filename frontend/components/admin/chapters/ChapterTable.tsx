@@ -146,13 +146,13 @@ export function ChapterTable({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-200/70 bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              <th className="py-3 px-4">Chương / Tác phẩm</th>
-              <th className="py-3 px-4">Tác giả</th>
-              <th className="py-3 px-4 text-center">Trạng thái</th>
-              <th className="py-3 px-4 text-center">Phí đọc</th>
-              <th className="py-3 px-4 text-center">Lượt đọc</th>
-              <th className="py-3 px-4">Thời gian</th>
-              <th className="py-3 px-4 text-center">Thao tác</th>
+              <th className="py-2.5 px-3">Chương / Tác phẩm</th>
+              <th className="py-2.5 px-3">Tác giả</th>
+              <th className="py-2.5 px-3 text-center">Trạng thái</th>
+              <th className="py-2.5 px-3 text-center">Phí đọc</th>
+              <th className="py-2.5 px-3 text-center">Lượt đọc</th>
+              <th className="py-2.5 px-3">Thời gian</th>
+              <th className="py-2.5 px-3 text-center">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
@@ -178,20 +178,20 @@ export function ChapterTable({
                   className="hover:bg-blue-50/30 transition-colors group"
                 >
                   {/* Cột Chương & Truyện */}
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
+                  <td className="py-2.5 px-3">
+                    <div className="flex items-center gap-2.5">
                       {/* Bìa truyện mini bo tròn */}
-                      <div className="w-10 h-13 rounded-lg overflow-hidden bg-slate-200 shrink-0 border border-slate-200 shadow-2xs relative">
+                      <div className="w-8 h-11 rounded-lg overflow-hidden bg-slate-200 shrink-0 border border-slate-200 shadow-2xs relative">
                         <StoryThumb src={story?.coverUrl} alt={story?.title || "Bìa"} />
                       </div>
 
-                      <div className="min-w-0 max-w-xs md:max-w-sm">
+                      <div className="min-w-0 max-w-[170px] xl:max-w-[220px]">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-bold text-sky-700 bg-sky-100/70 px-2 py-0.5 rounded-md text-[11px]">
-                            Chương {ch.chapterNumber}
+                          <span className="font-bold text-sky-700 bg-sky-100/70 px-1.5 py-0.2 rounded text-[10px]">
+                            Ch. {ch.chapterNumber}
                           </span>
                           {isPendingUpdateReview && (
-                            <span className="font-bold text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-md text-[10px]">
+                            <span className="font-bold text-amber-800 bg-amber-100 border border-amber-300 px-1 py-0.2 rounded text-[9px]">
                               Bản sửa
                             </span>
                           )}
@@ -206,38 +206,38 @@ export function ChapterTable({
                         </div>
 
                         {story && (
-                          <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+                          <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5" title={story.title}>
                             Truyện: <span className="font-semibold text-slate-700">{story.title}</span>
                           </p>
                         )}
 
                         {/* Hiển thị lý do phù hợp theo trạng thái */}
                         {ch.rejectReason && (
-                          <div className={`mt-1.5 flex items-start gap-1 text-[11px] px-2 py-1 rounded-lg border ${
+                          <div className={`mt-1 flex items-start gap-1 text-[10px] px-1.5 py-0.5 rounded border ${
                             ch.status === "HIDDEN"
                               ? "text-purple-700 bg-purple-50 border-purple-200/80"
                               : ch.status === "DRAFT"
                               ? "text-amber-800 bg-amber-50 border-amber-200/80"
                               : "text-rose-700 bg-rose-50 border-rose-200/80"
-                          }`}>
+                          }`} title={ch.rejectReason}>
                             <span className="font-bold shrink-0">
                               {ch.status === "HIDDEN"
-                                ? "Lý do tạm ẩn:"
+                                ? "Ẩn:"
                                 : ch.status === "DRAFT"
-                                ? "Lý do gỡ duyệt:"
-                                : "Lý do từ chối:"}
+                                ? "Gỡ:"
+                                : "Từ chối:"}
                             </span>
-                            <span className="line-clamp-2">{ch.rejectReason}</span>
+                            <span className="truncate max-w-[140px]">{ch.rejectReason}</span>
                           </div>
                         )}
                       </div>
                     </div>
                   </td>
 
-                  {/* Cột Tác giả với Avatar tròn giống ảnh */}
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold shrink-0 overflow-hidden ring-1 ring-slate-200">
+                  {/* Cột Tác giả với Avatar tròn */}
+                  <td className="py-2.5 px-3">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold shrink-0 overflow-hidden ring-1 ring-slate-200">
                         {authorAvatar ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -249,12 +249,12 @@ export function ChapterTable({
                           authorName.charAt(0).toUpperCase()
                         )}
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-900 text-xs truncate">
+                      <div className="min-w-0 max-w-[90px] xl:max-w-[120px]">
+                        <p className="font-bold text-slate-900 text-xs truncate" title={authorName}>
                           {authorName}
                         </p>
                         {authorEmail && (
-                          <p className="text-[11px] text-slate-400 truncate">
+                          <p className="text-[10px] text-slate-400 truncate" title={authorEmail}>
                             {authorEmail}
                           </p>
                         )}
@@ -263,23 +263,23 @@ export function ChapterTable({
                   </td>
 
                   {/* Cột Trạng thái */}
-                  <td className="py-3 px-4 text-center whitespace-nowrap">
+                  <td className="py-2.5 px-3 text-center whitespace-nowrap">
                     {isPendingUpdateReview ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        Bản sửa chờ duyệt
+                        Chờ duyệt sửa
                       </span>
                     ) : ch.status === "PENDING_REVIEW" ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                         Chờ duyệt
                       </span>
                     ) : ch.status === "PUBLISHED" ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100/80 text-emerald-800">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100/80 text-emerald-800">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         Đã xuất bản
                       </span>
                     ) : ch.status === "REJECTED" ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                         Bị từ chối
                       </span>
@@ -289,38 +289,38 @@ export function ChapterTable({
                   </td>
 
                   {/* Cột Phí đọc / Coin */}
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2.5 px-3 text-center whitespace-nowrap">
                     {ch.isFree ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[11px]">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[10px]">
                         Miễn phí
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 font-semibold text-[11px]">
-                        Cộng khai · {ch.coinPrice} Xu
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 font-semibold text-[10px]">
+                        {ch.coinPrice} Xu
                       </span>
                     )}
                   </td>
 
                   {/* Cột Lượt đọc */}
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2.5 px-3 text-center">
                     <span className="font-semibold text-slate-700 text-xs">
                       {ch.viewCount ?? 0}
                     </span>
                   </td>
 
                   {/* Cột Thời gian */}
-                  <td className="py-3 px-4 text-slate-600 text-[11px] whitespace-nowrap">
+                  <td className="py-2.5 px-3 text-slate-600 text-[11px] whitespace-nowrap">
                     {timeStr}
                   </td>
 
-                  {/* Cột Thao tác: 4 nút vuông/tròn bo góc nhỏ xíu: Xanh mắt, Xanh tick/Cấm, Vàng sửa, Đỏ xoá */}
-                  <td className="py-3 px-4 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
+                  {/* Cột Thao tác */}
+                  <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-1">
                       {/* Nút Xem chi tiết nội dung chương */}
                       <button
                         type="button"
                         onClick={() => onViewDetail(ch)}
-                        className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                        className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                         title="Xem nội dung chi tiết chương"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -334,7 +334,7 @@ export function ChapterTable({
                           <button
                             type="button"
                             onClick={() => onApprove(ch)}
-                            className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                             title={isPendingUpdateReview ? "Phê duyệt bản chỉnh sửa chương" : "Phê duyệt xuất bản chương"}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -344,7 +344,7 @@ export function ChapterTable({
                           <button
                             type="button"
                             onClick={() => onReject(ch)}
-                            className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                             title={isPendingUpdateReview ? "Từ chối bản chỉnh sửa chương (kèm lý do)" : "Từ chối chương (kèm lý do)"}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -361,7 +361,7 @@ export function ChapterTable({
                             <button
                               type="button"
                               onClick={() => onHide(ch)}
-                              className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                              className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                               title="Ẩn chương khỏi độc giả"
                             >
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -372,7 +372,7 @@ export function ChapterTable({
                           <button
                             type="button"
                             onClick={() => onUnpublish(ch)}
-                            className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                             title="Gỡ duyệt chương (về bản nháp)"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -387,7 +387,7 @@ export function ChapterTable({
                         <button
                           type="button"
                           onClick={() => onUnhide(ch)}
-                          className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                          className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                           title="Bỏ ẩn - Mở lại hiển thị công khai cho độc giả"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -401,7 +401,7 @@ export function ChapterTable({
                         <button
                           type="button"
                           onClick={() => onResetPending(ch)}
-                          className="w-7 h-7 rounded-md border border-zinc-700/80 bg-white text-zinc-800 hover:bg-zinc-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                          className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                           title="Chuyển về chờ duyệt lại"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

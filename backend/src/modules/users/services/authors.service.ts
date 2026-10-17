@@ -198,8 +198,7 @@ export class AuthorsService {
 
     const penName =
       authorProfile?.penName || user.displayName || user.username;
-    const avatarUrl =
-      authorProfile?.avatarUrl || user.avatarUrl || null;
+    const avatarUrl = user.avatarUrl || null;
     const biography = authorProfile?.biography || '';
     const website = authorProfile?.website || null;
     const socialLinks = authorProfile?.socialLinks || {};
@@ -268,6 +267,10 @@ export class AuthorsService {
 
     if (query.progressState) {
       filter.progressState = query.progressState;
+    }
+
+    if (query.search && query.search.trim()) {
+      filter.title = { $regex: query.search.trim(), $options: 'i' };
     }
 
     const sort: any = {};
@@ -701,7 +704,7 @@ export class AuthorsService {
         username: user?.username || '',
         displayName: user?.displayName || '',
         penName: p.penName || user?.displayName || user?.username || '',
-        avatarUrl: p.avatarUrl || user?.avatarUrl || null,
+        avatarUrl: user?.avatarUrl || null,
         biography: p.biography || '',
         genres: topGenres,
         followerCount: p.followerCount || 0,
