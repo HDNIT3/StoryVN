@@ -26,14 +26,6 @@ export class CreateAuthorRequestDto {
   biography?: string;
 
   @ApiPropertyOptional({
-    example: 'https://example.com/avatar.jpg',
-    description: 'URL ảnh đại diện riêng của tác giả (tùy chọn)',
-  })
-  @IsOptional()
-  @IsString({ message: 'Avatar URL phải là chuỗi ký tự' })
-  avatarUrl?: string;
-
-  @ApiPropertyOptional({
     example: 'https://authorblog.vn',
     description: 'Website cá nhân của tác giả (tùy chọn)',
   })

@@ -13,7 +13,6 @@ export type ReviewAction = "APPROVED" | "REJECTED";
 export interface CreateAuthorRequestPayload {
   penName: string;
   biography?: string;
-  avatarUrl?: string;
   website?: string;
   socialLinks?: Record<string, any>;
   bankName?: string;
@@ -26,7 +25,6 @@ export interface CreateAuthorRequestPayload {
 export interface UpdateAuthorRequestPayload {
   penName?: string;
   biography?: string;
-  avatarUrl?: string;
   website?: string;
   socialLinks?: Record<string, any>;
   bankName?: string;
@@ -65,7 +63,6 @@ export interface AuthorRequestItem {
       };
   penName: string;
   biography?: string | null;
-  avatarUrl?: string | null;
   website?: string | null;
   socialLinks?: Record<string, any>;
   bankName?: string | null;
@@ -95,7 +92,6 @@ export interface AuthorProfileItem {
   userId: string;
   penName: string;
   biography?: string | null;
-  avatarUrl?: string | null;
   website?: string | null;
   socialLinks?: Record<string, any>;
   bankName?: string | null;
@@ -133,6 +129,12 @@ export interface PaginationMeta {
 export interface PaginatedAuthorRequests {
   items: AuthorRequestItem[];
   pagination: PaginationMeta;
+  counts?: {
+    all: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
 }
 
 /** Cấu trúc chuẩn phản hồi từ API Author Request */
@@ -202,6 +204,7 @@ export interface QueryAuthorPublicStoriesParams {
   limit?: number;
   progressState?: string;
   sortBy?: "latest" | "views" | "rating" | "chapters";
+  search?: string;
 }
 
 /** Danh sách tác phẩm công khai của tác giả có phân trang */

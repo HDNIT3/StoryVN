@@ -168,45 +168,60 @@ function Sidebar({
           mobileOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0"
         } ${
           /* Desktop */
-          collapsed ? "lg:w-20" : "lg:w-68"
+          collapsed ? "lg:w-20" : "lg:w-64"
         }`}
       >
         {/* Header Logo + Collapse */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+        <div className={`flex items-center justify-between px-5 pt-5 pb-3 ${collapsed ? "lg:flex-col lg:px-2 lg:gap-2.5 lg:items-center" : ""}`}>
           <Link
-            href="/quan-ly/truyen"
+            href="/"
             onClick={onMobileClose}
-            className={`flex items-center gap-2.5 ${collapsed ? "lg:hidden" : ""}`}
+            className={`flex items-center gap-2.5 transition-transform active:scale-95 group ${collapsed ? "lg:hidden" : ""}`}
+            title="StoryVN - Về trang chủ"
           >
             {/* Logo Icon */}
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-500 p-0.5 shadow-sm flex items-center justify-center text-white shrink-0 ring-1 ring-indigo-200/60">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
+            <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-xs group-hover:shadow-md transition-shadow border border-slate-200/80 shrink-0">
+              <Image
+                src="/icon/iconweb.png"
+                alt="StoryVN Logo"
+                width={36}
+                height={36}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base tracking-tight text-slate-900 flex items-center gap-1.5">
-                StoryVN
+            <div className="flex flex-col select-none">
+              <span className="font-black text-xl tracking-tight text-slate-900 flex items-center leading-none">
+                Story<span className="text-sky-500 ml-0.5">VN</span>
               </span>
-              <span className="bg-indigo-50 text-indigo-700 border border-indigo-200/60 text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-                CRM
+              <span className="text-[9px] font-bold tracking-widest text-slate-400 mt-1 uppercase leading-none">
+                TIỂU THUYẾT TRỰC TUYẾN
               </span>
             </div>
           </Link>
 
           {collapsed && (
-            <div className="hidden lg:flex w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 items-center justify-center mx-auto text-white shadow-xs">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
+            <Link
+              href="/"
+              className="hidden lg:flex w-10 h-10 rounded-xl overflow-hidden border border-slate-200/80 mx-auto shadow-xs hover:shadow-md transition-all shrink-0 active:scale-95"
+              title="StoryVN - Về trang chủ"
+            >
+              <Image
+                src="/icon/iconweb.png"
+                alt="StoryVN Logo"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+                priority
+              />
+            </Link>
           )}
 
           {/* Desktop Toggle Button */}
           <button
             onClick={onToggle}
             className={`hidden lg:flex text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg p-1.5 transition-colors cursor-pointer ${
-              collapsed ? "mx-auto mt-2" : ""
+              collapsed ? "mx-auto" : ""
             }`}
             aria-label="Thu gọn menu"
             title={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
@@ -386,7 +401,7 @@ export default function QuanLyLayout({
         <div className="flex flex-col items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-slate-200/80 max-w-xs w-full text-center">
           <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-semibold text-slate-700">
-            {redirecting ? "Đang chuyển hướng..." : "Đang tải dữ liệu CRM..."}
+            {redirecting ? "Đang chuyển hướng..." : "Đang tải dữ liệu quản trị..."}
           </p>
         </div>
       </div>
@@ -409,13 +424,13 @@ export default function QuanLyLayout({
       {/* Main Content Area */}
       <div
         className={`flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300 ${
-          collapsed ? "lg:ml-20" : "lg:ml-68"
+          collapsed ? "lg:ml-20" : "lg:ml-64"
         }`}
       >
         {/* Top bar với hiệu ứng kính mờ sáng, hiện đại & viền tinh tế */}
-        <header className="sticky top-0 z-40 admin-crm-header px-4 sm:px-8 py-3.5 flex items-center justify-between gap-3 border-b border-slate-200/80 shadow-2xs">
+        <header className="sticky top-0 z-40 admin-crm-header px-4 sm:px-6 py-3 flex items-center justify-between gap-3 border-b border-slate-200/80 shadow-2xs">
           {/* Mobile hamburger + Page Title */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               onClick={() => setMobileOpen(true)}
               className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
@@ -425,6 +440,23 @@ export default function QuanLyLayout({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
+
+            {/* Mobile Logo Link to Client */}
+            <Link
+              href="/"
+              className="lg:hidden flex items-center shrink-0 active:scale-95 transition-transform"
+              title="StoryVN - Về trang chủ"
+            >
+              <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-slate-200 shadow-2xs shrink-0">
+                <Image
+                  src="/icon/iconweb.png"
+                  alt="StoryVN"
+                  width={28}
+                  height={28}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </Link>
 
             <div className="flex items-center gap-2.5 truncate">
               <h2 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight truncate">
@@ -470,7 +502,7 @@ export default function QuanLyLayout({
         </header>
 
         {/* Main page content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full min-w-0 max-w-full overflow-x-hidden">
+        <main className="flex-1 p-3.5 sm:p-5 lg:p-6 w-full min-w-0 max-w-full overflow-x-hidden">
           {children}
         </main>
       </div>
