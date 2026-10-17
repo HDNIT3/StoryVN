@@ -39,4 +39,8 @@ export class QueryAuthorStoriesDto {
   @IsOptional()
   @IsEnum(AuthorStorySortOption)
   sortBy?: AuthorStorySortOption = AuthorStorySortOption.LATEST;
+
+  @ApiPropertyOptional({ description: 'Tìm kiếm theo tên tác phẩm' })
+  @IsOptional()
+  search?: string;
 }

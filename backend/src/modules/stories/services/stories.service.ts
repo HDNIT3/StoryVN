@@ -582,7 +582,7 @@ export class StoriesService {
         .skip(query.skip)
         .limit(query.limit)
         .populate('genreIds', 'name slug')
-        .populate('authorId', 'displayName username avatar')
+        .populate('authorId', 'displayName username avatarUrl')
         .lean()
         .exec(),
       this.storyModel.countDocuments(filter),
@@ -653,7 +653,7 @@ export class StoriesService {
           author: {
             _id: authorUser?._id || null,
             name: authorName,
-            avatar: authorUser?.avatar || null,
+            avatar: authorUser?.avatarUrl || null,
           },
           genres,
           publishedAt: story.publishedAt || story.createdAt,
@@ -724,7 +724,7 @@ export class StoriesService {
       .findOne(filter)
       .populate('genreIds', 'name slug')
       .populate('tagIds', 'name slug')
-      .populate('authorId', 'displayName username avatar email')
+      .populate('authorId', 'displayName username avatarUrl email')
       .lean()
       .exec();
 
@@ -869,7 +869,7 @@ export class StoriesService {
         displayName: authorUser?.displayName || '',
         penName: authorProfile?.penName || authorUser?.displayName || authorUser?.username || 'Tác giả',
         name: authorName,
-        avatar: authorUser?.avatar || null,
+        avatar: authorUser?.avatarUrl || null,
         bio: authorProfile?.bio || '',
         storyCount: authorProfile?.storyCount ?? 0,
       },

@@ -9,7 +9,7 @@ import { storyService } from "@/lib/services/story.service";
 import { chapterService } from "@/lib/services/chapter.service";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "@/lib/toast";
-import type { SameGenreStoryItem, StoryAgeRating, StoryProgressState } from "@/types/story";
+import type { SameGenreStoryItem, StoryAgeRating, StoryDetailData, StoryProgressState } from "@/types/story";
 
 // Helper format số lượt đọc / theo dõi
 function formatNumber(num?: number): string {
@@ -119,13 +119,139 @@ function AgeRatingBadge({ rating }: { rating?: StoryAgeRating }) {
   }
 }
 
+// Link tác giả dùng chung: luôn hiện avatar + tên, bấm được khi có username
+function AuthorLink({ author }: { author?: StoryDetailData["author"] }) {
+  const avatar = author?.avatar || null;
+  const name =
+    author?.penName ||
+    author?.displayName ||
+    author?.name ||
+    author?.username ||
+    "Tác giả StoryVN";
+
+  const content = (
+    <>
+      {avatar && (
+        <span className="relative w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-200">
+          <Image src={avatar} alt={name} fill unoptimized sizes="24px" className="object-cover" />
+        </span>
+      )}
+      <span>{name}</span>
+    </>
+  );
+
+  if (author?.username) {
+    return (
+      <Link
+        href={`/tac-gia/${author.username}`}
+        className="inline-flex items-center gap-1.5 font-bold text-emerald-800 hover:text-emerald-900 hover:underline transition-colors"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1.5 font-semibold text-zinc-800">
+      {content}
+    </span>
+  );
+}
+
+// THẺ TÁC GIẢ GỌN GÀN TRONG SIDEBAR: đặt trên cùng, trước "Cùng thể loại"
+function AuthorSidebarCard({ author }: { author?: StoryDetailData["author"] }) {
+  const avatar = author?.avatar || null;
+  const name =
+    author?.penName ||
+    author?.displayName ||
+    author?.name ||
+    author?.username ||
+    "Tác giả StoryVN";
+  const initial = name[0]?.toUpperCase() || "T";
+
+  return (
+    <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs relative overflow-hidden p-6 text-center">
+      {/* Trang trí background nhẹ */}
+      <div className="absolute top-0 right-0 w-44 h-44 bg-amber-50/70 rounded-full blur-2xl pointer-events-none -mr-14 -mt-14" />
+      <div className="absolute bottom-0 left-0 w-36 h-36 bg-emerald-50/70 rounded-full blur-2xl pointer-events-none -ml-12 -mb-12" />
+
+      <div className="relative flex flex-col items-center">
+        {/* AVATAR vòng gradient */}
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-300 via-emerald-200 to-amber-200 p-[3px] shadow-sm">
+          <div className="relative w-full h-full rounded-full overflow-hidden bg-emerald-50 border-2 border-white flex items-center justify-center text-emerald-800 text-2xl font-extrabold">
+            {avatar ? (
+              <Image
+                src={avatar}
+                alt={name}
+                fill
+                unoptimized
+                sizes="80px"
+                className="object-cover"
+              />
+            ) : (
+              <span>{initial}</span>
+            )}
+          </div>
+        </div>
+
+        {/* THÔNG TIN TÁC GIẢ */}
+        <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-700">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+          Tác giả truyện này
+        </div>
+
+        <h3 className="mt-1 text-lg font-extrabold text-zinc-900 tracking-tight leading-snug">
+          {name}
+        </h3>
+        {author?.username && (
+          <p className="text-xs text-zinc-400">@{author.username}</p>
+        )}
+
+        <p className="mt-2 text-xs text-zinc-600 leading-relaxed line-clamp-3">
+          {author?.bio?.trim() || "Chào mừng bạn đến với trang tác phẩm của tôi trên StoryVN."}
+        </p>
+
+        {typeof author?.storyCount === "number" && author.storyCount > 0 && (
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/70">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            {author.storyCount} tác phẩm đã đăng
+          </div>
+        )}
+
+        {/* NÚT XEM TRANG TÁC GIẢ */}
+        <div className="mt-4 w-full">
+          {author?.username ? (
+            <Link
+              href={`/tac-gia/${author.username}`}
+              className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-700 hover:bg-emerald-800 text-white transition-colors shadow-sm shadow-emerald-700/20 active:scale-[0.98]"
+            >
+              <span>Xem trang tác giả</span>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          ) : (
+            <span className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-zinc-100 text-zinc-500 border border-zinc-200 cursor-default">
+              Trang tác giả sắp ra mắt
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function StoryDetailClient({ slug: initialSlug }: { slug?: string }) {
   const params = useParams();
   const slugParam =
     initialSlug ||
     (Array.isArray(params?.slug) ? params.slug[0] : (params?.slug as string) || "");
 
-  const [activeTab, setActiveTab] = useState<"about" | "chapters" | "author">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "chapters">("about");
   const [chapterOrder, setChapterOrder] = useState<"asc" | "desc">("asc");
 
   // Query thông tin chi tiết truyện (kèm luôn sameGenreStories)
@@ -358,29 +484,7 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
                   {/* TÁC GIẢ */}
                   <div className="mt-3 flex items-center gap-2 text-sm text-zinc-600">
                     <span className="text-zinc-500">Tác giả:</span>
-                    {story.author?.username ? (
-                      <Link
-                        href={`/tac-gia/${story.author.username}`}
-                        className="inline-flex items-center gap-1.5 font-bold text-emerald-800 hover:text-emerald-900 hover:underline transition-colors"
-                      >
-                        {story.author.avatar && (
-                          <span className="relative w-5 h-5 rounded-full overflow-hidden shrink-0 border border-zinc-200">
-                            <Image
-                              src={story.author.avatar}
-                              alt={story.author.name || "avatar"}
-                              fill
-                              unoptimized
-                              className="object-cover"
-                            />
-                          </span>
-                        )}
-                        <span>{story.author.penName || story.author.displayName || story.author.name || story.author.username}</span>
-                      </Link>
-                    ) : (
-                      <span className="font-semibold text-zinc-800">
-                        {story.author?.penName || story.author?.displayName || story.author?.name || "Tác giả StoryVN"}
-                      </span>
-                    )}
+                    <AuthorLink author={story.author} />
                   </div>
 
                   {/* THỂ LOẠI */}
@@ -508,17 +612,6 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
                   }`}
                 >
                   Danh sách chương ({publicChapterCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("author")}
-                  className={`py-4 px-2 sm:px-4 text-sm font-bold border-b-2 transition-colors ${
-                    activeTab === "author"
-                      ? "border-emerald-700 text-emerald-800"
-                      : "border-transparent text-zinc-500 hover:text-zinc-800"
-                  }`}
-                >
-                  Tác giả
                 </button>
               </div>
 
@@ -684,59 +777,21 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
                     )}
                   </div>
                 )}
-
-                {/* TAB 3: THÔNG TIN TÁC GIẢ */}
-                {activeTab === "author" && (
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-4 rounded-2xl bg-zinc-50 border border-zinc-200/60">
-                    <div className="relative w-20 h-20 rounded-full overflow-hidden shrink-0 bg-emerald-100 border-2 border-white shadow-sm flex items-center justify-center text-emerald-800 text-2xl font-bold">
-                      {story.author?.avatar ? (
-                        <Image
-                          src={story.author.avatar}
-                          alt={story.author.name}
-                          fill
-                          unoptimized
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span>{(story.author?.name || "T")[0].toUpperCase()}</span>
-                      )}
-                    </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <h4 className="text-lg font-bold text-zinc-900">
-                        {story.author?.name || story.author?.penName || "Tác giả StoryVN"}
-                      </h4>
-                      <p className="text-xs text-zinc-500 mt-0.5">
-                        {story.author?.storyCount ? `${story.author.storyCount} tác phẩm đã đăng` : "Tác giả StoryVN"}
-                      </p>
-                      <p className="text-sm text-zinc-600 mt-2 line-clamp-3">
-                        {story.author?.bio || "Chào mừng bạn đến với trang tác phẩm của tôi trên StoryVN."}
-                      </p>
-                      {story.author?.username && (
-                        <div className="mt-4">
-                          <Link
-                            href={`/tac-gia/${story.author.username}`}
-                            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-200 transition-colors shadow-2xs"
-                          >
-                            <span>Xem trang tác giả</span>
-                            <span>→</span>
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
           </div>
 
           {/* ═══════════════════════════════════════════════════════════
-              CỘT PHẢI (4 COLS): DANH SÁCH TRUYỆN CÓ CÙNG THỂ LOẠI
+              CỘT PHẢI (4 COLS): TÁC GIẢ + DANH SÁCH TRUYỆN CÙNG THỂ LOẠI
           ═════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-4 space-y-6">
             
-            {/* WIDGET TRUYỆN CÙNG THỂ LOẠI */}
-            <div className="bg-white rounded-3xl p-6 border border-zinc-200/80 shadow-xs sticky top-24">
+            {/* THẺ TÁC GIẢ (lên trên đầu sidebar cho dễ thấy) */}
+            <AuthorSidebarCard author={story.author} />
+
+            {/* WIDGET TRUYỆN CÙNG THỂ LOẠI (chuyển xuống dưới) */}
+            <div className="bg-white rounded-3xl p-6 border border-zinc-200/80 shadow-xs">
               <div className="flex items-center justify-between pb-4 mb-4 border-b border-zinc-100">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
