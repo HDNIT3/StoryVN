@@ -61,6 +61,7 @@ export const authorService = {
     if (params?.progressState)
       searchParams.append("progressState", params.progressState);
     if (params?.sortBy) searchParams.append("sortBy", params.sortBy);
+    if (params?.search) searchParams.append("search", params.search);
 
     const qs = searchParams.toString();
     const endpoint = qs

@@ -26,9 +26,6 @@ export class AuthorRequest {
   @Prop({ type: String, default: null, trim: true })
   biography?: string | null;
 
-  @Prop({ type: String, default: null })
-  avatarUrl?: string | null;
-
   @Prop({ type: String, default: null, trim: true })
   website?: string | null;
 
