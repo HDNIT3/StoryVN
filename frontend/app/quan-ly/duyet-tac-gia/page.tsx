@@ -120,6 +120,7 @@ export default function DuyetTacGiaPage() {
         currentFilter={filter}
         onFilterChange={handleFilterChange}
         totalItems={totalItems}
+        counts={data?.counts}
       />
 
       {/* Thanh tìm kiếm & Làm mới */}

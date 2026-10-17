@@ -83,7 +83,6 @@ export class AuthorRequestsService {
     if (previousRejected) {
       previousRejected.penName = trimmedPenName;
       previousRejected.biography = dto.biography ? dto.biography.trim() : null;
-      previousRejected.avatarUrl = dto.avatarUrl || user.avatarUrl || null;
       previousRejected.website = dto.website ? dto.website.trim() : null;
       previousRejected.socialLinks = dto.socialLinks || {};
       previousRejected.bankName = dto.bankName ? dto.bankName.trim() : null;
@@ -104,7 +103,6 @@ export class AuthorRequestsService {
         userId: user._id,
         penName: trimmedPenName,
         biography: dto.biography ? dto.biography.trim() : null,
-        avatarUrl: dto.avatarUrl || user.avatarUrl || null,
         website: dto.website ? dto.website.trim() : null,
         socialLinks: dto.socialLinks || {},
         bankName: dto.bankName ? dto.bankName.trim() : null,
@@ -202,7 +200,6 @@ export class AuthorRequestsService {
     }
 
     if (dto.biography !== undefined) request.biography = dto.biography ? dto.biography.trim() : null;
-    if (dto.avatarUrl !== undefined) request.avatarUrl = dto.avatarUrl;
     if (dto.website !== undefined) request.website = dto.website ? dto.website.trim() : null;
     if (dto.socialLinks !== undefined) request.socialLinks = dto.socialLinks;
     if (dto.bankName !== undefined) request.bankName = dto.bankName ? dto.bankName.trim() : null;
@@ -265,9 +262,6 @@ export class AuthorRequestsService {
     if (dto.biography !== undefined) {
       authorProfile.biography = dto.biography ? dto.biography.trim() : null;
     }
-    if (dto.avatarUrl !== undefined) {
-      authorProfile.avatarUrl = dto.avatarUrl ? dto.avatarUrl.trim() : null;
-    }
     if (dto.website !== undefined) {
       authorProfile.website = dto.website ? dto.website.trim() : null;
     }
@@ -322,7 +316,7 @@ export class AuthorRequestsService {
 
     const skip = ((page || 1) - 1) * (limit || 10);
 
-    const [items, totalItems] = await Promise.all([
+    const [items, totalItems, pendingCount, approvedCount, rejectedCount, allCount] = await Promise.all([
       this.authorRequestModel
         .find(filter)
         .sort({ createdAt: -1 })
@@ -332,12 +326,22 @@ export class AuthorRequestsService {
         .populate('processedBy', 'email username displayName role')
         .exec(),
       this.authorRequestModel.countDocuments(filter),
+      this.authorRequestModel.countDocuments({ status: AuthorRequestStatus.PENDING }),
+      this.authorRequestModel.countDocuments({ status: AuthorRequestStatus.APPROVED }),
+      this.authorRequestModel.countDocuments({ status: AuthorRequestStatus.REJECTED }),
+      this.authorRequestModel.countDocuments({}),
     ]);
 
     return {
       items,
       pagination: buildPaginationMeta(totalItems, page, limit),
-    };
+      counts: {
+        all: allCount,
+        pending: pendingCount,
+        approved: approvedCount,
+        rejected: rejectedCount,
+      },
+    } as any;
   }
 
   async reviewRequest(
@@ -378,7 +382,6 @@ export class AuthorRequestsService {
           userId: targetUser._id,
           penName: request.penName,
           biography: request.biography,
-          avatarUrl: request.avatarUrl || targetUser.avatarUrl,
           website: request.website,
           socialLinks: request.socialLinks,
           bankName: request.bankName,
