@@ -3,35 +3,29 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { NavItem, GenreItem as GenreItemType, UserProfile, WalletInfo, BookmarkInfo } from "./header.types";
-import { DEFAULT_NAV_ITEMS, DEFAULT_GENRES } from "./header.constants";
+import { useRouter } from "next/navigation";
+import {
+  NavItem,
+  UserProfile,
+  WalletInfo,
+  BookmarkInfo,
+  DEFAULT_NAV_ITEMS,
+  ROLE_LABEL,
+  ROLE_COLOR,
+  ACCOUNT_MENU_ITEMS,
+  LOGOUT_ICON_PATH,
+} from "./header.config";
 import { HeaderSearch } from "./HeaderSearch";
 import { NotificationBell } from "./NotificationBell";
-
-const ROLE_LABEL: Record<string, string> = {
-  USER: "Người dùng",
-  AUTHOR: "Tác giả",
-  MANAGER: "Quản lý",
-  ADMIN: "Quản trị viên",
-};
-
-const ROLE_COLOR: Record<string, string> = {
-  USER: "text-zinc-600 bg-zinc-100",
-  AUTHOR: "text-sky-600 bg-sky-50",
-  MANAGER: "text-blue-600 bg-blue-50",
-  ADMIN: "text-purple-600 bg-purple-50",
-};
 
 interface HeaderMobileMenuProps {
   navItems?: NavItem[];
   activeNavId?: string;
-  genres?: GenreItemType[];
   isLoggedIn?: boolean;
   user?: UserProfile;
   wallet?: WalletInfo;
   bookmark?: BookmarkInfo;
   onNavItemClick?: (item: NavItem) => void;
-  onGenreClick?: (genre: GenreItemType) => void;
   onSearch?: (query: string) => void;
   onLoginClick?: () => void;
   onLogoutClick?: () => void;
@@ -42,21 +36,19 @@ interface HeaderMobileMenuProps {
 export function HeaderMobileMenu({
   navItems = DEFAULT_NAV_ITEMS,
   activeNavId = "home",
-  genres = DEFAULT_GENRES,
   isLoggedIn = true,
   user,
   wallet,
   bookmark,
   onNavItemClick,
-  onGenreClick,
   onSearch,
   onLoginClick,
   onLogoutClick,
   onRechargeClick,
   onBookmarkClick,
 }: HeaderMobileMenuProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isGenresExpanded, setIsGenresExpanded] = useState(false);
 
   // Prevent background scroll when mobile drawer is open
   useEffect(() => {
@@ -85,8 +77,7 @@ export function HeaderMobileMenu({
   const roleKey = (user?.role || "").toUpperCase();
   const roleLabel = ROLE_LABEL[roleKey] || user?.role;
   const roleColor = ROLE_COLOR[roleKey] || "text-zinc-600 bg-zinc-100";
-  const isAdminOrManager = roleKey === "ADMIN" || roleKey === "MANAGER";
-  const isAuthor = roleKey === "AUTHOR";
+  const accountItems = ACCOUNT_MENU_ITEMS.filter((item) => item.visibleFor(roleKey));
 
   return (
     <div className="xl:hidden flex items-center shrink-0">
@@ -252,7 +243,11 @@ export function HeaderMobileMenu({
                 className="max-w-none w-full"
                 onSearch={(q) => {
                   setIsOpen(false);
-                  onSearch?.(q);
+                  if (onSearch) {
+                    onSearch(q);
+                  } else {
+                    router.push(`/truyen?search=${encodeURIComponent(q)}`);
+                  }
                 }}
               />
             </div>
@@ -260,48 +255,6 @@ export function HeaderMobileMenu({
             {/* Mobile Nav Links */}
             <nav className="flex flex-col gap-1 flex-1">
               {navItems.map((item) => {
-                if (item.hasDropdown && item.dropdownType === "genres") {
-                  return (
-                    <div key={item.id} className="py-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setIsGenresExpanded(!isGenresExpanded)}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-zinc-800 hover:bg-zinc-50"
-                      >
-                        <span>{item.label}</span>
-                        <div className="relative w-4 h-4">
-                          <Image
-                            src={isGenresExpanded ? "/icon/chevron-up.svg" : "/icon/chevron-down.svg"}
-                            alt=""
-                            width={16}
-                            height={16}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      </button>
-
-                      {isGenresExpanded && (
-                        <div className="grid grid-cols-2 gap-1.5 pl-3 pr-2 py-2 bg-zinc-50 rounded-2xl my-1 border border-zinc-100 max-h-60 overflow-y-auto">
-                          {genres.map((g) => (
-                            <Link
-                              key={g.id}
-                              href={g.href}
-                              onClick={() => {
-                                setIsOpen(false);
-                                onGenreClick?.(g);
-                              }}
-                              className="px-2 py-1.5 text-xs text-zinc-600 hover:text-sky-600 hover:bg-white rounded-lg flex justify-between transition-colors"
-                            >
-                              <span className="truncate">{g.name}</span>
-                              {g.count && <span className="text-[10px] text-zinc-400 font-medium">{g.count}</span>}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-
                 const isActive = activeNavId === item.id;
 
                 return (
@@ -312,10 +265,10 @@ export function HeaderMobileMenu({
                       setIsOpen(false);
                       onNavItemClick?.(item);
                     }}
-                    className={`px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                       isActive
-                        ? "bg-sky-50 text-sky-600 font-medium"
-                        : "text-zinc-800 hover:bg-zinc-50"
+                        ? "bg-sky-50 text-sky-600 font-semibold"
+                        : "text-zinc-700 font-medium hover:text-sky-600 hover:bg-sky-50/70"
                     }`}
                   >
                     {item.label}
@@ -331,55 +284,23 @@ export function HeaderMobileMenu({
                     Tài khoản
                   </p>
 
-                  <Link
-                    href="/ho-so"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-zinc-700 hover:text-sky-600 hover:bg-sky-50/70 transition-colors"
-                  >
-                    <svg className="w-4.5 h-4.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span>Hồ sơ cá nhân</span>
-                  </Link>
-
-                  {isAuthor && (
+                  {accountItems.map((item) => (
                     <Link
-                      href="/tac-gia/tong-quan"
+                      key={item.id}
+                      href={item.href}
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-zinc-700 hover:text-sky-600 hover:bg-sky-50/70 transition-colors"
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-700 transition-colors ${
+                        item.isAdmin
+                          ? "hover:text-blue-600 hover:bg-blue-50/70"
+                          : "hover:text-sky-600 hover:bg-sky-50/70"
+                      }`}
                     >
-                      <svg className="w-4.5 h-4.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.iconPath} />
                       </svg>
-                      <span>Quản lý tác giả</span>
+                      <span>{item.label}</span>
                     </Link>
-                  )}
-
-                  {isAdminOrManager && (
-                    <Link
-                      href="/quan-ly/duyet-tac-gia"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-zinc-700 hover:text-blue-600 hover:bg-blue-50/60 transition-colors"
-                    >
-                      <svg className="w-4.5 h-4.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                      <span>Bảng quản lý</span>
-                    </Link>
-                  )}
-
-                  {roleKey === "USER" && (
-                    <Link
-                      href="/tac-gia/dang-ky"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-zinc-700 hover:text-sky-600 hover:bg-sky-50/70 transition-colors"
-                    >
-                      <svg className="w-4.5 h-4.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      <span>Đăng ký tác giả</span>
-                    </Link>
-                  )}
+                  ))}
 
                   <div className="mt-auto pt-3 border-t border-zinc-100">
                     <button
@@ -388,10 +309,10 @@ export function HeaderMobileMenu({
                         setIsOpen(false);
                         onLogoutClick?.();
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 font-semibold hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rose-600 font-medium hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                     >
-                      <svg className="w-4.5 h-4.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      <svg className="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={LOGOUT_ICON_PATH} />
                       </svg>
                       <span>Đăng xuất</span>
                     </button>

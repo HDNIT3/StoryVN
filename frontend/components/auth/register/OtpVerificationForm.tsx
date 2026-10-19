@@ -29,7 +29,7 @@ export function OtpVerificationForm({
   handleBackToForm,
 }: OtpVerificationFormProps) {
   return (
-    <form onSubmit={handleVerifyOtp} className="space-y-6">
+    <form onSubmit={handleVerifyOtp} className="space-y-5">
       <div className="flex flex-col items-center justify-center space-y-4">
         <div className="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-600 border border-sky-100">
           <svg

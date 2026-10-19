@@ -21,6 +21,8 @@
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -33,6 +35,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Typography Enhancements & Measure Helpers */
+.text-balance {
+  text-wrap: balance;
+}
+
+.measure-prose {
+  max-width: 65ch;
 }
 
 /* Toast Notifications Animation */

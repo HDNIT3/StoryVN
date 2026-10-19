@@ -687,7 +687,7 @@ export default function AuthorDetailPage() {
                 {stories.map((story: AuthorStoryItem) => (
                   <article
                     key={story._id}
-                    className="group flex gap-4 p-3.5 sm:p-4 rounded-xl bg-[#FAF7F2]/60 hover:bg-[#FAF7F2] border border-[#EDE7DF] hover:border-[#8B1E2D]/30 shadow-2xs hover:shadow-xs transition-all duration-200"
+                    className="group flex gap-4 p-3.5 sm:p-4 rounded-xl bg-[#FAF7F2]/60 hover:bg-[#FAF7F2] border border-[#EDE7DF] hover:border-[#8B1E2D]/30 transition-colors"
                   >
                     {/* Bìa truyện (Tỷ lệ 3:4) */}
                     <Link
@@ -699,7 +699,7 @@ export default function AuthorDetailPage() {
                           src={story.coverUrl}
                           alt={story.title}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="object-cover"
                           sizes="(max-width: 640px) 96px, 128px"
                         />
                       ) : (

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import { SmartHeader } from "@/components/layout/header";
+import { Footer } from "@/components/layout/Footer";
 
 export default function NguoiDungLayout({
   children,
@@ -12,6 +13,7 @@ export default function NguoiDungLayout({
 }) {
   const { isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -34,10 +36,14 @@ export default function NguoiDungLayout({
 
   if (!isAuthenticated) return null;
 
+  // Khu vực dashboard sáng tác tác giả có sidebar riêng, các trang tài khoản người dùng (hồ sơ, lịch sử đọc...) hiển thị Footer
+  const isAuthorDashboard = pathname?.startsWith("/tac-gia");
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50/50">
       <SmartHeader />
       <main className="flex-1 w-full">{children}</main>
+      {!isAuthorDashboard && <Footer />}
     </div>
   );
 }
