@@ -147,7 +147,7 @@ export default function QuenMatKhauPage() {
   );
 
   return (
-    <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xl p-7 sm:p-9 space-y-6">
+    <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs sm:shadow-sm p-6 sm:p-7 space-y-5">
       {/* Stepper */}
       <div className="flex items-center gap-2">
         {(["email", "otp", "newpass"] as Step[]).map((s, i) => (
@@ -196,7 +196,7 @@ export default function QuenMatKhauPage() {
 
       {/* ─── Step 1: Email ─── */}
       {step === "email" && (
-        <form onSubmit={handleSendEmail} className="space-y-4">
+        <form onSubmit={handleSendEmail} className="space-y-3.5">
           <Input
             id="forgot-email"
             label="Email"
@@ -220,7 +220,7 @@ export default function QuenMatKhauPage() {
 
       {/* ─── Step 2: OTP ─── */}
       {step === "otp" && (
-        <form onSubmit={handleVerifyOtp} className="space-y-4">
+        <form onSubmit={handleVerifyOtp} className="space-y-3.5">
           <Input
             id="forgot-otp"
             label="Mã OTP"
@@ -257,7 +257,7 @@ export default function QuenMatKhauPage() {
 
       {/* ─── Step 3: New Password ─── */}
       {step === "newpass" && (
-        <form onSubmit={handleResetPassword} className="space-y-4">
+        <form onSubmit={handleResetPassword} className="space-y-3.5">
           <Input
             id="forgot-new-password"
             label="Mật khẩu mới"

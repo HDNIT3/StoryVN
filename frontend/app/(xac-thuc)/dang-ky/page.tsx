@@ -16,7 +16,7 @@ export default function RegisterPage() {
   const { step, email, backendMessage, backendError } = registerState;
 
   return (
-    <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xl p-7 sm:p-9 space-y-6">
+    <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs sm:shadow-sm p-6 sm:p-7 space-y-5">
       {/* 1. Step Indicator Header */}
       <StepIndicator currentStep={step} />
 

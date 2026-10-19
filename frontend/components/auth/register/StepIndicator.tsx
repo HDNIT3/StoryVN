@@ -8,7 +8,7 @@ export interface StepIndicatorProps {
 
 export function StepIndicator({ currentStep }: StepIndicatorProps) {
   return (
-    <div className="flex items-center justify-center gap-1.5 sm:gap-3 mb-3">
+    <div className="flex items-center justify-center gap-1.5 sm:gap-3">
       <div
         className={`flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full ${
           currentStep === "form"

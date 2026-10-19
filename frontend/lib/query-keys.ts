@@ -84,6 +84,12 @@ export const queryKeys = {
       ["notifications", "list", ...(params ? [params] : [])] as const,
     unreadCount: ["notifications", "unread-count"] as const,
   },
+  readingHistory: {
+    all: ["reading-history"] as const,
+    list: (params?: Record<string, any>) =>
+      ["reading-history", "list", ...(params ? [params] : [])] as const,
+    story: (storyId: string) => ["reading-history", "story", storyId] as const,
+  },
   author: {
     all: ["author"] as const,
     communityStats: ["author", "community-stats"] as const,

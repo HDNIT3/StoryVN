@@ -1,15 +1,7 @@
-export * from "./header.types";
-export * from "./header.constants";
-export { Header, default } from "./Header";
-export { HeaderLogo } from "./HeaderLogo";
+export * from "./header.config";
+export { Header, SmartHeader, default } from "./Header";
 export { HeaderNav } from "./HeaderNav";
-export { HeaderNavItem } from "./HeaderNavItem";
-export { GenreDropdown } from "./GenreDropdown";
-export { GenreItem } from "./GenreItem";
 export { HeaderSearch } from "./HeaderSearch";
 export { HeaderActions } from "./HeaderActions";
-export { HeaderBookmark } from "./HeaderBookmark";
-export { HeaderWallet } from "./HeaderWallet";
-export { HeaderUserAvatar } from "./HeaderUserAvatar";
 export { HeaderMobileMenu } from "./HeaderMobileMenu";
-export { SmartHeader } from "./SmartHeader";
+export { NotificationBell } from "./NotificationBell";

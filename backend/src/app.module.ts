@@ -15,6 +15,7 @@ import { UploadModule } from './modules/upload/upload.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ChaptersModule } from './modules/chapters/chapters.module.js';
+import { ReadingHistoryModule } from './modules/reading-history/reading-history.module.js';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ChaptersModule } from './modules/chapters/chapters.module.js';
     StoriesModule,
     NotificationsModule,
     ChaptersModule,
+    ReadingHistoryModule,
   ],
   controllers: [AppController],
   providers: [
