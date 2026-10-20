@@ -380,10 +380,16 @@ export default function ChuongTruyenPage() {
 
             {/* Quick Stats overview */}
             {stats && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 shrink-0">
                 <div className="bg-zinc-50 border border-zinc-200 rounded-md p-2.5 text-center min-w-[85px]">
                   <span className="text-[11px] text-zinc-400 font-medium block">Tổng chương</span>
                   <span className="text-base font-bold text-zinc-800">{stats.totalChapters}</span>
+                </div>
+                <div className="bg-sky-50 border border-sky-200 rounded-md p-2.5 text-center min-w-[85px]">
+                  <span className="text-[11px] text-sky-600 font-medium block">Tổng từ</span>
+                  <span className="text-base font-bold text-sky-700">
+                    {(stats.totalWords ?? 0).toLocaleString("vi-VN")}
+                  </span>
                 </div>
                 <div className="bg-emerald-50 border border-emerald-200 rounded-md p-2.5 text-center min-w-[85px]">
                   <span className="text-[11px] text-emerald-600 font-medium block">Xuất bản</span>
@@ -476,7 +482,7 @@ export default function ChuongTruyenPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[750px]">
+              <table className="w-full text-left border-collapse min-w-[850px]">
                 <thead>
                   <tr className="border-b border-zinc-200 bg-zinc-50 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
                     <th className="py-3 px-3 w-10 text-center">
@@ -492,6 +498,7 @@ export default function ChuongTruyenPage() {
                     <th className="py-3 px-4">Tiêu đề chương</th>
                     <th className="py-3 px-4 w-36">Trạng thái</th>
                     <th className="py-3 px-4 w-36">Cấu hình xu</th>
+                    <th className="py-3 px-4 w-24 text-center">Số từ</th>
                     <th className="py-3 px-4 w-28 text-center">Lượt xem</th>
                     <th className="py-3 px-4 w-32">Cập nhật</th>
                     <th className="py-3 px-4 w-48 text-right">Thao tác</th>
@@ -573,6 +580,11 @@ export default function ChuongTruyenPage() {
                               )}
                             </div>
                           )}
+                        </td>
+
+                        {/* Word Count */}
+                        <td className="py-3.5 px-4 text-center font-medium text-zinc-600 text-xs">
+                          {(chapter.wordCount || 0).toLocaleString("vi-VN")}
                         </td>
 
                         {/* View Count */}

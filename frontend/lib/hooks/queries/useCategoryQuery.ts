@@ -28,6 +28,24 @@ export function useCategories(params: QueryCategoryParams) {
 }
 
 /**
+ * Hook lấy TOÀN BỘ thể loại (không phân trang) để đổ vào dropdown / bộ lọc.
+ *
+ * Đây là nguồn duy nhất sở hữu query key `categories.list({ all: true })`,
+ * và queryFn luôn trả về `CategoryItem[]` (không phải object phân trang).
+ * Nhờ vậy mọi trang dùng chung cache mà không lệch shape dữ liệu.
+ */
+export function useAllCategories() {
+  return useQuery({
+    queryKey: queryKeys.categories.list({ all: true }),
+    queryFn: async () => {
+      const res = await categoryService.findAll({ all: true });
+      return res.data?.items ?? [];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+/**
  * Hook lấy chi tiết thể loại theo ID
  */
 export function useCategoryDetail(id: string) {

@@ -10,6 +10,7 @@ import {
   PaginatedResult,
 } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
+import { countWords } from '../../../common/utils/text.util.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { NotificationType } from '../../notifications/schemas/notification.schema.js';
 import { Story, StoryDocument } from '../../stories/schemas/story.schema.js';
@@ -40,10 +41,14 @@ export class AdminChaptersService {
   ) {}
 
   /**
-   * Helper cập nhật số lượng chương hiển thị cho độc giả trong Story.
-   * Chỉ đếm chương PUBLISHED mà scheduledAt <= now hoặc null.
+   * Helper cập nhật thống kê hiển thị cho độc giả trong Story:
+   * - stats.chapterCount: số chương PUBLISHED mà scheduledAt <= now hoặc null.
+   * - stats.wordCount: tổng số từ của các chương đang hiển thị cho độc giả.
+   * Đồng thời điền wordCount cho các chương cũ chưa từng được tính.
    */
-  private async updateStoryChapterCount(storyId: Types.ObjectId): Promise<number> {
+  private async updateStoryStats(
+    storyId: Types.ObjectId,
+  ): Promise<{ chapterCount: number; wordCount: number }> {
     const now = new Date();
     // Tìm chương đầu tiên chưa được phát hành tới độc giả (để đảm bảo không đếm nhảy cóc)
     const firstUnreleased = await this.chapterModel
@@ -70,14 +75,44 @@ export class AdminChaptersService {
       countFilter.chapterNumber = { $lt: firstUnreleased.chapterNumber };
     }
 
-    const totalChapters = await this.chapterModel.countDocuments(countFilter);
+    const chapters = await this.chapterModel
+      .find(countFilter)
+      .select('wordCount content')
+      .lean();
+
+    let wordCount = 0;
+    const needUpdate: any[] = [];
+
+    for (const chapter of chapters as any[]) {
+      let chapterWordCount = chapter.wordCount;
+      // Chương cũ (trước khi có trường wordCount) được tính bù tại đây
+      if (typeof chapterWordCount !== 'number') {
+        chapterWordCount = countWords(chapter.content);
+        needUpdate.push({
+          updateOne: {
+            filter: { _id: chapter._id },
+            update: { $set: { wordCount: chapterWordCount } },
+          },
+        });
+      }
+      wordCount += chapterWordCount;
+    }
+
+    if (needUpdate.length > 0) {
+      await this.chapterModel.bulkWrite(needUpdate);
+    }
+
+    const totalChapters = chapters.length;
 
     await this.storyModel.updateOne(
       { _id: storyId },
-      { 'stats.chapterCount': totalChapters },
+      {
+        'stats.chapterCount': totalChapters,
+        'stats.wordCount': wordCount,
+      },
     );
 
-    return totalChapters;
+    return { chapterCount: totalChapters, wordCount };
   }
 
   /**
@@ -345,7 +380,12 @@ export class AdminChaptersService {
         chapter.requirePreviousChapter = pendingUpdate.requirePreviousChapter;
       }
       chapter.rejectReason = null;
+      if (pendingUpdate.content) {
+        chapter.wordCount = countWords(pendingUpdate.content);
+      }
       await chapter.save();
+
+      await this.updateStoryStats(story._id);
 
       pendingUpdate.status = ChapterUpdateStatus.APPROVED;
       pendingUpdate.reviewerId = new Types.ObjectId(reviewerId);
@@ -413,9 +453,10 @@ export class AdminChaptersService {
     chapter.status = ChapterStatus.PUBLISHED;
     chapter.rejectReason = null;
     chapter.scheduledAt = chapter.scheduledAt || now;
+    chapter.wordCount = countWords(chapter.content);
     await chapter.save();
 
-    await this.updateStoryChapterCount(story._id);
+    await this.updateStoryStats(story._id);
 
     // Gửi thông báo tới tác giả truyện
     try {
@@ -497,7 +538,7 @@ export class AdminChaptersService {
     chapter.rejectReason = dto.reason.trim();
     await chapter.save();
 
-    await this.updateStoryChapterCount(story._id);
+    await this.updateStoryStats(story._id);
 
     // Gửi thông báo từ chối tới tác giả
     try {
@@ -566,7 +607,7 @@ export class AdminChaptersService {
     }
     await chapter.save();
 
-    await this.updateStoryChapterCount(story._id);
+    await this.updateStoryStats(story._id);
 
     // Gửi thông báo gỡ duyệt
     try {
@@ -620,7 +661,7 @@ export class AdminChaptersService {
     }
     await chapter.save();
 
-    await this.updateStoryChapterCount(story._id);
+    await this.updateStoryStats(story._id);
 
     try {
       await this.notificationsService.create({
@@ -666,7 +707,7 @@ export class AdminChaptersService {
     chapter.rejectReason = null;
     await chapter.save();
 
-    await this.updateStoryChapterCount(story._id);
+    await this.updateStoryStats(story._id);
 
     try {
       await this.notificationsService.create({
@@ -710,7 +751,7 @@ export class AdminChaptersService {
     chapter.rejectReason = null;
     await chapter.save();
 
-    await this.updateStoryChapterCount(story._id);
+    await this.updateStoryStats(story._id);
 
     try {
       await this.notificationsService.create({

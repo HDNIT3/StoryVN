@@ -34,20 +34,20 @@ export function HeaderSearch({
     <form
       onSubmit={handleSubmit}
       role="search"
-      className={`relative flex items-center w-full bg-zinc-100/90 hover:bg-zinc-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 border border-transparent rounded-full px-3 sm:px-4 py-1.5 sm:py-2 transition-colors duration-200 ${className}`}
+      className={`relative flex w-full items-center rounded-full border border-slate-200 bg-white px-4 py-2.5 shadow-[0_6px_20px_-16px_rgba(15,23,42,0.5)] transition-all duration-200 hover:border-slate-300 focus-within:border-sky-300 focus-within:ring-4 focus-within:ring-sky-500/15 sm:px-5 ${className}`}
     >
       {/* Search Icon from public */}
       <button
         type="submit"
         aria-label="Tìm kiếm"
-        className="relative w-4 h-4 shrink-0 mr-2 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer flex items-center justify-center"
+        className="relative mr-2.5 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center text-zinc-400 transition-colors hover:text-zinc-600"
       >
         <Image
           src={iconSrc}
           alt="Icon tìm kiếm"
-          width={16}
-          height={16}
-          className="w-full h-full object-contain opacity-75"
+          width={20}
+          height={20}
+          className="h-full w-full object-contain opacity-75"
         />
       </button>
 
@@ -58,7 +58,7 @@ export function HeaderSearch({
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
         aria-label="Tìm kiếm truyện"
-        className="w-full min-w-0 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden"
+        className="w-full min-w-0 bg-transparent text-base text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden"
       />
 
       {/* Clear Button */}
@@ -67,7 +67,7 @@ export function HeaderSearch({
           type="button"
           onClick={handleClear}
           aria-label="Xóa từ khóa"
-          className="ml-1 text-xs text-zinc-400 hover:text-zinc-600 rounded-full w-4 h-4 flex items-center justify-center shrink-0 cursor-pointer"
+          className="ml-1 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-sm text-zinc-400 hover:text-zinc-600"
         >
           ✕
         </button>

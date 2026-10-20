@@ -150,6 +150,7 @@ export function ChapterTable({
               <th className="py-2.5 px-3">Tác giả</th>
               <th className="py-2.5 px-3 text-center">Trạng thái</th>
               <th className="py-2.5 px-3 text-center">Phí đọc</th>
+              <th className="py-2.5 px-3 text-center">Số từ</th>
               <th className="py-2.5 px-3 text-center">Lượt đọc</th>
               <th className="py-2.5 px-3">Thời gian</th>
               <th className="py-2.5 px-3 text-center">Thao tác</th>
@@ -299,6 +300,13 @@ export function ChapterTable({
                         {ch.coinPrice} Xu
                       </span>
                     )}
+                  </td>
+
+                  {/* Cột Số từ */}
+                  <td className="py-2.5 px-3 text-center">
+                    <span className="font-semibold text-slate-700 text-xs">
+                      {(ch.wordCount ?? 0).toLocaleString("vi-VN")}
+                    </span>
                   </td>
 
                   {/* Cột Lượt đọc */}

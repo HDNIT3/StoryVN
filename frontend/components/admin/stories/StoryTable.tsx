@@ -248,6 +248,9 @@ export function StoryTable({
                       {story.stats?.chapterCount ?? 0} chương ↗
                     </a>
                     <span className="text-[10px] text-slate-400 block mt-0.5">
+                      {story.stats?.wordCount?.toLocaleString("vi-VN") ?? 0} từ
+                    </span>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">
                       {story.stats?.viewCount?.toLocaleString() ?? 0} lượt xem
                     </span>
                   </td>

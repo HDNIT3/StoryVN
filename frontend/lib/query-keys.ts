@@ -52,6 +52,8 @@ export const queryKeys = {
       ["stories", "filtered", ...(params ? [params] : [])] as const,
     topViews: (limit?: number) =>
       ["stories", "top-views", limit || 10] as const,
+    topWordCount: (limit?: number) =>
+      ["stories", "top-word-count", limit || 10] as const,
     myList: (params?: Record<string, any>) =>
       ["stories", "my", ...(params ? [params] : [])] as const,
     latestUpdated: (params?: Record<string, any>) =>

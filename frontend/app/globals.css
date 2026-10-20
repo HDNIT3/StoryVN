@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-plus-jakarta), var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: var(--font-merriweather), "Times New Roman", Times, Georgia, serif;
   --font-mono: var(--font-geist-mono), monospace;
 }
@@ -28,7 +28,7 @@ html {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-plus-jakarta), var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1rem;
   line-height: 1.6;
   letter-spacing: -0.01em;
@@ -184,6 +184,75 @@ body {
   height: 0;
   pointer-events: none;
   font-family: var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Ultra-Bright Modern Light Mode — hiệu ứng dùng cho trang chủ
+   ───────────────────────────────────────────────────────────── */
+
+/* Ánh sáng quét ngang khi hover (dùng cho CTA gradient) */
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-140%) skewX(-14deg);
+  }
+  100% {
+    transform: translateX(260%) skewX(-14deg);
+  }
+}
+
+.shimmer-hover {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.shimmer-hover::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  transform: translateX(-140%) skewX(-14deg);
+}
+
+.shimmer-hover:hover::after {
+  animation: shimmerSweep 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Bìa truyện lơ lửng rất nhẹ */
+@keyframes floatSoft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float-soft {
+  animation: floatSoft 7s ease-in-out infinite;
+}
+
+/* Nền lưới chấm siêu mảnh cho khung Hero */
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(14, 165, 233, 0.18) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-hover::after,
+  .animate-float-soft {
+    animation: none !important;
+  }
 }
 
 /* Nền chung cho trang CRM Quản lý - Sáng sủa, hiện đại, tối giản và chuyên nghiệp */
