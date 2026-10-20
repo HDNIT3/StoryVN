@@ -13,6 +13,7 @@ import type {
   StoryDetailData,
   StoryItem,
   TopViewStoryItem,
+  TopWordCountStoryItem,
   UpdateStoryPayload,
 } from "../../types/story";
 
@@ -42,6 +43,16 @@ export const storyService = {
    */
   async getTopViews(limit = 10): Promise<StoryApiResponse<TopViewStoryItem[]>> {
     return api.get<StoryApiResponse<TopViewStoryItem[]>>(`/stories/top-views?limit=${limit}`);
+  },
+
+  /**
+   * Lấy top truyện có tổng số từ lớn nhất (Công khai)
+   * Phục vụ bảng xếp hạng 'Truyện dài nhất'
+   */
+  async getTopWordCount(limit = 10): Promise<StoryApiResponse<TopWordCountStoryItem[]>> {
+    return api.get<StoryApiResponse<TopWordCountStoryItem[]>>(
+      `/stories/top-word-count?limit=${limit}`
+    );
   },
 
   /**

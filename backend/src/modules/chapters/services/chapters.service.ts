@@ -7,6 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
+import { countWords } from '../../../common/utils/text.util.js';
 import { UserRole } from '../../users/schemas/user.schema.js';
 import { Story, StoryDocument } from '../../stories/schemas/story.schema.js';
 import {
@@ -66,10 +67,14 @@ export class ChaptersService {
   }
 
   /**
-   * Helper cập nhật số lượng chương hiển thị cho độc giả (stats.chapterCount) trong Story.
-   * Chỉ đếm chương PUBLISHED mà scheduledAt <= now hoặc null.
+   * Helper cập nhật thống kê hiển thị cho độc giả trong Story:
+   * - stats.chapterCount: số chương PUBLISHED mà scheduledAt <= now hoặc null.
+   * - stats.wordCount: tổng số từ của các chương đang hiển thị cho độc giả.
+   * Đồng thời điền wordCount cho các chương cũ chưa từng được tính.
    */
-  private async updateStoryChapterCount(storyId: Types.ObjectId): Promise<number> {
+  private async updateStoryStats(
+    storyId: Types.ObjectId,
+  ): Promise<{ chapterCount: number; wordCount: number }> {
     const now = new Date();
     // Tìm chương đầu tiên chưa được phát hành tới độc giả (để đảm bảo không đếm nhảy cóc)
     const firstUnreleased = await this.chapterModel
@@ -96,20 +101,48 @@ export class ChaptersService {
       countFilter.chapterNumber = { $lt: firstUnreleased.chapterNumber };
     }
 
-    const totalChapters = await this.chapterModel.countDocuments(countFilter);
+    const chapters = await this.chapterModel
+      .find(countFilter)
+      .select('wordCount content')
+      .lean();
+
+    let wordCount = 0;
+    const needUpdate: any[] = [];
+
+    for (const chapter of chapters as any[]) {
+      let chapterWordCount = chapter.wordCount;
+      // Chương cũ (trước khi có trường wordCount) được tính bù tại đây
+      if (typeof chapterWordCount !== 'number') {
+        chapterWordCount = countWords(chapter.content);
+        needUpdate.push({
+          updateOne: {
+            filter: { _id: chapter._id },
+            update: { $set: { wordCount: chapterWordCount } },
+          },
+        });
+      }
+      wordCount += chapterWordCount;
+    }
+
+    if (needUpdate.length > 0) {
+      await this.chapterModel.bulkWrite(needUpdate);
+    }
+
+    const totalChapters = chapters.length;
 
     await this.storyModel.updateOne(
       { _id: storyId },
-      { 'stats.chapterCount': totalChapters },
+      {
+        'stats.chapterCount': totalChapters,
+        'stats.wordCount': wordCount,
+      },
     );
 
-    return totalChapters;
+    return { chapterCount: totalChapters, wordCount };
   }
 
   private countChapterWords(htmlContent: string): number {
-    if (!htmlContent) return 0;
-    const plainText = htmlContent.replace(/<[^>]*>/g, ' ').trim();
-    return plainText ? plainText.split(/\s+/).length : 0;
+    return countWords(htmlContent);
   }
 
   /**
@@ -192,6 +225,7 @@ export class ChaptersService {
       chapterNumber,
       title: dto.title.trim(),
       content: dto.content,
+      wordCount,
       status,
       isFree,
       coinPrice,
@@ -202,8 +236,8 @@ export class ChaptersService {
 
     const saved = await chapter.save();
 
-    // Cập nhật stats.chapterCount trên truyện
-    await this.updateStoryChapterCount(story._id);
+    // Cập nhật stats.chapterCount + stats.wordCount trên truyện
+    await this.updateStoryStats(story._id);
 
     return saved;
   }
@@ -314,7 +348,7 @@ export class ChaptersService {
 
       const allStoryChapters = await this.chapterModel
         .find({ storyId: story._id })
-        .select('status viewCount isFree coinPrice')
+        .select('status viewCount wordCount isFree coinPrice')
         .lean();
 
       const pendingUpdatesCount = await this.chapterUpdateModel.countDocuments({
@@ -329,6 +363,7 @@ export class ChaptersService {
         draft: allStoryChapters.filter((c) => c.status === ChapterStatus.DRAFT).length,
         rejected: allStoryChapters.filter((c) => c.status === ChapterStatus.REJECTED).length,
         totalViews: allStoryChapters.reduce((sum, c) => sum + (c.viewCount || 0), 0),
+        totalWords: allStoryChapters.reduce((sum, c) => sum + (c.wordCount || 0), 0),
       };
     }
 
@@ -414,6 +449,7 @@ export class ChaptersService {
     }
 
     const chapterObj: any = chapter.toObject();
+    chapterObj.wordCount = this.countChapterWords(chapterObj.content);
 
     // Nếu là tác giả hoặc quản trị viên, kiểm tra xem có bản ghi ChapterUpdate (bản sửa đang chờ duyệt/lưu nháp) không
     if (isOwner || isAdminOrManager) {
@@ -527,6 +563,7 @@ export class ChaptersService {
 
       const newTitle = dto.title !== undefined ? dto.title.trim() : (activeUpdate?.title ?? chapter.title);
       const newContent = dto.content !== undefined ? dto.content : (activeUpdate?.content ?? chapter.content);
+      const newWordCount = this.countChapterWords(newContent);
       const newStatus =
         dto.action === ChapterAction.SUBMIT
           ? ChapterUpdateStatus.PENDING_REVIEW
@@ -540,6 +577,7 @@ export class ChaptersService {
           authorId: new Types.ObjectId(userId),
           title: newTitle,
           content: newContent,
+          wordCount: newWordCount,
           isFree,
           coinPrice,
           requirePreviousChapter,
@@ -549,6 +587,7 @@ export class ChaptersService {
         // Bản DRAFT hoặc PENDING_REVIEW đang mở: cập nhật tại chỗ
         activeUpdate.title = newTitle;
         activeUpdate.content = newContent;
+        activeUpdate.wordCount = newWordCount;
         activeUpdate.isFree = isFree;
         activeUpdate.coinPrice = coinPrice;
         activeUpdate.requirePreviousChapter = requirePreviousChapter;
@@ -589,6 +628,7 @@ export class ChaptersService {
         throw new BadRequestException('Nội dung chương không được vượt quá 2.500 từ');
       }
       chapter.content = dto.content;
+      chapter.wordCount = wordCount;
     }
 
     // Cấu hình xu (UC-15)
@@ -659,7 +699,7 @@ export class ChaptersService {
     }
 
     const updated = await chapter.save();
-    await this.updateStoryChapterCount(chapter.storyId);
+    await this.updateStoryStats(chapter.storyId);
 
     return updated;
   }
@@ -852,8 +892,8 @@ export class ChaptersService {
       );
     }
 
-    // 5. Cập nhật lại stats.chapterCount trên Story
-    await this.updateStoryChapterCount(storyId);
+    // 5. Cập nhật lại stats.chapterCount + stats.wordCount trên Story
+    await this.updateStoryStats(storyId);
 
     const message =
       laterChapters.length > 0
@@ -897,6 +937,9 @@ export class ChaptersService {
 
     await this.chapterModel.bulkWrite(bulkFinalOps);
 
+    // Cập nhật lại thống kê hiển thị (số chương + số từ) sau khi đổi thứ tự
+    await this.updateStoryStats(story._id);
+
     return {
       success: true,
       message: 'Cập nhật thứ tự chương thành công',
@@ -915,7 +958,7 @@ export class ChaptersService {
 
     const chapters = await this.chapterModel
       .find({ storyId: story._id })
-      .select('chapterNumber title status viewCount isFree coinPrice createdAt')
+      .select('chapterNumber title status viewCount wordCount isFree coinPrice createdAt')
       .sort({ chapterNumber: 1 })
       .lean();
 
@@ -925,6 +968,7 @@ export class ChaptersService {
     const draft = chapters.filter((c) => c.status === ChapterStatus.DRAFT).length;
     const rejected = chapters.filter((c) => c.status === ChapterStatus.REJECTED).length;
     const totalViews = chapters.reduce((sum, c) => sum + (c.viewCount || 0), 0);
+    const totalWords = chapters.reduce((sum, c) => sum + (c.wordCount || 0), 0);
     const paidCount = chapters.filter((c) => !c.isFree).length;
     const freeCount = chapters.filter((c) => c.isFree).length;
 
@@ -935,6 +979,7 @@ export class ChaptersService {
       draft,
       rejected,
       totalViews,
+      totalWords,
       paidCount,
       freeCount,
       topViewed: [...chapters]
@@ -988,7 +1033,7 @@ export class ChaptersService {
 
     let queryBuilder = this.chapterModel
       .find(filter)
-      .select('chapterNumber title viewCount createdAt updatedAt')
+      .select('chapterNumber title wordCount viewCount createdAt updatedAt')
       .sort({ chapterNumber: sortOrder });
 
     if (options?.page && options?.limit) {
@@ -1153,9 +1198,10 @@ export class ChaptersService {
         .lean(),
     ]);
 
-    const wordCount = chapter.content
-      ? chapter.content.trim().split(/\s+/).length
-      : 0;
+    const wordCount =
+      typeof chapter.wordCount === 'number'
+        ? chapter.wordCount
+        : this.countChapterWords(chapter.content);
 
     return {
       _id: chapter._id,

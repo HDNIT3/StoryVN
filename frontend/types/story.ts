@@ -168,6 +168,17 @@ export interface TopViewStoryItem {
   viewCount: number;
 }
 
+export interface TopWordCountStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl?: string | null;
+  author: string;
+  wordCount: number;
+  chapterCount: number;
+  viewCount: number;
+}
+
 export type StorySortOption = "published" | "updated" | "views" | "chapters" | "rating";
 
 export interface FilterStoriesParams {

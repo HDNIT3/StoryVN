@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { buildPaginationMeta, PaginatedResult } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
+import { countWords } from '../../../common/utils/text.util.js';
 import {
   generateUniqueSlug,
   isSlugAvailable,
@@ -493,6 +494,94 @@ export class StoriesService {
   }
 
   /**
+   * Lấy danh sách truyện có tổng số từ lớn nhất (Top word count)
+   * Yêu cầu: Ảnh bìa, Tên truyện, Tác giả, Tổng số từ, Số chương
+   * Lọc: status = PUBLISHED, visibility = PUBLIC
+   * Sắp xếp: stats.wordCount giảm dần
+   */
+  async getTopWordCount(limit = 10): Promise<any[]> {
+    const take = Math.min(Math.max(Number(limit) || 10, 1), 50);
+    // Lấy dư ứng viên để bù cho các truyện cũ chưa được đồng bộ số từ
+    const candidateLimit = Math.min(take * 3, 60);
+
+    const stories = await this.storyModel
+      .find({
+        status: StoryStatus.PUBLISHED,
+        visibility: StoryVisibility.PUBLIC,
+      })
+      .select('title slug coverUrl stats.wordCount stats.chapterCount stats.viewCount authorId updatedAt')
+      .sort({ 'stats.wordCount': -1, 'stats.chapterCount': -1, updatedAt: -1 })
+      .limit(candidateLimit)
+      .populate('authorId', 'displayName username')
+      .lean()
+      .exec();
+
+    const authorUserIds = Array.from(
+      new Set(
+        stories
+          .map((s) => (s.authorId as any)?._id?.toString() || s.authorId?.toString())
+          .filter(Boolean),
+      ),
+    );
+
+    let profileMap = new Map<string, any>();
+    if (authorUserIds.length > 0) {
+      const profiles = await this.authorProfileModel
+        .find({
+          userId: { $in: authorUserIds.map((id) => new Types.ObjectId(id)) },
+        })
+        .select('userId penName')
+        .lean()
+        .exec();
+
+      profileMap = new Map(profiles.map((p) => [p.userId.toString(), p]));
+    }
+
+    // Đồng bộ số từ/số chương thực tế cho các ứng viên rồi sắp xếp lại
+    const items = await Promise.all(
+      stories.map(async (story) => {
+        const liveStats = await this.getLiveStats(story._id);
+        if (
+          story.stats?.chapterCount !== liveStats.chapterCount ||
+          story.stats?.wordCount !== liveStats.wordCount
+        ) {
+          await this.storyModel.updateOne(
+            { _id: story._id },
+            {
+              'stats.chapterCount': liveStats.chapterCount,
+              'stats.wordCount': liveStats.wordCount,
+            },
+          );
+        }
+
+        const authorUser = story.authorId as any;
+        const authorUserIdStr = authorUser?._id?.toString() || authorUser?.toString();
+        const authorProfile = authorUserIdStr ? profileMap.get(authorUserIdStr) : null;
+        const authorName =
+          authorProfile?.penName ||
+          authorUser?.displayName ||
+          authorUser?.username ||
+          'Tác giả ẩn danh';
+
+        return {
+          _id: story._id,
+          title: story.title,
+          slug: story.slug,
+          coverUrl: story.coverUrl || null,
+          author: authorName,
+          wordCount: liveStats.wordCount,
+          chapterCount: liveStats.chapterCount,
+          viewCount: story.stats?.viewCount ?? 0,
+        };
+      }),
+    );
+
+    return items
+      .sort((a, b) => b.wordCount - a.wordCount)
+      .slice(0, take);
+  }
+
+  /**
    * Lấy danh sách truyện có bộ lọc: thể loại, tiến độ, sắp xếp, tìm kiếm và phân trang
    * Lọc: status = PUBLISHED, visibility = PUBLIC
    */
@@ -610,14 +699,20 @@ export class StoriesService {
       profileMap = new Map(profiles.map((p) => [p.userId.toString(), p]));
     }
 
-    // 7. Format dữ liệu trả về cho Frontend (đồng bộ chapterCount chuẩn xác theo thời gian thực)
+    // 7. Format dữ liệu trả về cho Frontend (đồng bộ chapterCount + wordCount chuẩn xác theo thời gian thực)
     const items = await Promise.all(
       stories.map(async (story) => {
-        const liveChapterCount = await this.getLiveContinuousChapterCount(story._id);
-        if (story.stats?.chapterCount !== liveChapterCount) {
+        const liveStats = await this.getLiveStats(story._id);
+        if (
+          story.stats?.chapterCount !== liveStats.chapterCount ||
+          story.stats?.wordCount !== liveStats.wordCount
+        ) {
           await this.storyModel.updateOne(
             { _id: story._id },
-            { 'stats.chapterCount': liveChapterCount },
+            {
+              'stats.chapterCount': liveStats.chapterCount,
+              'stats.wordCount': liveStats.wordCount,
+            },
           );
         }
 
@@ -645,7 +740,8 @@ export class StoriesService {
           description: story.description || '',
           progressState: story.progressState,
           stats: {
-            chapterCount: liveChapterCount,
+            chapterCount: liveStats.chapterCount,
+            wordCount: liveStats.wordCount,
             viewCount: story.stats?.viewCount ?? 0,
             ratingAverage: story.stats?.ratingAverage ?? 0,
             ratingCount: story.stats?.ratingCount ?? 0,
@@ -669,10 +765,14 @@ export class StoriesService {
   }
 
   /**
-   * Tính toán số lượng chương đã phát hành thực tế tới độc giả theo chuỗi liên tục
-   * (Chỉ tính các chương PUBLISHED có scheduledAt <= now và không bị ngắt quãng bởi chương chưa phát hành)
+   * Tính toán thống kê chương đã phát hành thực tế tới độc giả theo chuỗi liên tục:
+   * - chapterCount: số chương PUBLISHED có scheduledAt <= now, không bị ngắt quãng.
+   * - wordCount: tổng số từ của các chương đó.
+   * Đồng thời điền wordCount cho các chương cũ chưa từng được tính.
    */
-  async getLiveContinuousChapterCount(storyId: Types.ObjectId): Promise<number> {
+  async getLiveStats(
+    storyId: Types.ObjectId,
+  ): Promise<{ chapterCount: number; wordCount: number }> {
     const now = new Date();
     const firstUnreleased = await this.chapterModel
       .findOne({
@@ -698,7 +798,42 @@ export class StoriesService {
       countFilter.chapterNumber = { $lt: firstUnreleased.chapterNumber };
     }
 
-    return this.chapterModel.countDocuments(countFilter);
+    const chapters = await this.chapterModel
+      .find(countFilter)
+      .select('wordCount content')
+      .lean();
+
+    let wordCount = 0;
+    const needUpdate: any[] = [];
+
+    for (const chapter of chapters as any[]) {
+      let chapterWordCount = chapter.wordCount;
+      if (typeof chapterWordCount !== 'number') {
+        chapterWordCount = countWords(chapter.content);
+        needUpdate.push({
+          updateOne: {
+            filter: { _id: chapter._id },
+            update: { $set: { wordCount: chapterWordCount } },
+          },
+        });
+      }
+      wordCount += chapterWordCount;
+    }
+
+    if (needUpdate.length > 0) {
+      await this.chapterModel.bulkWrite(needUpdate);
+    }
+
+    return { chapterCount: chapters.length, wordCount };
+  }
+
+  /**
+   * Tính toán số lượng chương đã phát hành thực tế tới độc giả theo chuỗi liên tục
+   * (Chỉ tính các chương PUBLISHED có scheduledAt <= now và không bị ngắt quãng bởi chương chưa phát hành)
+   */
+  async getLiveContinuousChapterCount(storyId: Types.ObjectId): Promise<number> {
+    const { chapterCount } = await this.getLiveStats(storyId);
+    return chapterCount;
   }
 
   /**
@@ -834,11 +969,17 @@ export class StoriesService {
       });
     }
 
-    const liveChapterCount = await this.getLiveContinuousChapterCount(story._id);
-    if (story.stats?.chapterCount !== liveChapterCount) {
+    const liveStats = await this.getLiveStats(story._id);
+    if (
+      story.stats?.chapterCount !== liveStats.chapterCount ||
+      story.stats?.wordCount !== liveStats.wordCount
+    ) {
       await this.storyModel.updateOne(
         { _id: story._id },
-        { 'stats.chapterCount': liveChapterCount },
+        {
+          'stats.chapterCount': liveStats.chapterCount,
+          'stats.wordCount': liveStats.wordCount,
+        },
       );
     }
 
@@ -854,12 +995,12 @@ export class StoriesService {
       status: story.status,
       visibility: story.visibility,
       stats: {
-        chapterCount: liveChapterCount,
+        chapterCount: liveStats.chapterCount,
+        wordCount: liveStats.wordCount,
         viewCount: story.stats?.viewCount ?? 0,
         followCount: story.stats?.followCount ?? 0,
         ratingAverage: story.stats?.ratingAverage ?? 0,
         ratingCount: story.stats?.ratingCount ?? 0,
-        wordCount: story.stats?.wordCount ?? 0,
       },
       genres,
       tags,

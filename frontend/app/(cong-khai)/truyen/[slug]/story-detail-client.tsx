@@ -514,8 +514,8 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
                     )}
                   </div>
 
-                  {/* THỐNG KÊ (LƯỢT ĐỌC, LƯỢT THEO DÕI, ĐÁNH GIÁ, SỐ CHƯƠNG) */}
-                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-zinc-50/80 border border-zinc-200/60">
+                  {/* THỐNG KÊ (LƯỢT ĐỌC, LƯỢT THEO DÕI, ĐÁNH GIÁ, SỐ CHƯƠNG, SỐ TỪ) */}
+                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-2xl bg-zinc-50/80 border border-zinc-200/60">
                     <div className="text-center">
                       <div className="text-xs text-zinc-500 font-medium">Lượt đọc</div>
                       <div className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5">
@@ -539,6 +539,15 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
                       <div className="text-xs text-zinc-500 font-medium">Số chương</div>
                       <div className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5">
                         {publicChapterCount}
+                      </div>
+                    </div>
+                    <div className="text-center border-l border-zinc-200/60">
+                      <div className="text-xs text-zinc-500 font-medium">Số từ</div>
+                      <div
+                        className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5"
+                        title={`${(story.stats?.wordCount || 0).toLocaleString("vi-VN")} từ`}
+                      >
+                        {formatNumber(story.stats?.wordCount)}
                       </div>
                     </div>
                   </div>
@@ -788,6 +797,19 @@ export default function StoryDetailClient({ slug: initialSlug }: { slug?: string
                                   </svg>
                                   <span className="tabular-nums">
                                     {formatNumber(chapter.viewCount || 0)}
+                                  </span>
+                                </span>
+
+                                {/* Số từ */}
+                                <span
+                                  className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-zinc-400 group-hover:text-emerald-700 transition-colors"
+                                  title={`${(chapter.wordCount || 0).toLocaleString("vi-VN")} từ`}
+                                >
+                                  <svg className="w-4 h-4 shrink-0 text-zinc-400 group-hover:text-emerald-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h10M4 18h13" />
+                                  </svg>
+                                  <span className="tabular-nums">
+                                    {formatNumber(chapter.wordCount || 0)}
                                   </span>
                                 </span>
 

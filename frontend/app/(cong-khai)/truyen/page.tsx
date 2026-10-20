@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { storyService } from "@/lib/services/story.service";
-import { categoryService } from "@/lib/services/category.service";
+import { useAllCategories } from "@/lib/hooks/queries/useCategoryQuery";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   FilteredStoryItem,
@@ -134,6 +134,14 @@ function ClockIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
+function WordsIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6h16M4 12h10M4 18h13" />
+    </svg>
+  );
+}
+
 const SORT_OPTIONS: { label: string; value: StorySortOption }[] = [
   { label: "Mới xuất bản", value: "published" },
   { label: "Mới cập nhật", value: "updated" },
@@ -183,15 +191,8 @@ function StoriesContent() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Lấy danh sách thể loại từ API
-  const { data: genresData } = useQuery({
-    queryKey: queryKeys.categories.list({ all: true }),
-    queryFn: async () => {
-      const res = await categoryService.findAll({ all: true });
-      return res.data?.items || [];
-    },
-    staleTime: 10 * 60 * 1000,
-  });
+  // Lấy danh sách thể loại từ API (dùng chung cache với các trang khác)
+  const { data: genresData = [] } = useAllCategories();
 
   // Lấy danh sách truyện chính với bộ lọc (mỗi trang 10 truyện)
   const {
@@ -651,6 +652,10 @@ function StoriesContent() {
                         <div className="flex sm:justify-end items-center gap-1.5 text-zinc-700">
                           <BookIcon className="w-3.5 h-3.5 text-zinc-400" />
                           <span className="font-medium">{story.stats?.chapterCount ?? 0} chương</span>
+                        </div>
+                        <div className="flex sm:justify-end items-center gap-1.5 text-zinc-500">
+                          <WordsIcon className="w-3.5 h-3.5 text-zinc-400" />
+                          <span>{formatNumber(story.stats?.wordCount)} từ</span>
                         </div>
                         <div className="flex sm:justify-end items-center gap-1.5 text-zinc-500">
                           <EyeIcon className="w-3.5 h-3.5 text-zinc-400" />

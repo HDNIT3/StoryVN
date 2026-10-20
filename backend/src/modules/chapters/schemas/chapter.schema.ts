@@ -45,6 +45,17 @@ export class Chapter {
   })
   content: string;
 
+  /**
+   * Số từ của nội dung chương (đã loại bỏ thẻ HTML).
+   * Được tính lại mỗi khi tạo/cập nhật/duyệt chương.
+   */
+  @Prop({
+    type: Number,
+    default: 0,
+    min: 0,
+  })
+  wordCount: number;
+
   @Prop({
     type: String,
     enum: ChapterStatus,

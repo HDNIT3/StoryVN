@@ -1,7 +1,19 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro, Geist_Mono, Merriweather } from "next/font/google";
+import {
+  Be_Vietnam_Pro,
+  Geist_Mono,
+  Merriweather,
+  Plus_Jakarta_Sans,
+} from "next/font/google";
 import "./globals.css";
 import { ClientProviders } from "./providers";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  weight: ["400", "500", "600", "700", "800"],
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
 
 const beVietnamPro = Be_Vietnam_Pro({
   weight: ["300", "400", "500", "600", "700", "800"],
@@ -43,7 +55,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${beVietnamPro.variable} ${merriweather.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plusJakarta.variable} ${beVietnamPro.variable} ${merriweather.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
         <ClientProviders>{children}</ClientProviders>

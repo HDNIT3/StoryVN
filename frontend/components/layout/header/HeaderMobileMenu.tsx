@@ -80,7 +80,7 @@ export function HeaderMobileMenu({
   const accountItems = ACCOUNT_MENU_ITEMS.filter((item) => item.visibleFor(roleKey));
 
   return (
-    <div className="xl:hidden flex items-center shrink-0">
+    <div className="flex shrink-0 items-center lg:hidden">
       {/* Mobile / Tablet Toggle Button */}
       <button
         type="button"
@@ -88,13 +88,13 @@ export function HeaderMobileMenu({
         aria-label="Mở menu di động"
         className="p-1 sm:p-2 rounded-xl text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
       >
-        <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+        <div className="relative h-6 w-6 sm:h-7 sm:w-7">
           <Image
             src="/icon/menu.svg"
             alt="Menu"
-            width={24}
-            height={24}
-            className="w-full h-full object-contain"
+            width={28}
+            height={28}
+            className="h-full w-full object-contain"
           />
         </div>
       </button>
@@ -110,15 +110,18 @@ export function HeaderMobileMenu({
           />
 
           {/* Drawer Sidebar */}
-          <div className="fixed top-0 right-0 bottom-0 w-full max-w-[320px] sm:max-w-sm bg-white h-screen h-[100dvh] shadow-2xl p-4 sm:p-5 flex flex-col overflow-y-auto z-10 animate-in slide-in-from-right duration-250">
+          <div className="fixed top-0 right-0 bottom-0 z-10 flex h-screen h-[100dvh] w-full max-w-[320px] flex-col overflow-y-auto border-l border-white/70 bg-white/95 p-4 shadow-[0_30px_80px_-30px_rgba(14,165,233,0.45)] backdrop-blur-xl animate-in slide-in-from-right duration-250 sm:max-w-sm sm:p-5">
             {/* Drawer Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-zinc-100 mb-3.5 shrink-0">
+            <div className="mb-3.5 flex shrink-0 items-center justify-between border-b border-slate-100 pb-3.5">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl overflow-hidden border border-zinc-100 shrink-0">
+                <div className="h-8 w-8 shrink-0 overflow-hidden rounded-xl border border-white/80 shadow-[0_6px_18px_-10px_rgba(14,165,233,0.8)] ring-1 ring-slate-100">
                   <Image src="/icon/iconweb.png" alt="StoryVN" width={32} height={32} className="object-cover w-full h-full" />
                 </div>
-                <span className="font-black text-base text-zinc-900">
-                  Story<span className="text-sky-500">VN</span>
+                <span className="text-lg font-extrabold text-slate-900">
+                  Story
+                  <span className="bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
+                    VN
+                  </span>
                 </span>
               </div>
               <button
@@ -141,7 +144,7 @@ export function HeaderMobileMenu({
 
             {/* User Profile / Auth Area */}
             {isLoggedIn && user ? (
-              <div className="mb-4 bg-zinc-50/80 rounded-2xl p-3.5 border border-zinc-100 space-y-3">
+              <div className="mb-4 space-y-3 rounded-2xl border border-sky-100/80 bg-gradient-to-br from-sky-50/70 to-white p-3.5">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-sky-500 text-white font-bold text-base flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
                     {user.avatarUrl && !user.avatarUrl.includes("avatar-h.svg") ? (
@@ -157,7 +160,7 @@ export function HeaderMobileMenu({
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-zinc-900 truncate">{user.name}</p>
+                    <p className="text-base font-bold text-zinc-900 truncate">{user.name}</p>
                     <span className={`inline-block mt-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full ${roleColor}`}>
                       {roleLabel}
                     </span>
@@ -167,12 +170,12 @@ export function HeaderMobileMenu({
                 {/* Mobile Wallet & Bookmark row */}
                 <div className="flex items-center gap-2 pt-1 border-t border-zinc-200/60">
                   {wallet && (
-                    <div className="flex-1 flex items-center justify-between px-3 py-1.5 bg-amber-50/80 rounded-xl border border-amber-200/80">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <div className="relative w-4 h-4 shrink-0">
+                    <div className="flex flex-1 items-center justify-between rounded-xl border border-amber-200/80 bg-gradient-to-r from-amber-100 to-yellow-50 px-3 py-1.5">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <div className="relative h-4 w-4 shrink-0">
                           <Image src={wallet.coinIconSrc || "/icon/coin.svg"} alt="Xu" width={16} height={16} className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-xs font-bold text-amber-900 truncate">
+                        <span className="truncate text-xs font-bold text-amber-600">
                           {(wallet.coins || 0).toLocaleString("vi-VN")} {wallet.unit || "Xu"}
                         </span>
                       </div>
@@ -183,7 +186,7 @@ export function HeaderMobileMenu({
                           if (onRechargeClick) onRechargeClick();
                           else if (wallet.onRechargeClick) wallet.onRechargeClick();
                         }}
-                        className="text-[11px] font-bold text-amber-800 bg-amber-200/70 hover:bg-amber-200 px-2 py-0.5 rounded-md transition"
+                        className="rounded-md bg-amber-200/70 px-2 py-0.5 text-[11px] font-bold text-amber-700 transition hover:bg-amber-200"
                       >
                         + Nạp
                       </button>
@@ -220,7 +223,7 @@ export function HeaderMobileMenu({
                     setIsOpen(false);
                     onLoginClick?.();
                   }}
-                  className="w-full py-2.5 text-center text-sm font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition"
+                  className="w-full py-2.5 text-center text-base font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition"
                 >
                   Đăng nhập
                 </Link>
@@ -230,7 +233,7 @@ export function HeaderMobileMenu({
                     setIsOpen(false);
                     onLoginClick?.();
                   }}
-                  className="w-full py-2.5 text-center text-sm font-bold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition shadow-xs"
+                  className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 py-2.5 text-center text-base font-bold text-white shadow-lg shadow-sky-500/25 transition hover:-translate-y-0.5"
                 >
                   Đăng ký
                 </Link>
@@ -265,7 +268,7 @@ export function HeaderMobileMenu({
                       setIsOpen(false);
                       onNavItemClick?.(item);
                     }}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`px-3 py-2.5 rounded-lg text-base transition-colors ${
                       isActive
                         ? "bg-sky-50 text-sky-600 font-semibold"
                         : "text-zinc-700 font-medium hover:text-sky-600 hover:bg-sky-50/70"
@@ -289,7 +292,7 @@ export function HeaderMobileMenu({
                       key={item.id}
                       href={item.href}
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-700 transition-colors ${
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-base font-medium text-zinc-700 transition-colors ${
                         item.isAdmin
                           ? "hover:text-blue-600 hover:bg-blue-50/70"
                           : "hover:text-sky-600 hover:bg-sky-50/70"

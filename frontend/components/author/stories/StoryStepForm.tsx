@@ -4,7 +4,7 @@ import React, { useState, useRef, useId, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCreateStory, useUpdateStory } from "@/lib/hooks/queries/useStoryQuery";
-import { useCategories } from "@/lib/hooks/queries/useCategoryQuery";
+import { useAllCategories } from "@/lib/hooks/queries/useCategoryQuery";
 import { useTags } from "@/lib/hooks/queries/useTagQuery";
 import {
   CreateStoryPayload,
@@ -93,10 +93,9 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Fetch categories & tags from API via hooks
-  const { data: categoriesData } = useCategories({ all: true });
+  const { data: apiCategories = [] } = useAllCategories();
   const { data: tagsData } = useTags({ all: true });
 
-  const apiCategories = categoriesData?.items || [];
   const apiTags = tagsData?.items || [];
 
   // Đồng bộ thể loại và thẻ tag từ initialStory khi dữ liệu truyện hoặc API tải xong
