@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { authorService } from "@/lib/services/author.service";
-import { categoryService } from "@/lib/services/category.service";
+import { useAllCategories } from "@/lib/hooks/queries/useCategoryQuery";
 import { queryKeys } from "@/lib/query-keys";
 import type { AuthorListItem } from "@/types/author";
 
@@ -42,12 +42,8 @@ export default function AuthorsPage() {
   });
   const stats = statsData?.data;
 
-  // ─── 3. React Query: Danh sách thể loại để đổ vào Dropdown ────
-  const { data: categoriesData } = useQuery({
-    queryKey: queryKeys.categories.list({ all: true }),
-    queryFn: () => categoryService.findAll({ all: true }),
-  });
-  const categories = categoriesData?.data?.items || [];
+  // ─── 3. Thể loại để đổ vào Dropdown (dùng chung cache với các trang khác) ─
+  const { data: categories = [] } = useAllCategories();
 
   // ─── 4. React Query: Danh sách tác giả theo bộ lọc ────────────
   const queryParams = {

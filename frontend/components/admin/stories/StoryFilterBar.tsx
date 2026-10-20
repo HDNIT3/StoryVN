@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useCategories } from "@/lib/hooks/queries/useCategoryQuery";
+import { useAllCategories } from "@/lib/hooks/queries/useCategoryQuery";
 
 interface Props {
   search: string;
@@ -25,8 +25,7 @@ export function StoryFilterBar({
   isRefreshing,
 }: Props) {
   // Lấy toàn bộ thể loại để chọn lọc
-  const { data: categoriesData } = useCategories({ all: true });
-  const categories = categoriesData?.items ?? [];
+  const { data: categories = [] } = useAllCategories();
 
   return (
     <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-2xs mb-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">

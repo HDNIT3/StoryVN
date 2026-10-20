@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { storyService } from "@/lib/services/story.service";
-import { categoryService } from "@/lib/services/category.service";
+import { useAllCategories } from "@/lib/hooks/queries/useCategoryQuery";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   FilteredStoryItem,
@@ -183,15 +183,8 @@ function StoriesContent() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Lấy danh sách thể loại từ API
-  const { data: genresData } = useQuery({
-    queryKey: queryKeys.categories.list({ all: true }),
-    queryFn: async () => {
-      const res = await categoryService.findAll({ all: true });
-      return res.data?.items || [];
-    },
-    staleTime: 10 * 60 * 1000,
-  });
+  // Lấy danh sách thể loại từ API (dùng chung cache với các trang khác)
+  const { data: genresData = [] } = useAllCategories();
 
   // Lấy danh sách truyện chính với bộ lọc (mỗi trang 10 truyện)
   const {

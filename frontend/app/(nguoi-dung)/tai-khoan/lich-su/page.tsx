@@ -3,9 +3,7 @@
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { categoryService } from "@/lib/services/category.service";
-import { queryKeys } from "@/lib/query-keys";
+import { useAllCategories } from "@/lib/hooks/queries/useCategoryQuery";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useMyReadingHistory } from "@/lib/hooks/queries/useReadingHistoryQuery";
 import { ReadingHistoryCard } from "@/components/reading-history/ReadingHistoryCard";
@@ -84,15 +82,8 @@ function LichSuDocContent() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Thể loại cho bộ lọc
-  const { data: genres } = useQuery({
-    queryKey: queryKeys.categories.list({ all: true }),
-    queryFn: async () => {
-      const res = await categoryService.findAll({ all: true });
-      return res.data?.items || [];
-    },
-    staleTime: 10 * 60 * 1000,
-  });
+  // Thể loại cho bộ lọc (dùng chung cache với các trang khác)
+  const { data: genres = [] } = useAllCategories();
 
   const params = useMemo(
     () => ({
