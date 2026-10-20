@@ -42,7 +42,7 @@ function LoginFormContainer() {
   }, [registered]);
 
   return (
-    <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xl p-7 sm:p-9 space-y-6">
+    <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs sm:shadow-sm p-6 sm:p-7 space-y-5">
       {/* 1. Header */}
       <AuthHeader
         title="Đăng Nhập"
@@ -53,7 +53,7 @@ function LoginFormContainer() {
       <AuthAlert message={successBanner || undefined} error={backendError} />
 
       {/* 3. Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         <Input
           id="login-email"
           label="Email"
@@ -141,7 +141,7 @@ function LoginFormContainer() {
           fullWidth
           size="lg"
           isLoading={isLoading}
-          className="mt-2"
+          className="mt-1"
         >
           Đăng Nhập
         </Button>
@@ -164,7 +164,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xl p-7 sm:p-9 text-center text-zinc-400 text-sm">
+        <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xl p-6 sm:p-7 text-center text-zinc-400 text-sm">
           Đang tải...
         </div>
       }

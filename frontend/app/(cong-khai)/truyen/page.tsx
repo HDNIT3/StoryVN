@@ -285,7 +285,7 @@ function StoriesContent() {
 
   return (
     <div className="min-h-screen bg-[#fafaf8] py-5 sm:py-8">
-      <div className="w-full px-3 sm:px-5 md:px-7 lg:px-10 xl:px-12 2xl:px-16">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 mb-4 sm:mb-6 select-none">
           <Link href="/" className="hover:text-emerald-700 transition-colors">
@@ -484,7 +484,7 @@ function StoriesContent() {
               <button
                 type="button"
                 onClick={() => handleApplyFilter()}
-                className="shrink-0 px-6 py-2.5 bg-[#0d5c46] hover:bg-[#084232] text-white text-sm font-semibold rounded-xl transition-colors shadow-xs active:scale-[0.98]"
+                className="shrink-0 px-6 py-2.5 bg-[#0d5c46] hover:bg-[#084232] text-white text-sm font-semibold rounded-xl transition-colors"
               >
                 Tìm kiếm
               </button>
@@ -569,7 +569,7 @@ function StoriesContent() {
                 return (
                   <div
                     key={story._id}
-                    className="bg-white rounded-2xl border border-zinc-200/80 p-4 sm:p-5 hover:shadow-md transition-shadow flex flex-col sm:flex-row gap-4 sm:gap-5"
+                    className="bg-white rounded-2xl border border-zinc-200/80 p-4 sm:p-5 transition-colors hover:border-zinc-300 flex flex-col sm:flex-row gap-4 sm:gap-5"
                   >
                     {/* Bìa truyện */}
                     <div className="relative w-28 h-38 sm:w-32 sm:h-44 shrink-0 rounded-xl overflow-hidden bg-zinc-100 border border-zinc-200/60 shadow-2xs self-center sm:self-start">
@@ -810,7 +810,7 @@ function StoriesContent() {
                               fill
                               unoptimized
                               sizes="40px"
-                              className="object-cover group-hover:scale-105 transition-transform duration-200"
+                              className="object-cover"
                             />
                           ) : (
                             <div className="w-full h-full bg-zinc-800 text-zinc-400 flex items-center justify-center">

@@ -51,7 +51,7 @@ export function SocialAuthButtons() {
   });
 
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-3">
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-zinc-200" />
