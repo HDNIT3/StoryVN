@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { HeaderSearchProps } from "./header.types";
-import { DEFAULT_SEARCH } from "./header.constants";
+import { useRouter } from "next/navigation";
+import { HeaderSearchProps, DEFAULT_SEARCH } from "./header.config";
 
 export function HeaderSearch({
   placeholder = DEFAULT_SEARCH.placeholder ?? "Tìm tên truyện, tác giả...",
@@ -12,12 +12,17 @@ export function HeaderSearch({
   onSearch,
   className = "",
 }: HeaderSearchProps) {
+  const router = useRouter();
   const [query, setQuery] = useState(defaultValue);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      onSearch?.(query.trim());
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    if (onSearch) {
+      onSearch(trimmed);
+    } else {
+      router.push(`/truyen?search=${encodeURIComponent(trimmed)}`);
     }
   };
 
@@ -29,7 +34,7 @@ export function HeaderSearch({
     <form
       onSubmit={handleSubmit}
       role="search"
-      className={`relative flex items-center w-full bg-zinc-100/90 hover:bg-zinc-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 border border-transparent rounded-full px-3 sm:px-4 py-1.5 sm:py-2 transition-all duration-200 ${className}`}
+      className={`relative flex items-center w-full bg-zinc-100/90 hover:bg-zinc-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 border border-transparent rounded-full px-3 sm:px-4 py-1.5 sm:py-2 transition-colors duration-200 ${className}`}
     >
       {/* Search Icon from public */}
       <button
@@ -53,7 +58,7 @@ export function HeaderSearch({
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
         aria-label="Tìm kiếm truyện"
-        className="w-full min-w-0 bg-transparent text-xs sm:text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden"
+        className="w-full min-w-0 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden"
       />
 
       {/* Clear Button */}

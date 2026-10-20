@@ -102,7 +102,7 @@ export default function AuthorsPage() {
 
   return (
     <div className="min-h-screen bg-[#faf7f2]/60 dark:bg-zinc-950 pb-20 pt-4 sm:pt-6">
-      <div className="w-full px-3 sm:px-5 md:px-7 lg:px-10 xl:px-12 2xl:px-16 space-y-6">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* ═══════════════════════════════════════════════════════════
             1. BANNER HERO: CỘNG ĐỒNG SÁNG TÁC - TÁC GIẢ STORYVN
         ═════════════════════════════════════════════════════════════ */}
@@ -328,7 +328,7 @@ export default function AuthorsPage() {
                 <button
                   type="button"
                   onClick={handleApplyFilters}
-                  className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm bg-[#8b181b] hover:bg-[#721316] text-white transition-all shadow-sm shadow-[#8b181b]/20 whitespace-nowrap cursor-pointer hover:scale-[1.02] text-center"
+                  className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm bg-[#8b181b] hover:bg-[#721316] text-white transition-colors whitespace-nowrap cursor-pointer text-center"
                 >
                   Áp dụng
                 </button>
@@ -443,7 +443,7 @@ export default function AuthorsPage() {
                 <Link
                   key={author._id}
                   href={`/tac-gia/${author.username}`}
-                  className="group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 hover:border-amber-300 dark:hover:border-amber-900/60 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
+                  className="group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 hover:border-amber-300 dark:hover:border-amber-900/60 transition-colors cursor-pointer overflow-hidden"
                 >
                   <div>
                     {/* Hàng đầu: Avatar + Tên tác giả + Thể loại tags + Mũi tên */}

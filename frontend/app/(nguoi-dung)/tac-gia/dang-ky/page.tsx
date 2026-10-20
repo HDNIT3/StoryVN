@@ -346,7 +346,7 @@ export default function DangKyTacGiaPage() {
   const isAuthor = statusData?.isAuthor ?? false;
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto px-3.5 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 py-6 sm:py-10">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       {/* Loading */}
       {isLoadingStatus ? (
         <div className="flex flex-col items-center justify-center py-24 gap-3">

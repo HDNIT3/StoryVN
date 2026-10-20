@@ -40,7 +40,10 @@ export function RegisterForm({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
-    <form onSubmit={handleRegisterSubmit} className="space-y-4">
+    <form
+      onSubmit={handleRegisterSubmit}
+      className="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+    >
       {/* Display Name */}
       <Input
         label="Họ và tên hoặc Biệt danh"
@@ -78,6 +81,7 @@ export function RegisterForm({
         placeholder="example@gmail.com"
         type="email"
         required
+        containerClassName="sm:col-span-2"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         leftIcon={
@@ -156,7 +160,7 @@ export function RegisterForm({
       />
 
       {/* Terms checkbox */}
-      <div className="pt-2">
+      <div className="pt-1 sm:col-span-2">
         <label className="flex items-start gap-2.5 cursor-pointer select-none text-xs sm:text-sm text-zinc-700 font-medium">
           <input
             type="checkbox"
@@ -183,7 +187,7 @@ export function RegisterForm({
         fullWidth
         size="lg"
         isLoading={isLoading}
-        className="mt-2"
+        className="sm:col-span-2"
       >
         Đăng Ký Tài Khoản
       </Button>

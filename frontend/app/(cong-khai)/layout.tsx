@@ -10,12 +10,12 @@ export default function CongKhaiLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50/50">
+    <div className="min-h-screen flex flex-col bg-zinc-50/50 w-full overflow-x-hidden">
       {/* Header tự động nhận biết trạng thái đăng nhập */}
       <SmartHeader />
 
       {/* Nội dung trang */}
-      <main className="flex-1 w-full">{children}</main>
+      <main className="flex-1 w-full overflow-x-hidden">{children}</main>
       <Footer />
     </div>
   );

@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { chapterService } from "@/lib/services/chapter.service";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useRecordReading } from "@/lib/hooks/queries/useReadingHistoryQuery";
 
 function formatDate(dateStr?: string | null): string {
   if (!dateStr) return "—";
@@ -22,6 +24,9 @@ function formatDate(dateStr?: string | null): string {
   }
 }
 
+// Số chương hiển thị trên mỗi trang của modal mục lục
+const CHAPTERS_PER_PAGE = 10;
+
 export default function ChapterReadingPage({
   params: paramsPromise,
 }: {
@@ -36,10 +41,10 @@ export default function ChapterReadingPage({
   const [lineHeight, setLineHeight] = useState<number>(1.8);
   const [theme, setTheme] = useState<"vintage" | "light" | "dark">("vintage");
   const [showSettings, setShowSettings] = useState(false);
-  const [showChapterSelector, setShowChapterSelector] = useState(false);
+  const [showChapterModal, setShowChapterModal] = useState(false);
+  const [chapterPage, setChapterPage] = useState(1);
 
   const settingsRef = useRef<HTMLDivElement>(null);
-  const selectorRef = useRef<HTMLDivElement>(null);
 
   // Khôi phục cài đặt đọc cá nhân từ localStorage (nếu có)
   useEffect(() => {
@@ -89,14 +94,11 @@ export default function ChapterReadingPage({
     } catch {}
   };
 
-  // Đóng popup khi click ra ngoài
+  // Đóng popup cài đặt khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
         setShowSettings(false);
-      }
-      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
-        setShowChapterSelector(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -116,10 +118,57 @@ export default function ChapterReadingPage({
 
   const chapter = chapterRes?.data;
   const story = chapter?.story;
+  const chapterId = chapter?._id;
 
-  // Lắng nghe phím tắt điều hướng mũi tên trái/phải
+  // Ghi nhận lịch sử đọc mỗi khi mở một chương (chỉ khi đã đăng nhập)
+  const { isAuthenticated } = useAuth();
+  const { mutate: recordReading } = useRecordReading();
+
+  useEffect(() => {
+    if (isAuthenticated && chapterId) {
+      recordReading(chapterId);
+    }
+  }, [isAuthenticated, chapterId, recordReading]);
+
+  // ─── Modal mục lục chương (10 chương / trang) ────────────────────
+  const chapterList = chapter?.chaptersList ?? [];
+  const totalChapterPages = Math.max(
+    1,
+    Math.ceil(chapterList.length / CHAPTERS_PER_PAGE)
+  );
+  const pagedChapters = chapterList.slice(
+    (chapterPage - 1) * CHAPTERS_PER_PAGE,
+    chapterPage * CHAPTERS_PER_PAGE
+  );
+
+  // Mở modal và nhảy đúng trang đang chứa chương hiện tại
+  const openChapterModal = () => {
+    const idx = chapterList.findIndex(
+      (c) => c.chapterNumber === chapter?.chapterNumber
+    );
+    setChapterPage(Math.floor((idx >= 0 ? idx : 0) / CHAPTERS_PER_PAGE) + 1);
+    setShowChapterModal(true);
+  };
+
+  // Khóa cuộn nền khi modal đang mở
+  useEffect(() => {
+    if (!showChapterModal) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showChapterModal]);
+
+  // Lắng nghe phím tắt điều hướng mũi tên trái/phải + Esc đóng modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowChapterModal(false);
+        return;
+      }
+      // Khi modal mục lục đang mở thì không nhảy chương bằng phím mũi tên
+      if (showChapterModal) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -132,7 +181,7 @@ export default function ChapterReadingPage({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [chapter, router, slug]);
+  }, [chapter, router, slug, showChapterModal]);
 
   // Cuộn lên đầu trang khi đổi chương
   useEffect(() => {
@@ -162,8 +211,8 @@ export default function ChapterReadingPage({
       navSelectorBtn: "bg-[#faedd9] hover:bg-[#f5e3ca] border-[#e8d2b7] text-stone-800 shadow-2xs",
       navScrollTopBtn: "bg-[#faedd9] hover:bg-[#f5e3ca] border-[#e8d2b7] text-stone-800 shadow-2xs",
       menuDropdown: "bg-white border-stone-200 divide-stone-100 text-stone-700 shadow-2xl",
-      menuItemActive: "bg-[#8b251e] text-white font-bold",
-      menuItemHover: "hover:bg-stone-50 text-stone-700",
+      menuItemActive: "bg-[#ece5da] text-[#2c2725] font-semibold border border-[#ded5c7]",
+      menuItemHover: "hover:bg-stone-100/70 text-stone-700 border border-transparent",
       menuHeader: "text-stone-400",
       selection: "selection:bg-amber-200 selection:text-stone-900",
     },
@@ -189,8 +238,8 @@ export default function ChapterReadingPage({
       navSelectorBtn: "bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-800 shadow-2xs",
       navScrollTopBtn: "bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-800 shadow-2xs",
       menuDropdown: "bg-white border-zinc-200 divide-zinc-100 text-zinc-800 shadow-2xl",
-      menuItemActive: "bg-zinc-900 text-white font-bold",
-      menuItemHover: "hover:bg-zinc-100 text-zinc-800",
+      menuItemActive: "bg-zinc-100 text-zinc-900 font-semibold border border-zinc-200/80",
+      menuItemHover: "hover:bg-zinc-50 text-zinc-700 border border-transparent",
       menuHeader: "text-zinc-400",
       selection: "selection:bg-zinc-200 selection:text-zinc-900",
     },
@@ -218,8 +267,8 @@ export default function ChapterReadingPage({
       navSelectorBtn: "bg-[#282a32] hover:bg-[#32353f] border-zinc-700 text-zinc-200 shadow-2xs",
       navScrollTopBtn: "bg-[#282a32] hover:bg-[#32353f] border-zinc-700 text-zinc-200 shadow-2xs",
       menuDropdown: "bg-[#282a32] border-zinc-700 divide-zinc-700/60 text-zinc-200 shadow-2xl",
-      menuItemActive: "bg-[#9b2c23] text-white font-bold",
-      menuItemHover: "hover:bg-[#333642] text-zinc-100",
+      menuItemActive: "bg-[#333642] text-white font-semibold border border-zinc-700/80",
+      menuItemHover: "hover:bg-[#2c2f38] text-zinc-300 border border-transparent",
       menuHeader: "text-zinc-400",
       selection: "selection:bg-amber-400/30 selection:text-amber-200",
     },
@@ -289,7 +338,7 @@ export default function ChapterReadingPage({
         <div className={`flex items-center justify-between pb-6 border-b ${themes.divider} mb-8`}>
           <Link
             href={`/truyen/${slug}`}
-            className={`inline-flex items-center gap-1.5 text-xs font-semibold ${themes.topBackBtn} transition-colors`}
+            className={`inline-flex items-center gap-1.5 text-sm font-semibold ${themes.topBackBtn} transition-colors`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -302,9 +351,9 @@ export default function ChapterReadingPage({
             <button
               type="button"
               onClick={() => setShowSettings(!showSettings)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${themes.settingsBtn}`}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-sm font-semibold transition-colors cursor-pointer ${themes.settingsBtn}`}
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
@@ -313,7 +362,7 @@ export default function ChapterReadingPage({
 
             {/* Popup Cài đặt */}
             {showSettings && (
-              <div className={`absolute right-0 mt-2 w-64 p-4 rounded-2xl border ${themes.settingsPopup} z-30 space-y-3.5 text-xs`}>
+              <div className={`absolute right-0 mt-2 w-72 p-4 rounded-2xl border ${themes.settingsPopup} z-30 space-y-3.5 text-[13px]`}>
                 <div>
                   <label className={`font-bold block mb-1.5 ${themes.settingsLabel}`}>Màu nền</label>
                   <div className="grid grid-cols-3 gap-1.5">
@@ -402,7 +451,7 @@ export default function ChapterReadingPage({
           {story && (
             <Link
               href={`/truyen/${slug}`}
-              className={`text-sm sm:text-base font-bold hover:underline transition-colors block max-w-2xl ${themes.storyLink}`}
+              className={`text-base sm:text-lg md:text-xl font-bold hover:underline transition-colors block max-w-2xl ${themes.storyLink}`}
             >
               {story.title}
             </Link>
@@ -432,7 +481,7 @@ export default function ChapterReadingPage({
           {chapter.prevChapter ? (
             <Link
               href={`/truyen/${slug}/chuong/${chapter.prevChapter.chapterNumber}`}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90 ${themes.navPrevBtn}`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors active:brightness-95 ${themes.navPrevBtn}`}
               title={`Chương trước: Chương ${chapter.prevChapter.chapterNumber}`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -447,48 +496,30 @@ export default function ChapterReadingPage({
             </div>
           )}
 
-          {/* Nút Chọn Chương (Dropdown popup) */}
-          <div className="relative" ref={selectorRef}>
+          {/* Nút mở modal Mục lục chương */}
+          <div className="relative">
             <button
               type="button"
-              onClick={() => setShowChapterSelector(!showChapterSelector)}
+              onClick={() =>
+                showChapterModal ? setShowChapterModal(false) : openChapterModal()
+              }
               className={`px-8 py-2.5 rounded-full border text-sm font-semibold transition-colors cursor-pointer flex items-center gap-2 ${themes.navSelectorBtn}`}
+              aria-haspopup="dialog"
+              aria-expanded={showChapterModal}
+              title="Mở mục lục chương"
             >
               <span>{`Chương ${chapter.chapterNumber}`}</span>
               <svg className="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
               </svg>
             </button>
-
-            {/* Menu danh sách chương nhanh */}
-            {showChapterSelector && (
-              <div className={`absolute left-1/2 -translate-x-1/2 mt-2 w-72 max-h-80 overflow-y-auto rounded-2xl border z-40 p-2 ${themes.menuDropdown}`}>
-                <div className={`px-3 py-2 text-xs font-bold uppercase tracking-wider ${themes.menuHeader}`}>
-                  Mục lục chương ({chapter.chaptersList?.length || 0})
-                </div>
-                {chapter.chaptersList?.map((c) => (
-                  <Link
-                    key={c.chapterNumber}
-                    href={`/truyen/${slug}/chuong/${c.chapterNumber}`}
-                    onClick={() => setShowChapterSelector(false)}
-                    className={`block px-3 py-2.5 rounded-xl text-xs font-medium transition-colors ${
-                      c.chapterNumber === chapter.chapterNumber
-                        ? themes.menuItemActive
-                        : themes.menuItemHover
-                    }`}
-                  >
-                    Chương {c.chapterNumber}: {c.title || `Chương ${c.chapterNumber}`}
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Nút Chương sau */}
           {chapter.nextChapter ? (
             <Link
               href={`/truyen/${slug}/chuong/${chapter.nextChapter.chapterNumber}`}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90 ${themes.navNextBtn}`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors active:brightness-95 ${themes.navNextBtn}`}
               title={`Chương sau: Chương ${chapter.nextChapter.chapterNumber}`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -520,7 +551,7 @@ export default function ChapterReadingPage({
           {chapter.prevChapter ? (
             <Link
               href={`/truyen/${slug}/chuong/${chapter.prevChapter.chapterNumber}`}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90 ${themes.navPrevBtn}`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors active:brightness-95 ${themes.navPrevBtn}`}
               title={`Chương trước: Chương ${chapter.prevChapter.chapterNumber}`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -546,7 +577,7 @@ export default function ChapterReadingPage({
           {chapter.nextChapter ? (
             <Link
               href={`/truyen/${slug}/chuong/${chapter.nextChapter.chapterNumber}`}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90 ${themes.navNextBtn}`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors active:brightness-95 ${themes.navNextBtn}`}
               title={`Chương sau: Chương ${chapter.nextChapter.chapterNumber}`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -562,6 +593,131 @@ export default function ChapterReadingPage({
           )}
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════
+          MODAL MỤC LỤC CHƯƠNG: 10 chương / trang + phân trang
+      ═══════════════════════════════════════════════════════════ */}
+      {showChapterModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mục lục chương"
+        >
+          {/* Lớp phủ mờ: bấm để đóng */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+            onClick={() => setShowChapterModal(false)}
+          />
+
+          {/* Khung modal */}
+          <div
+            className={`relative w-full max-w-xl rounded-2xl border shadow-2xl overflow-hidden ${themes.menuDropdown}`}
+          >
+            {/* Header modal */}
+            <div className={`flex items-center justify-between gap-3 px-4 py-3 border-b ${themes.divider}`}>
+              <div className="flex items-center gap-2 min-w-0">
+                <svg className="w-4 h-4 opacity-70 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                <h3 className="text-base font-bold truncate">Mục lục chương</h3>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 tabular-nums ${themes.tagBg}`}>
+                  {chapterList.length}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowChapterModal(false)}
+                aria-label="Đóng mục lục"
+                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors cursor-pointer ${themes.topBackBtn} hover:bg-black/5`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 10 chương của trang hiện tại: Mỗi chương 1 dòng */}
+            {pagedChapters.length === 0 ? (
+              <div className={`px-4 py-10 text-center text-xs ${themes.secondaryText}`}>
+                Chưa có chương nào trong mục lục.
+              </div>
+            ) : (
+              <div className="p-3 flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
+                {pagedChapters.map((c) => {
+                  const isActive = c.chapterNumber === chapter.chapterNumber;
+                  return (
+                    <Link
+                      key={c.chapterNumber}
+                      href={`/truyen/${slug}/chuong/${c.chapterNumber}`}
+                      onClick={() => setShowChapterModal(false)}
+                      title={c.title || `Chương ${c.chapterNumber}`}
+                      className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-colors ${
+                        isActive ? themes.menuItemActive : themes.menuItemHover
+                      }`}
+                    >
+                      <div className="min-w-0 flex items-baseline gap-2 truncate">
+                        <span className="font-bold tabular-nums shrink-0">
+                          Chương {c.chapterNumber}
+                        </span>
+                        {c.title && (
+                          <span className="truncate opacity-75">
+                            : {c.title}
+                          </span>
+                        )}
+                      </div>
+
+                      {isActive && (
+                        <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-md ${themes.tagBg}`}>
+                          Đang đọc
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Phân trang */}
+            {totalChapterPages > 1 && (
+              <div className={`flex items-center justify-between gap-2 px-3 py-2.5 border-t ${themes.divider}`}>
+                <button
+                  type="button"
+                  disabled={chapterPage <= 1}
+                  onClick={() => setChapterPage((p) => Math.max(1, p - 1))}
+                  className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    chapterPage <= 1
+                      ? `opacity-40 cursor-not-allowed ${themes.navDisabledBtn}`
+                      : `cursor-pointer ${themes.settingsBtnSecondary}`
+                  }`}
+                >
+                  ← Trước
+                </button>
+
+                <span className="text-sm font-semibold tabular-nums opacity-80">
+                  Trang {chapterPage}/{totalChapterPages}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={chapterPage >= totalChapterPages}
+                  onClick={() =>
+                    setChapterPage((p) => Math.min(totalChapterPages, p + 1))
+                  }
+                  className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    chapterPage >= totalChapterPages
+                      ? `opacity-40 cursor-not-allowed ${themes.navDisabledBtn}`
+                      : `cursor-pointer ${themes.settingsBtnSecondary}`
+                  }`}
+                >
+                  Sau →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
