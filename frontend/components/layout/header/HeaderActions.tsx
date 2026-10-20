@@ -38,13 +38,13 @@ function HeaderBookmark({
       title="Tủ truyện đã lưu"
       aria-label={`Tủ truyện: ${count} truyện đã lưu`}
     >
-      <div className="relative w-4 h-4 sm:w-5 sm:h-5 shrink-0">
+      <div className="relative h-5 w-5 shrink-0 sm:h-6 sm:w-6">
         <Image
           src={iconSrc}
           alt="Icon tủ truyện"
-          width={20}
-          height={20}
-          className="w-full h-full object-contain"
+          width={24}
+          height={24}
+          className="h-full w-full object-contain"
         />
       </div>
 
@@ -105,18 +105,18 @@ function HeaderWallet({
       title={`Số dư: ${coins.toLocaleString("vi-VN")} ${unit}`}
     >
       {/* Coin Icon from public/icon */}
-      <div className="relative w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0">
+      <div className="relative h-4 w-4 shrink-0 sm:h-5 sm:w-5">
         <Image
           src={iconSrc}
           alt="Icon đồng xu"
-          width={16}
-          height={16}
-          className="w-full h-full object-contain"
+          width={20}
+          height={20}
+          className="h-full w-full object-contain"
         />
       </div>
 
       {/* Balance Text */}
-      <span className="whitespace-nowrap text-[11px] font-bold text-amber-600 sm:text-xs">
+      <span className="whitespace-nowrap text-xs font-bold text-amber-600 sm:text-sm">
         {coins.toLocaleString("vi-VN")}{" "}
         <span className="hidden sm:inline">{unit}</span>
       </span>
@@ -182,14 +182,14 @@ function HeaderUserAvatar({
         <Link
           href="/dang-nhap"
           onClick={onLoginClick}
-          className="whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-sky-50/70 hover:text-sky-600"
+          className="whitespace-nowrap rounded-lg px-4 py-2.5 text-base font-medium text-slate-600 transition-colors hover:bg-sky-50/70 hover:text-sky-600"
         >
           Đăng nhập
         </Link>
         <Link
           href="/dang-ky"
           onClick={onLoginClick}
-          className="shimmer-hover whitespace-nowrap rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/30"
+          className="shimmer-hover whitespace-nowrap rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2.5 text-base font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/30"
         >
           Đăng ký
         </Link>
@@ -213,7 +213,7 @@ function HeaderUserAvatar({
         aria-label="Menu tài khoản"
         className="group flex shrink-0 cursor-pointer items-center gap-1 rounded-full p-0.5 transition-colors hover:bg-sky-50 sm:gap-1.5 sm:p-1"
       >
-        <div className="flex h-7 w-7 shrink-0 select-none items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-indigo-500 text-xs font-bold text-white ring-2 ring-sky-100 transition-all group-hover:ring-sky-300 sm:h-9 sm:w-9 sm:text-sm">
+        <div className="flex h-9 w-9 shrink-0 select-none items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-indigo-500 text-sm font-bold text-white ring-2 ring-sky-100 transition-all group-hover:ring-sky-300 sm:h-10 sm:w-10 sm:text-base">
           {user.avatarUrl && !user.avatarUrl.includes("avatar-h.svg") ? (
             <Image
               src={user.avatarUrl}

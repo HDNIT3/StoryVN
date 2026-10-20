@@ -54,6 +54,16 @@ export class ChapterUpdate {
   })
   content: string;
 
+  /**
+   * Số từ của bản sửa (đã loại bỏ thẻ HTML) — phục vụ hiển thị/thống kê.
+   */
+  @Prop({
+    type: Number,
+    default: 0,
+    min: 0,
+  })
+  wordCount: number;
+
   @Prop({
     type: Boolean,
     default: true,

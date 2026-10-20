@@ -57,6 +57,31 @@ export class StoriesController {
   }
 
   @ApiOperation({
+    summary: 'Lấy top truyện có tổng số từ lớn nhất (Công khai)',
+    description:
+      'Trả về danh sách truyện có tổng số từ cao nhất (mặc định 10) gồm: ảnh bìa, tên truyện, tác giả, tổng số từ, số chương',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Số lượng truyện cần lấy (mặc định: 10)',
+    type: Number,
+  })
+  @Public()
+  @Get('top-word-count')
+  @HttpCode(HttpStatus.OK)
+  async getTopWordCount(@Query('limit') limitQuery?: string) {
+    const limit = limitQuery ? parseInt(limitQuery, 10) : 10;
+    const data = await this.storiesService.getTopWordCount(limit);
+
+    return {
+      success: true,
+      message: 'Lấy danh sách truyện có tổng số từ lớn nhất thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
     summary: 'Lấy danh sách truyện mới cập nhật (Công khai)',
     description:
       'Trả về danh sách truyện mới cập nhật: Thể loại, Tên, Số chương, Tác giả, Ngày giờ cập nhật có phân trang',

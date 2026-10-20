@@ -104,6 +104,23 @@ function ArrowUpRightIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+function WordsIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 6h16M4 12h10M4 18h13" />
+    </svg>
+  );
+}
+
 /* ─────────────────────────────────────────────────────────────
    Small shared pieces
    ───────────────────────────────────────────────────────────── */
@@ -116,7 +133,7 @@ function SectionKicker({
   children: React.ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-sky-600 shadow-[0_10px_30px_-22px_rgba(14,165,233,0.9)] backdrop-blur-xl">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-sky-600 shadow-[0_10px_30px_-22px_rgba(14,165,233,0.9)] backdrop-blur-xl">
       {icon}
       {children}
     </span>
@@ -125,7 +142,7 @@ function SectionKicker({
 
 function NewBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-50 to-indigo-50 px-2.5 py-1 text-[11px] font-bold text-sky-600 ring-1 ring-sky-100">
+    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-50 to-indigo-50 px-2.5 py-1 text-xs font-bold text-sky-600 ring-1 ring-sky-100">
       <SparkleIcon className="h-3 w-3" />
       Mới ra mắt
     </span>
@@ -134,7 +151,7 @@ function NewBadge() {
 
 function UpcomingBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 px-2.5 py-1 text-[11px] font-bold text-amber-600 ring-1 ring-amber-100">
+    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 px-2.5 py-1 text-xs font-bold text-amber-600 ring-1 ring-amber-100">
       <ClockIcon className="h-3 w-3" />
       Sắp cập nhật
     </span>
@@ -168,6 +185,14 @@ export default function HomePage() {
     },
   });
 
+  const { data: topWordCountStories = [], isLoading: isLoadingWordCount } = useQuery({
+    queryKey: queryKeys.stories.topWordCount(4),
+    queryFn: async () => {
+      const res = await storyService.getTopWordCount(4);
+      return res.data || [];
+    },
+  });
+
   const latestStories = latestUpdatedData?.items || [];
 
   const hasPodium = topStories.length >= 3;
@@ -186,18 +211,18 @@ export default function HomePage() {
         <div className="absolute inset-x-0 top-0 h-[520px] bg-gradient-to-b from-white/0 via-white/40 to-white" />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-7xl space-y-12 px-4 py-6 sm:space-y-16 sm:px-6 sm:py-10 lg:px-8">
+      <div className="relative z-10 mx-auto w-full space-y-12 px-4 py-6 sm:space-y-16 sm:px-6 sm:py-10 lg:px-10 2xl:px-16">
         {/* ═══════════════════════════════════════════════════════
             HERO — Truyện mới nhất nổi bật
         ═══════════════════════════════════════════════════════ */}
-        <section aria-label="Tiêu điểm nổi bật">
+        <section id="noi-bat" aria-label="Tiêu điểm nổi bật" className="scroll-mt-36">
           <HeroStoryBanner />
         </section>
 
         {/* ═══════════════════════════════════════════════════════
             BẢNG XẾP HẠNG — Top truyện nhiều lượt xem
         ═══════════════════════════════════════════════════════ */}
-        <section aria-labelledby="leaderboard-heading" className="relative">
+        <section id="bang-xep-hang" aria-labelledby="leaderboard-heading" className="relative scroll-mt-36">
           {/* Quầng sáng nền phía sau bảng xếp hạng */}
           <div
             aria-hidden="true"
@@ -211,11 +236,11 @@ export default function HomePage() {
               </SectionKicker>
               <h2
                 id="leaderboard-heading"
-                className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl"
+                className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
               >
                 Top truyện nhiều lượt xem nhất
               </h2>
-              <p className="max-w-[65ch] text-sm leading-relaxed text-slate-500">
+              <p className="max-w-[65ch] text-base leading-relaxed text-slate-500">
                 Những tác phẩm thu hút độc giả hàng đầu đang được đọc nhiều nhất
                 trên StoryVN.
               </p>
@@ -223,7 +248,7 @@ export default function HomePage() {
 
             <Link
               href="/truyen"
-              className="shimmer-hover inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-sky-500/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/30 sm:self-auto sm:text-sm"
+              className="shimmer-hover inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/30 sm:self-auto sm:text-base"
             >
               <span>Khám phá tất cả truyện</span>
               <ArrowUpRightIcon className="h-4 w-4" />
@@ -251,16 +276,16 @@ export default function HomePage() {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-50 to-indigo-50 text-sky-500 ring-1 ring-sky-100">
                 <BookIcon className="h-7 w-7" />
               </div>
-              <h3 className="text-base font-bold text-slate-800">
+              <h3 className="text-lg font-bold text-slate-800">
                 Chưa có truyện nào trong danh sách
               </h3>
-              <p className="mx-auto mt-1 mb-5 max-w-md text-sm text-slate-500">
+              <p className="mx-auto mt-1 mb-5 max-w-md text-base text-slate-500">
                 Các tác phẩm mới được xuất bản sẽ xuất hiện tại đây khi có lượt
                 đọc.
               </p>
               <Link
                 href="/truyen"
-                className="inline-flex rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:-translate-y-0.5"
+                className="inline-flex rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2.5 text-base font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:-translate-y-0.5"
               >
                 Xem danh sách truyện
               </Link>
@@ -293,8 +318,8 @@ export default function HomePage() {
                           </span>
 
                           {story.viewCount > 0 ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-100">
-                              <EyeIcon className="h-3.5 w-3.5 text-sky-400" />
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-500 ring-1 ring-slate-100">
+                              <EyeIcon className="h-4 w-4 text-sky-400" />
                               <span className="tabular-nums">
                                 {formatNumber(story.viewCount)} lượt đọc
                               </span>
@@ -327,18 +352,18 @@ export default function HomePage() {
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <h3 className="line-clamp-2 text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-600 sm:text-base">
+                            <h3 className="line-clamp-2 text-base font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-600 sm:text-lg">
                               {story.title}
                             </h3>
-                            <p className="mt-1.5 line-clamp-1 text-xs text-slate-500">
+                            <p className="mt-1.5 line-clamp-1 text-sm text-slate-500">
                               Tác giả{" "}
                               <span className="font-semibold text-slate-700">
                                 {story.author}
                               </span>
                             </p>
-                            <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-sky-600 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                            <span className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-sky-600 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                               Xem truyện
-                              <ArrowUpRightIcon className="h-3.5 w-3.5" />
+                              <ArrowUpRightIcon className="h-4 w-4" />
                             </span>
                           </div>
                         </div>
@@ -351,7 +376,7 @@ export default function HomePage() {
               {/* Các vị trí còn lại — danh sách sạch */}
               {remainingStories.length > 0 && (
                 <div className="overflow-hidden rounded-3xl border border-white/80 bg-white/80 p-2 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.4)] backdrop-blur-xl sm:p-3">
-                  <h3 className="px-3 pt-2 pb-3 text-sm font-bold text-slate-800 sm:text-base">
+                  <h3 className="px-3 pt-2 pb-3 text-base font-bold text-slate-800 sm:text-lg">
                     {hasPodium ? "Các vị trí tiếp theo" : "Danh sách xếp hạng"}
                   </h3>
 
@@ -387,10 +412,10 @@ export default function HomePage() {
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <h4 className="line-clamp-1 text-xs font-semibold leading-tight text-slate-900 transition-colors group-hover:text-sky-600 sm:text-sm">
+                            <h4 className="line-clamp-1 text-sm font-semibold leading-tight text-slate-900 transition-colors group-hover:text-sky-600 sm:text-base">
                               {story.title}
                             </h4>
-                            <p className="mt-1 line-clamp-1 text-xs text-slate-500">
+                            <p className="mt-1 line-clamp-1 text-sm text-slate-500">
                               Tác giả{" "}
                               <span className="font-medium text-slate-600">
                                 {story.author}
@@ -401,11 +426,11 @@ export default function HomePage() {
                           <div className="shrink-0 text-right">
                             {story.viewCount > 0 ? (
                               <>
-                                <div className="flex items-center justify-end gap-1.5 text-xs font-semibold tabular-nums text-slate-700">
+                                <div className="flex items-center justify-end gap-1.5 text-sm font-semibold tabular-nums text-slate-700">
                                   <EyeIcon className="h-3.5 w-3.5 text-sky-400" />
                                   {formatNumber(story.viewCount)}
                                 </div>
-                                <span className="hidden text-[11px] text-slate-400 sm:inline">
+                                <span className="hidden text-sm text-slate-400 sm:inline">
                                   lượt đọc
                                 </span>
                               </>
@@ -424,9 +449,132 @@ export default function HomePage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════
+            TOP WORD COUNT — Truyện có tổng số từ lớn nhất (full-width, card dọc)
+        ═══════════════════════════════════════════════════════ */}
+        <section
+          id="top-nhieu-chu"
+          aria-labelledby="top-word-count-heading"
+          className="relative left-1/2 w-screen -translate-x-1/2 scroll-mt-36 bg-white"
+        >
+          <div className="mx-auto w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-10 2xl:px-16">
+            <div className="mb-6 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-2.5">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.16em] text-emerald-600">
+                  <WordsIcon className="h-4 w-4" />
+                  Truyện dài nhất
+                </span>
+                <h2
+                  id="top-word-count-heading"
+                  className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
+                >
+                  Top truyện nhiều chữ nhất
+                </h2>
+                <p className="max-w-[65ch] text-base text-slate-500">
+                  Tổng hợp những tác phẩm đồ sộ nhất theo tổng số từ của các chương
+                  đã xuất bản.
+                </p>
+              </div>
+
+              <Link
+                href="/truyen"
+                className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.6)] transition-colors hover:border-emerald-300 hover:text-emerald-700"
+              >
+                Xem tất cả
+                <ArrowUpRightIcon className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {isLoadingWordCount ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="animate-pulse rounded-2xl border border-slate-200/70 bg-white p-2 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)]"
+                  >
+                    <div className="aspect-[3/4] w-full rounded-xl bg-slate-100" />
+                    <div className="space-y-2 px-1.5 py-3">
+                      <div className="h-4 w-4/5 rounded bg-slate-100" />
+                      <div className="h-3 w-1/2 rounded bg-slate-100" />
+                      <div className="h-3 w-2/3 rounded bg-slate-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : topWordCountStories.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 text-amber-500 ring-1 ring-amber-100">
+                  <WordsIcon className="h-6 w-6" />
+                </div>
+                <p className="text-base font-medium text-slate-500">
+                  Chưa có truyện nào được thống kê số từ.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+                {topWordCountStories.map((story, index) => (
+                  <Link
+                    key={story._id}
+                    href={`/truyen/${story.slug}`}
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-2 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.35)] transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_24px_50px_-24px_rgba(16,185,129,0.35)]"
+                  >
+                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-slate-100">
+                      {story.coverUrl ? (
+                        <Image
+                          src={story.coverUrl}
+                          alt={story.title}
+                          fill
+                          unoptimized
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50 text-amber-400">
+                          <BookIcon className="h-7 w-7" />
+                        </div>
+                      )}
+
+                      <span
+                        className={`absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg text-xs font-extrabold tabular-nums ${
+                          index < 3
+                            ? "bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-50 text-amber-700 ring-1 ring-amber-200"
+                            : "bg-white/90 text-slate-600 ring-1 ring-slate-200"
+                        }`}
+                      >
+                        #{index + 1}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-1 flex-col px-1.5 pt-3 pb-1.5">
+                      <h3 className="line-clamp-2 text-base font-bold leading-snug text-slate-900 transition-colors group-hover:text-emerald-700 sm:text-lg">
+                        {story.title}
+                      </h3>
+                      <p className="mt-1.5 line-clamp-1 text-sm text-slate-500">
+                        Tác giả{" "}
+                        <span className="font-semibold text-slate-700">{story.author}</span>
+                      </p>
+
+                      <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-3 text-sm font-semibold text-slate-600">
+                        <span className="inline-flex items-center gap-1.5 tabular-nums text-amber-600">
+                          <WordsIcon className="h-4 w-4" />
+                          {formatNumber(story.wordCount)} từ
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 tabular-nums text-emerald-600">
+                          <BookIcon className="h-4 w-4" />
+                          {formatNumber(story.chapterCount)} chương
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════
             MỚI CẬP NHẬT — Modern clean list
         ═══════════════════════════════════════════════════════ */}
-        <section aria-labelledby="latest-chapters-heading" className="space-y-5">
+        <section id="moi-cap-nhat" aria-labelledby="latest-chapters-heading" className="space-y-5 scroll-mt-36">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-2.5">
               <SectionKicker icon={<ClockIcon className="h-3.5 w-3.5" />}>
@@ -434,21 +582,21 @@ export default function HomePage() {
               </SectionKicker>
               <h2
                 id="latest-chapters-heading"
-                className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl lg:text-3xl"
+                className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl"
               >
                 Mới cập nhật
               </h2>
-              <p className="max-w-[65ch] text-sm text-slate-500">
+              <p className="max-w-[65ch] text-base text-slate-500">
                 Những chương truyện vừa lên kệ, cập nhật liên tục mỗi ngày.
               </p>
             </div>
 
             <Link
               href="/truyen"
-              className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.6)] transition-colors hover:border-sky-200 hover:text-sky-600 sm:self-auto sm:text-sm"
+              className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-600 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.6)] transition-colors hover:border-sky-200 hover:text-sky-600 sm:self-auto sm:text-base"
             >
               Xem tất cả
-              <ArrowUpRightIcon className="h-3.5 w-3.5" />
+              <ArrowUpRightIcon className="h-4 w-4" />
             </Link>
           </div>
 
@@ -468,7 +616,7 @@ export default function HomePage() {
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-50 to-indigo-50 text-sky-500 ring-1 ring-sky-100">
                 <ClockIcon className="h-6 w-6" />
               </div>
-              <p className="text-sm font-medium text-slate-500">
+              <p className="text-base font-medium text-slate-500">
                 Chưa có chương truyện nào mới cập nhật.
               </p>
             </div>
@@ -477,7 +625,7 @@ export default function HomePage() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                    <tr className="bg-slate-50/70 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 sm:text-xs">
                       <th scope="col" className="hidden px-5 py-3 font-bold sm:table-cell">
                         Thể loại
                       </th>
@@ -496,7 +644,7 @@ export default function HomePage() {
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
+                  <tbody className="divide-y divide-slate-100 text-sm sm:text-base">
                     {latestStories.map((item) => {
                       const dateObj = item.updatedAt
                         ? new Date(item.updatedAt)
@@ -520,12 +668,12 @@ export default function HomePage() {
                           className="group transition-colors hover:bg-sky-50/60"
                         >
                           <td className="hidden px-5 py-3.5 sm:table-cell">
-                            <span className="inline-flex max-w-[7.5rem] truncate rounded-full border border-sky-100 bg-sky-50/70 px-2.5 py-1 text-[11px] font-semibold text-sky-600">
+                            <span className="inline-flex max-w-[9rem] truncate rounded-full border border-sky-100 bg-sky-50/70 px-2.5 py-1 text-xs font-semibold text-sky-600">
                               {item.genre || "Chưa phân loại"}
                             </span>
                           </td>
 
-                          <td className="max-w-[10rem] px-4 py-3.5 sm:max-w-xs sm:px-5">
+                          <td className="max-w-[14rem] px-4 py-4 sm:max-w-md sm:px-5">
                             <Link
                               href={`/truyen/${item.slug}`}
                               className="block truncate font-semibold text-slate-900 transition-colors group-hover:text-sky-600"
@@ -535,7 +683,7 @@ export default function HomePage() {
                             </Link>
                           </td>
 
-                          <td className="max-w-[8rem] px-4 py-3.5 text-slate-500 sm:max-w-sm sm:px-5">
+                          <td className="max-w-[11rem] px-4 py-4 text-slate-500 sm:max-w-md sm:px-5">
                             {item.latestChapter ? (
                               <Link
                                 href={chapterLink}
@@ -549,11 +697,11 @@ export default function HomePage() {
                             )}
                           </td>
 
-                          <td className="hidden max-w-[9rem] truncate px-5 py-3.5 font-medium text-slate-500 md:table-cell">
+                          <td className="hidden max-w-[12rem] truncate px-5 py-4 font-medium text-slate-500 md:table-cell">
                             {item.author}
                           </td>
 
-                          <td className="whitespace-nowrap px-4 py-3.5 text-right text-xs tabular-nums text-slate-400 sm:px-5">
+                          <td className="whitespace-nowrap px-4 py-4 text-right text-sm tabular-nums text-slate-400 sm:px-5">
                             {dateStr}
                           </td>
                         </tr>

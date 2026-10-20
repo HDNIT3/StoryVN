@@ -18,6 +18,7 @@ export interface ChapterUpdateItem {
   coinPrice: number;
   requirePreviousChapter: boolean;
   status: 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  wordCount?: number;
   rejectReason?: string | null;
   reviewerId?: string | { _id: string; displayName?: string; username?: string; avatarUrl?: string } | null;
   reviewedAt?: string | null;
@@ -37,6 +38,7 @@ export interface ChapterItem {
   coinPrice: number;
   requirePreviousChapter: boolean;
   viewCount: number;
+  wordCount?: number;
   scheduledAt?: string | null;
   publishedAt?: string | null;
   rejectReason?: string | null;
@@ -102,6 +104,7 @@ export interface ChapterStatsData {
   draft: number;
   rejected: number;
   totalViews: number;
+  totalWords: number;
   paidCount: number;
   freeCount: number;
   topViewed: ChapterItem[];
@@ -125,6 +128,7 @@ export interface StoryChaptersResponse {
     draft: number;
     rejected: number;
     totalViews: number;
+    totalWords?: number;
   } | null;
 }
 

@@ -80,7 +80,7 @@ export function HeaderMobileMenu({
   const accountItems = ACCOUNT_MENU_ITEMS.filter((item) => item.visibleFor(roleKey));
 
   return (
-    <div className="xl:hidden flex items-center shrink-0">
+    <div className="flex shrink-0 items-center lg:hidden">
       {/* Mobile / Tablet Toggle Button */}
       <button
         type="button"
@@ -88,13 +88,13 @@ export function HeaderMobileMenu({
         aria-label="Mở menu di động"
         className="p-1 sm:p-2 rounded-xl text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
       >
-        <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+        <div className="relative h-6 w-6 sm:h-7 sm:w-7">
           <Image
             src="/icon/menu.svg"
             alt="Menu"
-            width={24}
-            height={24}
-            className="w-full h-full object-contain"
+            width={28}
+            height={28}
+            className="h-full w-full object-contain"
           />
         </div>
       </button>
@@ -117,7 +117,7 @@ export function HeaderMobileMenu({
                 <div className="h-8 w-8 shrink-0 overflow-hidden rounded-xl border border-white/80 shadow-[0_6px_18px_-10px_rgba(14,165,233,0.8)] ring-1 ring-slate-100">
                   <Image src="/icon/iconweb.png" alt="StoryVN" width={32} height={32} className="object-cover w-full h-full" />
                 </div>
-                <span className="text-base font-extrabold text-slate-900">
+                <span className="text-lg font-extrabold text-slate-900">
                   Story
                   <span className="bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
                     VN
@@ -160,7 +160,7 @@ export function HeaderMobileMenu({
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-zinc-900 truncate">{user.name}</p>
+                    <p className="text-base font-bold text-zinc-900 truncate">{user.name}</p>
                     <span className={`inline-block mt-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full ${roleColor}`}>
                       {roleLabel}
                     </span>
@@ -223,7 +223,7 @@ export function HeaderMobileMenu({
                     setIsOpen(false);
                     onLoginClick?.();
                   }}
-                  className="w-full py-2.5 text-center text-sm font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition"
+                  className="w-full py-2.5 text-center text-base font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition"
                 >
                   Đăng nhập
                 </Link>
@@ -233,7 +233,7 @@ export function HeaderMobileMenu({
                     setIsOpen(false);
                     onLoginClick?.();
                   }}
-                  className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 py-2.5 text-center text-sm font-bold text-white shadow-lg shadow-sky-500/25 transition hover:-translate-y-0.5"
+                  className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 py-2.5 text-center text-base font-bold text-white shadow-lg shadow-sky-500/25 transition hover:-translate-y-0.5"
                 >
                   Đăng ký
                 </Link>
@@ -268,7 +268,7 @@ export function HeaderMobileMenu({
                       setIsOpen(false);
                       onNavItemClick?.(item);
                     }}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`px-3 py-2.5 rounded-lg text-base transition-colors ${
                       isActive
                         ? "bg-sky-50 text-sky-600 font-semibold"
                         : "text-zinc-700 font-medium hover:text-sky-600 hover:bg-sky-50/70"
@@ -292,7 +292,7 @@ export function HeaderMobileMenu({
                       key={item.id}
                       href={item.href}
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-700 transition-colors ${
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-base font-medium text-zinc-700 transition-colors ${
                         item.isAdmin
                           ? "hover:text-blue-600 hover:bg-blue-50/70"
                           : "hover:text-sky-600 hover:bg-sky-50/70"

@@ -134,6 +134,14 @@ function ClockIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
+function WordsIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6h16M4 12h10M4 18h13" />
+    </svg>
+  );
+}
+
 const SORT_OPTIONS: { label: string; value: StorySortOption }[] = [
   { label: "Mới xuất bản", value: "published" },
   { label: "Mới cập nhật", value: "updated" },
@@ -644,6 +652,10 @@ function StoriesContent() {
                         <div className="flex sm:justify-end items-center gap-1.5 text-zinc-700">
                           <BookIcon className="w-3.5 h-3.5 text-zinc-400" />
                           <span className="font-medium">{story.stats?.chapterCount ?? 0} chương</span>
+                        </div>
+                        <div className="flex sm:justify-end items-center gap-1.5 text-zinc-500">
+                          <WordsIcon className="w-3.5 h-3.5 text-zinc-400" />
+                          <span>{formatNumber(story.stats?.wordCount)} từ</span>
                         </div>
                         <div className="flex sm:justify-end items-center gap-1.5 text-zinc-500">
                           <EyeIcon className="w-3.5 h-3.5 text-zinc-400" />

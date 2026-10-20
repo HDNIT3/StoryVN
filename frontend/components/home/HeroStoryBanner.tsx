@@ -184,7 +184,7 @@ export function HeroStoryBanner() {
           <div className="space-y-5 lg:col-span-7 xl:col-span-8">
             {/* Kicker + trạng thái */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/80 px-3 py-1 text-xs font-bold text-sky-600 shadow-[0_10px_30px_-22px_rgba(14,165,233,0.9)] backdrop-blur-md">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/80 px-3.5 py-1.5 text-sm font-bold text-sky-600 shadow-[0_10px_30px_-22px_rgba(14,165,233,0.9)] backdrop-blur-md">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-70" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sky-500" />
@@ -192,14 +192,14 @@ export function HeroStoryBanner() {
                 <span className="uppercase tracking-[0.12em]">Truyện mới xuất bản</span>
               </span>
 
-              <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50/80 px-2.5 py-1 text-xs font-semibold text-indigo-600 backdrop-blur-md">
+              <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50/80 px-3 py-1.5 text-sm font-semibold text-indigo-600 backdrop-blur-md">
                 {progressText}
               </span>
             </div>
 
             {/* Tiêu đề */}
             <h2
-              className="text-balance text-2xl font-extrabold leading-[1.15] tracking-tight text-slate-900 transition-colors hover:text-sky-600 sm:text-3xl md:text-4xl lg:text-[2.6rem]"
+              className="text-balance text-3xl font-extrabold leading-[1.15] tracking-tight text-slate-900 transition-colors hover:text-sky-600 sm:text-4xl md:text-5xl lg:text-6xl"
               style={{ textWrap: "balance" }}
             >
               <Link href={`/truyen/${current.slug}`} className="hover:underline underline-offset-4">
@@ -208,8 +208,8 @@ export function HeroStoryBanner() {
             </h2>
 
             {/* Tác giả + thể loại */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs sm:text-sm">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3 py-1 backdrop-blur-md">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm sm:text-base">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3 py-1.5 backdrop-blur-md">
                 <span className="text-slate-400">Tác giả</span>
                 <span className="font-bold text-slate-800">{authorName}</span>
               </div>
@@ -217,7 +217,7 @@ export function HeroStoryBanner() {
               {genresList.slice(0, 3).map((genreName) => (
                 <span
                   key={genreName}
-                  className="rounded-full border border-slate-200/70 bg-white/80 px-2.5 py-1 text-xs font-semibold text-slate-600 backdrop-blur-md"
+                  className="rounded-full border border-slate-200/70 bg-white/80 px-3 py-1 text-sm font-semibold text-slate-600 backdrop-blur-md"
                 >
                   {genreName}
                 </span>
@@ -225,39 +225,39 @@ export function HeroStoryBanner() {
             </div>
 
             {/* Thống kê — có xử lý dữ liệu 0 */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
               {viewCount > 0 ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/80 px-2.5 py-1 font-semibold tabular-nums text-slate-600 backdrop-blur-md">
-                  <EyeIcon className="h-3.5 w-3.5 text-sky-400" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/80 px-3 py-1.5 font-semibold tabular-nums text-slate-600 backdrop-blur-md">
+                  <EyeIcon className="h-4 w-4 text-sky-400" />
                   {formatNumber(viewCount)} lượt đọc
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-gradient-to-r from-sky-50 to-indigo-50 px-2.5 py-1 font-bold text-sky-600">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-gradient-to-r from-sky-50 to-indigo-50 px-3 py-1.5 font-bold text-sky-600">
                   ✦ Mới ra mắt
                 </span>
               )}
 
               {chapterCount > 0 ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/80 px-2.5 py-1 font-semibold tabular-nums text-slate-600 backdrop-blur-md">
-                  <BookIcon className="h-3.5 w-3.5 text-indigo-400" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/80 px-3 py-1.5 font-semibold tabular-nums text-slate-600 backdrop-blur-md">
+                  <BookIcon className="h-4 w-4 text-indigo-400" />
                   {formatNumber(chapterCount)} chương
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-100 bg-gradient-to-r from-amber-50 to-yellow-50 px-2.5 py-1 font-bold text-amber-600">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-100 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 font-bold text-amber-600">
                   Sắp cập nhật
                 </span>
               )}
 
               {current.stats?.ratingAverage ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-100 bg-gradient-to-r from-amber-50 to-yellow-50 px-2.5 py-1 font-bold tabular-nums text-amber-600">
-                  <StarIcon className="h-3.5 w-3.5" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-100 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 font-bold tabular-nums text-amber-600">
+                  <StarIcon className="h-4 w-4" />
                   {current.stats.ratingAverage.toFixed(1)}
                 </span>
               ) : null}
             </div>
 
             {/* Tóm tắt */}
-            <p className="max-w-[65ch] text-sm leading-relaxed text-slate-600 sm:text-base line-clamp-3">
+            <p className="max-w-[65ch] text-base leading-relaxed text-slate-600 sm:text-lg line-clamp-3">
               {current.description?.replace(/<[^>]*>?/gm, "") ||
                 "Một tác phẩm mới vừa được cập nhật tại StoryVN, mang đến những tình tiết hấp dẫn, mở ra thế giới câu chuyện kỳ thú cho độc giả yêu thích tiểu thuyết trực tuyến."}
             </p>
@@ -266,7 +266,7 @@ export function HeroStoryBanner() {
             <div className="flex flex-wrap items-center gap-3 pt-1 sm:pt-2">
               <Link
                 href={`/truyen/${current.slug}`}
-                className="shimmer-hover inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 sm:text-base"
+                className="shimmer-hover inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-sky-500/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 sm:text-lg"
               >
                 <span>Đọc Truyện Ngay</span>
                 <span aria-hidden="true">→</span>
@@ -274,7 +274,7 @@ export function HeroStoryBanner() {
 
               <Link
                 href={`/truyen/${current.slug}`}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-200/80 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700 backdrop-blur-md transition-colors hover:border-sky-200 hover:text-sky-600"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200/80 bg-white/80 px-5 py-3.5 text-base font-semibold text-slate-700 backdrop-blur-md transition-colors hover:border-sky-200 hover:text-sky-600"
               >
                 Thông tin chi tiết
               </Link>
@@ -335,7 +335,7 @@ export function HeroStoryBanner() {
                   <div className="pointer-events-none absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-slate-900/20 via-white/40 to-transparent" />
 
                   {/* Nhãn kính mờ gradient trên bìa */}
-                  <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg shadow-sky-500/30">
+                  <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-sky-500/30">
                     <FlameIcon className="h-3 w-3" />
                     <span>Mới nhất</span>
                   </div>
@@ -358,7 +358,7 @@ export function HeroStoryBanner() {
                   onClick={() => setActiveIndex(idx)}
                   aria-label={`Chuyển tới truyện: ${story.title}`}
                   aria-current={isSelected ? "true" : undefined}
-                  className={`flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full px-2.5 py-1.5 text-xs transition-all duration-200 ${
+                  className={`flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm transition-all duration-200 ${
                     isSelected
                       ? "bg-sky-50 font-bold text-sky-700 shadow-[0_8px_20px_-14px_rgba(14,165,233,0.9)] ring-1 ring-sky-200"
                       : "font-medium text-slate-600 hover:bg-white hover:text-sky-600"
