@@ -36,21 +36,23 @@ function HeaderLogo({
       aria-label={`${title}${suffix} - ${subtitle}`}
     >
       {/* Brand Icon Box */}
-      <div className="relative w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 shrink-0 rounded-xl overflow-hidden border border-zinc-100">
+      <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-xl border border-white/80 shadow-[0_6px_18px_-8px_rgba(14,165,233,0.75)] ring-1 ring-slate-100 sm:h-9 sm:w-9 md:h-10 md:w-10">
         <Image
           src={iconSrc}
           alt={`${title}${suffix} Icon`}
           width={40}
           height={40}
-          className="w-full h-full object-cover"
+          className="h-full w-full object-cover"
           priority
         />
       </div>
 
       {/* Brand Typography */}
-      <span className="select-none text-lg sm:text-2xl md:text-[26px] font-black tracking-tight leading-none text-zinc-900">
+      <span className="select-none text-lg font-extrabold leading-none tracking-tight text-slate-900 sm:text-2xl md:text-[26px]">
         {title}
-        <span className="text-sky-500">{suffix}</span>
+        <span className="bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
+          {suffix}
+        </span>
       </span>
     </Link>
   );
@@ -74,8 +76,10 @@ export function Header({
 }: HeaderProps = {}) {
   return (
     <header
-      className={`w-full bg-white border-b border-zinc-100 transition-all ${
-        sticky ? "sticky top-0 z-40 backdrop-blur-md bg-white/95" : ""
+      className={`w-full border-b border-white/60 bg-white/80 transition-all ${
+        sticky
+          ? "sticky top-0 z-40 bg-white/80 shadow-[0_1px_0_rgba(15,23,42,0.04),0_14px_40px_-30px_rgba(14,165,233,0.55)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/70"
+          : ""
       } ${className}`}
     >
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-3 lg:gap-4 min-w-0">

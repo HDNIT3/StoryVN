@@ -10,8 +10,8 @@ export default function CongKhaiLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50/50 w-full overflow-x-hidden">
-      {/* Header tự động nhận biết trạng thái đăng nhập */}
+    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-[#F8FAFC]">
+      {/* Header trong suốt — tự nhận biết trạng thái đăng nhập */}
       <SmartHeader />
 
       {/* Nội dung trang */}

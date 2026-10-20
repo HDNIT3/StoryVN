@@ -34,7 +34,7 @@ export function HeaderSearch({
     <form
       onSubmit={handleSubmit}
       role="search"
-      className={`relative flex items-center w-full bg-zinc-100/90 hover:bg-zinc-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 border border-transparent rounded-full px-3 sm:px-4 py-1.5 sm:py-2 transition-colors duration-200 ${className}`}
+      className={`relative flex w-full items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-[0_6px_20px_-16px_rgba(15,23,42,0.5)] transition-all duration-200 hover:border-slate-300 focus-within:border-sky-300 focus-within:ring-4 focus-within:ring-sky-500/15 sm:px-4 sm:py-2 ${className}`}
     >
       {/* Search Icon from public */}
       <button

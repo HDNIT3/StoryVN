@@ -34,7 +34,7 @@ function HeaderBookmark({
 
   const content = (
     <div
-      className={`relative p-1 sm:p-2 rounded-full hover:bg-zinc-100 text-zinc-700 transition-colors select-none group cursor-pointer shrink-0 ${className}`}
+      className={`group relative shrink-0 cursor-pointer rounded-full p-1 text-slate-500 transition-colors select-none hover:bg-sky-50 hover:text-sky-600 sm:p-2 ${className}`}
       title="Tủ truyện đã lưu"
       aria-label={`Tủ truyện: ${count} truyện đã lưu`}
     >
@@ -101,7 +101,7 @@ function HeaderWallet({
 
   return (
     <div
-      className={`inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 bg-amber-50 hover:bg-amber-100/60 border border-amber-200 rounded-full transition-colors select-none shrink-0 ${className}`}
+      className={`inline-flex shrink-0 select-none items-center gap-1 rounded-full border border-amber-200/80 bg-gradient-to-r from-amber-100 to-yellow-50 px-1.5 py-0.5 shadow-[0_6px_18px_-12px_rgba(245,158,11,0.9)] transition-colors hover:from-amber-100 hover:to-amber-50 sm:gap-1.5 sm:px-2.5 sm:py-1 ${className}`}
       title={`Số dư: ${coins.toLocaleString("vi-VN")} ${unit}`}
     >
       {/* Coin Icon from public/icon */}
@@ -116,7 +116,7 @@ function HeaderWallet({
       </div>
 
       {/* Balance Text */}
-      <span className="text-[11px] sm:text-xs font-bold text-amber-900 whitespace-nowrap">
+      <span className="whitespace-nowrap text-[11px] font-bold text-amber-600 sm:text-xs">
         {coins.toLocaleString("vi-VN")}{" "}
         <span className="hidden sm:inline">{unit}</span>
       </span>
@@ -128,7 +128,7 @@ function HeaderWallet({
           onClick={handleRecharge}
           aria-label="Nạp thêm xu"
           title="Nạp thêm xu"
-          className="ml-0.5 w-3 h-3 sm:w-4 sm:h-4 flex items-center justify-center rounded-full text-amber-700 hover:text-amber-900 hover:bg-amber-200 transition-colors cursor-pointer shrink-0"
+          className="ml-0.5 flex h-3 w-3 shrink-0 cursor-pointer items-center justify-center rounded-full text-amber-500 transition-colors hover:bg-amber-200/70 hover:text-amber-700 sm:h-4 sm:w-4"
         >
           <div className="relative w-2 h-2 sm:w-3 sm:h-3 shrink-0">
             <Image
@@ -182,14 +182,14 @@ function HeaderUserAvatar({
         <Link
           href="/dang-nhap"
           onClick={onLoginClick}
-          className="px-3.5 py-2 text-sm font-medium text-zinc-700 hover:text-sky-600 hover:bg-sky-50/70 transition-colors rounded-lg whitespace-nowrap"
+          className="whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-sky-50/70 hover:text-sky-600"
         >
           Đăng nhập
         </Link>
         <Link
           href="/dang-ky"
           onClick={onLoginClick}
-          className="px-4 py-2 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 active:bg-sky-700 rounded-lg transition-colors whitespace-nowrap shadow-2xs"
+          className="shimmer-hover whitespace-nowrap rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/30"
         >
           Đăng ký
         </Link>
@@ -211,9 +211,9 @@ function HeaderUserAvatar({
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-label="Menu tài khoản"
-        className="flex items-center gap-1 sm:gap-1.5 p-0.5 sm:p-1 rounded-full hover:bg-zinc-100 transition-colors group cursor-pointer shrink-0"
+        className="group flex shrink-0 cursor-pointer items-center gap-1 rounded-full p-0.5 transition-colors hover:bg-sky-50 sm:gap-1.5 sm:p-1"
       >
-        <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-sky-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center overflow-hidden ring-2 ring-sky-200 group-hover:ring-sky-400 transition-colors select-none shrink-0">
+        <div className="flex h-7 w-7 shrink-0 select-none items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-indigo-500 text-xs font-bold text-white ring-2 ring-sky-100 transition-all group-hover:ring-sky-300 sm:h-9 sm:w-9 sm:text-sm">
           {user.avatarUrl && !user.avatarUrl.includes("avatar-h.svg") ? (
             <Image
               src={user.avatarUrl}
@@ -238,11 +238,11 @@ function HeaderUserAvatar({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-60 sm:w-64 max-w-[calc(100vw-20px)] bg-white rounded-xl shadow-xl border border-zinc-200/80 p-1.5 z-50">
+        <div className="absolute right-0 z-50 mt-2 w-60 max-w-[calc(100vw-20px)] rounded-2xl border border-slate-100 bg-white/95 p-1.5 shadow-[0_24px_60px_-24px_rgba(14,165,233,0.35)] backdrop-blur-xl sm:w-64">
           {/* User Info Header */}
-          <div className="px-3 py-2.5 border-b border-zinc-100 mb-1">
+          <div className="mb-1 border-b border-slate-100 px-3 py-2.5">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-sky-500 text-white font-bold text-sm flex items-center justify-center overflow-hidden shrink-0">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-sky-500 to-indigo-500 text-sm font-bold text-white">
                 {user.avatarUrl && !user.avatarUrl.includes("avatar-h.svg") ? (
                   <Image
                     src={user.avatarUrl}

@@ -17,8 +17,8 @@ function HeaderNavItem({
   className?: string;
 }) {
   const activeClasses = isActive
-    ? "bg-sky-50 text-sky-600 font-semibold"
-    : "text-zinc-700 font-medium hover:text-sky-600 hover:bg-sky-50/70";
+    ? "bg-sky-50 text-sky-600 font-semibold shadow-[inset_0_0_0_1px_rgba(14,165,233,0.14),0_8px_24px_-18px_rgba(14,165,233,0.9)]"
+    : "text-slate-600 font-medium hover:text-sky-600 hover:bg-sky-50/70";
 
   return (
     <Link
