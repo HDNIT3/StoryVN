@@ -1,56 +1,11 @@
-"use client";
+import type { Metadata } from "next";
+import { RegisterView } from "@/features/auth";
 
-import { useRegister } from "@/lib/hooks/useRegister";
-import {
-  StepIndicator,
-  AuthHeader,
-  AuthAlert,
-  RegisterForm,
-  OtpVerificationForm,
-  SocialAuthButtons,
-  AuthFooterSwitcher,
-} from "@/components/auth";
+export const metadata: Metadata = {
+  title: "Đăng ký tài khoản | StoryVN",
+  description: "Gia nhập cộng đồng độc giả StoryVN hoàn toàn miễn phí.",
+};
 
 export default function RegisterPage() {
-  const registerState = useRegister();
-  const { step, email, backendMessage, backendError } = registerState;
-
-  return (
-    <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs sm:shadow-sm p-6 sm:p-7 space-y-5">
-      {/* 1. Step Indicator Header */}
-      <StepIndicator currentStep={step} />
-
-      {/* 2. Page Title & Description */}
-      <AuthHeader
-        title={step === "form" ? "Đăng Ký Tài Khoản" : "Xác Thực Email"}
-        subtitle={
-          step === "form"
-            ? "Gia nhập cộng đồng độc giả StoryVN hoàn toàn miễn phí"
-            : `Mã OTP đã được gửi đến email ${email}`
-        }
-      />
-
-      {/* 3. Success / Error Feedback Alert */}
-      <AuthAlert message={backendMessage} error={backendError} />
-
-      {/* 4. Form (Step 1: Register Info | Step 2: OTP Verification) */}
-      {step === "form" ? (
-        <RegisterForm {...registerState} />
-      ) : (
-        <OtpVerificationForm {...registerState} />
-      )}
-
-      {/* 5. Social Login & Switcher (Step 1 only) */}
-      {step === "form" && (
-        <>
-          <SocialAuthButtons />
-          <AuthFooterSwitcher
-            questionText="Đã có tài khoản?"
-            actionText="Đăng nhập ngay"
-            href="/dang-nhap"
-          />
-        </>
-      )}
-    </div>
-  );
+  return <RegisterView />;
 }

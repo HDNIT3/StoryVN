@@ -3,8 +3,8 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useMyStoryDetail } from "@/lib/hooks/queries/useStoryQuery";
-import { StoryStepForm } from "@/components/author/stories/StoryStepForm";
+import { useMyStoryDetail } from "@/features/stories";
+import { StoryStepForm } from "@/features/author";
 
 export default function ChinhSuaTacPhamPage() {
   const router = useRouter();

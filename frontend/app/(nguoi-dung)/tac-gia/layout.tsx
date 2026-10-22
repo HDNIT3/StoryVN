@@ -1,5 +1,4 @@
-import React from "react";
-import { AuthorSidebar } from "@/components/author/dashboard/AuthorSidebar";
+import { AuthorSidebar } from "@/features/author";
 
 export const metadata = {
   title: "Quản lý tác giả - StoryVN",
