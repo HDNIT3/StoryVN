@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useRef, useEffect } from "react";
 import type { CategoryItem } from "@/features/categories";
 import type { StoryProgressState, StorySortOption } from "@/features/stories";

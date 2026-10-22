@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import type { CreateAuthorRequestPayload } from "@/features/author";
 import { Button } from "@/components/ui";
