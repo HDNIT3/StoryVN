@@ -9,7 +9,7 @@ import { AuthProvider } from "@/lib/context/AuthContext";
 import { ToastContainer } from "@/components/ui/Toast";
 import { toast } from "@/lib/toast";
 
-import { useRealtimeNotifications } from "@/lib/hooks/useRealtimeNotifications";
+import { useRealtimeNotifications } from "@/features/notifications";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 

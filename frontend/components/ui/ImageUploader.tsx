@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, ChangeEvent, DragEvent } from "react";
 import Image from "next/image";
-import { uploadService } from "@/lib/services/upload.service";
+import { uploadService } from "@/features/upload";
 import { toast } from "@/lib/toast";
 
 export interface ImageUploaderProps {

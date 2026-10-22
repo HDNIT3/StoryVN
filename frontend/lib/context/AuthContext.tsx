@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, {
   createContext,
@@ -8,9 +8,9 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import type { UserProfile } from "@/types/user";
-import { userService } from "@/lib/services/user.service";
-import { authService } from "@/lib/services/auth.service";
+import type { UserProfile } from "@/features/user";
+import { userService } from "@/features/user";
+import { authService } from "@/features/auth";
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -132,3 +132,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
+

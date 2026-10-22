@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { StoryStepForm } from "@/components/author/stories/StoryStepForm";
+import { StoryStepForm } from "@/features/author";
 
 export default function ThemMoiTacPhamPage() {
   return <StoryStepForm isEdit={false} />;

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import StoryDetailClient from "./story-detail-client";
+import { StoryDetailView } from "@/features/stories";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -82,5 +82,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // ═══════════════════════════════════════════════════════════════
 export default async function StoryDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  return <StoryDetailClient slug={slug} />;
+  return <StoryDetailView slug={slug} />;
 }

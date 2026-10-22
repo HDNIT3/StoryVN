@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { NavItem, DEFAULT_NAV_ITEMS } from "./header.config";
-import { useAllCategories } from "@/lib/hooks/queries/useCategoryQuery";
+import { useAllCategories } from "@/features/categories";
 
 // ─── Icons ────────────────────────────────────────────────────────
 function ChevronDownIcon({
