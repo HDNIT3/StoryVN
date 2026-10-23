@@ -76,26 +76,34 @@ export const ReaderContent: React.FC<ReaderContentProps> = ({
       </div>
 
       {/* Nội dung chương chữ */}
-      <div
-        style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
-        className={`font-serif sm:font-sans ${t.textColor} tracking-normal text-justify select-text whitespace-pre-wrap leading-relaxed ${t.selection}`}
-      >
-        {content ? (
-          content.split("\n").map((para, idx) => {
-            const trimmed = para.trim();
-            if (!trimmed) {
-              return <div key={idx} className="h-4" />;
-            }
-            return (
-              <p key={idx} className="mb-4 text-indent-sm">
-                {trimmed}
-              </p>
-            );
-          })
+      {content ? (
+        /<\/?[a-z][\s\S]*>/i.test(content) ? (
+          <div
+            style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
+            className={`font-serif sm:font-sans ${t.textColor} tracking-normal text-justify select-text leading-relaxed ${t.selection} prose max-w-none [&_p]:mb-4 [&_p]:text-indent-sm [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mb-2 [&_blockquote]:pl-4 [&_blockquote]:border-l-4 [&_blockquote]:border-zinc-300 [&_blockquote]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5`}
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
         ) : (
-          <p className="italic opacity-60">Nội dung chương đang được cập nhật...</p>
-        )}
-      </div>
+          <div
+            style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
+            className={`font-serif sm:font-sans ${t.textColor} tracking-normal text-justify select-text whitespace-pre-wrap leading-relaxed ${t.selection}`}
+          >
+            {content.split("\n").map((para, idx) => {
+              const trimmed = para.trim();
+              if (!trimmed) {
+                return <div key={idx} className="h-4" />;
+              }
+              return (
+                <p key={idx} className="mb-4 text-indent-sm">
+                  {trimmed}
+                </p>
+              );
+            })}
+          </div>
+        )
+      ) : (
+        <p className="italic opacity-60">Nội dung chương đang được cập nhật...</p>
+      )}
     </article>
   );
 };
