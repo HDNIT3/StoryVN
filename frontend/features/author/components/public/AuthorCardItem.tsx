@@ -12,12 +12,12 @@ export function AuthorCardItem({ author, formatNumber }: AuthorCardItemProps) {
   return (
     <Link
       href={`/tac-gia/${author.username}`}
-      className="group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 hover:border-amber-300 dark:hover:border-amber-900/60 transition-colors cursor-pointer overflow-hidden shadow-2xs"
+      className="group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-sky-300 hover:shadow-xs transition-all cursor-pointer overflow-hidden shadow-2xs"
     >
       <div>
         {/* Avatar + Name + Tags + Arrow */}
         <div className="flex items-start gap-3.5">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200 dark:from-zinc-800 dark:to-zinc-700 border border-zinc-200/80 dark:border-zinc-700 flex items-center justify-center text-amber-900 dark:text-zinc-200 font-bold text-lg shrink-0 shadow-inner">
+          <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center text-slate-700 font-bold text-lg shrink-0 shadow-inner">
             {author.avatarUrl ? (
               <Image
                 src={author.avatarUrl}
@@ -32,7 +32,7 @@ export function AuthorCardItem({ author, formatNumber }: AuthorCardItemProps) {
           </div>
 
           <div className="flex-1 min-w-0 pr-4">
-            <h3 className="font-bold text-base text-zinc-900 dark:text-zinc-100 font-serif group-hover:text-[#8b181b] dark:group-hover:text-amber-400 transition-colors truncate">
+            <h3 className="font-bold text-base text-slate-900 group-hover:text-sky-600 transition-colors truncate">
               {author.penName}
             </h3>
 
@@ -44,15 +44,15 @@ export function AuthorCardItem({ author, formatNumber }: AuthorCardItemProps) {
                     key={g._id || idx}
                     className={`text-[11px] font-medium px-2 py-0.5 rounded-md ${
                       idx === 0
-                        ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/60"
-                        : "bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/60"
+                        ? "bg-sky-50 text-sky-700 border border-sky-200/60"
+                        : "bg-slate-100 text-slate-700 border border-slate-200/60"
                     }`}
                   >
                     {g.name}
                   </span>
                 ))
               ) : (
-                <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
                   Sáng tác StoryVN
                 </span>
               )}
@@ -60,7 +60,7 @@ export function AuthorCardItem({ author, formatNumber }: AuthorCardItemProps) {
           </div>
 
           {/* Navigation Arrow */}
-          <div className="text-zinc-300 dark:text-zinc-600 group-hover:text-[#8b181b] dark:group-hover:text-amber-400 group-hover:translate-x-1 transition-all pt-1 shrink-0">
+          <div className="text-slate-300 group-hover:text-sky-600 group-hover:translate-x-1 transition-all pt-1 shrink-0">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

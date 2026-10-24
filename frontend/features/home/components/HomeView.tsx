@@ -7,6 +7,8 @@ import { HeroStoryBanner } from "./HeroStoryBanner";
 import { HomeTopViewsSection } from "./HomeTopViewsSection";
 import { HomeTopWordCountSection } from "./HomeTopWordCountSection";
 import { HomeLatestChaptersSection } from "./HomeLatestChaptersSection";
+import { HomeFeaturedAuthorsSection } from "./HomeFeaturedAuthorsSection";
+import { HomeSideNav } from "./HomeSideNav";
 
 export function HomeView() {
   const { data: topStories = [], isLoading: isLoadingTopViews } = useQuery({
@@ -37,20 +39,12 @@ export function HomeView() {
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-white">
-      {/* ─── Luminous mesh background ─────────────────────────── */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[920px] overflow-hidden"
-      >
-        <div className="absolute -top-40 left-1/2 h-[440px] w-[760px] -translate-x-1/2 rounded-full bg-sky-200/40 opacity-70 blur-3xl" />
-        <div className="absolute top-24 -left-32 h-[380px] w-[380px] rounded-full bg-indigo-200/35 opacity-60 blur-3xl" />
-        <div className="absolute top-64 -right-32 h-[420px] w-[420px] rounded-full bg-fuchsia-200/25 opacity-60 blur-3xl" />
-        <div className="absolute inset-x-0 top-0 h-[520px] bg-gradient-to-b from-white/0 via-white/40 to-white" />
-      </div>
+      {/* Thanh điều hướng nhanh theo section nổi bên phải */}
+      <HomeSideNav />
 
-      <div className="relative z-10 mx-auto w-full space-y-12 px-4 py-6 sm:space-y-16 sm:px-6 sm:py-10 lg:px-10 2xl:px-16">
+      <div className="relative z-10 mx-auto w-full max-w-7xl space-y-10 px-4 pt-2 pb-12 sm:space-y-14 sm:px-6 sm:pt-4 sm:pb-16 lg:px-8">
         {/* HERO — Truyện mới nhất nổi bật */}
-        <section id="noi-bat" aria-label="Tiêu điểm nổi bật" className="scroll-mt-36">
+        <section id="noi-bat" aria-label="Tiêu điểm nổi bật" className="scroll-mt-28">
           <HeroStoryBanner />
         </section>
 
@@ -59,6 +53,9 @@ export function HomeView() {
           topStories={topStories}
           isLoading={isLoadingTopViews}
         />
+
+        {/* TÁC GIẢ NỔI BẬT — Avatar tròn + Tên + Tổng lượt đọc */}
+        <HomeFeaturedAuthorsSection />
 
         {/* TOP WORD COUNT — Truyện có tổng số từ lớn nhất */}
         <HomeTopWordCountSection

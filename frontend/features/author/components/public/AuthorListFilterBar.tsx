@@ -33,7 +33,7 @@ export function AuthorListFilterBar({
   onReset,
 }: AuthorListFilterBarProps) {
   return (
-    <section className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 items-end">
         {/* Search Input */}
         <div className="space-y-1.5">
@@ -161,7 +161,7 @@ export function AuthorListFilterBar({
             <button
               type="button"
               onClick={onApply}
-              className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm bg-[#8b181b] hover:bg-[#721316] text-white transition-colors whitespace-nowrap cursor-pointer text-center"
+              className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm bg-sky-600 hover:bg-sky-700 text-white shadow-xs transition-colors whitespace-nowrap cursor-pointer text-center"
             >
               Áp dụng
             </button>

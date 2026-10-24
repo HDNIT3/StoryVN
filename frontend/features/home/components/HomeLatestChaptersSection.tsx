@@ -57,18 +57,17 @@ export function HomeLatestChaptersSection({ stories, isLoading }: HomeLatestChap
   return (
     <section id="moi-cap-nhat" aria-labelledby="latest-chapters-heading" className="space-y-5 scroll-mt-36">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2.5">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-sky-600 shadow-[0_10px_30px_-22px_rgba(14,165,233,0.9)] backdrop-blur-xl">
-            <ClockIcon className="h-3.5 w-3.5" />
-            Mới nhất
-          </span>
+        <div className="space-y-1.5">
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-sky-600">
+            Mới cập nhật
+          </p>
           <h2
             id="latest-chapters-heading"
-            className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl"
+            className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900"
           >
-            Mới cập nhật
+            Chương truyện mới xuất bản
           </h2>
-          <p className="max-w-[65ch] text-base text-slate-500">
+          <p className="max-w-[65ch] text-sm sm:text-base leading-relaxed text-slate-500 italic">
             Những chương truyện vừa lên kệ, cập nhật liên tục mỗi ngày.
           </p>
         </div>
