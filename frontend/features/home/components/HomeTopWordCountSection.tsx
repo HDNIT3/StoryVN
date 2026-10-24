@@ -76,18 +76,17 @@ export function HomeTopWordCountSection({ stories, isLoading }: HomeTopWordCount
     >
       <div className="mx-auto w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-10 2xl:px-16">
         <div className="mb-6 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2.5">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.16em] text-emerald-600">
-              <WordsIcon className="h-4 w-4" />
-              Truyện dài nhất
-            </span>
+          <div className="space-y-1.5">
+            <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-sky-600">
+              Top nhiều chữ
+            </p>
             <h2
               id="top-word-count-heading"
-              className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
+              className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900"
             >
               Top truyện nhiều chữ nhất
             </h2>
-            <p className="max-w-[65ch] text-base text-slate-500">
+            <p className="max-w-[65ch] text-sm sm:text-base leading-relaxed text-slate-500 italic">
               Tổng hợp những tác phẩm đồ sộ nhất theo tổng số từ của các chương đã xuất bản.
             </p>
           </div>

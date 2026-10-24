@@ -111,18 +111,17 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
       />
 
       <div className="mb-7 flex flex-col gap-4 sm:mb-9 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2.5">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-sky-600 shadow-[0_10px_30px_-22px_rgba(14,165,233,0.9)] backdrop-blur-xl">
-            <FlameIcon className="h-3.5 w-3.5" />
+        <div className="space-y-1.5">
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-sky-600">
             Bảng xếp hạng
-          </span>
+          </p>
           <h2
             id="leaderboard-heading"
-            className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
+            className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900"
           >
             Top truyện nhiều lượt xem nhất
           </h2>
-          <p className="max-w-[65ch] text-base leading-relaxed text-slate-500">
+          <p className="max-w-[65ch] text-sm sm:text-base leading-relaxed text-slate-500 italic">
             Những tác phẩm thu hút độc giả hàng đầu đang được đọc nhiều nhất trên StoryVN.
           </p>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -19,14 +19,6 @@ import { HeaderNav } from "./HeaderNav";
 import { HeaderSearch } from "./HeaderSearch";
 import { HeaderActions } from "./HeaderActions";
 import { HeaderMobileMenu } from "./HeaderMobileMenu";
-
-// ─── Home section anchors ─────────────────────────────────────────
-const HOME_SECTION_LINKS = [
-  { id: "noi-bat", label: "Nổi bật" },
-  { id: "bang-xep-hang", label: "Bảng xếp hạng" },
-  { id: "top-nhieu-chu", label: "Top nhiều chữ" },
-  { id: "moi-cap-nhat", label: "Mới cập nhật" },
-] as const;
 
 // ─── Logo ─────────────────────────────────────────────────────────
 function HeaderLogo({
@@ -82,56 +74,15 @@ export function Header({
   sticky = true,
   className = "",
 }: HeaderProps = {}) {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-  const [activeSection, setActiveSection] = useState<string>("noi-bat");
-
-  useEffect(() => {
-    if (!isHome) return;
-
-    const sections = HOME_SECTION_LINKS.map((item) =>
-      document.getElementById(item.id)
-    ).filter((el): el is HTMLElement => Boolean(el));
-
-    if (sections.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-
-        if (visible[0]) {
-          setActiveSection(visible[0].target.id);
-        }
-      },
-      {
-        rootMargin: "-140px 0px -55% 0px",
-        threshold: [0, 0.2, 0.5, 0.8],
-      }
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, [isHome]);
-
-  const scrollToSection = (id: string) => {
-    setActiveSection(id);
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
-
   return (
     <header
-      className={`w-full border-b border-white/60 bg-white/80 transition-all ${
+      className={`w-full border-b border-slate-200/80 bg-white/95 transition-all ${
         sticky
-          ? "sticky top-0 z-40 bg-white/80 shadow-[0_1px_0_rgba(15,23,42,0.04),0_14px_40px_-30px_rgba(14,165,233,0.55)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/70"
+          ? "sticky top-0 z-50 bg-white/95 shadow-xs backdrop-blur-xl supports-[backdrop-filter]:bg-white/90"
           : ""
       } ${className}`}
     >
-      <div className="flex h-16 w-full min-w-0 items-center justify-between gap-2 px-4 sm:h-20 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8 2xl:px-10">
+      <div className="mx-auto flex h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-2 px-4 sm:h-20 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         {/* Left Side: Logo & Desktop Navigation */}
         <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 lg:gap-4">
           <HeaderLogo {...logo} />
@@ -189,44 +140,6 @@ export function Header({
           />
         </div>
       </div>
-
-      {/* Home section quick navigation */}
-      {isHome && (
-        <div className="border-t border-slate-100/80 bg-white/70 backdrop-blur-xl">
-          <nav
-            aria-label="Mục lục trang chủ"
-            className="flex w-full items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8 2xl:px-10"
-          >
-            <span className="hidden shrink-0 text-xs font-bold uppercase tracking-[0.14em] text-slate-400 sm:inline">
-              Mục lục
-            </span>
-            <div className="flex items-center gap-1">
-              {HOME_SECTION_LINKS.map((item) => {
-                const isActive = activeSection === item.id;
-
-                return (
-                  <a
-                    key={item.id}
-                    href={`#${item.id}`}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      scrollToSection(item.id);
-                    }}
-                    aria-current={isActive ? "true" : undefined}
-                    className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-                      isActive
-                        ? "bg-sky-50 text-sky-600 shadow-[inset_0_0_0_1px_rgba(14,165,233,0.16)]"
-                        : "text-slate-600 hover:bg-sky-50/70 hover:text-sky-600"
-                    }`}
-                  >
-                    {item.label}
-                  </a>
-                );
-              })}
-            </div>
-          </nav>
-        </div>
-      )}
     </header>
   );
 }

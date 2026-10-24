@@ -59,8 +59,8 @@ export class AuthGuard implements CanActivate {
               }
             }
           }
-        } catch (err: any) {
-          console.error('[AuthGuard isPublic] error decoding token:', err?.message || err);
+        } catch {
+          // Route công khai: Token hết hạn hoặc không hợp lệ thì coi như khách vãng lai (Guest), không log error tránh spam terminal
         }
       }
       return true;
