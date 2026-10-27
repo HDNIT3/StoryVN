@@ -16,6 +16,7 @@ import { UsersModule } from './modules/users/users.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ChaptersModule } from './modules/chapters/chapters.module.js';
 import { ReadingHistoryModule } from './modules/reading-history/reading-history.module.js';
+import { FollowsModule } from './modules/follows/follows.module.js';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ReadingHistoryModule } from './modules/reading-history/reading-history.
     NotificationsModule,
     ChaptersModule,
     ReadingHistoryModule,
+    FollowsModule,
   ],
   controllers: [AppController],
   providers: [

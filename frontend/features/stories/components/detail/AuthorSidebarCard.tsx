@@ -5,9 +5,17 @@ import type { StoryDetailData } from "@/features/stories";
 
 interface AuthorSidebarCardProps {
   author?: StoryDetailData["author"];
+  isFollowingAuthor?: boolean;
+  isFollowAuthorPending?: boolean;
+  onToggleFollowAuthor?: () => void;
 }
 
-export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({ author }) => {
+export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({
+  author,
+  isFollowingAuthor,
+  isFollowAuthorPending,
+  onToggleFollowAuthor,
+}) => {
   const avatar = author?.avatar || null;
   const name =
     author?.penName ||
@@ -70,8 +78,37 @@ export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({ author }) 
           </div>
         )}
 
-        {/* Nút xem trang tác giả */}
-        <div className="mt-4 w-full">
+        {/* Nút thao tác tác giả */}
+        <div className="mt-4 w-full flex flex-col gap-2">
+          {author?.username && onToggleFollowAuthor && (
+            <button
+              type="button"
+              onClick={onToggleFollowAuthor}
+              disabled={isFollowAuthorPending}
+              className={`inline-flex w-full items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all cursor-pointer ${
+                isFollowingAuthor
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
+                  : "bg-white text-zinc-700 hover:bg-zinc-50 border-zinc-200"
+              }`}
+            >
+              {isFollowingAuthor ? (
+                <>
+                  <svg className="w-4 h-4 text-emerald-700 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                  <span>Đang theo dõi tác giả</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Theo dõi tác giả</span>
+                </>
+              )}
+            </button>
+          )}
+
           {author?.username ? (
             <Link
               href={`/tac-gia/${author.username}`}

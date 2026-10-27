@@ -51,3 +51,15 @@ export function formatRelativeTime(value?: string | Date | null): string {
 
   return formatDate(date);
 }
+
+/** Định dạng số rút gọn (1.2K, 3.5M hoặc phân cách hàng nghìn) */
+export function formatNumber(num?: number | null): string {
+  if (num === undefined || num === null || isNaN(num)) return "0";
+  if (num >= 1_000_000) {
+    return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  }
+  if (num >= 1_000) {
+    return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  }
+  return num.toLocaleString("vi-VN");
+}
