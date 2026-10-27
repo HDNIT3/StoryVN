@@ -195,7 +195,7 @@ export function HeaderMobileMenu({
 
                   {bookmark && (
                     <Link
-                      href={bookmark.href || "/tai-khoan/tu-truyen"}
+                      href={bookmark.href || "/tai-khoan/theo-doi"}
                       onClick={() => {
                         setIsOpen(false);
                         if (onBookmarkClick) onBookmarkClick();

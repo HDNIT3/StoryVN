@@ -2,10 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { storyService, storyKeys } from "@/features/stories";
 import { chapterService, chapterKeys } from "@/features/chapters";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useFollowStatus, useToggleFollow } from "@/features/follows";
 import { toast } from "@/lib/toast";
 import type { SameGenreStoryItem } from "@/features/stories";
 import { StoryDetailHeader } from "./StoryDetailHeader";
@@ -100,6 +102,58 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({ slug: initialS
     } catch {
       toast.error("Không thể sao chép liên kết, vui lòng copy trên thanh địa chỉ.");
     }
+  };
+
+  const router = useRouter();
+  const { isAuthenticated, user: currentUser } = useAuth();
+
+  // Kiểm tra & thao tác follow truyện
+  const { data: followStoryStatus, isLoading: isLoadingFollowStory } = useFollowStatus(
+    "STORY",
+    story?._id || "",
+    Boolean(isAuthenticated && story?._id)
+  );
+  const isFollowingStory = followStoryStatus?.isFollowing ?? false;
+
+  const { mutate: toggleFollow, isPending: isPendingFollow } = useToggleFollow();
+
+  const handleToggleFollowStory = () => {
+    if (!isAuthenticated) {
+      toast.info("Vui lòng đăng nhập để theo dõi truyện!");
+      router.push(`/dang-nhap?returnUrl=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    if (!story?._id) return;
+    toggleFollow({
+      targetType: "STORY",
+      targetId: story._id,
+    });
+  };
+
+  // Kiểm tra & thao tác follow tác giả
+  const authorUserId = story?.author?._id;
+  const { data: followAuthorStatus, isLoading: isLoadingFollowAuthor } = useFollowStatus(
+    "AUTHOR",
+    authorUserId || "",
+    Boolean(isAuthenticated && authorUserId)
+  );
+  const isFollowingAuthor = followAuthorStatus?.isFollowing ?? false;
+
+  const handleToggleFollowAuthor = () => {
+    if (!isAuthenticated) {
+      toast.info("Vui lòng đăng nhập để theo dõi tác giả!");
+      router.push(`/dang-nhap?returnUrl=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    if (!authorUserId) return;
+    if (authorUserId === currentUser?._id) {
+      toast.warning("Bạn không thể tự theo dõi chính mình!");
+      return;
+    }
+    toggleFollow({
+      targetType: "AUTHOR",
+      targetId: authorUserId,
+    });
   };
 
   const handleFunctionPlaceholder = (featureName: string) => {
@@ -212,6 +266,9 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({ slug: initialS
               firstChapter={firstChapter}
               onShare={handleShare}
               onPlaceholder={handleFunctionPlaceholder}
+              isFollowing={isFollowingStory}
+              isFollowPending={isPendingFollow}
+              onToggleFollow={handleToggleFollowStory}
             />
 
             <StoryDetailTabs
@@ -234,7 +291,12 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({ slug: initialS
 
           {/* CỘT PHẢI */}
           <div className="lg:col-span-4 space-y-6">
-            <AuthorSidebarCard author={story.author} />
+            <AuthorSidebarCard
+              author={story.author}
+              isFollowingAuthor={isFollowingAuthor}
+              isFollowAuthorPending={isPendingFollow}
+              onToggleFollowAuthor={handleToggleFollowAuthor}
+            />
             <SameGenreStoriesWidget
               sameGenreStories={sameGenreStories}
               genres={story.genres}

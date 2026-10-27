@@ -2,8 +2,11 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { authorService, authorKeys, AuthorStoryItem } from "@/features/author";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useFollowStatus, useToggleFollow } from "@/features/follows";
 import { toast } from "@/lib/toast";
 import { AuthorProfileHeader } from "./AuthorProfileHeader";
 import { AuthorStoriesTab } from "./AuthorStoriesTab";
@@ -57,7 +60,6 @@ export function PublicAuthorDetailView({ username }: PublicAuthorDetailViewProps
 
   const [showDonateModal, setShowDonateModal] = useState<boolean>(false);
   const [isCopiedBank, setIsCopiedBank] = useState<boolean>(false);
-  const [isFollowedDemo, setIsFollowedDemo] = useState<boolean>(false);
 
   const {
     data: authorData,
@@ -95,14 +97,35 @@ export function PublicAuthorDetailView({ username }: PublicAuthorDetailViewProps
   const stories = storiesData?.data?.items || [];
   const pagination = storiesData?.data?.pagination;
 
+  const router = useRouter();
+  const { isAuthenticated, user: currentUser } = useAuth();
+
+  const authorUserId = author?._id;
+
+  const { data: followStatus, isLoading: isLoadingFollowStatus } = useFollowStatus(
+    "AUTHOR",
+    authorUserId || "",
+    Boolean(isAuthenticated && authorUserId)
+  );
+  const isFollowing = followStatus?.isFollowing ?? false;
+
+  const { mutate: toggleFollow, isPending: isPendingFollow } = useToggleFollow();
+
   const handleFollowToggle = () => {
-    const nextState = !isFollowedDemo;
-    setIsFollowedDemo(nextState);
-    if (nextState) {
-      toast.success(`Đã theo dõi tác giả ${author?.penName || ""}! Bạn sẽ nhận được thông báo khi có chương mới.`);
-    } else {
-      toast.info("Đã bỏ theo dõi tác giả.");
+    if (!isAuthenticated) {
+      toast.info("Vui lòng đăng nhập để theo dõi tác giả!");
+      router.push(`/dang-nhap?returnUrl=${encodeURIComponent(window.location.pathname)}`);
+      return;
     }
+    if (!authorUserId) return;
+    if (authorUserId === currentUser?._id) {
+      toast.warning("Bạn không thể tự theo dõi chính mình!");
+      return;
+    }
+    toggleFollow({
+      targetType: "AUTHOR",
+      targetId: authorUserId,
+    });
   };
 
   const handleShareClick = () => {
@@ -190,7 +213,7 @@ export function PublicAuthorDetailView({ username }: PublicAuthorDetailViewProps
     );
   }
 
-  const effectiveFollowerCount = (author.followerCount || 0) + (isFollowedDemo ? 1 : 0);
+  const effectiveFollowerCount = author.followerCount || 0;
   const hasDonateInfo = Boolean(author.donateInfo?.bankName && author.donateInfo?.bankAccountNumber);
 
   return (
@@ -199,7 +222,7 @@ export function PublicAuthorDetailView({ username }: PublicAuthorDetailViewProps
         {/* Profile Card Header */}
         <AuthorProfileHeader
           author={author}
-          isFollowedDemo={isFollowedDemo}
+          isFollowedDemo={isFollowing}
           onFollowToggle={handleFollowToggle}
           onShareClick={handleShareClick}
           onOpenDonate={() => setShowDonateModal(true)}

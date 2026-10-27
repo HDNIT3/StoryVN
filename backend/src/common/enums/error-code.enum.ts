@@ -235,4 +235,12 @@ export const ErrorCode = {
     error: 'CHAPTER_REJECT_REASON_REQUIRED',
     message: 'Vui lòng cung cấp lý do từ chối phê duyệt chương',
   },
+  CANNOT_FOLLOW_SELF: {
+    error: 'CANNOT_FOLLOW_SELF',
+    message: 'Bạn không thể tự theo dõi chính mình',
+  },
+  ALREADY_FOLLOWING: {
+    error: 'ALREADY_FOLLOWING',
+    message: 'Bạn đã theo dõi đối tượng này rồi',
+  },
 };
