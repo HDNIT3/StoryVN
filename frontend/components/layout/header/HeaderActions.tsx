@@ -30,12 +30,12 @@ function HeaderBookmark({
 }) {
   const count = bookmark.count ?? 0;
   const iconSrc = bookmark.iconSrc ?? "/icon/bookmark.svg";
-  const href = bookmark.href ?? "/tai-khoan/tu-truyen";
+  const href = bookmark.href ?? "/tai-khoan/theo-doi";
 
   const content = (
     <div
       className={`group relative shrink-0 cursor-pointer rounded-full p-1 text-slate-500 transition-colors select-none hover:bg-sky-50 hover:text-sky-600 sm:p-2 ${className}`}
-      title="Tủ truyện đã lưu"
+      title="Tủ truyện"
       aria-label={`Tủ truyện: ${count} truyện đã lưu`}
     >
       <div className="relative h-5 w-5 shrink-0 sm:h-6 sm:w-6">
