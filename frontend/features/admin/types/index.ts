@@ -25,3 +25,6 @@ export type {
   QueryAuthorRequestsParams,
   ReviewAuthorRequestPayload,
 } from "@/features/author";
+
+export * from "./comment.types";
+export * from "./rating.types";

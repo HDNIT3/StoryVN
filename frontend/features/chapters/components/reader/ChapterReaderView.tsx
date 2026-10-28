@@ -13,6 +13,7 @@ import { ReaderSettingsModal } from "./ReaderSettingsModal";
 import { ReaderContent } from "./ReaderContent";
 import { ReaderNavigation } from "./ReaderNavigation";
 import { ReaderChapterModal } from "./ReaderChapterModal";
+import { ChapterCommentSection } from "@/features/comments";
 
 interface ChapterReaderViewProps {
   slug: string;
@@ -157,8 +158,14 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [chapter, router, slug, showChapterModal]);
 
-  // Scroll to top on chapter change
+  // Scroll to top on chapter change (chỉ khi không có commentId đang cần scroll tới)
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("commentId") || window.location.hash.includes("comment-")) {
+        return;
+      }
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [chapterNumber]);
 
@@ -257,6 +264,18 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
           onOpenChapterModal={openChapterModal}
           onScrollToTop={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         />
+
+        {/* Khu vực bình luận chương */}
+        {story?._id && chapter?._id && (
+          <ChapterCommentSection
+            storyId={story._id}
+            chapterId={chapter._id}
+            chapterNumber={chapter.chapterNumber}
+            storyAuthorId={(story as any)?.authorId || (story as any)?.author?._id}
+            storySlug={slug}
+            theme={theme}
+          />
+        )}
       </main>
 
       {/* Modal mục lục */}

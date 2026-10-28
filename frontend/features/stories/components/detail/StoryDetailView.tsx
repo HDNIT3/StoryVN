@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { storyService, storyKeys } from "@/features/stories";
 import { chapterService, chapterKeys } from "@/features/chapters";
@@ -26,7 +26,29 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({ slug: initialS
     initialSlug ||
     (Array.isArray(params?.slug) ? params.slug[0] : (params?.slug as string) || "");
 
-  const [activeTab, setActiveTab] = useState<"about" | "chapters">("about");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const commentIdParam = searchParams.get("commentId");
+
+  const [activeTab, setActiveTab] = useState<"about" | "chapters" | "ratings" | "comments">(
+    tabParam === "comments" || commentIdParam
+      ? "comments"
+      : tabParam === "ratings"
+      ? "ratings"
+      : tabParam === "chapters"
+      ? "chapters"
+      : "about"
+  );
+
+  useEffect(() => {
+    if (tabParam === "comments" || commentIdParam) {
+      setActiveTab("comments");
+    } else if (tabParam === "ratings") {
+      setActiveTab("ratings");
+    } else if (tabParam === "chapters") {
+      setActiveTab("chapters");
+    }
+  }, [tabParam, commentIdParam]);
   const [chapterOrder, setChapterOrder] = useState<"asc" | "desc">("asc");
 
   // Query thông tin chi tiết truyện
@@ -269,6 +291,7 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({ slug: initialS
               isFollowing={isFollowingStory}
               isFollowPending={isPendingFollow}
               onToggleFollow={handleToggleFollowStory}
+              onOpenRatings={() => setActiveTab("ratings")}
             />
 
             <StoryDetailTabs

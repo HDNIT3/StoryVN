@@ -13,6 +13,7 @@ interface StoryDetailHeaderProps {
   isFollowing?: boolean;
   isFollowPending?: boolean;
   onToggleFollow?: () => void;
+  onOpenRatings?: () => void;
 }
 
 function ProgressBadge({ state }: { state?: StoryProgressState }) {
@@ -166,6 +167,7 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
   isFollowing,
   isFollowPending,
   onToggleFollow,
+  onOpenRatings,
 }) => {
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/80 shadow-xs relative overflow-hidden">
@@ -242,13 +244,13 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
                 {formatNumber(story.stats?.followCount)}
               </div>
             </div>
-            <div className="text-center border-l border-zinc-200/60">
+            <button type="button" onClick={onOpenRatings} className="text-center border-l border-zinc-200/60 hover:bg-amber-50/50 rounded-lg p-1 transition-colors cursor-pointer">
               <div className="text-xs text-zinc-500 font-medium">Đánh giá</div>
               <div className="text-base sm:text-lg font-bold text-amber-600 mt-0.5 flex items-center justify-center gap-1">
                 <span>★</span>
-                <span>{story.stats?.ratingAverage ? story.stats.ratingAverage.toFixed(1) : "5.0"}</span>
+                <span>{story.stats?.ratingAverage ? story.stats.ratingAverage.toFixed(1) : "0.0"}</span>
               </div>
-            </div>
+            </button>
             <div className="text-center border-l border-zinc-200/60">
               <div className="text-xs text-zinc-500 font-medium">Số chương</div>
               <div className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5">

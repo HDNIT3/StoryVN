@@ -1,10 +1,16 @@
+"use client";
+
 import React from "react";
 import type { StoryDetailData } from "@/features/stories";
+import { StoryRatingsSection } from "@/features/ratings";
+import { StoryCommentsSection } from "@/features/comments";
+
+export type StoryDetailTabKey = "about" | "chapters" | "ratings" | "comments";
 
 interface StoryDetailTabsProps {
   story: StoryDetailData;
-  activeTab: "about" | "chapters";
-  onTabChange: (tab: "about" | "chapters") => void;
+  activeTab: StoryDetailTabKey;
+  onTabChange: (tab: StoryDetailTabKey) => void;
   publicChapterCount: number;
   children?: React.ReactNode;
 }
@@ -16,14 +22,18 @@ export const StoryDetailTabs: React.FC<StoryDetailTabsProps> = ({
   publicChapterCount,
   children,
 }) => {
+  const ratingCount = story.stats?.ratingCount ?? 0;
+  const ratingAvg = story.stats?.ratingAverage ?? 0;
+  const commentCount = story.stats?.commentCount ?? 0;
+
   return (
     <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs overflow-hidden">
       {/* Header các tab */}
-      <div className="flex border-b border-zinc-200/80 px-6 sm:px-8 bg-zinc-50/50">
+      <div className="flex border-b border-zinc-200/80 px-4 sm:px-8 bg-zinc-50/50 overflow-x-auto scrollbar-none">
         <button
           type="button"
           onClick={() => onTabChange("about")}
-          className={`py-4 px-2 sm:px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+          className={`py-4 px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer shrink-0 ${
             activeTab === "about"
               ? "border-emerald-700 text-emerald-800"
               : "border-transparent text-zinc-500 hover:text-zinc-800"
@@ -34,13 +44,44 @@ export const StoryDetailTabs: React.FC<StoryDetailTabsProps> = ({
         <button
           type="button"
           onClick={() => onTabChange("chapters")}
-          className={`py-4 px-2 sm:px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+          className={`py-4 px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer shrink-0 ${
             activeTab === "chapters"
               ? "border-emerald-700 text-emerald-800"
               : "border-transparent text-zinc-500 hover:text-zinc-800"
           }`}
         >
           Danh sách chương ({publicChapterCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => onTabChange("ratings")}
+          className={`py-4 px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 ${
+            activeTab === "ratings"
+              ? "border-emerald-700 text-emerald-800"
+              : "border-transparent text-zinc-500 hover:text-zinc-800"
+          }`}
+        >
+          <span>Đánh giá</span>
+          <span className="text-amber-500">★</span>
+          <span>
+            {ratingAvg > 0 ? ratingAvg.toFixed(1) : "0"} ({ratingCount})
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onTabChange("comments")}
+          className={`py-4 px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 ${
+            activeTab === "comments"
+              ? "border-emerald-700 text-emerald-800"
+              : "border-transparent text-zinc-500 hover:text-zinc-800"
+          }`}
+        >
+          <span>Bình luận</span>
+          {commentCount > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-zinc-200 text-zinc-700 font-semibold">
+              {commentCount}
+            </span>
+          )}
         </button>
       </div>
 
@@ -95,6 +136,21 @@ export const StoryDetailTabs: React.FC<StoryDetailTabsProps> = ({
         )}
 
         {activeTab === "chapters" && children}
+
+        {activeTab === "ratings" && (
+          <StoryRatingsSection
+            storyId={story._id}
+            authorId={story.author?._id || undefined}
+          />
+        )}
+
+        {activeTab === "comments" && (
+          <StoryCommentsSection
+            storyId={story._id}
+            storyAuthorId={story.author?._id || undefined}
+            storySlug={story.slug}
+          />
+        )}
       </div>
     </div>
   );
