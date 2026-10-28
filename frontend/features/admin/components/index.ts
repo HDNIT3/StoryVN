@@ -6,4 +6,6 @@ export * from "./stories";
 export * from "./tags";
 export * from "./users";
 export * from "./media";
+export * from "./comments";
+export * from "./ratings";
 export * from "./layout";

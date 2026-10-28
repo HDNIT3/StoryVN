@@ -67,11 +67,23 @@ export class NotificationsService {
       isRead: false,
     });
     const saved = await notification.save();
+    let notificationForEvent: any = saved;
+    try {
+      const populated = await this.notificationModel
+        .findById(saved._id)
+        .populate('storyId', 'title slug coverUrl')
+        .populate('chapterId', 'chapterNumber title')
+        .populate('actorId', 'displayName username avatarUrl')
+        .exec();
+      if (populated) notificationForEvent = populated;
+    } catch {
+      // fallback to saved
+    }
 
     // Phát sự kiện realtime
     this.notificationSubject.next({
       targetUserIds: [saved.userId.toString()],
-      notification: saved,
+      notification: notificationForEvent,
     });
 
     return saved;
@@ -192,6 +204,9 @@ export class NotificationsService {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
+        .populate('storyId', 'title slug coverUrl')
+        .populate('chapterId', 'chapterNumber title')
+        .populate('actorId', 'displayName username avatarUrl')
         .exec(),
       this.notificationModel.countDocuments(filter),
     ]);

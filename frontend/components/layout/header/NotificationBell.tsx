@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationService, notificationKeys } from "@/features/notifications";
+import { commentService } from "@/features/comments";
 import type { Notification } from "@/features/notifications";
 import { NotificationDropdown } from "./NotificationDropdown";
 
@@ -133,7 +134,7 @@ export function NotificationBell({
   const { user } = useAuth();
 
   const handleNavigate = useCallback(
-    (notification: Notification) => {
+    async (notification: Notification) => {
       setIsOpen(false);
       if (notification.type === "MODERATION") {
         if (user?.role === "ADMIN" || user?.role === "MANAGER") {
@@ -141,12 +142,97 @@ export function NotificationBell({
         } else {
           router.push("/tac-gia/dang-ky");
         }
-      } else if (notification.type === "NEW_CHAPTER" && notification.storyId) {
-        if (notification.chapterId) {
-          router.push(`/truyen/${notification.storyId}/${notification.chapterId}`);
-        } else {
-          router.push(`/truyen/${notification.storyId}`);
+        return;
+      }
+
+      if (notification.type === "NEW_CHAPTER") {
+        const storySlug =
+          typeof notification.storyId === "object" && notification.storyId !== null
+            ? notification.storyId.slug
+            : notification.storyId;
+        const chapterNum =
+          typeof notification.chapterId === "object" && notification.chapterId !== null
+            ? notification.chapterId.chapterNumber
+            : null;
+
+        if (storySlug) {
+          if (chapterNum) {
+            router.push(`/truyen/${storySlug}/chuong/${chapterNum}`);
+          } else {
+            router.push(`/truyen/${storySlug}`);
+          }
         }
+        return;
+      }
+
+      if (notification.type === "COMMENT" || notification.type === "REPLY") {
+        const commentId = notification.referenceId;
+        let storySlug =
+          typeof notification.storyId === "object" && notification.storyId !== null
+            ? notification.storyId.slug
+            : (notification.storyId as string | undefined);
+        let chapterNum =
+          typeof notification.chapterId === "object" && notification.chapterId !== null
+            ? notification.chapterId.chapterNumber
+            : null;
+        let parentId: string | null = null;
+
+        if (commentId) {
+          try {
+            const commentRes = await commentService.getCommentById(commentId);
+            const commentData = commentRes?.data as any;
+            if (commentData) {
+              if (commentData.parentId) {
+                parentId = typeof commentData.parentId === "object" ? commentData.parentId._id : commentData.parentId;
+              }
+              if (commentData.storyId && typeof commentData.storyId === "object") {
+                storySlug = commentData.storyId.slug;
+              }
+              if (commentData.chapterId && typeof commentData.chapterId === "object") {
+                chapterNum = commentData.chapterId.chapterNumber;
+              }
+            }
+          } catch {
+            // fallback to notification fields
+          }
+        }
+
+        if (storySlug) {
+          const queryParams = new URLSearchParams();
+          if (commentId) queryParams.set("commentId", commentId);
+          if (parentId) queryParams.set("parentId", parentId);
+
+          if (chapterNum) {
+            const hash = commentId ? `#comment-${commentId}` : "";
+            router.push(`/truyen/${storySlug}/chuong/${chapterNum}?${queryParams.toString()}${hash}`);
+          } else {
+            queryParams.set("tab", "comments");
+            const hash = commentId ? `#comment-${commentId}` : "";
+            router.push(`/truyen/${storySlug}?${queryParams.toString()}${hash}`);
+          }
+        }
+        return;
+      }
+
+      if (notification.type === "FOLLOW") {
+        const storySlug =
+          typeof notification.storyId === "object" && notification.storyId !== null
+            ? notification.storyId.slug
+            : notification.storyId;
+        if (storySlug) {
+          router.push(`/truyen/${storySlug}`);
+        } else {
+          router.push("/ho-so");
+        }
+        return;
+      }
+
+      if (notification.storyId) {
+        const storySlug =
+          typeof notification.storyId === "object" && notification.storyId !== null
+            ? notification.storyId.slug
+            : notification.storyId;
+        router.push(`/truyen/${storySlug}`);
       }
     },
     [router, user]

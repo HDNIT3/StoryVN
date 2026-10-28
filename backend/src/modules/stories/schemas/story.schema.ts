@@ -49,6 +49,9 @@ export class StoryStats {
 
   @Prop({ type: Number, default: 0, min: 0 })
   wordCount: number;
+
+  @Prop({ type: Number, default: 0, min: 0 })
+  commentCount: number;
 }
 
 export const StoryStatsSchema = SchemaFactory.createForClass(StoryStats);
