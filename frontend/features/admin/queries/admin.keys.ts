@@ -15,4 +15,10 @@ export const adminKeys = {
   chapterCounts: (storyId?: string) =>
     ["admin", "chapters", "counts", ...(storyId ? [storyId] : [])] as const,
   chapterDetail: (id: string) => ["admin", "chapters", "detail", id] as const,
+  comments: (params?: Record<string, unknown>) =>
+    ["admin", "comments", ...(params ? [params] : [])] as const,
+  commentCounts: ["admin", "comments", "counts"] as const,
+  ratings: (params?: Record<string, unknown>) =>
+    ["admin", "ratings", ...(params ? [params] : [])] as const,
+  ratingCounts: ["admin", "ratings", "counts"] as const,
 } as const;

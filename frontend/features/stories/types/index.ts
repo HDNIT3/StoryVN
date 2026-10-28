@@ -17,6 +17,7 @@ export interface StoryStats {
   ratingAverage: number;
   chapterCount: number;
   wordCount?: number;
+  commentCount?: number;
 }
 
 export interface StoryItem {

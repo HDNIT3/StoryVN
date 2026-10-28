@@ -374,6 +374,7 @@ export class ChaptersService {
       limit: query.limit || total,
       story: {
         _id: story._id,
+        authorId: (story.authorId as any)?._id || story.authorId,
         title: story.title,
         slug: story.slug,
         status: story.status,

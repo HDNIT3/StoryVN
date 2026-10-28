@@ -243,4 +243,32 @@ export const ErrorCode = {
     error: 'ALREADY_FOLLOWING',
     message: 'Bạn đã theo dõi đối tượng này rồi',
   },
+  RATING_NOT_FOUND: {
+    error: 'RATING_NOT_FOUND',
+    message: 'Không tìm thấy đánh giá',
+  },
+  CANNOT_RATE_OWN_STORY: {
+    error: 'CANNOT_RATE_OWN_STORY',
+    message: 'Bạn không thể tự đánh giá truyện của chính mình',
+  },
+  STORY_NOT_PUBLISHED: {
+    error: 'STORY_NOT_PUBLISHED',
+    message: 'Chỉ có thể thao tác trên tác phẩm đã phát hành',
+  },
+  COMMENT_NOT_FOUND: {
+    error: 'COMMENT_NOT_FOUND',
+    message: 'Không tìm thấy bình luận',
+  },
+  COMMENT_FORBIDDEN: {
+    error: 'COMMENT_FORBIDDEN',
+    message: 'Bạn không có quyền thao tác trên bình luận này',
+  },
+  PARENT_COMMENT_NOT_FOUND: {
+    error: 'PARENT_COMMENT_NOT_FOUND',
+    message: 'Không tìm thấy bình luận cha để phản hồi',
+  },
+  INVALID_COMMENT_PARENT: {
+    error: 'INVALID_COMMENT_PARENT',
+    message: 'Bình luận cha không thuộc tác phẩm hoặc chương này',
+  },
 };
