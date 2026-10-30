@@ -126,6 +126,35 @@ export function useUpdateChapter() {
   });
 }
 
+export function useRestoreChapterRevision() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      revisionId,
+    }: {
+      id: string;
+      revisionId: string;
+    }) => {
+      const res = await chapterService.restoreChapterRevision(id, revisionId);
+      return res;
+    },
+    onSuccess: (res, variables) => {
+      toast.success(res.message || "Đã khôi phục bản sửa thành bản nháp mới!");
+      queryClient.invalidateQueries({ queryKey: chapterKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: chapterKeys.detail(variables.id),
+      });
+      queryClient.invalidateQueries({ queryKey: storyKeys.all });
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Khôi phục bản sửa thất bại!";
+      toast.error(msg);
+    },
+  });
+}
+
 export function useDeleteChapter() {
   const queryClient = useQueryClient();
 

@@ -135,6 +135,29 @@ export function StoryCardItem({
               </span>
             )}
 
+            {story.status === "PUBLISHED" && story.pendingRevision && (
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border ${
+                  story.pendingRevision.status === "PENDING_REVIEW"
+                    ? "bg-amber-50 border-amber-200 text-amber-700"
+                    : story.pendingRevision.status === "REJECTED"
+                    ? "bg-rose-50 border-rose-200 text-rose-700"
+                    : "bg-zinc-50 border-zinc-200 text-zinc-600"
+                }`}
+                title={
+                  story.pendingRevision.rejectReason
+                    ? `Lý do từ chối bản sửa: ${story.pendingRevision.rejectReason}`
+                    : undefined
+                }
+              >
+                {story.pendingRevision.status === "PENDING_REVIEW"
+                  ? "Bản sửa chờ duyệt"
+                  : story.pendingRevision.status === "REJECTED"
+                  ? "Bản sửa bị từ chối"
+                  : "Có bản sửa nháp"}
+              </span>
+            )}
+
             {story.ageRating && story.ageRating !== "ALL" && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
                 {story.ageRating}
@@ -243,7 +266,12 @@ export function StoryCardItem({
           </div>
 
           <div className="flex items-center gap-2">
-            {(story.status === "DRAFT" || story.status === "REJECTED") && onSubmitReview && (
+            {((story.status === "DRAFT" || story.status === "REJECTED") ||
+              (story.status === "PUBLISHED" &&
+                story.pendingRevision &&
+                (story.pendingRevision.status === "DRAFT" ||
+                  story.pendingRevision.status === "REJECTED"))) &&
+              onSubmitReview && (
               <button
                 type="button"
                 disabled={isSubmittingReview}

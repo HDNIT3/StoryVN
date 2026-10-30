@@ -177,6 +177,11 @@ export function StoryTable({
               const isPending = story.status === "PENDING_REVIEW";
               const isPublished = story.status === "PUBLISHED";
               const isPrivate = story.visibility === "PRIVATE";
+              const isRevisionPending = Boolean(
+                story.isPendingReview &&
+                  story.pendingRevision?.status === "PENDING_REVIEW"
+              );
+              const canModerate = isPending || isRevisionPending;
 
               return (
                 <tr
@@ -260,6 +265,14 @@ export function StoryTable({
                     <div className="flex flex-col gap-1 items-start">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {renderStatusBadge(story.status)}
+                        {isRevisionPending && (
+                          <span
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200"
+                            title="Tác phẩm có bản chỉnh sửa đang chờ duyệt"
+                          >
+                            Bản sửa chờ duyệt
+                          </span>
+                        )}
                         {story.visibility === "PRIVATE" ? (
                           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200" title="Chế độ riêng tư / Đang bị ẩn khỏi độc giả">
                             <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,14 +335,18 @@ export function StoryTable({
                         </svg>
                       </button>
 
-                      {/* Khi đang PENDING_REVIEW: Nút Phê duyệt và Từ chối */}
-                      {isPending && (
+                      {/* Khi đang PENDING_REVIEW hoặc có bản sửa chờ duyệt: Nút Phê duyệt và Từ chối */}
+                      {canModerate && (
                         <>
                           <button
                             type="button"
                             onClick={() => onApprove(story)}
                             className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                            title="Phê duyệt tác phẩm"
+                            title={
+                              isRevisionPending
+                                ? "Phê duyệt bản sửa tác phẩm"
+                                : "Phê duyệt tác phẩm"
+                            }
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -339,7 +356,11 @@ export function StoryTable({
                             type="button"
                             onClick={() => onReject(story)}
                             className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                            title="Từ chối phê duyệt tác phẩm"
+                            title={
+                              isRevisionPending
+                                ? "Từ chối bản sửa tác phẩm"
+                                : "Từ chối phê duyệt tác phẩm"
+                            }
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />

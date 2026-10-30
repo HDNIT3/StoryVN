@@ -1,12 +1,22 @@
 import React from "react";
 import Link from "next/link";
-import { ChapterUpdateItem } from "@/features/chapters";
+import { ChapterRevisionItem } from "@/features/chapters";
 
 interface RevisionDetailViewerProps {
-  selectedRevision: ChapterUpdateItem | null;
+  selectedRevision: ChapterRevisionItem | null;
+  isMutating?: boolean;
+  hasActiveRevision?: boolean;
+  onRestore?: (revision: ChapterRevisionItem) => void;
+  onWithdraw?: (revision: ChapterRevisionItem) => void;
 }
 
-export function RevisionDetailViewer({ selectedRevision }: RevisionDetailViewerProps) {
+export function RevisionDetailViewer({
+  selectedRevision,
+  isMutating = false,
+  hasActiveRevision = false,
+  onRestore,
+  onWithdraw,
+}: RevisionDetailViewerProps) {
   if (!selectedRevision) {
     return (
       <div className="p-12 text-center text-xs text-zinc-400 flex flex-col items-center justify-center h-full">
@@ -40,24 +50,74 @@ export function RevisionDetailViewer({ selectedRevision }: RevisionDetailViewerP
               <span>{storyTitle}</span>
               <span>•</span>
               <span>{chapterNumber ? `Chương #${chapterNumber}` : "Chương"}</span>
+              {selectedRevision.isActive && (
+                <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                  Đang mở
+                </span>
+              )}
             </div>
             <h2 className="text-base sm:text-lg font-bold text-zinc-900 leading-tight">
               {selectedRevision.title}
             </h2>
           </div>
 
-          {/* Action button to open chapter editor */}
-          {chapterId && (
-            <Link
-              href={`/tac-gia/chuong-truyen/chinh-sua/${chapterId}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-xs font-semibold transition shadow-xs shrink-0 self-start sm:self-auto"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              <span>Sửa chương này</span>
-            </Link>
-          )}
+          {/* Hành động theo trạng thái bản sửa */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0 self-start sm:self-auto">
+            {selectedRevision.isActive &&
+              selectedRevision.status === "PENDING_REVIEW" && (
+                <button
+                  type="button"
+                  disabled={isMutating}
+                  onClick={() => onWithdraw?.(selectedRevision)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-300 rounded-md text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  <span>Rút bản chờ duyệt để sửa</span>
+                </button>
+              )}
+
+            {selectedRevision.isActive && chapterId && (
+              <Link
+                href={`/tac-gia/chuong-truyen/chinh-sua/${chapterId}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-xs font-semibold transition shadow-xs"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span>Tiếp tục chỉnh sửa bản này</span>
+              </Link>
+            )}
+
+            {!selectedRevision.isActive && (
+              <button
+                type="button"
+                disabled={isMutating || hasActiveRevision}
+                onClick={() => onRestore?.(selectedRevision)}
+                title={
+                  hasActiveRevision
+                    ? "Đang có bản sửa mở. Hãy rút hoặc hủy bản đó trước khi khôi phục bản khác."
+                    : "Tạo bản nháp mới từ nội dung bản này"
+                }
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-xs font-semibold transition shadow-xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Khôi phục thành bản nháp</span>
+              </button>
+            )}
+
+            {chapterId && (
+              <Link
+                href={`/tac-gia/chuong-truyen/chinh-sua/${chapterId}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-50 text-zinc-600 border border-zinc-200 rounded-md text-xs font-semibold transition"
+              >
+                <span>Mở trang sửa chương</span>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Metadata Chips */}

@@ -44,14 +44,21 @@ export function AuthorStoriesView() {
     return stories.filter((s) => s.visibility === visibilityFilter);
   }, [stories, visibilityFilter]);
 
-  // Compute status counts from all stories
+  // Compute status counts from all stories (khớp filter phía API:
+  // truyện đã xuất bản vẫn có thể có bản chỉnh sửa chờ duyệt / bị từ chối)
   const statusCounts = useMemo(() => {
+    const isPending = (s: StoryItem) =>
+      s.status === "PENDING_REVIEW" ||
+      s.pendingRevision?.status === "PENDING_REVIEW";
+    const isRejected = (s: StoryItem) =>
+      s.status === "REJECTED" ||
+      s.pendingRevision?.status === "REJECTED";
     return {
       ALL: allStories.length,
       PUBLISHED: allStories.filter((s) => s.status === "PUBLISHED").length,
-      PENDING_REVIEW: allStories.filter((s) => s.status === "PENDING_REVIEW").length,
+      PENDING_REVIEW: allStories.filter(isPending).length,
       DRAFT: allStories.filter((s) => s.status === "DRAFT").length,
-      REJECTED: allStories.filter((s) => s.status === "REJECTED").length,
+      REJECTED: allStories.filter(isRejected).length,
     };
   }, [allStories]);
 

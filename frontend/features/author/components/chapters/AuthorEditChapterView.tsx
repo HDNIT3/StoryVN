@@ -3,11 +3,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useChapterDetail, useUpdateChapter, useChapterHistory, ChapterAction, ChapterUpdateItem } from "@/features/chapters";
+import { useChapterDetail, useUpdateChapter, ChapterAction, ChapterItem, ChapterRevisionItem } from "@/features/chapters";
 import { useMyStories } from "@/features/stories";
 import { ChapterRichTextEditor } from "./ChapterRichTextEditor";
 import { ChapterPricingFields } from "./ChapterPricingFields";
-import { ChapterHistoryModal } from "./ChapterHistoryModal";
 import { toast } from "@/lib/toast";
 
 interface AuthorEditChapterViewProps {
@@ -19,14 +18,6 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
 
   // Fetch chapter detail
   const { data: chapter, isLoading, isError } = useChapterDetail(chapterId);
-
-  // Fetch chapter revision history
-  const { data: historyList, isLoading: isLoadingHistory } = useChapterHistory(chapterId, Boolean(chapterId));
-
-  const sortedHistory = useMemo(() => {
-    if (!historyList) return [];
-    return [...historyList].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-  }, [historyList]);
 
   // Fetch stories to find current story info
   const { data: storiesData } = useMyStories({ limit: 100 });
@@ -45,23 +36,20 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
   const [requirePrevious, setRequirePrevious] = useState(false);
   const [scheduledAt, setScheduledAt] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedRevision, setSelectedRevision] = useState<ChapterUpdateItem | null>(null);
-
-  useEffect(() => {
-    if (sortedHistory.length > 0 && !selectedRevision) {
-      setSelectedRevision(sortedHistory[0]);
-    }
-  }, [sortedHistory, selectedRevision]);
 
   useEffect(() => {
     if (chapter) {
+      // Luôn mở đúng bản sửa đang mở (chờ duyệt/nháp/bị từ chối) để tác giả
+      // chỉnh tiếp trên chính bản đó, không quay về nội dung đang phát hành.
+      const pending = chapter.pendingRevision;
+      const source: ChapterRevisionItem | ChapterItem = pending ?? chapter;
+
       setChapterNumber(chapter.chapterNumber);
-      setTitle(chapter.title);
-      setContent(chapter.content || "");
-      setIsFree(chapter.isFree);
-      setCoinPrice(chapter.coinPrice ?? 0);
-      setRequirePrevious(chapter.requirePreviousChapter ?? false);
+      setTitle(source.title);
+      setContent(source.content || "");
+      setIsFree(source.isFree);
+      setCoinPrice(source.coinPrice ?? 0);
+      setRequirePrevious(source.requirePreviousChapter ?? false);
 
       if (chapter.scheduledAt) {
         const d = new Date(chapter.scheduledAt);
@@ -72,16 +60,6 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
   }, [chapter]);
 
   const updateChapterMutation = useUpdateChapter();
-
-  const handleLoadVersionIntoEditor = (rev: ChapterUpdateItem) => {
-    setTitle(rev.title);
-    setContent(rev.content || "");
-    setIsFree(rev.isFree);
-    setCoinPrice(rev.coinPrice || 0);
-    setRequirePrevious(rev.requirePreviousChapter || false);
-    setShowHistoryModal(false);
-    toast.success("Đã nạp nội dung bản sửa vào trình soạn thảo!");
-  };
 
   const validateForm = () => {
     const errs: Record<string, string> = {};
@@ -105,19 +83,43 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
   const handleSubmit = async (action: ChapterAction) => {
     if (!validateForm() || !chapterId) return;
 
-    await updateChapterMutation.mutateAsync({
-      id: chapterId,
-      payload: {
-        chapterNumber,
-        title: title.trim(),
-        content,
-        isFree,
-        coinPrice: isFree ? 0 : coinPrice,
-        requirePreviousChapter: isFree ? false : requirePrevious,
-        action,
-        scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
-      },
-    });
+    // Chương đã xuất bản: không gửi chapterNumber/scheduledAt để tránh bị chặn
+    // do lệch múi giờ/độ chính xác khi so sánh với giá trị đã lưu.
+    const isPublished = chapter?.status === "PUBLISHED";
+    const payload = {
+      ...(isPublished ? {} : { chapterNumber }),
+      title: title.trim(),
+      content,
+      isFree,
+      coinPrice: isFree ? 0 : coinPrice,
+      requirePreviousChapter: isFree ? false : requirePrevious,
+      ...(isPublished
+        ? {}
+        : { scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null }),
+    };
+
+    // Bản đang chờ duyệt: rút khỏi hàng đợi và lưu luôn nội dung mới vào
+    // chính bản sửa đó (một request), rồi gửi duyệt lại nếu cần.
+    const needsWithdrawFirst =
+      chapter?.pendingRevision?.status === "PENDING_REVIEW";
+
+    if (needsWithdrawFirst) {
+      await updateChapterMutation.mutateAsync({
+        id: chapterId,
+        payload: { ...payload, action: "WITHDRAW" },
+      });
+      if (action === "SUBMIT") {
+        await updateChapterMutation.mutateAsync({
+          id: chapterId,
+          payload: { ...payload, action: "SUBMIT" },
+        });
+      }
+    } else {
+      await updateChapterMutation.mutateAsync({
+        id: chapterId,
+        payload: { ...payload, action },
+      });
+    }
 
     const storySlug = story?.slug || chapter?.storyId;
     router.push(`/tac-gia/chuong-truyen?story=${storySlug}`);
@@ -137,6 +139,16 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
       setRequirePrevious(chapter.requirePreviousChapter || false);
     }
     toast.success("Đã hủy bản sửa đổi thành công!");
+  };
+
+  const handleWithdraw = async () => {
+    if (!chapterId) return;
+    await updateChapterMutation.mutateAsync({
+      id: chapterId,
+      payload: { action: "WITHDRAW" },
+    });
+    toast.success("Đã rút bản chờ duyệt, bạn có thể tiếp tục chỉnh sửa!");
+    window.location.reload();
   };
 
   if (isLoading) {
@@ -165,6 +177,21 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
     );
   }
 
+  // Bản sửa đang mở được nạp thẳng vào biểu mẫu để chỉnh tiếp.
+  const pendingRevision = chapter.pendingRevision ?? null;
+  const pendingRevisionLabel =
+    pendingRevision?.status === "PENDING_REVIEW"
+      ? "Bản sửa chờ duyệt"
+      : pendingRevision?.status === "REJECTED"
+      ? "Bản sửa bị từ chối"
+      : "Bản sửa nháp";
+  const pendingRevisionChipClass =
+    pendingRevision?.status === "PENDING_REVIEW"
+      ? "border-amber-200 bg-amber-50 text-amber-700"
+      : pendingRevision?.status === "REJECTED"
+      ? "border-rose-200 bg-rose-50 text-rose-700"
+      : "border-zinc-200 bg-zinc-50 text-zinc-600";
+
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 max-w-5xl mx-auto space-y-5">
       {/* Top Navigation Bar */}
@@ -181,21 +208,20 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
 
         {/* Top Actions */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowHistoryModal(true)}
+          <Link
+            href={`/tac-gia/chuong-truyen/lich-su?story=${story?.slug || ""}&chapter=${chapter.chapterNumber}`}
             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-zinc-700 hover:text-zinc-900 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-md transition shadow-xs cursor-pointer"
           >
             <svg className="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>Lịch sử chỉnh sửa {sortedHistory.length > 0 && `(${sortedHistory.length})`}</span>
-          </button>
+            <span>Lịch sử chỉnh sửa</span>
+          </Link>
           <button
             type="button"
             disabled={updateChapterMutation.isPending}
             onClick={() => handleSubmit("DRAFT")}
-            className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-md transition shadow-xs disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-md transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             Lưu bản nháp
           </button>
@@ -203,7 +229,7 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
             type="button"
             disabled={updateChapterMutation.isPending}
             onClick={() => handleSubmit("SUBMIT")}
-            className="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-md transition shadow-xs disabled:opacity-50 cursor-pointer"
+            className="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-md transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {updateChapterMutation.isPending ? "Đang lưu..." : "Gửi duyệt ngay"}
           </button>
@@ -225,53 +251,70 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
           </h1>
         </div>
 
-        {/* Status Alert for Published Chapter */}
+        {/* Thông báo trạng thái xuất bản & bản sửa đang mở */}
         {chapter.status === "PUBLISHED" && (
-          <div className="p-3 sm:p-3.5 bg-sky-50/70 border border-sky-200/80 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2.5 flex-wrap min-w-0">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[11px] bg-emerald-100 text-emerald-800 shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Đã xuất bản
-              </span>
-              <span className="text-zinc-600">
-                Bản sửa sẽ được lưu riêng để kiểm duyệt trước khi cập nhật tới độc giả.
-              </span>
-              {(chapter as any).pendingUpdate && (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span
-                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${
-                      (chapter as any).pendingUpdate.status === "PENDING_REVIEW"
-                        ? "bg-amber-100 text-amber-800 border-amber-300"
-                        : (chapter as any).pendingUpdate.status === "REJECTED"
-                        ? "bg-rose-100 text-rose-800 border-rose-200"
-                        : "bg-zinc-100 text-zinc-700 border-zinc-200"
-                    }`}
-                  >
-                    {(chapter as any).pendingUpdate.status === "PENDING_REVIEW"
-                      ? "Bản sửa đang chờ duyệt"
-                      : (chapter as any).pendingUpdate.status === "REJECTED"
-                      ? "Bản sửa bị từ chối"
-                      : "Bản sửa nháp"}
-                  </span>
+          <div className="rounded-lg border border-zinc-200 bg-white p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900">Đã xuất bản</h3>
+                    {pendingRevision && (
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${pendingRevisionChipClass}`}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                        {pendingRevisionLabel}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                    {pendingRevision?.status === "PENDING_REVIEW"
+                      ? "Biểu mẫu đang mở chính bản sửa đã gửi duyệt. Khi lưu, bản sửa được rút khỏi hàng đợi (vẫn giữ nguyên là một bản) và lưu nội dung mới — gửi duyệt lại để đưa vào kiểm duyệt."
+                      : "Bản sửa được lưu riêng để kiểm duyệt trước khi cập nhật tới độc giả."}
+                  </p>
+                  {pendingRevision?.status === "REJECTED" && pendingRevision.rejectReason && (
+                    <p className="mt-1 text-xs text-rose-600">
+                      Lý do từ chối: {pendingRevision.rejectReason}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {pendingRevision && (
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <Link
                     href={`/tac-gia/chuong-truyen/lich-su?story=${story?.slug || ""}&chapter=${chapter.chapterNumber}`}
-                    className="text-sky-700 hover:text-sky-900 underline font-semibold cursor-pointer"
+                    className="rounded-md px-3 py-1.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
                   >
-                    Xem chi tiết →
+                    Xem bản sửa
                   </Link>
+                  {pendingRevision.status === "PENDING_REVIEW" && (
+                    <button
+                      type="button"
+                      onClick={handleWithdraw}
+                      disabled={updateChapterMutation.isPending}
+                      className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                    >
+                      Rút bản sửa
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleDiscardUpdate}
+                    disabled={updateChapterMutation.isPending}
+                    className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  >
+                    Hủy bản sửa
+                  </button>
                 </div>
               )}
             </div>
-            {(chapter as any).pendingUpdate && (
-              <button
-                type="button"
-                onClick={handleDiscardUpdate}
-                disabled={updateChapterMutation.isPending}
-                className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:text-rose-800 bg-white hover:bg-rose-50 border border-rose-200 rounded-lg transition cursor-pointer shadow-2xs"
-              >
-                Hủy bản sửa
-              </button>
-            )}
           </div>
         )}
 
@@ -288,126 +331,135 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
           </div>
         )}
 
-        {/* Chapter Number & Title */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div className="sm:col-span-1">
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Số thứ tự chương <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
-                #
-              </span>
-              <input
-                type="number"
-                min={1}
-                value={chapterNumber}
-                onChange={(e) => setChapterNumber(parseInt(e.target.value, 10) || 1)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-md pl-7 pr-3 py-2 text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
-              />
-            </div>
-          </div>
-
-          <div className="sm:col-span-3">
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Tiêu đề chương <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Nhập tiêu đề chương..."
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                if (errors.title) setErrors((prev) => ({ ...prev, title: "" }));
-              }}
-              className={`w-full bg-slate-50 border rounded-md px-3.5 py-2 text-sm font-semibold text-slate-900 focus:outline-none transition ${
-                errors.title
-                  ? "border-rose-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-                  : "border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-              }`}
-            />
-            {errors.title && (
-              <span className="text-xs text-rose-500 mt-1 block">{errors.title}</span>
-            )}
-          </div>
-        </div>
-
-        {/* Rich Text Editor for Content */}
-        <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-slate-700">
-            Nội dung chương truyện <span className="text-rose-500">*</span>
-          </label>
-          <ChapterRichTextEditor
-            content={content}
-            onChange={(html, count) => {
-              setContent(html);
-              setWordCount(count);
-              if (errors.content) setErrors((prev) => ({ ...prev, content: "" }));
-            }}
-          />
-          {errors.content && (
-            <span className="text-xs text-rose-500 mt-1 block">{errors.content}</span>
-          )}
-        </div>
-
-        {/* Pricing Fields */}
-        <ChapterPricingFields
-          isFree={isFree}
-          setIsFree={setIsFree}
-          coinPrice={coinPrice}
-          setCoinPrice={setCoinPrice}
-          requirePrevious={requirePrevious}
-          setRequirePrevious={setRequirePrevious}
-          error={errors.coinPrice}
-        />
-
-        {/* Scheduled At */}
-        {chapter.status !== "PUBLISHED" && (
-          <div className="bg-slate-50/80 rounded-lg border border-slate-200/80 p-5 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span>Lên lịch hiển thị cho độc giả (Tùy chọn)</span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Nếu không đặt lịch, chương sẽ tự động hiển thị cho độc giả ngay sau khi được Ban quản trị phê duyệt.
-                </p>
+        {/* Vùng chỉnh sửa */}
+        <div className="space-y-6">
+          {/* Chapter Number & Title */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="sm:col-span-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Số thứ tự chương <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
+                  #
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  value={chapterNumber}
+                  disabled={chapter.status === "PUBLISHED"}
+                  title={
+                    chapter.status === "PUBLISHED"
+                      ? "Không thể đổi số thứ tự chương sau khi đã xuất bản"
+                      : undefined
+                  }
+                  onChange={(e) => setChapterNumber(parseInt(e.target.value, 10) || 1)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md pl-7 pr-3 py-2 text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition disabled:cursor-not-allowed disabled:opacity-60"
+                />
               </div>
-              {scheduledAt && (
-                <button
-                  type="button"
-                  onClick={() => setScheduledAt("")}
-                  className="text-xs text-rose-600 hover:text-rose-700 font-semibold self-start sm:self-auto cursor-pointer"
-                >
-                  Xóa lịch hẹn
-                </button>
+            </div>
+
+            <div className="sm:col-span-3">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Tiêu đề chương <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Nhập tiêu đề chương..."
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (errors.title) setErrors((prev) => ({ ...prev, title: "" }));
+                }}
+                className={`w-full bg-slate-50 border rounded-md px-3.5 py-2 text-sm font-semibold text-slate-900 focus:outline-none transition ${
+                  errors.title
+                    ? "border-rose-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                    : "border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                }`}
+              />
+              {errors.title && (
+                <span className="text-xs text-rose-500 mt-1 block">{errors.title}</span>
               )}
             </div>
-            <div className="max-w-xs">
-              <input
-                type="datetime-local"
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
-              />
-            </div>
           </div>
-        )}
 
-        {chapter.status === "PUBLISHED" && chapter.scheduledAt && new Date(chapter.scheduledAt) > new Date() && (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3 text-xs sm:text-sm text-amber-800">
-            <svg className="w-5 h-5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <strong>Lịch hẹn hiển thị:</strong> Chương này đã được duyệt nhưng đang hẹn giờ hiển thị vào{" "}
-              <span className="font-bold underline">{new Date(chapter.scheduledAt).toLocaleString("vi-VN")}</span>. Đến thời điểm này độc giả mới thấy chương trên hệ thống.
-            </div>
+          {/* Rich Text Editor for Content */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-700">
+              Nội dung chương truyện <span className="text-rose-500">*</span>
+            </label>
+            <ChapterRichTextEditor
+              content={content}
+              onChange={(html, count) => {
+                setContent(html);
+                setWordCount(count);
+                if (errors.content) setErrors((prev) => ({ ...prev, content: "" }));
+              }}
+            />
+            {errors.content && (
+              <span className="text-xs text-rose-500 mt-1 block">{errors.content}</span>
+            )}
           </div>
-        )}
+
+          {/* Pricing Fields */}
+          <ChapterPricingFields
+            isFree={isFree}
+            setIsFree={setIsFree}
+            coinPrice={coinPrice}
+            setCoinPrice={setCoinPrice}
+            requirePrevious={requirePrevious}
+            setRequirePrevious={setRequirePrevious}
+            error={errors.coinPrice}
+          />
+
+          {/* Scheduled At */}
+          {chapter.status !== "PUBLISHED" && (
+            <div className="bg-slate-50/80 rounded-lg border border-slate-200/80 p-5 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Lên lịch hiển thị cho độc giả (Tùy chọn)</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Nếu không đặt lịch, chương sẽ tự động hiển thị cho độc giả ngay sau khi được Ban quản trị phê duyệt.
+                  </p>
+                </div>
+                {scheduledAt && (
+                  <button
+                    type="button"
+                    onClick={() => setScheduledAt("")}
+                    className="text-xs text-rose-600 hover:text-rose-700 font-semibold self-start sm:self-auto cursor-pointer"
+                  >
+                    Xóa lịch hẹn
+                  </button>
+                )}
+              </div>
+              <div className="max-w-xs">
+                <input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+                />
+              </div>
+            </div>
+          )}
+
+          {chapter.status === "PUBLISHED" && chapter.scheduledAt && new Date(chapter.scheduledAt) > new Date() && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3 text-xs sm:text-sm text-amber-800">
+              <svg className="w-5 h-5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <strong>Lịch hẹn hiển thị:</strong> Chương này đã được duyệt nhưng đang hẹn giờ hiển thị vào{" "}
+                <span className="font-bold underline">{new Date(chapter.scheduledAt).toLocaleString("vi-VN")}</span>. Đến thời điểm này độc giả mới thấy chương trên hệ thống.
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Bottom Actions */}
         <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
@@ -422,34 +474,22 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
             <button
               type="button"
               disabled={updateChapterMutation.isPending}
-              onClick={() => handleSubmit("DRAFT")}
-              className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition disabled:opacity-50 cursor-pointer"
+                onClick={() => handleSubmit("DRAFT")}
+              className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               Lưu bản nháp
             </button>
             <button
               type="button"
               disabled={updateChapterMutation.isPending}
-              onClick={() => handleSubmit("SUBMIT")}
-              className="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-md transition shadow-xs disabled:opacity-50 cursor-pointer"
+                onClick={() => handleSubmit("SUBMIT")}
+              className="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-md transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {updateChapterMutation.isPending ? "Đang lưu..." : "Gửi duyệt ngay"}
             </button>
           </div>
         </div>
       </div>
-
-      {/* History Modal */}
-      <ChapterHistoryModal
-        isOpen={showHistoryModal}
-        onClose={() => setShowHistoryModal(false)}
-        chapterNumber={chapter.chapterNumber}
-        sortedHistory={sortedHistory}
-        isLoading={isLoadingHistory}
-        selectedRevision={selectedRevision}
-        onSelectRevision={setSelectedRevision}
-        onLoadVersion={handleLoadVersionIntoEditor}
-      />
     </div>
   );
 }

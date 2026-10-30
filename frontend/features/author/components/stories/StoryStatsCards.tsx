@@ -10,7 +10,9 @@ interface StoryStatsCardsProps {
 export function StoryStatsCards({ stories }: StoryStatsCardsProps) {
   const totalStories = stories.length;
   const publishedCount = stories.filter((s) => s.status === "PUBLISHED").length;
-  const pendingCount = stories.filter((s) => s.status === "PENDING_REVIEW").length;
+  const isPendingReview = (s: StoryItem) =>
+    s.status === "PENDING_REVIEW" || s.pendingRevision?.status === "PENDING_REVIEW";
+  const pendingCount = stories.filter(isPendingReview).length;
   const draftCount = stories.filter((s) => s.status === "DRAFT").length;
 
   const totalViews = stories.reduce((sum, s) => sum + (s.stats?.viewCount || 0), 0);

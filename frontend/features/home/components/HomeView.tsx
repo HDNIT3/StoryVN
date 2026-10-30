@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { storyService, storyKeys } from "@/features/stories";
 import { HeroStoryBanner } from "./HeroStoryBanner";
 import { HomeTopViewsSection } from "./HomeTopViewsSection";
-import { HomeTopWordCountSection } from "./HomeTopWordCountSection";
+import { HomeNewestStoriesSection } from "./HomeNewestStoriesSection";
 import { HomeLatestChaptersSection } from "./HomeLatestChaptersSection";
 import { HomeFeaturedAuthorsSection } from "./HomeFeaturedAuthorsSection";
 import { HomeSideNav } from "./HomeSideNav";
@@ -27,11 +27,11 @@ export function HomeView() {
     },
   });
 
-  const { data: topWordCountStories = [], isLoading: isLoadingWordCount } = useQuery({
-    queryKey: storyKeys.topWordCount(4),
+  const { data: newestStories = [], isLoading: isLoadingNewest } = useQuery({
+    queryKey: storyKeys.filtered({ sortBy: "published", limit: 10 }),
     queryFn: async () => {
-      const res = await storyService.getTopWordCount(4);
-      return res.data || [];
+      const res = await storyService.getStories({ sortBy: "published", limit: 10 });
+      return res.data?.items || [];
     },
   });
 
@@ -57,10 +57,10 @@ export function HomeView() {
         {/* TÁC GIẢ NỔI BẬT — Avatar tròn + Tên + Tổng lượt đọc */}
         <HomeFeaturedAuthorsSection />
 
-        {/* TOP WORD COUNT — Truyện có tổng số từ lớn nhất */}
-        <HomeTopWordCountSection
-          stories={topWordCountStories}
-          isLoading={isLoadingWordCount}
+        {/* TRUYỆN MỚI NHẤT — 10 truyện vừa xuất bản, 5 truyện mỗi hàng */}
+        <HomeNewestStoriesSection
+          stories={newestStories}
+          isLoading={isLoadingNewest}
         />
 
         {/* MỚI CẬP NHẬT — Modern clean list */}

@@ -12,6 +12,7 @@ import type {
   StoryApiResponse,
   StoryDetailData,
   StoryItem,
+  StoryRevisionItem,
   TopViewStoryItem,
   TopWordCountStoryItem,
   UpdateStoryPayload,
@@ -116,6 +117,30 @@ export const storyService = {
     return api.patch<StoryApiResponse<StoryItem>>(
       `/stories/my/${slugOrId}${query}`,
       payload
+    );
+  },
+
+  /**
+   * Lấy lịch sử các bản chỉnh sửa của tác phẩm (quyền Author)
+   */
+  async getMyStoryRevisions(
+    slugOrId: string
+  ): Promise<StoryApiResponse<StoryRevisionItem[]>> {
+    return api.get<StoryApiResponse<StoryRevisionItem[]>>(
+      `/stories/my/${slugOrId}/revisions`
+    );
+  },
+
+  /**
+   * Khôi phục một bản sửa đổi thành bản nháp mới (quyền Author)
+   */
+  async restoreMyStoryRevision(
+    slugOrId: string,
+    revisionId: string
+  ): Promise<StoryApiResponse<StoryItem>> {
+    return api.patch<StoryApiResponse<StoryItem>>(
+      `/stories/my/${slugOrId}/revisions/${revisionId}/restore`,
+      {}
     );
   },
 

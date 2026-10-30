@@ -208,7 +208,7 @@ export class ChaptersController {
 
   @ApiOperation({
     summary: 'Lấy danh sách tất cả lịch sử chỉnh sửa chương của tác giả - UC-15 & UC-16',
-    description: 'Tác giả xem toàn bộ các bản chỉnh sửa chương (ChapterUpdate) có thể lọc theo truyện, chương, trạng thái',
+    description: 'Tác giả xem toàn bộ các bản chỉnh sửa chương có thể lọc theo truyện, chương, trạng thái',
   })
   @Roles(UserRole.AUTHOR, UserRole.ADMIN, UserRole.MANAGER)
   @Get('history')
@@ -267,7 +267,7 @@ export class ChaptersController {
 
   @ApiOperation({
     summary: 'Lấy lịch sử các bản sửa đổi của chương - UC-15 & UC-16',
-    description: 'Tác giả hoặc Quản lý xem toàn bộ các bản sửa đổi (ChapterUpdate) của chương truyện',
+    description: 'Tác giả hoặc Quản lý xem toàn bộ các bản sửa đổi của chương truyện',
   })
   @Roles(UserRole.AUTHOR, UserRole.ADMIN, UserRole.MANAGER)
   @Get(':id/history')
@@ -285,6 +285,33 @@ export class ChaptersController {
     return {
       success: true,
       message: 'Lấy lịch sử sửa đổi chương thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Khôi phục một bản chỉnh sửa cũ của chương thành bản nháp mới - UC-15 & UC-16',
+    description:
+      'Tạo bản nháp mới từ nội dung của bản cũ; bản khôi phục vẫn phải qua kiểm duyệt lại',
+  })
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN)
+  @Patch(':id/revisions/:revisionId/restore')
+  @HttpCode(HttpStatus.OK)
+  async restoreChapterRevision(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Param('revisionId') revisionId: string,
+  ) {
+    const data = await this.chaptersService.restoreChapterRevision(
+      user._id,
+      id,
+      revisionId,
+      user.role,
+    );
+
+    return {
+      success: true,
+      message: 'Khôi phục bản chỉnh sửa chương thành công (đang ở trạng thái nháp)',
       data,
     };
   }
@@ -313,7 +340,11 @@ export class ChaptersController {
       message:
         dto.action === 'SUBMIT'
           ? 'Cập nhật và gửi yêu cầu phê duyệt chương thành công'
-          : 'Cập nhật chương truyện thành công',
+          : dto.action === 'WITHDRAW'
+            ? 'Đã rút bản chỉnh sửa chương về trạng thái nháp'
+            : dto.action === 'DISCARD_UPDATE'
+              ? 'Đã hủy bản chỉnh sửa chương'
+              : 'Cập nhật chương truyện thành công',
       data,
     };
   }

@@ -110,8 +110,43 @@ export function useMyStoryDetail(slugOrId: string) {
   });
 }
 
-export function useCreateStory() {
+export function useMyStoryRevisions(slugOrId: string, enabled = true) {
+  return useQuery({
+    queryKey: storyKeys.revisions(slugOrId),
+    queryFn: async () => {
+      const res = await storyService.getMyStoryRevisions(slugOrId);
+      return res.data;
+    },
+    enabled: Boolean(slugOrId) && enabled,
+  });
+}
+
+export function useRestoreStoryRevision() {
   const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      slugOrId,
+      revisionId,
+    }: {
+      slugOrId: string;
+      revisionId: string;
+    }) => {
+      const res = await storyService.restoreMyStoryRevision(slugOrId, revisionId);
+      return res;
+    },
+    onSuccess: () => {
+      toast.success("Đã khôi phục bản sửa thành bản nháp mới!");
+      queryClient.invalidateQueries({ queryKey: storyKeys.all });
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Không thể khôi phục bản sửa";
+      toast.error(msg);
+    },
+  });
+}
+
+export function useCreateStory() {  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({

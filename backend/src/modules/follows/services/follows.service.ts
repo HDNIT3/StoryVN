@@ -67,6 +67,20 @@ export interface FollowedStoryItem {
   followedAt: Date;
 }
 
+export interface FollowedAuthorStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl: string | null;
+  progressState: string;
+  updatedAt: Date;
+  followedAt: Date;
+  stats: {
+    chapterCount: number;
+    viewCount: number;
+  };
+}
+
 export interface FollowedAuthorItem {
   _id: string;
   username: string;
@@ -78,6 +92,8 @@ export interface FollowedAuthorItem {
   storyCount: number;
   totalViews: number;
   followedAt: Date;
+  followedStories: FollowedAuthorStoryItem[];
+  followedStoryCount: number;
 }
 
 @Injectable()
@@ -379,11 +395,12 @@ export class FollowsService {
   ): Promise<PaginatedResult<FollowedAuthorItem>> {
     const page = query.page || 1;
     const limit = query.limit || 10;
+    const userObjectId = this.toObjectId(userId);
 
     const pipeline: PipelineStage[] = [
       {
         $match: {
-          userId: this.toObjectId(userId),
+          userId: userObjectId,
           targetType: FollowTargetType.AUTHOR,
         },
       },
@@ -408,6 +425,57 @@ export class FollowsService {
           localField: 'targetId',
           foreignField: 'userId',
           as: 'profile',
+        },
+      },
+      {
+        $lookup: {
+          from: 'follows',
+          let: { authorId: '$targetId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$userId', userObjectId] },
+                    { $eq: ['$targetType', FollowTargetType.STORY] },
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: 'stories',
+                localField: 'targetId',
+                foreignField: '_id',
+                as: 'story',
+              },
+            },
+            { $unwind: '$story' },
+            {
+              $match: {
+                'story.status': StoryStatus.PUBLISHED,
+                'story.visibility': StoryVisibility.PUBLIC,
+                $expr: { $eq: ['$story.authorId', '$$authorId'] },
+              },
+            },
+            { $sort: { createdAt: -1 } },
+            {
+              $project: {
+                _id: '$story._id',
+                title: '$story.title',
+                slug: '$story.slug',
+                coverUrl: '$story.coverUrl',
+                progressState: '$story.progressState',
+                updatedAt: '$story.updatedAt',
+                followedAt: '$createdAt',
+                stats: {
+                  chapterCount: { $ifNull: ['$story.stats.chapterCount', 0] },
+                  viewCount: { $ifNull: ['$story.stats.viewCount', 0] },
+                },
+              },
+            },
+          ],
+          as: 'followedStories',
         },
       },
     ];
@@ -467,6 +535,8 @@ export class FollowsService {
                 ],
               },
               followedAt: '$createdAt',
+              followedStories: { $slice: ['$followedStories', 6] },
+              followedStoryCount: { $size: '$followedStories' },
             },
           },
         ],

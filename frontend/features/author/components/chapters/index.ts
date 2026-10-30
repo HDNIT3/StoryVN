@@ -2,7 +2,6 @@ export * from "./StoryPickerDropdown";
 export * from "./ChapterRichTextEditor";
 export * from "./StatusBadge";
 export * from "./ChapterPricingFields";
-export * from "./ChapterHistoryModal";
 export * from "./RevisionDetailViewer";
 export * from "./RevisionListSidebar";
 export * from "./AuthorChapterFilterBar";
