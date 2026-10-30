@@ -41,20 +41,20 @@ export function ChapterDetailModal({
   const author = story && typeof story.authorId === "object" ? story.authorId : null;
   const authorName = author?.displayName || author?.username || "Chưa xác định";
 
-  const pendingUpdate = (currentChapter as any).pendingUpdate;
-  const isPendingUpdateReview =
+  const pendingRevision = (currentChapter as any).pendingRevision;
+  const isPendingRevisionReview =
     currentChapter.status === "PUBLISHED" &&
-    pendingUpdate?.status === "PENDING_REVIEW";
+    pendingRevision?.status === "PENDING_REVIEW";
 
-  const isPending = currentChapter.status === "PENDING_REVIEW" || isPendingUpdateReview;
-  const isPublished = currentChapter.status === "PUBLISHED" && !isPendingUpdateReview;
+  const isPending = currentChapter.status === "PENDING_REVIEW" || isPendingRevisionReview;
+  const isPublished = currentChapter.status === "PUBLISHED" && !isPendingRevisionReview;
 
-  // Nếu đang duyệt bản cập nhật, ưu tiên hiển thị nội dung và tiêu đề của pendingUpdate
-  const displayTitle = isPendingUpdateReview
-    ? pendingUpdate.title || currentChapter.title
+  // Nếu đang duyệt bản cập nhật, ưu tiên hiển thị nội dung và tiêu đề của pendingRevision
+  const displayTitle = isPendingRevisionReview
+    ? pendingRevision.title || currentChapter.title
     : currentChapter.title;
-  const contentText = isPendingUpdateReview
-    ? pendingUpdate.content || ""
+  const contentText = isPendingRevisionReview
+    ? pendingRevision.content || ""
     : currentChapter.content || "";
   const wordCount = contentText ? contentText.trim().split(/\s+/).length : 0;
 
@@ -74,7 +74,7 @@ export function ChapterDetailModal({
               <span className="font-bold text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-lg text-xs">
                 Chương {currentChapter.chapterNumber}
               </span>
-              {isPendingUpdateReview && (
+              {isPendingRevisionReview && (
                 <span className="font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md text-[10px]">
                   Bản sửa đổi chờ duyệt
                 </span>
@@ -204,7 +204,7 @@ export function ChapterDetailModal({
         </div>
 
         {/* Banner thông báo nếu đang duyệt bản sửa đổi của chương PUBLISHED */}
-        {isPendingUpdateReview && (
+        {isPendingRevisionReview && (
           <div className="mx-6 mt-4 p-3.5 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-start gap-2.5 text-xs text-indigo-900 shrink-0">
             <svg className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

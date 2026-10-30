@@ -2,7 +2,7 @@ import api from "@/lib/api";
 import type {
   ChapterItem,
   ChapterStatsData,
-  ChapterUpdateItem,
+  ChapterRevisionItem,
   CreateChapterPayload,
   QueryChaptersParams,
   ReorderChaptersPayload,
@@ -46,8 +46,21 @@ export const chapterService = {
   /**
    * Lấy lịch sử các bản sửa đổi của chương (UC-15 & UC-16)
    */
-  async getChapterHistory(id: string): Promise<ApiResponse<ChapterUpdateItem[]>> {
-    return api.get<ApiResponse<ChapterUpdateItem[]>>(`/chapters/${id}/history`);
+  async getChapterHistory(id: string): Promise<ApiResponse<ChapterRevisionItem[]>> {
+    return api.get<ApiResponse<ChapterRevisionItem[]>>(`/chapters/${id}/history`);
+  },
+
+  /**
+   * Khôi phục một bản sửa cũ thành bản nháp mới (phải duyệt lại)
+   */
+  async restoreChapterRevision(
+    id: string,
+    revisionId: string
+  ): Promise<ApiResponse<ChapterItem>> {
+    return api.patch<ApiResponse<ChapterItem>>(
+      `/chapters/${id}/revisions/${revisionId}/restore`,
+      {}
+    );
   },
 
   /**
@@ -62,7 +75,7 @@ export const chapterService = {
     limit?: number;
   }): Promise<
     ApiResponse<{
-      items: ChapterUpdateItem[];
+      items: ChapterRevisionItem[];
       total: number;
       page: number;
       limit: number;
@@ -79,7 +92,7 @@ export const chapterService = {
 
     return api.get<
       ApiResponse<{
-        items: ChapterUpdateItem[];
+        items: ChapterRevisionItem[];
         total: number;
         page: number;
         limit: number;

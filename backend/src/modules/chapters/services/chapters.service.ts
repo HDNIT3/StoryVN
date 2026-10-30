@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -7,7 +8,14 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
+import { RevisionStatus } from '../../../common/enums/revision-status.enum.js';
 import { countWords } from '../../../common/utils/text.util.js';
+import {
+  getActiveRevision,
+  hasRevisionWithStatus,
+  toRevisionView,
+  trimRevisions,
+} from '../../../common/utils/revision.util.js';
 import { UserRole } from '../../users/schemas/user.schema.js';
 import { Story, StoryDocument } from '../../stories/schemas/story.schema.js';
 import {
@@ -15,11 +23,6 @@ import {
   ChapterDocument,
   ChapterStatus,
 } from '../schemas/chapter.schema.js';
-import {
-  ChapterUpdate,
-  ChapterUpdateDocument,
-  ChapterUpdateStatus,
-} from '../schemas/chapter-update.schema.js';
 import {
   ChapterAction,
   CreateChapterDto,
@@ -33,8 +36,6 @@ export class ChaptersService {
   constructor(
     @InjectModel(Chapter.name)
     private readonly chapterModel: Model<ChapterDocument>,
-    @InjectModel(ChapterUpdate.name)
-    private readonly chapterUpdateModel: Model<ChapterUpdateDocument>,
     @InjectModel(Story.name)
     private readonly storyModel: Model<StoryDocument>,
   ) {}
@@ -143,6 +144,108 @@ export class ChaptersService {
 
   private countChapterWords(htmlContent: string): number {
     return countWords(htmlContent);
+  }
+
+  private cloneRevisionSnapshot(snapshot: any): Record<string, any> {
+    const plain = snapshot?.toObject ? snapshot.toObject() : { ...(snapshot || {}) };
+    delete plain._id;
+    return plain;
+  }
+
+  private chapterHasOfficialVersion(chapter: ChapterDocument): boolean {
+    return (
+      chapter.status === ChapterStatus.PUBLISHED ||
+      chapter.status === ChapterStatus.HIDDEN ||
+      hasRevisionWithStatus(chapter.revisions, RevisionStatus.APPROVED)
+    );
+  }
+
+  private buildChapterSnapshotFromDoc(
+    chapter: ChapterDocument,
+  ): Record<string, any> {
+    return {
+      title: chapter.title,
+      content: chapter.content,
+      isFree: chapter.isFree,
+      coinPrice: chapter.coinPrice,
+      requirePreviousChapter: chapter.requirePreviousChapter,
+    };
+  }
+
+  private mergeChapterSnapshot(
+    base: Record<string, any>,
+    dto: UpdateChapterDto,
+  ): Record<string, any> {
+    const merged = {
+      title: dto.title !== undefined ? dto.title.trim() : base.title,
+      content: dto.content !== undefined ? dto.content : base.content,
+      isFree: dto.isFree !== undefined ? dto.isFree : base.isFree,
+      coinPrice:
+        dto.coinPrice !== undefined ? dto.coinPrice : base.coinPrice,
+      requirePreviousChapter:
+        dto.requirePreviousChapter !== undefined
+          ? dto.requirePreviousChapter
+          : base.requirePreviousChapter,
+    };
+
+    if (merged.isFree) {
+      merged.coinPrice = 0;
+      merged.requirePreviousChapter = false;
+    } else if (!merged.coinPrice || merged.coinPrice <= 0) {
+      throw new BadRequestException(ErrorCode.CHAPTER_COIN_INVALID);
+    }
+
+    return merged;
+  }
+
+  private chapterSnapshotChanged(
+    a: Record<string, any>,
+    b: Record<string, any>,
+  ): boolean {
+    return (
+      a.title !== b.title ||
+      a.content !== b.content ||
+      a.isFree !== b.isFree ||
+      a.coinPrice !== b.coinPrice ||
+      a.requirePreviousChapter !== b.requirePreviousChapter
+    );
+  }
+
+  /**
+   * Chuyển revision nhúng thành object phẳng cho API (tương thích payload cũ).
+   */
+  private mapChapterRevision(revision: any, chapter: any): any {
+    if (!revision) return null;
+    const snapshot = revision.snapshot || {};
+    return toRevisionView(revision, {
+      chapterId: chapter._id,
+      storyId: chapter.storyId,
+      wordCount: countWords(snapshot.content || ''),
+      reviewerId: revision.reviewerId ?? null,
+      reviewedAt: revision.reviewedAt ?? null,
+    });
+  }
+
+  private async buildChapterResponse(
+    chapterId: Types.ObjectId | string,
+  ): Promise<any> {
+    const chapter: any = await this.chapterModel
+      .findById(chapterId)
+      .select('+revisions')
+      .lean();
+
+    if (!chapter) {
+      throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    const activeRevision = getActiveRevision(chapter.revisions);
+    const pendingRevision = this.mapChapterRevision(activeRevision, chapter);
+    delete chapter.revisions;
+
+    return {
+      ...chapter,
+      pendingRevision,
+    };
   }
 
   /**
@@ -292,7 +395,21 @@ export class ChaptersService {
         filter.chapterNumber = { $lt: firstUnreleased.chapterNumber };
       }
     } else if (query.status) {
-      filter.status = query.status;
+      // Với tác giả/quản lý: gộp cả bản sửa đang chờ duyệt / bị từ chối của
+      // chương đã xuất bản để khớp với số liệu thống kê.
+      if (query.status === ChapterStatus.PENDING_REVIEW) {
+        filter.$or = [
+          { status: ChapterStatus.PENDING_REVIEW },
+          { 'revisions.status': RevisionStatus.PENDING_REVIEW },
+        ];
+      } else if (query.status === ChapterStatus.REJECTED) {
+        filter.$or = [
+          { status: ChapterStatus.REJECTED },
+          { 'revisions.status': RevisionStatus.REJECTED },
+        ];
+      } else {
+        filter.status = query.status;
+      }
     }
 
     const sortBy = query.sortBy || 'chapterNumber';
@@ -302,9 +419,12 @@ export class ChaptersService {
     // Tổng số chương khớp filter
     const total = await this.chapterModel.countDocuments(filter);
 
+    const canManage = isOwner || isAdminOrManager;
+
     let queryBuilder = this.chapterModel
       .find(filter)
-      .select('-content') // Trừ nội dung khi lấy danh sách để tối ưu băng thông
+      // Trừ nội dung khi lấy danh sách để tối ưu băng thông
+      .select(canManage ? '-content +revisions' : '-content')
       .sort(sortObj);
 
     if (query.page && query.limit) {
@@ -313,53 +433,41 @@ export class ChaptersService {
     }
 
     const rawItems = await queryBuilder.lean().exec();
-    let items = rawItems;
+    let items: any[] = rawItems;
 
     // Thống kê nhanh cho tác giả nếu là chủ truyện
     let stats = null;
-    if (isOwner || isAdminOrManager) {
-      // Đính kèm thông tin pendingUpdate mới nhất cho từng chương
-      const chapterIds = rawItems.map((i: any) => i._id);
-      const updates = await this.chapterUpdateModel
-        .find({
-          chapterId: { $in: chapterIds },
-          status: {
-            $in: [
-              ChapterUpdateStatus.PENDING_REVIEW,
-              ChapterUpdateStatus.DRAFT,
-              ChapterUpdateStatus.REJECTED,
-            ],
-          },
-        })
-        .sort({ createdAt: -1 })
-        .lean();
-
-      const updateMap = new Map();
-      for (const u of updates) {
-        if (!updateMap.has(u.chapterId.toString())) {
-          updateMap.set(u.chapterId.toString(), u);
-        }
-      }
-
-      items = rawItems.map((item: any) => ({
-        ...item,
-        pendingUpdate: updateMap.get(item._id.toString()) || null,
-      }));
+    if (canManage) {
+      items = rawItems.map((item: any) => {
+        const pendingRevision = this.mapChapterRevision(
+          getActiveRevision(item.revisions),
+          item,
+        );
+        delete item.revisions;
+        return {
+          ...item,
+          pendingRevision,
+        };
+      });
 
       const allStoryChapters = await this.chapterModel
         .find({ storyId: story._id })
         .select('status viewCount wordCount isFree coinPrice')
         .lean();
 
-      const pendingUpdatesCount = await this.chapterUpdateModel.countDocuments({
+      // Chương PUBLISHED/HIDDEN có bản chỉnh sửa chờ duyệt (không trùng với status PENDING_REVIEW)
+      const pendingRevisionCount = await this.chapterModel.countDocuments({
         storyId: story._id,
-        status: ChapterUpdateStatus.PENDING_REVIEW,
+        status: { $ne: ChapterStatus.PENDING_REVIEW },
+        'revisions.status': RevisionStatus.PENDING_REVIEW,
       });
 
       stats = {
         totalChapters: allStoryChapters.length,
         published: allStoryChapters.filter((c) => c.status === ChapterStatus.PUBLISHED).length,
-        pending: allStoryChapters.filter((c) => c.status === ChapterStatus.PENDING_REVIEW).length + pendingUpdatesCount,
+        pending:
+          allStoryChapters.filter((c) => c.status === ChapterStatus.PENDING_REVIEW).length +
+          pendingRevisionCount,
         draft: allStoryChapters.filter((c) => c.status === ChapterStatus.DRAFT).length,
         rejected: allStoryChapters.filter((c) => c.status === ChapterStatus.REJECTED).length,
         totalViews: allStoryChapters.reduce((sum, c) => sum + (c.viewCount || 0), 0),
@@ -452,23 +560,17 @@ export class ChaptersService {
     const chapterObj: any = chapter.toObject();
     chapterObj.wordCount = this.countChapterWords(chapterObj.content);
 
-    // Nếu là tác giả hoặc quản trị viên, kiểm tra xem có bản ghi ChapterUpdate (bản sửa đang chờ duyệt/lưu nháp) không
+    // Nếu là tác giả hoặc quản trị viên, đính kèm bản chỉnh sửa đang mở (nếu có)
     if (isOwner || isAdminOrManager) {
-      const pendingUpdate = await this.chapterUpdateModel
-        .findOne({
-          chapterId: chapter._id,
-          status: {
-            $in: [
-              ChapterUpdateStatus.DRAFT,
-              ChapterUpdateStatus.PENDING_REVIEW,
-              ChapterUpdateStatus.REJECTED,
-            ],
-          },
-        })
-        .sort({ createdAt: -1 })
+      const withRevisions: any = await this.chapterModel
+        .findById(chapter._id)
+        .select('+revisions')
         .lean();
 
-      chapterObj.pendingUpdate = pendingUpdate || null;
+      chapterObj.pendingRevision = this.mapChapterRevision(
+        getActiveRevision(withRevisions?.revisions),
+        chapter,
+      );
     }
 
     return chapterObj;
@@ -487,122 +589,34 @@ export class ChaptersService {
       throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
     }
 
-    const chapter = await this.chapterModel.findById(chapterId);
+    const chapter = await this.chapterModel
+      .findById(chapterId)
+      .select('+revisions');
     if (!chapter) {
       throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
     }
 
     await this.verifyStoryOwnership(userId, chapter.storyId, userRole);
 
-    // Nếu tác giả yêu cầu hủy bỏ bản sửa đổi nháp của chương đã PUBLISHED
+    // Chương chưa từng có bản chính thức: chỉnh sửa trực tiếp như bản nháp
+    if (!this.chapterHasOfficialVersion(chapter)) {
+      return this.updateDraftChapter(chapter, dto);
+    }
+
+    return this.updateOfficialChapter(chapter, dto);
+  }
+
+  /**
+   * Chỉnh sửa trực tiếp chương chưa từng xuất bản (DRAFT/REJECTED/PENDING lần đầu).
+   */
+  private async updateDraftChapter(
+    chapter: ChapterDocument,
+    dto: UpdateChapterDto,
+  ): Promise<any> {
     if (dto.action === ChapterAction.DISCARD_UPDATE) {
-      if (chapter.status === ChapterStatus.PUBLISHED) {
-        await this.chapterUpdateModel.deleteMany({
-          chapterId: chapter._id,
-          status: {
-            $in: [
-              ChapterUpdateStatus.DRAFT,
-              ChapterUpdateStatus.PENDING_REVIEW,
-              ChapterUpdateStatus.REJECTED,
-            ],
-          },
-        });
-        const chapterObj: any = chapter.toObject();
-        chapterObj.pendingUpdate = null;
-        return chapterObj;
-      }
       return chapter;
     }
 
-    // TRƯỜNG HỢP 1: Chương ĐÃ XUẤT BẢN (PUBLISHED)
-    // Giữ nguyên bản chính trong `chapters` cho độc giả đọc, lưu bản sửa vào `chapter_updates`
-    if (chapter.status === ChapterStatus.PUBLISHED) {
-      if (dto.content !== undefined) {
-        const wordCount = this.countChapterWords(dto.content);
-        if (wordCount > 2500) {
-          throw new BadRequestException('Nội dung chương không được vượt quá 2.500 từ');
-        }
-      }
-
-      // Tìm bản ghi đang hoạt động (DRAFT, PENDING_REVIEW, REJECTED) — lấy bản mới nhất
-      let activeUpdate = await this.chapterUpdateModel
-        .findOne({
-          chapterId: chapter._id,
-          status: {
-            $in: [
-              ChapterUpdateStatus.DRAFT,
-              ChapterUpdateStatus.PENDING_REVIEW,
-              ChapterUpdateStatus.REJECTED,
-            ],
-          },
-        })
-        .sort({ createdAt: -1 });
-
-      const isFree =
-        dto.isFree !== undefined
-          ? dto.isFree
-          : (activeUpdate?.isFree ?? chapter.isFree);
-
-      let coinPrice =
-        dto.coinPrice !== undefined
-          ? dto.coinPrice
-          : (activeUpdate?.coinPrice ?? chapter.coinPrice);
-
-      let requirePreviousChapter =
-        dto.requirePreviousChapter !== undefined
-          ? dto.requirePreviousChapter
-          : (activeUpdate?.requirePreviousChapter ?? chapter.requirePreviousChapter);
-
-      if (!isFree) {
-        if (coinPrice <= 0) {
-          throw new BadRequestException(ErrorCode.CHAPTER_COIN_INVALID);
-        }
-      } else {
-        coinPrice = 0;
-        requirePreviousChapter = false;
-      }
-
-      const newTitle = dto.title !== undefined ? dto.title.trim() : (activeUpdate?.title ?? chapter.title);
-      const newContent = dto.content !== undefined ? dto.content : (activeUpdate?.content ?? chapter.content);
-      const newWordCount = this.countChapterWords(newContent);
-      const newStatus =
-        dto.action === ChapterAction.SUBMIT
-          ? ChapterUpdateStatus.PENDING_REVIEW
-          : ChapterUpdateStatus.DRAFT;
-
-      if (!activeUpdate || activeUpdate.status === ChapterUpdateStatus.REJECTED) {
-        // Tạo bản ghi ChapterUpdate MỚI (nếu chưa có hoặc bản cũ đã bị từ chối)
-        activeUpdate = new this.chapterUpdateModel({
-          chapterId: chapter._id,
-          storyId: chapter.storyId,
-          authorId: new Types.ObjectId(userId),
-          title: newTitle,
-          content: newContent,
-          wordCount: newWordCount,
-          isFree,
-          coinPrice,
-          requirePreviousChapter,
-          status: newStatus,
-        });
-      } else {
-        // Bản DRAFT hoặc PENDING_REVIEW đang mở: cập nhật tại chỗ
-        activeUpdate.title = newTitle;
-        activeUpdate.content = newContent;
-        activeUpdate.wordCount = newWordCount;
-        activeUpdate.isFree = isFree;
-        activeUpdate.coinPrice = coinPrice;
-        activeUpdate.requirePreviousChapter = requirePreviousChapter;
-        activeUpdate.status = newStatus;
-        activeUpdate.rejectReason = null;
-      }
-
-      const savedUpdate = await activeUpdate.save();
-      const chapterObj: any = chapter.toObject();
-      chapterObj.pendingUpdate = savedUpdate;
-      return chapterObj;
-    }
-
-    // TRƯỜNG HỢP 2: Chương CHƯA PUBLISHED (DRAFT, PENDING_REVIEW, REJECTED)
     // Kiểm tra trùng chapterNumber nếu cập nhật
     if (
       dto.chapterNumber !== undefined &&
@@ -697,12 +711,159 @@ export class ChaptersService {
     if (dto.action === ChapterAction.SUBMIT) {
       chapter.status = ChapterStatus.PENDING_REVIEW;
       chapter.rejectReason = null;
+    } else if (
+      dto.action === ChapterAction.WITHDRAW &&
+      chapter.status === ChapterStatus.PENDING_REVIEW
+    ) {
+      chapter.status = ChapterStatus.DRAFT;
+      chapter.rejectReason = null;
     }
 
     const updated = await chapter.save();
     await this.updateStoryStats(chapter.storyId);
 
     return updated;
+  }
+
+  /**
+   * Chỉnh sửa chương đã có bản chính thức: giữ nguyên bản chính cho độc giả,
+   * mọi thay đổi nội dung được lưu vào bản chỉnh sửa (revision) chờ duyệt.
+   */
+  private async updateOfficialChapter(
+    chapter: ChapterDocument,
+    dto: UpdateChapterDto,
+  ): Promise<any> {
+    const revisions = (chapter.revisions || []) as any[];
+    const activeRevision = getActiveRevision(revisions);
+
+    // Hủy bản đang chỉnh sửa
+    if (dto.action === ChapterAction.DISCARD_UPDATE) {
+      if (activeRevision) {
+        const index = revisions.findIndex(
+          (r) => r._id?.toString() === activeRevision._id?.toString(),
+        );
+        if (index >= 0) revisions.splice(index, 1);
+      }
+      trimRevisions(revisions);
+      await chapter.save();
+      return this.buildChapterResponse(chapter._id);
+    }
+
+    // Không cho đổi số thứ tự / lịch phát hành sau khi đã xuất bản
+    if (
+      dto.chapterNumber !== undefined &&
+      dto.chapterNumber !== chapter.chapterNumber
+    ) {
+      throw new BadRequestException(
+        'Không thể thay đổi số thứ tự của chương đã xuất bản',
+      );
+    }
+    if (dto.scheduledAt !== undefined) {
+      const nextTime = dto.scheduledAt
+        ? new Date(dto.scheduledAt).getTime()
+        : null;
+      const currentTime = chapter.scheduledAt
+        ? new Date(chapter.scheduledAt).getTime()
+        : null;
+      if (nextTime !== currentTime) {
+        throw new BadRequestException(
+          'Không thể thay đổi lịch phát hành của chương đã xuất bản',
+        );
+      }
+    }
+
+    const base = activeRevision
+      ? this.cloneRevisionSnapshot(activeRevision.snapshot)
+      : this.buildChapterSnapshotFromDoc(chapter);
+    const merged = this.mergeChapterSnapshot(base, dto);
+
+    if (
+      dto.content !== undefined &&
+      this.countChapterWords(merged.content) > 2500
+    ) {
+      throw new BadRequestException('Nội dung chương không được vượt quá 2.500 từ');
+    }
+
+    const contentChanged = this.chapterSnapshotChanged(base, merged);
+    const now = new Date();
+
+    // Rút bản đang chờ duyệt (có thể kèm chỉnh sửa)
+    if (dto.action === ChapterAction.WITHDRAW) {
+      if (
+        activeRevision &&
+        activeRevision.status === RevisionStatus.PENDING_REVIEW
+      ) {
+        activeRevision.status = RevisionStatus.DRAFT;
+        activeRevision.updatedAt = now;
+      }
+      if (contentChanged) {
+        if (activeRevision) {
+          activeRevision.snapshot = merged as any;
+          activeRevision.status = RevisionStatus.DRAFT;
+          activeRevision.rejectReason = null;
+          activeRevision.updatedAt = now;
+        } else {
+          revisions.push({
+            snapshot: merged,
+            status: RevisionStatus.DRAFT,
+            createdAt: now,
+            updatedAt: now,
+          } as any);
+        }
+      }
+      trimRevisions(revisions);
+      await chapter.save();
+      return this.buildChapterResponse(chapter._id);
+    }
+
+    // Đang chờ duyệt: phải rút trước khi sửa
+    if (
+      activeRevision &&
+      activeRevision.status === RevisionStatus.PENDING_REVIEW
+    ) {
+      if (contentChanged || dto.action === ChapterAction.SUBMIT) {
+        throw new ConflictException(
+          'Chương đang có bản chỉnh sửa chờ duyệt. Vui lòng rút bản đó (WITHDRAW) trước khi chỉnh sửa hoặc gửi duyệt lại.',
+        );
+      }
+      await chapter.save();
+      return this.buildChapterResponse(chapter._id);
+    }
+
+    if (contentChanged) {
+      if (activeRevision) {
+        activeRevision.snapshot = merged as any;
+        activeRevision.status =
+          dto.action === ChapterAction.SUBMIT
+            ? RevisionStatus.PENDING_REVIEW
+            : RevisionStatus.DRAFT;
+        activeRevision.rejectReason = null;
+        activeRevision.updatedAt = now;
+      } else {
+        revisions.push({
+          snapshot: merged,
+          status:
+            dto.action === ChapterAction.SUBMIT
+              ? RevisionStatus.PENDING_REVIEW
+              : RevisionStatus.DRAFT,
+          createdAt: now,
+          updatedAt: now,
+        } as any);
+      }
+    } else if (
+      dto.action === ChapterAction.SUBMIT &&
+      activeRevision &&
+      (activeRevision.status === RevisionStatus.DRAFT ||
+        activeRevision.status === RevisionStatus.REJECTED)
+    ) {
+      activeRevision.status = RevisionStatus.PENDING_REVIEW;
+      activeRevision.rejectReason = null;
+      activeRevision.updatedAt = now;
+    }
+
+    trimRevisions(revisions);
+    await chapter.save();
+    return this.buildChapterResponse(chapter._id);
   }
 
   /**
@@ -723,7 +884,9 @@ export class ChaptersService {
     }
 
     const objectIds = validIds.map((id) => new Types.ObjectId(id));
-    const chapters = await this.chapterModel.find({ _id: { $in: objectIds } });
+    const chapters = await this.chapterModel
+      .find({ _id: { $in: objectIds } })
+      .select('+revisions');
 
     if (chapters.length === 0) {
       throw new NotFoundException('Không tìm thấy chương truyện nào hợp lệ');
@@ -776,51 +939,39 @@ export class ChaptersService {
     }
 
     let submittedCount = 0;
+    const now = new Date();
 
-    // 1. Cập nhật các chương DRAFT hoặc REJECTED sang PENDING_REVIEW
-    const draftOrRejectedIds = chapters
-      .filter(
-        (c) =>
-          c.status === ChapterStatus.DRAFT ||
-          c.status === ChapterStatus.REJECTED,
-      )
-      .map((c) => c._id);
+    for (const chapter of chapters) {
+      let changed = false;
 
-    if (draftOrRejectedIds.length > 0) {
-      const res = await this.chapterModel.updateMany(
-        { _id: { $in: draftOrRejectedIds } },
-        {
-          $set: {
-            status: ChapterStatus.PENDING_REVIEW,
-            rejectReason: null,
-          },
-        },
-      );
-      submittedCount += res.modifiedCount;
-    }
+      // 1. Chương chưa xuất bản: gửi duyệt trực tiếp
+      if (
+        chapter.status === ChapterStatus.DRAFT ||
+        chapter.status === ChapterStatus.REJECTED
+      ) {
+        chapter.status = ChapterStatus.PENDING_REVIEW;
+        chapter.rejectReason = null;
+        changed = true;
+        submittedCount++;
+      } else {
+        // 2. Chương đã xuất bản: gửi duyệt bản chỉnh sửa đang nháp/bị từ chối
+        const activeRevision = getActiveRevision(chapter.revisions);
+        if (
+          activeRevision &&
+          (activeRevision.status === RevisionStatus.DRAFT ||
+            activeRevision.status === RevisionStatus.REJECTED)
+        ) {
+          activeRevision.status = RevisionStatus.PENDING_REVIEW;
+          activeRevision.rejectReason = null;
+          activeRevision.updatedAt = now;
+          changed = true;
+          submittedCount++;
+        }
+      }
 
-    // 2. Cập nhật các bản sửa ChapterUpdate đang ở DRAFT hoặc REJECTED sang PENDING_REVIEW
-    const activeUpdateIds = await this.chapterUpdateModel
-      .find({
-        chapterId: { $in: objectIds },
-        status: {
-          $in: [ChapterUpdateStatus.DRAFT, ChapterUpdateStatus.REJECTED],
-        },
-      })
-      .select('_id')
-      .lean();
-
-    if (activeUpdateIds.length > 0) {
-      const updateRes = await this.chapterUpdateModel.updateMany(
-        { _id: { $in: activeUpdateIds.map((u) => u._id) } },
-        {
-          $set: {
-            status: ChapterUpdateStatus.PENDING_REVIEW,
-            rejectReason: null,
-          },
-        },
-      );
-      submittedCount += updateRes.modifiedCount;
+      if (changed) {
+        await chapter.save();
+      }
     }
 
     return {
@@ -874,9 +1025,8 @@ export class ChaptersService {
     const storyId = chapter.storyId;
     const deletedChapterNumber = chapter.chapterNumber;
 
-    // 3. Xóa chapter và mọi bản ChapterUpdate liên quan
+    // 3. Xóa chương (lịch sử chỉnh sửa nhúng đi kèm)
     await this.chapterModel.deleteOne({ _id: chapter._id });
-    await this.chapterUpdateModel.deleteMany({ chapterId: chapter._id });
 
     // 4. Tự động dồn thứ tự các chương phía sau lên 1 bậc (dồn lên)
     const laterChapters = await this.chapterModel
@@ -965,7 +1115,14 @@ export class ChaptersService {
 
     const totalChapters = chapters.length;
     const published = chapters.filter((c) => c.status === ChapterStatus.PUBLISHED).length;
-    const pending = chapters.filter((c) => c.status === ChapterStatus.PENDING_REVIEW).length;
+    const pendingRevisionCount = await this.chapterModel.countDocuments({
+      storyId: story._id,
+      status: { $ne: ChapterStatus.PENDING_REVIEW },
+      'revisions.status': RevisionStatus.PENDING_REVIEW,
+    });
+    const pending =
+      chapters.filter((c) => c.status === ChapterStatus.PENDING_REVIEW).length +
+      pendingRevisionCount;
     const draft = chapters.filter((c) => c.status === ChapterStatus.DRAFT).length;
     const rejected = chapters.filter((c) => c.status === ChapterStatus.REJECTED).length;
     const totalViews = chapters.reduce((sum, c) => sum + (c.viewCount || 0), 0);
@@ -1238,6 +1395,52 @@ export class ChaptersService {
     };
   }
 
+  private buildRevisionHistoryItem(
+    revision: any,
+    chapter: any,
+    story: any,
+    activeRevisionId?: string | null,
+  ): any {
+    const snapshot = revision.snapshot || {};
+    const storyDoc = story && story.title !== undefined ? story : null;
+
+    return {
+      _id: revision._id,
+      isActive: Boolean(
+        activeRevisionId &&
+          revision._id?.toString() === activeRevisionId,
+      ),
+      chapterId: {
+        _id: chapter._id,
+        chapterNumber: chapter.chapterNumber,
+        title: chapter.title,
+        status: chapter.status,
+      },
+      storyId: storyDoc
+        ? {
+            _id: storyDoc._id,
+            title: storyDoc.title,
+            slug: storyDoc.slug,
+            coverUrl: storyDoc.coverUrl ?? null,
+            authorId: storyDoc.authorId ?? null,
+          }
+        : chapter.storyId,
+      authorId: storyDoc?.authorId ?? null,
+      title: snapshot.title,
+      content: snapshot.content,
+      isFree: snapshot.isFree,
+      coinPrice: snapshot.coinPrice,
+      requirePreviousChapter: snapshot.requirePreviousChapter,
+      wordCount: countWords(snapshot.content || ''),
+      status: revision.status,
+      rejectReason: revision.rejectReason ?? null,
+      reviewerId: revision.reviewerId ?? null,
+      reviewedAt: revision.reviewedAt ?? null,
+      createdAt: revision.createdAt,
+      updatedAt: revision.updatedAt,
+    };
+  }
+
   /**
    * Xem toàn bộ lịch sử các bản sửa đổi của chương (UC-15 & UC-16)
    */
@@ -1250,23 +1453,35 @@ export class ChaptersService {
       throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
     }
 
-    const chapter = await this.chapterModel.findById(chapterId);
+    const chapter = await this.chapterModel
+      .findById(chapterId)
+      .select('+revisions');
     if (!chapter) {
       throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
     }
 
     await this.verifyStoryOwnership(userId, chapter.storyId, userRole);
 
-    const history = await this.chapterUpdateModel
-      .find({ chapterId: chapter._id })
-      .populate('chapterId', 'chapterNumber title status')
-      .populate('storyId', 'title slug coverUrl')
+    const story: any = await this.storyModel
+      .findById(chapter.storyId)
+      .select('title slug coverUrl authorId')
       .populate('authorId', 'displayName username avatarUrl')
-      .populate('reviewerId', 'displayName username avatarUrl')
-      .sort({ createdAt: -1 })
       .lean();
 
-    return history;
+    const activeRevisionId = getActiveRevision(
+      (chapter.revisions || []) as any[],
+    )?._id?.toString();
+
+    return [...((chapter.revisions || []) as any[])]
+      .reverse()
+      .map((revision) =>
+        this.buildRevisionHistoryItem(
+          revision,
+          chapter,
+          story,
+          activeRevisionId,
+        ),
+      );
   }
 
   /**
@@ -1285,77 +1500,191 @@ export class ChaptersService {
       limit?: number;
     },
   ) {
-    const filter: any = {};
+    const isAdmin =
+      userRole === UserRole.ADMIN || userRole === UserRole.MANAGER;
 
-    // Nếu không phải ADMIN hoặc MANAGER, chỉ xem các bản update của chính tác giả đó
-    if (userRole !== UserRole.ADMIN && userRole !== UserRole.MANAGER) {
-      filter.authorId = new Types.ObjectId(userId.toString());
+    const page = Math.max(1, query?.page || 1);
+    const limit = Math.min(100, Math.max(1, query?.limit || 20));
+    const skip = (page - 1) * limit;
+
+    const emptyResult = {
+      items: [],
+      total: 0,
+      page,
+      limit,
+      totalPages: 1,
+    };
+
+    const chapterFilter: any = { 'revisions.0': { $exists: true } };
+
+    let restrictedStoryIds: Types.ObjectId[] | null = null;
+    if (!isAdmin) {
+      const ownedStories = await this.storyModel
+        .find({ authorId: new Types.ObjectId(userId.toString()) })
+        .select('_id')
+        .lean();
+      restrictedStoryIds = ownedStories.map((s) => s._id as Types.ObjectId);
     }
 
+    let resolvedStoryId: Types.ObjectId | null = null;
     if (query?.storyId) {
       if (Types.ObjectId.isValid(query.storyId)) {
-        filter.storyId = new Types.ObjectId(query.storyId);
+        resolvedStoryId = new Types.ObjectId(query.storyId);
       } else {
         const foundStory = await this.storyModel
           .findOne({ slug: query.storyId.trim() })
           .select('_id')
           .lean();
         if (foundStory) {
-          filter.storyId = foundStory._id;
+          resolvedStoryId = foundStory._id as Types.ObjectId;
         }
       }
+      if (!resolvedStoryId) return emptyResult;
+    }
+
+    if (restrictedStoryIds) {
+      if (resolvedStoryId) {
+        const owned = restrictedStoryIds.some(
+          (id) => id.toString() === resolvedStoryId!.toString(),
+        );
+        if (!owned) return emptyResult;
+        chapterFilter.storyId = resolvedStoryId;
+      } else {
+        chapterFilter.storyId = { $in: restrictedStoryIds };
+      }
+    } else if (resolvedStoryId) {
+      chapterFilter.storyId = resolvedStoryId;
     }
 
     if (query?.chapterId) {
       if (Types.ObjectId.isValid(query.chapterId)) {
-        filter.chapterId = new Types.ObjectId(query.chapterId);
+        chapterFilter._id = new Types.ObjectId(query.chapterId);
       } else if (!isNaN(Number(query.chapterId))) {
-        const chNum = Number(query.chapterId);
         const foundCh = await this.chapterModel
           .findOne({
-            ...(filter.storyId ? { storyId: filter.storyId } : {}),
-            chapterNumber: chNum,
+            ...(chapterFilter.storyId
+              ? { storyId: chapterFilter.storyId }
+              : {}),
+            chapterNumber: Number(query.chapterId),
           })
           .select('_id')
           .lean();
-        if (foundCh) {
-          filter.chapterId = foundCh._id;
-        }
+        if (!foundCh) return emptyResult;
+        chapterFilter._id = foundCh._id;
       }
     }
 
-    if (query?.status && Object.values(ChapterUpdateStatus).includes(query.status as any)) {
-      filter.status = query.status;
+    const chapters: any[] = await this.chapterModel
+      .find(chapterFilter)
+      .select('+revisions chapterNumber title status storyId')
+      .populate({
+        path: 'storyId',
+        select: 'title slug coverUrl authorId',
+        populate: {
+          path: 'authorId',
+          select: 'displayName username avatarUrl',
+        },
+      })
+      .lean();
+
+    const search = query?.search?.trim().toLowerCase();
+
+    const records: any[] = [];
+    for (const chapter of chapters) {
+      const story = chapter.storyId;
+      const activeRevisionId = getActiveRevision(
+        (chapter.revisions || []) as any[],
+      )?._id?.toString();
+      for (const revision of (chapter.revisions || []) as any[]) {
+        if (query?.status && revision.status !== query.status) continue;
+
+        const snapshot = revision.snapshot || {};
+        if (
+          search &&
+          !String(snapshot.title || '').toLowerCase().includes(search)
+        ) {
+          continue;
+        }
+
+        records.push(
+          this.buildRevisionHistoryItem(
+            revision,
+            chapter,
+            story,
+            activeRevisionId,
+          ),
+        );
+      }
     }
 
-    if (query?.search && query.search.trim()) {
-      filter.title = { $regex: query.search.trim(), $options: 'i' };
-    }
+    records.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
-    const page = Math.max(1, query?.page || 1);
-    const limit = Math.min(100, Math.max(1, query?.limit || 20));
-    const skip = (page - 1) * limit;
-
-    const [items, total] = await Promise.all([
-      this.chapterUpdateModel
-        .find(filter)
-        .populate('chapterId', 'chapterNumber title status')
-        .populate('storyId', 'title slug coverUrl')
-        .populate('authorId', 'displayName username avatarUrl')
-        .populate('reviewerId', 'displayName username avatarUrl')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      this.chapterUpdateModel.countDocuments(filter),
-    ]);
+    const total = records.length;
 
     return {
-      items,
+      items: records.slice(skip, skip + limit),
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit) || 1,
     };
+  }
+
+  /**
+   * Khôi phục một bản chỉnh sửa cũ thành bản nháp mới (phải qua duyệt lại).
+   */
+  async restoreChapterRevision(
+    userId: string | Types.ObjectId,
+    chapterId: string,
+    revisionId: string,
+    userRole?: string,
+  ): Promise<any> {
+    if (
+      !Types.ObjectId.isValid(chapterId) ||
+      !Types.ObjectId.isValid(revisionId)
+    ) {
+      throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
+    }
+
+    const chapter = await this.chapterModel
+      .findById(chapterId)
+      .select('+revisions');
+    if (!chapter) {
+      throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    await this.verifyStoryOwnership(userId, chapter.storyId, userRole);
+
+    const revisions = (chapter.revisions || []) as any[];
+    const target = revisions.find(
+      (revision) => revision._id?.toString() === revisionId,
+    );
+    if (!target) {
+      throw new NotFoundException(
+        'Không tìm thấy bản chỉnh sửa cần khôi phục',
+      );
+    }
+
+    if (getActiveRevision(revisions)) {
+      throw new ConflictException(
+        'Đang có bản chỉnh sửa khác. Vui lòng hủy hoặc rút bản đó trước khi khôi phục bản cũ.',
+      );
+    }
+
+    const now = new Date();
+    revisions.push({
+      snapshot: this.cloneRevisionSnapshot(target.snapshot),
+      status: RevisionStatus.DRAFT,
+      createdAt: now,
+      updatedAt: now,
+    } as any);
+
+    trimRevisions(revisions);
+    await chapter.save();
+
+    return this.buildChapterResponse(chapter._id);
   }
 }

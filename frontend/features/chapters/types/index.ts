@@ -5,9 +5,9 @@ export type ChapterStatus =
   | 'HIDDEN'
   | 'REJECTED';
 
-export type ChapterAction = 'DRAFT' | 'SUBMIT' | 'DISCARD_UPDATE';
+export type ChapterAction = 'DRAFT' | 'SUBMIT' | 'WITHDRAW' | 'DISCARD_UPDATE';
 
-export interface ChapterUpdateItem {
+export interface ChapterRevisionItem {
   _id: string;
   chapterId: string | { _id: string; chapterNumber?: number; title?: string; status?: ChapterStatus };
   storyId: string | { _id: string; title?: string; slug?: string; coverUrl?: string };
@@ -18,6 +18,7 @@ export interface ChapterUpdateItem {
   coinPrice: number;
   requirePreviousChapter: boolean;
   status: 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  isActive?: boolean;
   wordCount?: number;
   rejectReason?: string | null;
   reviewerId?: string | { _id: string; displayName?: string; username?: string; avatarUrl?: string } | null;
@@ -42,7 +43,7 @@ export interface ChapterItem {
   scheduledAt?: string | null;
   publishedAt?: string | null;
   rejectReason?: string | null;
-  pendingUpdate?: ChapterUpdateItem | null;
+  pendingRevision?: ChapterRevisionItem | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -144,7 +145,7 @@ export interface StoryChaptersResponse {
 
 export interface AdminChapterItem extends ChapterItem {
   storyId: any;
-  isPendingUpdateReview?: boolean;
+  isPendingRevisionReview?: boolean;
 }
 
 export interface AdminChapterCounts {

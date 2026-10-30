@@ -88,5 +88,4 @@ export const CommentSchema = SchemaFactory.createForClass(Comment);
 CommentSchema.index({ storyId: 1, chapterId: 1, parentId: 1, createdAt: -1 });
 CommentSchema.index({ parentId: 1, createdAt: 1 });
 CommentSchema.index({ userId: 1, createdAt: -1 });
-CommentSchema.index({ replyToUserId: 1 });
 

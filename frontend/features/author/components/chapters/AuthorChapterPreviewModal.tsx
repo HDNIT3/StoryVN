@@ -20,16 +20,50 @@ export function AuthorChapterPreviewModal({
 }: AuthorChapterPreviewModalProps) {
   if (!previewChapter) return null;
 
+  // Bản sửa đang mở: xem trước đúng nội dung tác giả đã chỉnh/gửi duyệt
+  const activeRevision =
+    (previewDetail ?? previewChapter).pendingRevision ?? null;
+  const displayTitle =
+    activeRevision?.title || previewDetail?.title || previewChapter.title;
+  const displayContent =
+    activeRevision?.content ??
+    previewDetail?.content ??
+    previewChapter.content;
+  const displayIsFree = activeRevision
+    ? activeRevision.isFree
+    : previewDetail?.isFree ?? previewChapter.isFree;
+  const displayCoinPrice = activeRevision
+    ? activeRevision.coinPrice
+    : previewDetail?.coinPrice ?? previewChapter.coinPrice;
+
+  const revisionChip =
+    activeRevision?.status === "PENDING_REVIEW"
+      ? { label: "Đang xem bản chờ duyệt", className: "bg-amber-50 text-amber-700 border-amber-200" }
+      : activeRevision?.status === "DRAFT"
+      ? { label: "Đang xem bản nháp", className: "bg-zinc-100 text-zinc-600 border-zinc-200" }
+      : activeRevision?.status === "REJECTED"
+      ? { label: "Đang xem bản bị từ chối", className: "bg-rose-50 text-rose-700 border-rose-200" }
+      : null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="bg-white rounded-lg border border-zinc-200 shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
         <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50/50">
           <div>
-            <span className="text-xs font-bold text-sky-600">
-              Chương #{previewDetail?.chapterNumber ?? previewChapter.chapterNumber}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-sky-600">
+                Chương #{previewDetail?.chapterNumber ?? previewChapter.chapterNumber}
+              </span>
+              {revisionChip && (
+                <span
+                  className={`px-2 py-0.5 rounded-sm text-[10px] font-bold border ${revisionChip.className}`}
+                >
+                  {revisionChip.label}
+                </span>
+              )}
+            </div>
             <h3 className="text-base font-bold text-zinc-900">
-              {previewDetail?.title || previewChapter.title}
+              {displayTitle}
             </h3>
           </div>
           <button
@@ -67,10 +101,8 @@ export function AuthorChapterPreviewModal({
             className="p-6 overflow-y-auto flex-1 font-serif text-zinc-800 leading-relaxed text-sm prose max-w-none [&_p]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:mb-2"
             dangerouslySetInnerHTML={{
               __html:
-                previewDetail?.content && previewDetail.content !== "<p></p>"
-                  ? previewDetail.content
-                  : previewChapter.content && previewChapter.content !== "<p></p>"
-                  ? previewChapter.content
+                displayContent && displayContent !== "<p></p>"
+                  ? displayContent
                   : "<p class='text-zinc-400 italic'>Chương này chưa có nội dung văn bản.</p>",
             }}
           />
@@ -86,11 +118,11 @@ export function AuthorChapterPreviewModal({
               />
             </span>
             <span className="text-zinc-300">|</span>
-            {previewDetail?.isFree ?? previewChapter.isFree ? (
+            {displayIsFree ? (
               <span className="text-emerald-600 font-medium">Miễn phí</span>
             ) : (
               <span className="text-amber-600 font-medium">
-                {previewDetail?.coinPrice ?? previewChapter.coinPrice} xu
+                {displayCoinPrice} xu
               </span>
             )}
           </div>

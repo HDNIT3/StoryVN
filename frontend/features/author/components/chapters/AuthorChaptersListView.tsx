@@ -105,9 +105,9 @@ export function AuthorChaptersListView() {
         c.status === "DRAFT" ||
         c.status === "REJECTED" ||
         (c.status === "PUBLISHED" &&
-          (c as any).pendingUpdate &&
-          ((c as any).pendingUpdate.status === "DRAFT" ||
-            (c as any).pendingUpdate.status === "REJECTED"))
+          (c as any).pendingRevision &&
+          ((c as any).pendingRevision.status === "DRAFT" ||
+            (c as any).pendingRevision.status === "REJECTED"))
     );
   }, [filteredChapters]);
 

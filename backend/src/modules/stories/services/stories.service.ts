@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,7 +9,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { buildPaginationMeta, PaginatedResult } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
+import { RevisionStatus } from '../../../common/enums/revision-status.enum.js';
 import { countWords } from '../../../common/utils/text.util.js';
+import {
+  getActiveRevision,
+  hasRevisionWithStatus,
+  toRevisionView,
+  trimRevisions,
+} from '../../../common/utils/revision.util.js';
 import {
   generateUniqueSlug,
   isSlugAvailable,
@@ -127,12 +135,30 @@ export class StoriesService {
     };
 
     if (query.status) {
-      filter.status = query.status;
+      if (query.status === StoryStatus.PENDING_REVIEW) {
+        filter.$or = [
+          { status: StoryStatus.PENDING_REVIEW },
+          { 'revisions.status': RevisionStatus.PENDING_REVIEW },
+        ];
+      } else if (query.status === StoryStatus.REJECTED) {
+        filter.$or = [
+          { status: StoryStatus.REJECTED },
+          { 'revisions.status': RevisionStatus.REJECTED },
+        ];
+      } else {
+        filter.status = query.status;
+      }
     }
 
     if (query.search?.trim()) {
       const regex = new RegExp(query.search.trim(), 'i');
-      filter.$or = [{ title: regex }, { slug: regex }];
+      const searchOr = [{ title: regex }, { slug: regex }];
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: searchOr }];
+        delete filter.$or;
+      } else {
+        filter.$or = searchOr;
+      }
     }
 
     const sortMap: Record<string, string> = {
@@ -147,9 +173,10 @@ export class StoriesService {
     const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const sort: any = { [sortField]: sortOrder };
 
-    const [items, totalItems] = await Promise.all([
+    const [rawItems, totalItems] = await Promise.all([
       this.storyModel
         .find(filter)
+        .select('+revisions')
         .populate('genreIds', 'name slug')
         .populate('tagIds', 'name slug')
         .sort(sort)
@@ -160,24 +187,40 @@ export class StoriesService {
       this.storyModel.countDocuments(filter),
     ]);
 
+    const items = rawItems.map((item: any) => {
+      const activeRevision = getActiveRevision(item.revisions);
+      delete item.revisions;
+      return {
+        ...item,
+        pendingRevision: toRevisionView(activeRevision),
+      };
+    });
+
     return {
       items,
       pagination: buildPaginationMeta(totalItems, query.page, query.limit),
     };
   }
 
-  async updateMyStory(
+  /**
+   * Tìm truyện thuộc sở hữu của tác giả, kèm mảng revisions.
+   */
+  private async findOwnedStory(
     authorId: Types.ObjectId,
     identifier: string,
-    dto: UpdateStoryDto,
-    actionOverride?: StoryAction,
+    includeRevisions = false,
   ): Promise<StoryDocument> {
     const isObjectId = Types.ObjectId.isValid(identifier);
     const filter: any = isObjectId
       ? { _id: new Types.ObjectId(identifier) }
       : { slug: identifier.trim() };
 
-    const story = await this.storyModel.findOne(filter);
+    let query = this.storyModel.findOne(filter);
+    if (includeRevisions) {
+      query = query.select('+revisions');
+    }
+
+    const story = await query;
     if (!story) {
       throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
     }
@@ -186,10 +229,160 @@ export class StoriesService {
       throw new ForbiddenException(ErrorCode.STORY_FORBIDDEN);
     }
 
+    return story;
+  }
+
+  /**
+   * Ảnh chụp nội dung chính thức hiện tại (các field được kiểm duyệt).
+   */
+  private buildStorySnapshotFromDoc(story: StoryDocument): Record<string, any> {
+    return {
+      title: story.title,
+      description: story.description || '',
+      coverUrl: story.coverUrl ?? null,
+      authorNote: story.authorNote || '',
+      genreIds: (story.genreIds || []).map((id) => new Types.ObjectId(id)),
+      tagIds: (story.tagIds || []).map((id) => new Types.ObjectId(id)),
+      ageRating: story.ageRating,
+    };
+  }
+
+  private sameObjectIdSet(a: any[] = [], b: any[] = []): boolean {
+    if (a.length !== b.length) return false;
+    const setB = new Set(b.map((x) => x.toString()));
+    return a.every((x) => setB.has(x.toString()));
+  }
+
+  /**
+   * Gộp thay đổi từ DTO lên snapshot nền (snapshot đang mở hoặc bản chính thức).
+   */
+  private mergeStorySnapshot(
+    base: Record<string, any>,
+    dto: UpdateStoryDto,
+  ): Record<string, any> {
+    const nextCover =
+      dto.coverImage !== undefined
+        ? dto.coverImage
+        : dto.coverUrl !== undefined
+          ? dto.coverUrl
+          : (base.coverUrl ?? null);
+
+    return {
+      title: dto.title !== undefined ? dto.title.trim() : base.title,
+      description:
+        dto.description !== undefined
+          ? (dto.description || '').trim()
+          : (base.description || ''),
+      coverUrl: nextCover ?? null,
+      authorNote:
+        dto.authorNote !== undefined
+          ? (dto.authorNote || '').trim()
+          : (base.authorNote || ''),
+      genreIds:
+        dto.genreIds !== undefined
+          ? dto.genreIds.map((id) => new Types.ObjectId(id))
+          : (base.genreIds || []),
+      tagIds:
+        dto.tagIds !== undefined
+          ? dto.tagIds.map((id) => new Types.ObjectId(id))
+          : (base.tagIds || []),
+      ageRating: dto.ageRating !== undefined ? dto.ageRating : base.ageRating,
+    };
+  }
+
+  private hasStoryContentChanged(
+    base: Record<string, any>,
+    dto: UpdateStoryDto,
+  ): boolean {
+    const next = this.mergeStorySnapshot(base, dto);
+    return (
+      next.title !== (base.title || '') ||
+      next.description !== (base.description || '') ||
+      (next.coverUrl ?? null) !== (base.coverUrl ?? null) ||
+      next.authorNote !== (base.authorNote || '') ||
+      next.ageRating !== base.ageRating ||
+      !this.sameObjectIdSet(next.genreIds, base.genreIds) ||
+      !this.sameObjectIdSet(next.tagIds, base.tagIds)
+    );
+  }
+
+  /**
+   * Áp dụng trực tiếp nội dung cho truyện chưa từng có bản chính thức.
+   */
+  private applyStoryContentDirectly(
+    story: StoryDocument,
+    dto: UpdateStoryDto,
+  ): void {
     if (dto.title !== undefined) {
       story.title = dto.title.trim();
     }
+    if (dto.description !== undefined) {
+      story.description = (dto.description || '').trim();
+    }
+    if (dto.coverImage !== undefined) {
+      story.coverUrl = dto.coverImage;
+    } else if (dto.coverUrl !== undefined) {
+      story.coverUrl = dto.coverUrl;
+    }
+    if (dto.genreIds !== undefined) {
+      story.genreIds = dto.genreIds.map((id) => new Types.ObjectId(id));
+    }
+    if (dto.tagIds !== undefined) {
+      story.tagIds = dto.tagIds.map((id) => new Types.ObjectId(id));
+    }
+    if (dto.ageRating !== undefined) {
+      story.ageRating = dto.ageRating;
+    }
+    if (dto.authorNote !== undefined) {
+      story.authorNote = (dto.authorNote || '').trim();
+    }
+  }
 
+  private cloneSnapshot(snapshot: any): Record<string, any> {
+    const plain = snapshot?.toObject ? snapshot.toObject() : { ...(snapshot || {}) };
+    delete plain._id;
+    return plain;
+  }
+
+  /**
+   * Trả về truyện kèm bản chỉnh sửa đang mở (nếu có); không lộ toàn bộ lịch sử.
+   */
+  private async buildStoryResponse(storyId: Types.ObjectId): Promise<any> {
+    const story: any = await this.storyModel
+      .findById(storyId)
+      .select('+revisions')
+      .populate('genreIds', 'name slug')
+      .populate('tagIds', 'name slug')
+      .lean()
+      .exec();
+
+    const activeRevision = getActiveRevision(story.revisions);
+    delete story.revisions;
+
+    return {
+      ...story,
+      pendingRevision: toRevisionView(activeRevision),
+    };
+  }
+
+  async updateMyStory(
+    authorId: Types.ObjectId,
+    identifier: string,
+    dto: UpdateStoryDto,
+    actionOverride?: StoryAction,
+  ): Promise<any> {
+    const story = await this.findOwnedStory(authorId, identifier, true);
+    const action = actionOverride || dto.action;
+
+    // Field vận hành: áp dụng ngay, không thuộc nội dung kiểm duyệt
+    if (dto.progressState !== undefined) {
+      story.progressState = dto.progressState;
+    }
+    if (dto.visibility !== undefined) {
+      story.visibility = dto.visibility;
+    }
+
+    // Slug tùy chỉnh không thuộc nội dung kiểm duyệt
     if (dto.slug?.trim()) {
       const customSlug = toSlug(dto.slug.trim());
       const available = await isSlugAvailable(this.storyModel, customSlug, {
@@ -201,57 +394,187 @@ export class StoriesService {
       story.slug = customSlug;
     }
 
-    if (dto.description !== undefined) {
-      story.description = dto.description.trim();
+    const hasOfficial =
+      story.status === StoryStatus.PUBLISHED ||
+      hasRevisionWithStatus(story.revisions, RevisionStatus.APPROVED);
+
+    // Chưa từng xuất bản: chỉnh sửa trực tiếp như luồng nháp ban đầu
+    if (!hasOfficial) {
+      this.applyStoryContentDirectly(story, dto);
+
+      if (action === StoryAction.SUBMIT) {
+        story.status = StoryStatus.PENDING_REVIEW;
+        story.rejectReason = null;
+      } else if (action === StoryAction.DRAFT) {
+        story.status = StoryStatus.DRAFT;
+      }
+
+      await story.save();
+      return this.buildStoryResponse(story._id);
     }
 
-    if (dto.coverImage !== undefined) {
-      story.coverUrl = dto.coverImage;
-    } else if (dto.coverUrl !== undefined) {
-      story.coverUrl = dto.coverUrl;
+    const revisions = story.revisions as any[];
+    const activeRevision = getActiveRevision(revisions);
+
+    // Bỏ bản đang chỉnh sửa
+    if (action === StoryAction.DISCARD) {
+      if (activeRevision) {
+        const index = revisions.findIndex(
+          (r) => r._id?.toString() === activeRevision!._id?.toString(),
+        );
+        if (index >= 0) revisions.splice(index, 1);
+      }
+      trimRevisions(revisions);
+      await story.save();
+      return this.buildStoryResponse(story._id);
     }
 
-    if (dto.genreIds !== undefined) {
-      story.genreIds = dto.genreIds.map((id) => new Types.ObjectId(id));
+    const base = activeRevision
+      ? this.cloneSnapshot(activeRevision.snapshot)
+      : this.buildStorySnapshotFromDoc(story);
+    const contentChanged = this.hasStoryContentChanged(base, dto);
+    const now = new Date();
+
+    // Rút bản đang chờ duyệt (có thể kèm chỉnh sửa)
+    if (action === StoryAction.WITHDRAW) {
+      if (activeRevision && activeRevision.status === RevisionStatus.PENDING_REVIEW) {
+        activeRevision.status = RevisionStatus.DRAFT;
+        activeRevision.updatedAt = now;
+      }
+      if (contentChanged) {
+        if (activeRevision) {
+          activeRevision.snapshot = this.mergeStorySnapshot(base, dto) as any;
+          activeRevision.status = RevisionStatus.DRAFT;
+          activeRevision.rejectReason = null;
+          activeRevision.updatedAt = now;
+        } else {
+          revisions.push({
+            snapshot: this.mergeStorySnapshot(base, dto),
+            status: RevisionStatus.DRAFT,
+            createdAt: now,
+            updatedAt: now,
+          } as any);
+        }
+      }
+      trimRevisions(revisions);
+      await story.save();
+      return this.buildStoryResponse(story._id);
     }
 
-    if (dto.tagIds !== undefined) {
-      story.tagIds = dto.tagIds.map((id) => new Types.ObjectId(id));
+    // Đang chờ duyệt: không được sửa nội dung, phải rút trước
+    if (activeRevision && activeRevision.status === RevisionStatus.PENDING_REVIEW) {
+      if (contentChanged || action === StoryAction.SUBMIT) {
+        throw new ConflictException(
+          'Tác phẩm đang có bản chỉnh sửa chờ duyệt. Vui lòng rút bản đó (WITHDRAW) trước khi chỉnh sửa hoặc gửi duyệt lại.',
+        );
+      }
+      await story.save();
+      return this.buildStoryResponse(story._id);
     }
 
-    if (dto.ageRating !== undefined) {
-      story.ageRating = dto.ageRating;
+    if (contentChanged) {
+      if (activeRevision) {
+        activeRevision.snapshot = this.mergeStorySnapshot(base, dto) as any;
+        activeRevision.status =
+          action === StoryAction.SUBMIT
+            ? RevisionStatus.PENDING_REVIEW
+            : RevisionStatus.DRAFT;
+        activeRevision.rejectReason = null;
+        activeRevision.updatedAt = now;
+      } else {
+        revisions.push({
+          snapshot: this.mergeStorySnapshot(base, dto),
+          status:
+            action === StoryAction.SUBMIT
+              ? RevisionStatus.PENDING_REVIEW
+              : RevisionStatus.DRAFT,
+          createdAt: now,
+          updatedAt: now,
+        } as any);
+      }
+    } else if (
+      action === StoryAction.SUBMIT &&
+      activeRevision &&
+      (activeRevision.status === RevisionStatus.DRAFT ||
+        activeRevision.status === RevisionStatus.REJECTED)
+    ) {
+      activeRevision.status = RevisionStatus.PENDING_REVIEW;
+      activeRevision.rejectReason = null;
+      activeRevision.updatedAt = now;
     }
 
-    if (dto.progressState !== undefined) {
-      story.progressState = dto.progressState;
+    trimRevisions(revisions);
+    await story.save();
+    return this.buildStoryResponse(story._id);
+  }
+
+  /**
+   * Lịch sử chỉnh sửa của truyện (mới nhất trước).
+   */
+  async getMyStoryRevisions(
+    authorId: Types.ObjectId,
+    identifier: string,
+  ): Promise<any[]> {
+    const story = await this.findOwnedStory(authorId, identifier, true);
+    const revisions = (story.revisions || []) as any[];
+
+    const latestApproved = [...revisions]
+      .reverse()
+      .find((r) => r.status === RevisionStatus.APPROVED);
+    const latestApprovedId = latestApproved?._id?.toString() || null;
+    const activeRevision = getActiveRevision(revisions);
+    const activeId = activeRevision?._id?.toString() || null;
+
+    return [...revisions].reverse().map((revision) =>
+      toRevisionView(revision, {
+        isOfficial: revision._id?.toString() === latestApprovedId,
+        isActive: revision._id?.toString() === activeId,
+      }),
+    );
+  }
+
+  /**
+   * Khôi phục một bản cũ thành bản nháp mới (phải qua duyệt lại).
+   */
+  async restoreMyStoryRevision(
+    authorId: Types.ObjectId,
+    identifier: string,
+    revisionId: string,
+  ): Promise<any> {
+    if (!Types.ObjectId.isValid(revisionId)) {
+      throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
     }
 
-    if (dto.visibility !== undefined) {
-      story.visibility = dto.visibility;
+    const story = await this.findOwnedStory(authorId, identifier, true);
+    const revisions = (story.revisions || []) as any[];
+
+    const target = revisions.find(
+      (r) => r._id?.toString() === revisionId,
+    );
+    if (!target) {
+      throw new NotFoundException(
+        'Không tìm thấy bản chỉnh sửa cần khôi phục',
+      );
     }
 
-    if (dto.authorNote !== undefined) {
-      story.authorNote = dto.authorNote.trim();
+    if (getActiveRevision(revisions)) {
+      throw new ConflictException(
+        'Đang có bản chỉnh sửa khác. Vui lòng hủy hoặc rút bản đó trước khi khôi phục bản cũ.',
+      );
     }
 
-    const action = actionOverride || dto.action;
-    if (action === StoryAction.SUBMIT) {
-      story.status = StoryStatus.PENDING_REVIEW;
-      story.rejectReason = null;
-    } else if (action === StoryAction.DRAFT) {
-      story.status = StoryStatus.DRAFT;
-    } else if (dto.status !== undefined) {
-      story.status = dto.status;
-    }
+    const now = new Date();
+    revisions.push({
+      snapshot: this.cloneSnapshot(target.snapshot),
+      status: RevisionStatus.DRAFT,
+      createdAt: now,
+      updatedAt: now,
+    } as any);
 
+    trimRevisions(revisions);
     await story.save();
 
-    return (await this.storyModel
-      .findById(story._id)
-      .populate('genreIds', 'name slug')
-      .populate('tagIds', 'name slug')
-      .exec()) as StoryDocument;
+    return this.buildStoryResponse(story._id);
   }
 
   async getMyCounts(authorId: Types.ObjectId): Promise<{
@@ -261,42 +584,37 @@ export class StoriesService {
     rejected: number;
     draft: number;
   }> {
-    const countsAggregate = await this.storyModel.aggregate([
-      {
-        $match: {
-          authorId: new Types.ObjectId(authorId),
-        },
-      },
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 },
-        },
-      },
+    const authorFilter = { authorId: new Types.ObjectId(authorId) };
+
+    const [all, pending, published, rejected, draft] = await Promise.all([
+      this.storyModel.countDocuments(authorFilter),
+      // Truyện đang chờ duyệt: gồm truyện mới gửi duyệt và truyện đã xuất bản
+      // có bản chỉnh sửa đang chờ duyệt (khớp filter của danh sách).
+      this.storyModel.countDocuments({
+        ...authorFilter,
+        $or: [
+          { status: StoryStatus.PENDING_REVIEW },
+          { 'revisions.status': RevisionStatus.PENDING_REVIEW },
+        ],
+      }),
+      this.storyModel.countDocuments({
+        ...authorFilter,
+        status: StoryStatus.PUBLISHED,
+      }),
+      this.storyModel.countDocuments({
+        ...authorFilter,
+        $or: [
+          { status: StoryStatus.REJECTED },
+          { 'revisions.status': RevisionStatus.REJECTED },
+        ],
+      }),
+      this.storyModel.countDocuments({
+        ...authorFilter,
+        status: StoryStatus.DRAFT,
+      }),
     ]);
 
-    const counts = {
-      all: 0,
-      pending: 0,
-      published: 0,
-      rejected: 0,
-      draft: 0,
-    };
-
-    countsAggregate.forEach((item) => {
-      counts.all += item.count;
-      if (item._id === StoryStatus.PENDING_REVIEW) {
-        counts.pending = item.count;
-      } else if (item._id === StoryStatus.PUBLISHED) {
-        counts.published = item.count;
-      } else if (item._id === StoryStatus.REJECTED) {
-        counts.rejected = item.count;
-      } else if (item._id === StoryStatus.DRAFT) {
-        counts.draft = item.count;
-      }
-    });
-
-    return counts;
+    return { all, pending, published, rejected, draft };
   }
 
   /**

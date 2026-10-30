@@ -11,13 +11,14 @@ import {
 import {
   StoryAgeRating,
   StoryProgressState,
-  StoryStatus,
   StoryVisibility,
 } from '../schemas/story.schema.js';
 
 export enum StoryAction {
   DRAFT = 'DRAFT',
   SUBMIT = 'SUBMIT',
+  WITHDRAW = 'WITHDRAW',
+  DISCARD = 'DISCARD',
 }
 
 export class CreateStoryDto {
@@ -109,15 +110,6 @@ export class CreateStoryDto {
   progressState?: StoryProgressState;
 
   @ApiPropertyOptional({
-    enum: StoryStatus,
-    default: StoryStatus.DRAFT,
-    description: 'Trạng thái truyện',
-  })
-  @IsOptional()
-  @IsEnum(StoryStatus, { message: 'Trạng thái truyện không hợp lệ' })
-  status?: StoryStatus;
-
-  @ApiPropertyOptional({
     enum: StoryVisibility,
     default: StoryVisibility.PUBLIC,
     description: 'Chế độ hiển thị',
@@ -129,9 +121,10 @@ export class CreateStoryDto {
   @ApiPropertyOptional({
     enum: StoryAction,
     default: StoryAction.DRAFT,
-    description: 'Hành động: DRAFT (lưu nháp) hoặc SUBMIT (gửi duyệt ngay)',
+    description:
+      'Hành động: DRAFT (lưu nháp), SUBMIT (gửi duyệt), WITHDRAW (rút bản đang chờ duyệt), DISCARD (bỏ bản đang chỉnh sửa)',
   })
   @IsOptional()
-  @IsEnum(StoryAction, { message: 'Hành động không hợp lệ (chỉ nhận DRAFT hoặc SUBMIT)' })
+  @IsEnum(StoryAction, { message: 'Hành động không hợp lệ' })
   action?: StoryAction;
 }

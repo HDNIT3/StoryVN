@@ -35,8 +35,8 @@ export function ChapterActionModal({
   if (!isOpen || !actionType || !chapter) return null;
 
   const isUpdateReview = Boolean(
-    chapter.isPendingUpdateReview ||
-    (chapter.status === "PUBLISHED" && (chapter as any).pendingUpdate?.status === "PENDING_REVIEW")
+    chapter.isPendingRevisionReview ||
+    (chapter.status === "PUBLISHED" && (chapter as any).pendingRevision?.status === "PENDING_REVIEW")
   );
 
   const chapterDisplay = `Chương ${chapter.chapterNumber}${

@@ -2,7 +2,24 @@ export type StoryStatus = "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "REJECTED";
 export type StoryVisibility = "PUBLIC" | "PRIVATE";
 export type StoryAgeRating = "ALL" | "13+" | "16+" | "18+";
 export type StoryProgressState = "ONGOING" | "COMPLETED" | "ON_HOLD";
-export type StoryAction = "DRAFT" | "SUBMIT";
+export type StoryAction = "DRAFT" | "SUBMIT" | "WITHDRAW" | "DISCARD";
+
+export interface StoryRevisionItem {
+  _id: string;
+  status: "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+  title: string;
+  description: string;
+  coverUrl?: string | null;
+  authorNote?: string;
+  genreIds?: (string | PopulatedRef)[];
+  tagIds?: (string | PopulatedRef)[];
+  ageRating?: StoryAgeRating;
+  rejectReason?: string | null;
+  isActive?: boolean;
+  isOfficial?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export interface PopulatedRef {
   _id: string;
@@ -41,6 +58,7 @@ export interface StoryItem {
   authorPenName?: string;
   rejectReason?: string | null;
   publishedAt?: string | null;
+  pendingRevision?: StoryRevisionItem | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -133,6 +151,7 @@ export interface AdminStoryItem extends Omit<StoryItem, "authorId"> {
     storyCount?: number;
     level?: number;
   } | null;
+  isPendingReview?: boolean;
 }
 
 export interface AdminStoryCounts {
