@@ -167,6 +167,53 @@ export class StoriesController {
     };
   }
 
+  @ApiOperation({
+    summary: 'Lấy lịch sử chỉnh sửa của tác phẩm (Tác giả)',
+    description:
+      'Trả về danh sách các bản chỉnh sửa (DRAFT, PENDING_REVIEW, APPROVED, REJECTED) kèm nội dung snapshot, mới nhất trước',
+  })
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN)
+  @Get('my/:id/revisions')
+  @HttpCode(HttpStatus.OK)
+  async getMyStoryRevisions(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ) {
+    const data = await this.storiesService.getMyStoryRevisions(user._id, id);
+
+    return {
+      success: true,
+      message: 'Lấy lịch sử chỉnh sửa tác phẩm thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Khôi phục một bản chỉnh sửa cũ thành bản nháp mới (Tác giả)',
+    description:
+      'Tạo một bản nháp mới từ nội dung của bản cũ; bản khôi phục vẫn phải qua kiểm duyệt lại',
+  })
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN)
+  @Patch('my/:id/revisions/:revisionId/restore')
+  @HttpCode(HttpStatus.OK)
+  async restoreMyStoryRevision(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Param('revisionId') revisionId: string,
+  ) {
+    const data = await this.storiesService.restoreMyStoryRevision(
+      user._id,
+      id,
+      revisionId,
+    );
+
+    return {
+      success: true,
+      message: 'Khôi phục bản chỉnh sửa thành công (đang ở trạng thái nháp)',
+      data,
+    };
+  }
+
   @Roles(UserRole.AUTHOR, UserRole.ADMIN)
   @Patch('my/:id')
   @HttpCode(HttpStatus.OK)
@@ -184,7 +231,11 @@ export class StoriesController {
       message:
         action === StoryAction.SUBMIT
           ? 'Cập nhật tác phẩm và gửi yêu cầu kiểm duyệt thành công'
-          : 'Cập nhật thông tin tác phẩm thành công',
+          : action === StoryAction.WITHDRAW
+            ? 'Đã rút bản chỉnh sửa về trạng thái nháp'
+            : action === StoryAction.DISCARD
+              ? 'Đã hủy bản chỉnh sửa'
+              : 'Cập nhật thông tin tác phẩm thành công',
       data,
     };
   }

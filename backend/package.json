@@ -20,7 +20,8 @@
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
-    "seed:mock": "npx tsx scripts/seed-mock-authors-and-stories.ts"
+    "seed:mock": "npx tsx scripts/seed-mock-authors-and-stories.ts",
+    "migrate:revisions": "npx tsx scripts/migrate-embedded-revisions.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

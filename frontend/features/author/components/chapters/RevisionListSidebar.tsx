@@ -1,8 +1,8 @@
 import React from "react";
-import { ChapterUpdateItem } from "@/features/chapters";
+import { ChapterRevisionItem } from "@/features/chapters";
 
 interface RevisionListSidebarProps {
-  historyItems: ChapterUpdateItem[];
+  historyItems: ChapterRevisionItem[];
   totalItems: number;
   selectedRevisionId: string | null;
   onSelectRevisionId: (id: string) => void;
@@ -73,9 +73,16 @@ export function RevisionListSidebar({
                 )}
               </div>
 
-              <h4 className="text-sm font-semibold text-zinc-900 mt-1 line-clamp-1">
-                {item.title}
-              </h4>
+              <div className="flex items-center gap-1.5 mt-1">
+                <h4 className="flex-1 text-sm font-semibold text-zinc-900 line-clamp-1">
+                  {item.title}
+                </h4>
+                {item.isActive && (
+                  <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">
+                    Đang mở
+                  </span>
+                )}
+              </div>
 
               <div className="flex items-center justify-between text-[11px] text-zinc-500 mt-2">
                 <span>{item.isFree ? "Miễn phí" : `${item.coinPrice} xu`}</span>

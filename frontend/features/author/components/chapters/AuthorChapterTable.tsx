@@ -98,9 +98,9 @@ export function AuthorChapterTable({
               chapter.status === "DRAFT" ||
               chapter.status === "REJECTED" ||
               (chapter.status === "PUBLISHED" &&
-                (chapter as any).pendingUpdate &&
-                ((chapter as any).pendingUpdate.status === "DRAFT" ||
-                  (chapter as any).pendingUpdate.status === "REJECTED"));
+                (chapter as any).pendingRevision &&
+                ((chapter as any).pendingRevision.status === "DRAFT" ||
+                  (chapter as any).pendingRevision.status === "REJECTED"));
 
             return (
               <tr
@@ -144,7 +144,7 @@ export function AuthorChapterTable({
                   <StatusBadge
                     status={chapter.status}
                     rejectReason={chapter.rejectReason}
-                    pendingUpdate={(chapter as any).pendingUpdate}
+                    pendingRevision={(chapter as any).pendingRevision}
                   />
                 </td>
 

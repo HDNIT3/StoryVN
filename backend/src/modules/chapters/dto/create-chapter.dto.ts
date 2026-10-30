@@ -15,6 +15,7 @@ import {
 export enum ChapterAction {
   DRAFT = 'DRAFT',
   SUBMIT = 'SUBMIT',
+  WITHDRAW = 'WITHDRAW',
   DISCARD_UPDATE = 'DISCARD_UPDATE',
 }
 

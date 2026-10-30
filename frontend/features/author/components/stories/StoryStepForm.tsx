@@ -22,6 +22,7 @@ import { StoryBasicInfoFields } from "./StoryBasicInfoFields";
 import { StoryGenresAndTagsFields } from "./StoryGenresAndTagsFields";
 import { StoryCoverUploader } from "./StoryCoverUploader";
 import { StoryPublishSettings } from "./StoryPublishSettings";
+import { StoryRevisionHistoryPanel } from "./StoryRevisionHistoryPanel";
 
 interface StoryStepFormProps {
   isEdit?: boolean;
@@ -38,53 +39,76 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
 
   const storyId = initialStory?._id || initialStory?.id;
 
+  // Luôn mở đúng bản sửa đang mở (chờ duyệt/nháp/bị từ chối) để tác giả chỉnh
+  // tiếp trên chính bản đó, không quay về nội dung đang phát hành.
+  const initialSource = useMemo<StoryItem | null | undefined>(() => {
+    const revision = initialStory?.pendingRevision;
+    if (!initialStory || !revision) return initialStory;
+    return {
+      ...initialStory,
+      title: revision.title || initialStory.title,
+      description: revision.description ?? initialStory.description,
+      coverUrl: revision.coverUrl ?? initialStory.coverUrl,
+      authorNote: revision.authorNote ?? initialStory.authorNote,
+      ageRating: revision.ageRating ?? initialStory.ageRating,
+      genreIds:
+        revision.genreIds && revision.genreIds.length > 0
+          ? revision.genreIds
+          : initialStory.genreIds,
+      tagIds:
+        revision.tagIds && revision.tagIds.length > 0
+          ? revision.tagIds
+          : initialStory.tagIds,
+    };
+  }, [initialStory]);
+
   // Basic fields
-  const [title, setTitle] = useState(initialStory?.title || "");
+  const [title, setTitle] = useState(initialSource?.title || "");
   const [slug, setSlug] = useState(initialStory?.slug || "");
-  const [description, setDescription] = useState(initialStory?.description || "");
+  const [description, setDescription] = useState(initialSource?.description || "");
   const [ageRating, setAgeRating] = useState<StoryAgeRating>(
-    initialStory?.ageRating || "ALL"
+    initialSource?.ageRating || "ALL"
   );
   const [visibility, setVisibility] = useState<StoryVisibility>(
     initialStory?.visibility || "PUBLIC"
   );
-  const [authorNote, setAuthorNote] = useState(initialStory?.authorNote || "");
+  const [authorNote, setAuthorNote] = useState(initialSource?.authorNote || "");
   const [progressState, setProgressState] = useState<StoryProgressState>(
     initialStory?.progressState || "ONGOING"
   );
 
   // Genres & Tags
   const rawInitialGenres = useMemo(() => {
-    if (initialStory?.genreIds && initialStory.genreIds.length > 0) {
-      return initialStory.genreIds.map((g: any) =>
+    if (initialSource?.genreIds && initialSource.genreIds.length > 0) {
+      return initialSource.genreIds.map((g: any) =>
         typeof g === "object" && g !== null ? g.name : g
       );
     }
-    return initialStory?.genres || [];
-  }, [initialStory]);
+    return initialSource?.genres || [];
+  }, [initialSource]);
 
   const [selectedGenres, setSelectedGenres] = useState<string[]>(rawInitialGenres);
   const [genreModalOpen, setGenreModalOpen] = useState(false);
 
   const rawInitialTags = useMemo(() => {
-    if (initialStory?.tagIds && initialStory.tagIds.length > 0) {
-      return initialStory.tagIds.map((t: any) =>
+    if (initialSource?.tagIds && initialSource.tagIds.length > 0) {
+      return initialSource.tagIds.map((t: any) =>
         typeof t === "object" && t !== null ? t.name : t
       );
     }
-    return initialStory?.tags || [];
-  }, [initialStory]);
+    return initialSource?.tags || [];
+  }, [initialSource]);
 
   const [selectedTags, setSelectedTags] = useState<string[]>(rawInitialTags);
   const [tagModalOpen, setTagModalOpen] = useState(false);
 
   // Cover image
   const [coverSourceType, setCoverSourceType] = useState<"file" | "url">(
-    initialStory?.coverUrl ? "url" : "file"
+    initialSource?.coverUrl ? "url" : "file"
   );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(initialStory?.coverUrl || "");
-  const [imageUrlInput, setImageUrlInput] = useState<string>(initialStory?.coverUrl || "");
+  const [previewUrl, setPreviewUrl] = useState<string>(initialSource?.coverUrl || "");
+  const [imageUrlInput, setImageUrlInput] = useState<string>(initialSource?.coverUrl || "");
   const [imageLoadError, setImageLoadError] = useState(false);
   const [cropperOpen, setCropperOpen] = useState(false);
   const [rawImageSrcToCrop, setRawImageSrcToCrop] = useState<string>("");
@@ -99,11 +123,11 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
   const apiTags = tagsData?.items || [];
 
   useEffect(() => {
-    if (initialStory) {
-      if (initialStory.progressState) setProgressState(initialStory.progressState);
+    if (initialSource) {
+      if (initialSource.progressState) setProgressState(initialSource.progressState);
 
-      if (initialStory.genreIds && initialStory.genreIds.length > 0) {
-        const names = initialStory.genreIds
+      if (initialSource.genreIds && initialSource.genreIds.length > 0) {
+        const names = initialSource.genreIds
           .map((g: any) => {
             if (typeof g === "object" && g !== null && g.name) return g.name;
             const matched = apiCategories.find(
@@ -115,8 +139,8 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
         if (names.length > 0) setSelectedGenres(names);
       }
 
-      if (initialStory.tagIds && initialStory.tagIds.length > 0) {
-        const names = initialStory.tagIds
+      if (initialSource.tagIds && initialSource.tagIds.length > 0) {
+        const names = initialSource.tagIds
           .map((t: any) => {
             if (typeof t === "object" && t !== null && t.name) return t.name;
             const matched = apiTags.find(
@@ -128,7 +152,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
         if (names.length > 0) setSelectedTags(names);
       }
     }
-  }, [initialStory, apiCategories, apiTags]);
+  }, [initialSource, apiCategories, apiTags]);
 
   const generateSlug = (str: string) => {
     return str
@@ -279,7 +303,24 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
       if (isEdit) {
         const identifier = initialStory?.slug || storyId;
         if (identifier) {
-          await updateStoryMutation.mutateAsync({ id: identifier, payload, action });
+          // Bản đang chờ duyệt: rút khỏi hàng đợi và lưu luôn nội dung mới vào
+          // chính bản sửa đó, rồi gửi duyệt lại nếu cần.
+          if (initialStory?.pendingRevision?.status === "PENDING_REVIEW") {
+            await updateStoryMutation.mutateAsync({
+              id: identifier,
+              payload,
+              action: "WITHDRAW",
+            });
+            if (action === "SUBMIT") {
+              await updateStoryMutation.mutateAsync({
+                id: identifier,
+                payload,
+                action: "SUBMIT",
+              });
+            }
+          } else {
+            await updateStoryMutation.mutateAsync({ id: identifier, payload, action });
+          }
         }
       } else {
         await createStoryMutation.mutateAsync({ payload, action });
@@ -290,6 +331,66 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const pendingRevision = initialStory?.pendingRevision ?? null;
+  const isOfficialPublished = initialStory?.status === "PUBLISHED";
+  const historyHref = `/tac-gia/tac-pham/lich-su?story=${initialStory?.slug || storyId || ""}`;
+  const pendingRevisionLabel =
+    pendingRevision?.status === "PENDING_REVIEW"
+      ? "Bản sửa chờ duyệt"
+      : pendingRevision?.status === "REJECTED"
+      ? "Bản sửa bị từ chối"
+      : "Bản sửa nháp";
+  const pendingRevisionChipClass =
+    pendingRevision?.status === "PENDING_REVIEW"
+      ? "border-amber-200 bg-amber-50 text-amber-700"
+      : pendingRevision?.status === "REJECTED"
+      ? "border-rose-200 bg-rose-50 text-rose-700"
+      : "border-zinc-200 bg-zinc-50 text-zinc-600";
+
+  const handleWithdrawRevision = async () => {
+    const identifier = initialStory?.slug || storyId;
+    if (!identifier) return;
+    await updateStoryMutation.mutateAsync({
+      id: identifier,
+      payload: {},
+      action: "WITHDRAW",
+    });
+    toast.success("Đã rút bản chờ duyệt, bạn có thể tiếp tục chỉnh sửa!");
+    window.location.reload();
+  };
+
+  const handleDiscardRevision = async () => {
+    const identifier = initialStory?.slug || storyId;
+    if (!identifier) return;
+    await updateStoryMutation.mutateAsync({
+      id: identifier,
+      payload: {},
+      action: "DISCARD",
+    });
+
+    // Đưa biểu mẫu về đúng bản đang phát hành sau khi hủy bản sửa
+    if (initialStory) {
+      setTitle(initialStory.title);
+      setDescription(initialStory.description || "");
+      setAuthorNote(initialStory.authorNote || "");
+      setAgeRating(initialStory.ageRating || "ALL");
+      setPreviewUrl(initialStory.coverUrl || "");
+      setImageUrlInput(initialStory.coverUrl || "");
+      setSelectedFile(null);
+      setSelectedGenres(
+        (initialStory.genreIds || [])
+          .map((g: any) => (typeof g === "object" && g !== null ? g.name : g))
+          .filter(Boolean)
+      );
+      setSelectedTags(
+        (initialStory.tagIds || [])
+          .map((t: any) => (typeof t === "object" && t !== null ? t.name : t))
+          .filter(Boolean)
+      );
+    }
+    toast.success("Đã hủy bản sửa đổi!");
   };
 
   return (
@@ -317,6 +418,79 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
           <span>Quay lại</span>
         </Link>
       </div>
+
+      {/* Bản sửa đang mở của tác phẩm đã xuất bản */}
+      {isEdit && pendingRevision && (
+        <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                  isOfficialPublished ? "bg-emerald-50 text-emerald-600" : "bg-zinc-100 text-zinc-500"
+                }`}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  {isOfficialPublished ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  )}
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-sm font-semibold text-zinc-900">
+                    {isOfficialPublished ? "Đã xuất bản" : "Tác phẩm chưa xuất bản"}
+                  </h3>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${pendingRevisionChipClass}`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {pendingRevisionLabel}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                  {pendingRevision.status === "PENDING_REVIEW"
+                    ? "Biểu mẫu đang mở chính bản sửa đã gửi duyệt. Khi lưu, bản sửa được rút khỏi hàng đợi (vẫn giữ nguyên là một bản) và lưu nội dung mới — gửi duyệt lại để đưa vào kiểm duyệt."
+                    : "Bản đang phát hành vẫn giữ nguyên cho tới khi bản sửa được duyệt."}
+                </p>
+                {pendingRevision.status === "REJECTED" && pendingRevision.rejectReason && (
+                  <p className="mt-1 text-xs text-rose-600">
+                    Lý do từ chối: {pendingRevision.rejectReason}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <Link
+                href={historyHref}
+                className="rounded-md px-3 py-1.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
+              >
+                Xem bản sửa
+              </Link>
+              {pendingRevision.status === "PENDING_REVIEW" && (
+                <button
+                  type="button"
+                  onClick={handleWithdrawRevision}
+                  disabled={updateStoryMutation.isPending}
+                  className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                >
+                  Rút bản sửa
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleDiscardRevision}
+                disabled={updateStoryMutation.isPending}
+                className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              >
+                Hủy bản sửa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main 2-Column Form Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -378,6 +552,12 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
           />
         </div>
       </div>
+
+      {isEdit && (initialStory?.slug || storyId) && (
+        <StoryRevisionHistoryPanel
+          identifier={(initialStory?.slug || storyId) as string}
+        />
+      )}
 
       {/* Modals */}
       <GenrePickerModal

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema, Types } from 'mongoose';
+import { RevisionStatus } from '../../../common/enums/revision-status.enum.js';
 import { Genre } from '../../genres/schemas/genre.schema.js';
 import { Tag } from '../../tags/schemas/tag.schema.js';
 import { User } from '../../users/schemas/user.schema.js';
@@ -55,6 +56,70 @@ export class StoryStats {
 }
 
 export const StoryStatsSchema = SchemaFactory.createForClass(StoryStats);
+
+/**
+ * Ảnh chụp các field nội dung được kiểm duyệt.
+ * Không chứa slug, visibility, progressState — các field vận hành áp dụng ngay.
+ */
+@Schema({ _id: false })
+export class StoryRevisionSnapshot {
+  @Prop({ type: String, required: true, trim: true })
+  title: string;
+
+  @Prop({ type: String, default: '', trim: true })
+  description: string;
+
+  @Prop({ type: String, default: null })
+  coverUrl?: string | null;
+
+  @Prop({ type: String, default: '', trim: true })
+  authorNote?: string;
+
+  @Prop({
+    type: [{ type: MongooseSchema.Types.ObjectId, ref: Genre.name }],
+    default: [],
+  })
+  genreIds: Types.ObjectId[];
+
+  @Prop({
+    type: [{ type: MongooseSchema.Types.ObjectId, ref: Tag.name }],
+    default: [],
+  })
+  tagIds: Types.ObjectId[];
+
+  @Prop({ type: String, enum: StoryAgeRating, default: StoryAgeRating.ALL })
+  ageRating: StoryAgeRating;
+}
+
+export const StoryRevisionSnapshotSchema = SchemaFactory.createForClass(
+  StoryRevisionSnapshot,
+);
+
+@Schema({ _id: true })
+export class StoryRevision {
+  _id?: Types.ObjectId;
+
+  @Prop({ type: StoryRevisionSnapshotSchema, required: true })
+  snapshot: StoryRevisionSnapshot;
+
+  @Prop({
+    type: String,
+    enum: RevisionStatus,
+    default: RevisionStatus.DRAFT,
+  })
+  status: RevisionStatus;
+
+  @Prop({ type: String, default: null, trim: true })
+  rejectReason?: string | null;
+
+  @Prop({ type: Date, default: Date.now })
+  createdAt: Date;
+
+  @Prop({ type: Date, default: Date.now })
+  updatedAt: Date;
+}
+
+export const StoryRevisionSchema = SchemaFactory.createForClass(StoryRevision);
 
 export type StoryDocument = Story & Document;
 
@@ -138,8 +203,18 @@ export class Story {
   @Prop({ type: Date, default: null })
   publishedAt?: Date | null;
 
+  /**
+   * Lịch sử các bản chỉnh sửa nội dung (kiểm duyệt).
+   * Bản chính thức luôn là các field top-level; chỉ APPROVE mới ghi đè.
+   * `select: false` để API công khai không bao giờ trả về nội dung đang chờ duyệt.
+   */
+  @Prop({ type: [StoryRevisionSchema], default: [], select: false })
+  revisions: StoryRevision[];
+
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export const StorySchema = SchemaFactory.createForClass(Story);
+
+StorySchema.index({ 'revisions.status': 1 });

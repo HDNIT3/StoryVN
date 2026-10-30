@@ -11,6 +11,7 @@ export const storyKeys = {
   latestUpdated: (params?: Record<string, unknown>) =>
     ["stories", "latest-updated", ...(params ? [params] : [])] as const,
   detail: (id: string) => ["stories", "detail", id] as const,
+  revisions: (id: string) => ["stories", "revisions", id] as const,
   bySlug: (slug: string) => ["stories", "by-slug", slug] as const,
   sameGenre: (slug: string, limit?: number) =>
     ["stories", "same-genre", slug, limit || 6] as const,

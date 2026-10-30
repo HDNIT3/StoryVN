@@ -164,12 +164,12 @@ export function ChapterTable({
                 author?.displayName || author?.username || "Chưa xác định";
               const authorEmail = author?.email || "";
               const authorAvatar = author?.avatarUrl;
-              const isPendingUpdateReview = Boolean(
-                ch.isPendingUpdateReview ||
-                (ch.status === "PUBLISHED" && ch.pendingUpdate?.status === "PENDING_REVIEW")
+              const isPendingRevisionReview = Boolean(
+                ch.isPendingRevisionReview ||
+                (ch.status === "PUBLISHED" && ch.pendingRevision?.status === "PENDING_REVIEW")
               );
-              const isPending = ch.status === "PENDING_REVIEW" || isPendingUpdateReview;
-              const isPublished = ch.status === "PUBLISHED" && !isPendingUpdateReview;
+              const isPending = ch.status === "PENDING_REVIEW" || isPendingRevisionReview;
+              const isPublished = ch.status === "PUBLISHED" && !isPendingRevisionReview;
 
               const timeStr = formatDate(ch.createdAt);
 
@@ -191,7 +191,7 @@ export function ChapterTable({
                           <span className="font-bold text-sky-700 bg-sky-100/70 px-1.5 py-0.2 rounded text-[10px]">
                             Ch. {ch.chapterNumber}
                           </span>
-                          {isPendingUpdateReview && (
+                          {isPendingRevisionReview && (
                             <span className="font-bold text-amber-800 bg-amber-100 border border-amber-300 px-1 py-0.2 rounded text-[9px]">
                               Bản sửa
                             </span>
@@ -265,7 +265,7 @@ export function ChapterTable({
 
                   {/* Cột Trạng thái */}
                   <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                    {isPendingUpdateReview ? (
+                    {isPendingRevisionReview ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                         Chờ duyệt sửa
@@ -343,7 +343,7 @@ export function ChapterTable({
                             type="button"
                             onClick={() => onApprove(ch)}
                             className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                            title={isPendingUpdateReview ? "Phê duyệt bản chỉnh sửa chương" : "Phê duyệt xuất bản chương"}
+                            title={isPendingRevisionReview ? "Phê duyệt bản chỉnh sửa chương" : "Phê duyệt xuất bản chương"}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -353,7 +353,7 @@ export function ChapterTable({
                             type="button"
                             onClick={() => onReject(ch)}
                             className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                            title={isPendingUpdateReview ? "Từ chối bản chỉnh sửa chương (kèm lý do)" : "Từ chối chương (kèm lý do)"}
+                            title={isPendingRevisionReview ? "Từ chối bản chỉnh sửa chương (kèm lý do)" : "Từ chối chương (kèm lý do)"}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />

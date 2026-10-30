@@ -7,7 +7,9 @@ import { useMyStories } from "@/features/stories";
 import {
   useAllChapterHistory,
   useChapterDetail,
+  useRestoreChapterRevision,
   useStoryChapters,
+  useUpdateChapter,
 } from "@/features/chapters";
 import { RevisionDetailViewer } from "./RevisionDetailViewer";
 import { RevisionListSidebar } from "./RevisionListSidebar";
@@ -112,6 +114,40 @@ export function AuthorChapterHistoryView() {
     () => historyItems.find((item) => item._id === selectedRevisionId) || historyItems[0] || null,
     [historyItems, selectedRevisionId]
   );
+
+  const hasActiveRevision = useMemo(
+    () => historyItems.some((item) => item.isActive),
+    [historyItems]
+  );
+
+  const updateChapterMutation = useUpdateChapter();
+  const restoreRevisionMutation = useRestoreChapterRevision();
+
+  const resolveRevisionChapterId = (revision: typeof selectedRevision) => {
+    if (!revision?.chapterId) return "";
+    return typeof revision.chapterId === "object"
+      ? revision.chapterId._id
+      : revision.chapterId;
+  };
+
+  const handleWithdrawRevision = async (revision: NonNullable<typeof selectedRevision>) => {
+    const chapterId = resolveRevisionChapterId(revision);
+    if (!chapterId) return;
+    await updateChapterMutation.mutateAsync({
+      id: chapterId,
+      payload: { action: "WITHDRAW" },
+    });
+    await refetch();
+  };
+
+  const handleRestoreRevision = (revision: NonNullable<typeof selectedRevision>) => {
+    const chapterId = resolveRevisionChapterId(revision);
+    if (!chapterId) return;
+    restoreRevisionMutation.mutate(
+      { id: chapterId, revisionId: revision._id },
+      { onSuccess: () => refetch() }
+    );
+  };
 
   const { data: targetChapter } = useChapterDetail(
     selectedChapterId,
@@ -385,7 +421,16 @@ export function AuthorChapterHistoryView() {
             onPageChange={setPage}
           />
           <div className="lg:col-span-7 bg-white rounded-lg border border-zinc-200 shadow-2xs overflow-hidden sticky top-6">
-            <RevisionDetailViewer selectedRevision={selectedRevision} />
+            <RevisionDetailViewer
+              selectedRevision={selectedRevision}
+              isMutating={
+                updateChapterMutation.isPending ||
+                restoreRevisionMutation.isPending
+              }
+              hasActiveRevision={hasActiveRevision}
+              onRestore={handleRestoreRevision}
+              onWithdraw={handleWithdrawRevision}
+            />
           </div>
         </div>
       )}

@@ -1,16 +1,16 @@
 import React from "react";
-import { ChapterStatus } from "@/features/chapters";
+import { ChapterRevisionItem, ChapterStatus } from "@/features/chapters";
 
 interface StatusBadgeProps {
   status: ChapterStatus;
   rejectReason?: string | null;
-  pendingUpdate?: any;
+  pendingRevision?: ChapterRevisionItem | null;
 }
 
 export function StatusBadge({
   status,
   rejectReason,
-  pendingUpdate,
+  pendingRevision,
 }: StatusBadgeProps) {
   return (
     <div className="flex flex-col gap-1 items-start">
@@ -47,21 +47,21 @@ export function StatusBadge({
           Bản nháp
         </span>
       )}
-      {status === "PUBLISHED" && pendingUpdate && (
+      {status === "PUBLISHED" && pendingRevision && (
         <span
           className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium border ${
-            pendingUpdate.status === "PENDING_REVIEW"
+            pendingRevision.status === "PENDING_REVIEW"
               ? "bg-amber-50 text-amber-700 border-amber-200"
-              : pendingUpdate.status === "REJECTED"
+              : pendingRevision.status === "REJECTED"
               ? "bg-rose-50 text-rose-700 border-rose-200 cursor-help"
               : "bg-zinc-50 text-zinc-600 border-zinc-200"
           }`}
-          title={pendingUpdate.rejectReason ? `Lý do từ chối bản sửa: ${pendingUpdate.rejectReason}` : undefined}
+          title={pendingRevision.rejectReason ? `Lý do từ chối bản sửa: ${pendingRevision.rejectReason}` : undefined}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-          {pendingUpdate.status === "PENDING_REVIEW"
+          {pendingRevision.status === "PENDING_REVIEW"
             ? "Bản sửa chờ duyệt"
-            : pendingUpdate.status === "REJECTED"
+            : pendingRevision.status === "REJECTED"
             ? "Bản sửa bị từ chối"
             : "Có bản sửa nháp"}
         </span>

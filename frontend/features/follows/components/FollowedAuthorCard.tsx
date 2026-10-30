@@ -3,8 +3,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { authorService, authorKeys, type AuthorStoryItem } from "@/features/author";
 import { formatNumber, formatRelativeTime } from "@/lib/utils/format";
 import { useToggleFollow } from "../queries/useFollowsQueries";
 import type { FollowedAuthorItem } from "../types";
@@ -17,24 +15,9 @@ export function FollowedAuthorCard({ author }: FollowedAuthorCardProps) {
   const { mutate: toggleFollow, isPending } = useToggleFollow();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Lấy các tác phẩm công khai của tác giả này (nếu tác giả có truyện)
-  const shouldFetchStories = Boolean(author.username && author.storyCount > 0);
-
-  const { data: storiesData, isLoading: isLoadingStories } = useQuery({
-    queryKey: authorKeys.stories(author.username, { limit: 4 }),
-    queryFn: async () => {
-      const res = await authorService.getPublicStories(author.username, {
-        limit: 4,
-        sortBy: "latest",
-      });
-      return res.data;
-    },
-    enabled: shouldFetchStories,
-    staleTime: 1000 * 60 * 2, // 2 phút
-  });
-
-  const stories: AuthorStoryItem[] = storiesData?.items || [];
-  const hasStories = stories.length > 0;
+  // Chỉ hiển thị những truyện của tác giả mà chính người dùng đang theo dõi
+  const followedStories = author.followedStories ?? [];
+  const followedStoryCount = author.followedStoryCount ?? followedStories.length;
 
   const handleUnfollowClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -210,133 +193,72 @@ export function FollowedAuthorCard({ author }: FollowedAuthorCardProps) {
         )}
       </div>
 
-      {/* ─── PHẦN 2: DANH SÁCH TÁC PHẨM CỦA TÁC GIẢ ──────────────────── */}
-      {/* 
-        LƯU Ý THEO YÊU CẦU: Nếu tác giả không có truyện thì chỉ cần hiển thị thông tin tác giả 
-        và nút link đến page của họ (ở trên). Không render khối truyện nếu storyCount = 0 hoặc rỗng!
-      */}
-      {shouldFetchStories && (
-        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
-                <svg
-                  className="w-3.5 h-3.5 text-emerald-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+      {/* ─── PHẦN 2: TRUYỆN CỦA TÁC GIẢ MÀ BẠN ĐANG THEO DÕI ─────────── */}
+      {followedStories.length > 0 && (
+        <div className="px-4 sm:px-5 py-4 border-t border-zinc-100">
+          <div className="flex items-center gap-1.5 mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Truyện bạn theo dõi của tác giả
+            </span>
+            <span className="text-xs font-semibold tabular-nums text-zinc-400">
+              ({followedStoryCount})
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+            {followedStories.map((story) => {
+              const isCompleted = story.progressState === "COMPLETED";
+              return (
+                <Link
+                  key={story._id}
+                  href={`/truyen/${story.slug}`}
+                  title={story.title}
+                  className="group/story flex items-center gap-3 rounded-xl border border-zinc-200/80 bg-zinc-50/60 px-2.5 py-2 hover:bg-white hover:border-zinc-300 transition-colors"
                 >
-                  <path
+                  <div className="relative w-9 h-12 shrink-0 overflow-hidden rounded-md bg-zinc-200">
+                    {story.coverUrl ? (
+                      <Image
+                        src={story.coverUrl}
+                        alt={story.title}
+                        fill
+                        unoptimized
+                        sizes="36px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-zinc-700 text-white flex items-center justify-center font-serif text-xs font-bold">
+                        {story.title.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="font-serif text-sm font-semibold text-zinc-900 line-clamp-1 leading-snug group-hover/story:text-emerald-700 transition-colors">
+                      {story.title}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-zinc-500 tabular-nums">
+                      {story.stats?.chapterCount || 0} chương
+                      <span aria-hidden className="mx-1.5 text-zinc-300">
+                        •
+                      </span>
+                      {isCompleted ? "Hoàn thành" : "Đang ra"}
+                    </p>
+                  </div>
+
+                  <svg
+                    className="w-3.5 h-3.5 shrink-0 text-zinc-300 group-hover/story:text-zinc-500 transition-colors"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-                Tác phẩm tiêu biểu
-              </span>
-              {author.storyCount > stories.length && (
-                <Link
-                  href={`/tac-gia/${author.username}`}
-                  className="text-xs text-emerald-700 hover:text-emerald-800 font-medium inline-flex items-center gap-0.5 hover:underline"
-                >
-                  <span>Xem tất cả {author.storyCount} truyện</span>
-                  <span>→</span>
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
                 </Link>
-              )}
-            </div>
-
-            {isLoadingStories ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-24 rounded-xl bg-zinc-50 border border-zinc-100 animate-pulse"
-                  />
-                ))}
-              </div>
-            ) : hasStories ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {stories.map((story) => {
-                  const isCompleted = story.progressState === "COMPLETED";
-                  return (
-                    <article
-                      key={story._id}
-                      className="group/story flex gap-3 p-2.5 rounded-xl bg-zinc-50/80 hover:bg-zinc-100/70 border border-zinc-200/70 hover:border-zinc-300 transition-all shadow-2xs"
-                    >
-                      {/* Bìa truyện */}
-                      <Link
-                        href={`/truyen/${story.slug}`}
-                        className="relative w-16 h-22 shrink-0 rounded-lg overflow-hidden bg-zinc-200 shadow-2xs"
-                        title={story.title}
-                      >
-                        {story.coverUrl ? (
-                          <Image
-                            src={story.coverUrl}
-                            alt={story.title}
-                            fill
-                            unoptimized
-                            sizes="64px"
-                            className="object-cover group-hover/story:scale-105 transition-transform"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-zinc-700 text-white flex items-center justify-center text-xs font-serif font-bold">
-                            {story.title.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <span
-                          className={`absolute bottom-0 inset-x-0 text-[9px] font-bold text-center py-0.5 text-white ${
-                            isCompleted ? "bg-emerald-600" : "bg-zinc-900/80"
-                          }`}
-                        >
-                          {isCompleted ? "Full" : "Đang ra"}
-                        </span>
-                      </Link>
-
-                      {/* Chi tiết truyện */}
-                      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                        <div>
-                          <Link
-                            href={`/truyen/${story.slug}`}
-                            className="font-serif text-sm font-bold text-zinc-900 group-hover/story:text-emerald-700 transition-colors line-clamp-1 leading-snug"
-                          >
-                            {story.title}
-                          </Link>
-
-                          {story.genres && story.genres.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {story.genres.slice(0, 2).map((g) => (
-                                <span
-                                  key={g._id}
-                                  className="text-[10px] px-1.5 py-0.2 rounded bg-white border border-zinc-200 text-zinc-600"
-                                >
-                                  {g.name}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-2 text-[11px] text-zinc-400 mt-1.5">
-                            <span>{story.stats?.chapterCount || 0} chương</span>
-                            <span>•</span>
-                            <span>{formatNumber(story.stats?.viewCount)} đọc</span>
-                          </div>
-                        </div>
-
-                        <div className="mt-2 flex items-center justify-between">
-                          <Link
-                            href={`/truyen/${story.slug}`}
-                            className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
-                          >
-                            Đọc ngay →
-                          </Link>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : null}
+              );
+            })}
           </div>
         </div>
       )}

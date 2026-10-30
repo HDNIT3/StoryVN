@@ -65,10 +65,13 @@ export class UpdateChapterDto {
 
   @ApiPropertyOptional({
     enum: ChapterAction,
-    description: 'Hành động: DRAFT (lưu nháp) hoặc SUBMIT (gửi duyệt kiểm duyệt)',
+    description:
+      'Hành động: DRAFT (lưu nháp), SUBMIT (gửi duyệt), WITHDRAW (rút bản chờ duyệt), DISCARD_UPDATE (bỏ bản nháp)',
   })
   @IsOptional()
-  @IsEnum(ChapterAction, { message: 'action phải là DRAFT, SUBMIT hoặc DISCARD_UPDATE' })
+  @IsEnum(ChapterAction, {
+    message: 'action phải là DRAFT, SUBMIT, WITHDRAW hoặc DISCARD_UPDATE',
+  })
   action?: ChapterAction;
 
   @ApiPropertyOptional({

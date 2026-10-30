@@ -30,6 +30,20 @@ export interface FollowedStoryItem {
   followedAt: string;
 }
 
+export interface FollowedAuthorStoryItem {
+  _id: string;
+  title: string;
+  slug: string;
+  coverUrl: string | null;
+  progressState: "ONGOING" | "COMPLETED" | "ON_HOLD" | string;
+  updatedAt: string;
+  followedAt: string;
+  stats: {
+    chapterCount: number;
+    viewCount: number;
+  };
+}
+
 export interface FollowedAuthorItem {
   _id: string;
   username: string;
@@ -41,6 +55,8 @@ export interface FollowedAuthorItem {
   storyCount: number;
   totalViews: number;
   followedAt: string;
+  followedStories?: FollowedAuthorStoryItem[];
+  followedStoryCount?: number;
 }
 
 export interface PaginationMeta {
