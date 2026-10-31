@@ -19,6 +19,10 @@ export const ErrorCode = {
     error: 'INVALID_OTP',
     message: 'Mã OTP không chính xác',
   },
+  OTP_ATTEMPTS_EXCEEDED: {
+    error: 'OTP_ATTEMPTS_EXCEEDED',
+    message: 'Bạn đã nhập sai mã OTP quá 5 lần, vui lòng gửi lại mã mới',
+  },
   REGISTRATION_NOT_FOUND: {
     error: 'REGISTRATION_NOT_FOUND',
     message: 'Không tìm thấy yêu cầu đăng ký cho email này hoặc OTP đã hết hạn',
@@ -171,6 +175,11 @@ export const ErrorCode = {
     error: 'CATEGORY_SLUG_EXISTS',
     message: 'Slug thể loại đã tồn tại trên hệ thống',
   },
+  CATEGORY_IN_USE: {
+    error: 'CATEGORY_IN_USE',
+    message:
+      'Thể loại đang được sử dụng bởi tác phẩm, không thể xóa. Hãy chuyển thể loại sang trạng thái ẩn thay vì xóa',
+  },
   TAG_NOT_FOUND: {
     error: 'TAG_NOT_FOUND',
     message: 'Không tìm thấy tag',
@@ -182,6 +191,11 @@ export const ErrorCode = {
   TAG_SLUG_EXISTS: {
     error: 'TAG_SLUG_EXISTS',
     message: 'Slug tag đã tồn tại trên hệ thống',
+  },
+  TAG_IN_USE: {
+    error: 'TAG_IN_USE',
+    message:
+      'Tag đang được sử dụng bởi tác phẩm, không thể xóa. Hãy chuyển tag sang trạng thái ẩn thay vì xóa',
   },
   STORY_NOT_FOUND: {
     error: 'STORY_NOT_FOUND',
@@ -195,6 +209,10 @@ export const ErrorCode = {
     error: 'STORY_SLUG_EXISTS',
     message: 'Đường dẫn (slug) tác phẩm đã tồn tại trên hệ thống',
   },
+  STORY_TITLE_EXISTS: {
+    error: 'STORY_TITLE_EXISTS',
+    message: 'Tên tác phẩm đã tồn tại trong danh sách truyện của bạn',
+  },
   STORY_NOT_PENDING: {
     error: 'STORY_NOT_PENDING',
     message: 'Tác phẩm không ở trạng thái chờ duyệt',
@@ -206,6 +224,10 @@ export const ErrorCode = {
   CHAPTER_NOT_FOUND: {
     error: 'CHAPTER_NOT_FOUND',
     message: 'Không tìm thấy chương truyện',
+  },
+  CHAPTER_NOT_PUBLISHED: {
+    error: 'CHAPTER_NOT_PUBLISHED',
+    message: 'Chỉ có thể bình luận trên chương đã phát hành',
   },
   CHAPTER_NUMBER_EXISTS: {
     error: 'CHAPTER_NUMBER_EXISTS',

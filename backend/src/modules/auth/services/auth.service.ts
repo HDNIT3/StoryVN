@@ -40,6 +40,8 @@ import {
   RefreshTokenDocument,
 } from '../schemas/refresh-token.schema.js';
 
+const OTP_MAX_ATTEMPTS = 5;
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -81,6 +83,9 @@ export class AuthService {
       },
       300,
     );
+    await this.redisService.del(
+      `register:otp:attempts:${dto.email.toLowerCase()}`,
+    );
 
     try {
       await this.mailService.sendRegisterOtp(dto.email, dto.displayName, otp);
@@ -98,13 +103,26 @@ export class AuthService {
 
   async verifyRegister(dto: VerifyRegisterDto) {
     const redisKey = `register:otp:${dto.email.toLowerCase()}`;
+    const attemptsKey = `register:otp:attempts:${dto.email.toLowerCase()}`;
     const cached: any = await this.redisService.get(redisKey);
 
     if (!cached || !cached.otpHash) {
+      const attempts = Number((await this.redisService.get(attemptsKey)) || 0);
+      if (attempts >= OTP_MAX_ATTEMPTS) {
+        await this.redisService.del(attemptsKey);
+        throw new BadRequestException(ErrorCode.OTP_ATTEMPTS_EXCEEDED);
+      }
       throw new BadRequestException(ErrorCode.OTP_EXPIRED_OR_NOT_FOUND);
     }
 
     if (hashOtp(dto.otp) !== cached.otpHash) {
+      const attempts =
+        Number((await this.redisService.get(attemptsKey)) || 0) + 1;
+      if (attempts >= OTP_MAX_ATTEMPTS) {
+        await this.redisService.del([redisKey, attemptsKey]);
+        throw new BadRequestException(ErrorCode.OTP_ATTEMPTS_EXCEEDED);
+      }
+      await this.redisService.set(attemptsKey, attempts, 300);
       throw new BadRequestException(ErrorCode.INVALID_OTP);
     }
 
@@ -130,7 +148,7 @@ export class AuthService {
         versionToken: 0,
       });
 
-      await this.redisService.del(redisKey);
+      await this.redisService.del([redisKey, attemptsKey]);
 
       return {
         success: true,
@@ -173,6 +191,9 @@ export class AuthService {
     cached.otpHash = hashOtp(otp);
 
     await this.redisService.set(redisKey, cached, 300);
+    await this.redisService.del(
+      `register:otp:attempts:${dto.email.toLowerCase()}`,
+    );
 
     try {
       await this.mailService.sendResendOtp(dto.email, otp);
@@ -494,6 +515,9 @@ export class AuthService {
       },
       300, // 5 phút
     );
+    await this.redisService.del(
+      `forgot-password:otp:attempts:${dto.email.toLowerCase()}`,
+    );
 
     try {
       await this.mailService.sendForgotPasswordOtp(
@@ -515,13 +539,26 @@ export class AuthService {
 
   async resetPassword(dto: ResetPasswordDto) {
     const redisKey = `forgot-password:otp:${dto.email.toLowerCase()}`;
+    const attemptsKey = `forgot-password:otp:attempts:${dto.email.toLowerCase()}`;
     const cached: any = await this.redisService.get(redisKey);
 
     if (!cached || !cached.otpHash) {
+      const attempts = Number((await this.redisService.get(attemptsKey)) || 0);
+      if (attempts >= OTP_MAX_ATTEMPTS) {
+        await this.redisService.del(attemptsKey);
+        throw new BadRequestException(ErrorCode.OTP_ATTEMPTS_EXCEEDED);
+      }
       throw new BadRequestException(ErrorCode.OTP_EXPIRED_OR_NOT_FOUND);
     }
 
     if (hashOtp(dto.otp) !== cached.otpHash) {
+      const attempts =
+        Number((await this.redisService.get(attemptsKey)) || 0) + 1;
+      if (attempts >= OTP_MAX_ATTEMPTS) {
+        await this.redisService.del([redisKey, attemptsKey]);
+        throw new BadRequestException(ErrorCode.OTP_ATTEMPTS_EXCEEDED);
+      }
+      await this.redisService.set(attemptsKey, attempts, 300);
       throw new BadRequestException(ErrorCode.INVALID_OTP);
     }
 
@@ -541,8 +578,8 @@ export class AuthService {
       { revokedAt: new Date() },
     );
 
-    // Xóa OTP khỏi Redis
-    await this.redisService.del(redisKey);
+    // Xóa OTP và bộ đếm nhập sai khỏi Redis
+    await this.redisService.del([redisKey, attemptsKey]);
 
     return {
       success: true,
