@@ -3,6 +3,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { filter, interval, map, merge, Observable, Subject } from 'rxjs';
 import { buildPaginationMeta, PaginatedResult } from '../../common/dto/pagination.dto.js';
+import {
+  User,
+  UserDocument,
+  UserRole,
+  UserStatus,
+} from '../users/schemas/user.schema.js';
 import { CreateNotificationDto } from './dto/create-notification.dto.js';
 import { QueryNotificationsDto } from './dto/query-notifications.dto.js';
 import {
@@ -24,6 +30,8 @@ export class NotificationsService {
   constructor(
     @InjectModel(Notification.name)
     private notificationModel: Model<NotificationDocument>,
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
   ) {}
 
   /**
@@ -177,6 +185,47 @@ export class NotificationsService {
       const msg = err instanceof Error ? err.message : String(err);
       this.logger.error(
         `Không thể tạo thông báo MODERATION cho user ${targetUserId}: ${msg}`,
+      );
+    }
+  }
+
+  /**
+   * Tạo thông báo MODERATION gửi tới toàn bộ Admin/Manager đang hoạt động
+   * khi Tác giả gửi duyệt truyện hoặc chương.
+   */
+  async notifyModerationToModerators(
+    title: string,
+    message: string,
+    meta: { storyId?: string; chapterId?: string; actorId?: string } = {},
+  ): Promise<void> {
+    try {
+      const moderators = await this.userModel
+        .find(
+          {
+            role: { $in: [UserRole.ADMIN, UserRole.MANAGER] },
+            status: UserStatus.ACTIVE,
+          },
+          '_id',
+        )
+        .lean();
+
+      if (moderators.length === 0) return;
+
+      await this.createMany(
+        moderators.map((moderator) => ({
+          userId: moderator._id.toString(),
+          type: NotificationType.MODERATION,
+          title,
+          message,
+          storyId: meta.storyId,
+          chapterId: meta.chapterId,
+          actorId: meta.actorId,
+        })),
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(
+        `Không thể tạo thông báo kiểm duyệt cho Admin/Manager: ${msg}`,
       );
     }
   }

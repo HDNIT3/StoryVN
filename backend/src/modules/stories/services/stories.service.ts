@@ -24,6 +24,7 @@ import {
 } from '../../../common/utils/slug.util.js';
 import { AuthorProfile, AuthorProfileDocument } from '../../users/schemas/author-profile.schema.js';
 import { Genre, GenreDocument } from '../../genres/schemas/genre.schema.js';
+import { NotificationsService } from '../../notifications/notifications.service.js';
 import { CreateStoryDto, StoryAction } from '../dto/create-story.dto.js';
 import { FilterStoriesDto, StorySortOption } from '../dto/filter-stories.dto.js';
 import { QueryMyStoriesDto } from '../dto/query-my-stories.dto.js';
@@ -53,6 +54,7 @@ export class StoriesService {
     private readonly genreModel: Model<GenreDocument>,
     @InjectModel(Chapter.name)
     private readonly chapterModel: Model<ChapterDocument>,
+    private readonly notificationsService: NotificationsService,
   ) { }
 
   async createStory(
@@ -67,6 +69,8 @@ export class StoriesService {
         : StoryStatus.DRAFT;
 
     const coverUrl = dto.coverImage || dto.coverUrl || null;
+
+    await this.assertStoryTitleAvailable(authorId, dto.title);
 
     let slug: string;
     if (dto.slug?.trim()) {
@@ -117,6 +121,14 @@ export class StoriesService {
       );
     } catch {
       // ignore
+    }
+
+    if (status === StoryStatus.PENDING_REVIEW) {
+      await this.notifyStorySubmitted(
+        savedStory._id,
+        savedStory.title,
+        authorId,
+      );
     }
 
     return (await this.storyModel
@@ -230,6 +242,50 @@ export class StoriesService {
     }
 
     return story;
+  }
+
+  /**
+   * UC-13: Tên truyện không được trùng với truyện khác cùng tác giả.
+   */
+  private async assertStoryTitleAvailable(
+    authorId: Types.ObjectId,
+    title: string,
+    excludeId?: Types.ObjectId,
+  ): Promise<void> {
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) return;
+
+    const escapedTitle = normalizedTitle.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      '\\$&',
+    );
+    const filter: Record<string, any> = {
+      authorId: new Types.ObjectId(authorId),
+      title: { $regex: new RegExp(`^${escapedTitle}$`, 'i') },
+    };
+    if (excludeId) {
+      filter._id = { $ne: excludeId };
+    }
+
+    const existing = await this.storyModel.findOne(filter).select('_id').lean();
+    if (existing) {
+      throw new ConflictException(ErrorCode.STORY_TITLE_EXISTS);
+    }
+  }
+
+  private async notifyStorySubmitted(
+    storyId: Types.ObjectId,
+    title: string,
+    authorId: Types.ObjectId,
+  ): Promise<void> {
+    await this.notificationsService.notifyModerationToModerators(
+      'Truyện mới chờ kiểm duyệt',
+      `Tác phẩm "${title}" vừa được gửi duyệt và đang chờ kiểm duyệt.`,
+      {
+        storyId: storyId.toString(),
+        actorId: authorId.toString(),
+      },
+    );
   }
 
   /**
@@ -374,6 +430,10 @@ export class StoriesService {
     const story = await this.findOwnedStory(authorId, identifier, true);
     const action = actionOverride || dto.action;
 
+    if (dto.title !== undefined && dto.title.trim() !== story.title) {
+      await this.assertStoryTitleAvailable(authorId, dto.title, story._id);
+    }
+
     // Field vận hành: áp dụng ngay, không thuộc nội dung kiểm duyệt
     if (dto.progressState !== undefined) {
       story.progressState = dto.progressState;
@@ -410,6 +470,11 @@ export class StoriesService {
       }
 
       await story.save();
+
+      if (action === StoryAction.SUBMIT) {
+        await this.notifyStorySubmitted(story._id, story.title, authorId);
+      }
+
       return this.buildStoryResponse(story._id);
     }
 
@@ -434,6 +499,7 @@ export class StoriesService {
       : this.buildStorySnapshotFromDoc(story);
     const contentChanged = this.hasStoryContentChanged(base, dto);
     const now = new Date();
+    let submittedForReview = false;
 
     // Rút bản đang chờ duyệt (có thể kèm chỉnh sửa)
     if (action === StoryAction.WITHDRAW) {
@@ -492,6 +558,10 @@ export class StoriesService {
           updatedAt: now,
         } as any);
       }
+
+      if (action === StoryAction.SUBMIT) {
+        submittedForReview = true;
+      }
     } else if (
       action === StoryAction.SUBMIT &&
       activeRevision &&
@@ -501,10 +571,18 @@ export class StoriesService {
       activeRevision.status = RevisionStatus.PENDING_REVIEW;
       activeRevision.rejectReason = null;
       activeRevision.updatedAt = now;
+      submittedForReview = true;
     }
 
     trimRevisions(revisions);
     await story.save();
+
+    if (submittedForReview) {
+      const pendingTitle =
+        getActiveRevision(revisions)?.snapshot?.title || story.title;
+      await this.notifyStorySubmitted(story._id, pendingTitle, authorId);
+    }
+
     return this.buildStoryResponse(story._id);
   }
 

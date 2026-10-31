@@ -197,10 +197,7 @@ export class AdminUsersService {
       }
     }
 
-    if (
-      targetUser.role === UserRole.ADMIN &&
-      currentActor.role !== UserRole.ADMIN
-    ) {
+    if (targetUser.role === UserRole.ADMIN) {
       throw new ForbiddenException(ErrorCode.CANNOT_MODIFY_ADMIN);
     }
 
