@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useFollowedStories } from "@/features/follows";
 import {
   HeaderProps,
   LogoProps,
@@ -111,9 +112,6 @@ export function Header({
             bookmark={bookmark}
             onLoginClick={onLoginClick}
             onLogoutClick={onLogoutClick}
-            onBookmarkClick={() => {
-              if (bookmark?.onClick) bookmark.onClick();
-            }}
             onRechargeClick={() => {
               if (wallet?.onRechargeClick) wallet.onRechargeClick();
             }}
@@ -134,9 +132,6 @@ export function Header({
             onRechargeClick={() => {
               if (wallet?.onRechargeClick) wallet.onRechargeClick();
             }}
-            onBookmarkClick={() => {
-              if (bookmark?.onClick) bookmark.onClick();
-            }}
           />
         </div>
       </div>
@@ -153,6 +148,17 @@ export function SmartHeader() {
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Số truyện đã lưu, dùng cho badge tủ truyện trên header
+  const { data: followedStories } = useFollowedStories(
+    { limit: 1 },
+    isAuthenticated
+  );
+  const bookmark = {
+    count: followedStories?.pagination.totalItems ?? 0,
+    iconSrc: "/icon/bookmark.svg",
+    href: "/tai-khoan/theo-doi",
+  };
 
   let activeNavId = "home";
   if (pathname.startsWith("/truyen")) {
@@ -180,6 +186,7 @@ export function SmartHeader() {
       activeNavId={activeNavId}
       isLoggedIn={isAuthenticated}
       user={userProfileForHeader}
+      bookmark={bookmark}
       onLogoutClick={handleLogout}
     />
   );

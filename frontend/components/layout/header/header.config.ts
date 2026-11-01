@@ -106,7 +106,7 @@ export const DEFAULT_WALLET: WalletInfo = {
 };
 
 export const DEFAULT_BOOKMARK: BookmarkInfo = {
-  count: 2,
+  count: 0,
   iconSrc: "/icon/bookmark.svg",
   href: "/tai-khoan/theo-doi",
 };

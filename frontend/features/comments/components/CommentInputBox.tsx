@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLoginHref, type LoginReturnTab } from "@/lib/hooks/useLoginHref";
 
 interface CommentInputBoxProps {
   onSubmit: (content: string) => Promise<void> | void;
@@ -13,6 +14,8 @@ interface CommentInputBoxProps {
   onCancel?: () => void;
   replyToName?: string;
   onClearReplyTo?: () => void;
+  /** Tab cần quay lại sau khi đăng nhập (mặc định quay lại đúng URL hiện tại) */
+  loginTab?: LoginReturnTab;
 }
 
 export const CommentInputBox: React.FC<CommentInputBoxProps> = ({
@@ -23,9 +26,11 @@ export const CommentInputBox: React.FC<CommentInputBoxProps> = ({
   onCancel,
   replyToName,
   onClearReplyTo,
+  loginTab,
 }) => {
   const { user, isAuthenticated } = useAuth();
   const [content, setContent] = useState("");
+  const loginHref = useLoginHref(loginTab);
 
   if (!isAuthenticated) {
     return (
@@ -34,7 +39,7 @@ export const CommentInputBox: React.FC<CommentInputBoxProps> = ({
           Bạn cần đăng nhập để tham gia thảo luận và bình luận.
         </p>
         <Link
-          href="/dang-nhap"
+          href={loginHref}
           className="inline-block px-4 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800 transition-colors shadow-2xs"
         >
           Đăng nhập để bình luận

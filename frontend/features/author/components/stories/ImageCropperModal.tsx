@@ -11,20 +11,38 @@ interface ImageCropperModalProps {
   outputWidth?: number; // mặc định 600px
 }
 
-export function ImageCropperModal({
-  isOpen,
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 3;
+
+const applyZoomStep = (value: number) =>
+  Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +value.toFixed(2)));
+
+type ImageCropperDialogProps = Omit<ImageCropperModalProps, "isOpen">;
+
+// Modal được unmount khi đóng nên mỗi lần mở lại sẽ tự reset state.
+export function ImageCropperModal({ isOpen, ...dialogProps }: ImageCropperModalProps) {
+  if (!isOpen) return null;
+  return <ImageCropperDialog key={dialogProps.imageSrc} {...dialogProps} />;
+}
+
+function ImageCropperDialog({
   imageSrc,
   onClose,
   onCropComplete,
   aspectRatio = 2 / 3, // Chuẩn bìa truyện 2:3
   outputWidth = 600,
-}: ImageCropperModalProps) {
-  const [zoom, setZoom] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+}: ImageCropperDialogProps) {
+  const [view, setView] = useState({
+    zoom: 1,
+    offset: { x: 0, y: 0 },
+  });
+  const { zoom, offset } = view;
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
 
+  const dragStartRef = useRef({ x: 0, y: 0 });
   const imgRef = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -32,55 +50,119 @@ export function ImageCropperModal({
   const cropBoxWidth = 260;
   const cropBoxHeight = Math.round(cropBoxWidth / aspectRatio); // 390px
 
-  // Reset state khi mở modal hoặc đổi ảnh
-  useEffect(() => {
-    if (isOpen) {
-      setZoom(1);
-      setOffset({ x: 0, y: 0 });
-      setImageLoaded(false);
-    }
-  }, [isOpen, imageSrc]);
+  // Phóng ảnh vừa khít khung crop (cover): ảnh luôn phủ kín khung, không lộ nền trắng
+  const baseScale =
+    naturalSize.width > 0 && naturalSize.height > 0
+      ? Math.max(cropBoxWidth / naturalSize.width, cropBoxHeight / naturalSize.height)
+      : 0;
+  const baseWidth = naturalSize.width * baseScale;
+  const baseHeight = naturalSize.height * baseScale;
+  const displayWidth = baseWidth * zoom;
+  const displayHeight = baseHeight * zoom;
 
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const limitX = Math.max(0, (displayWidth - cropBoxWidth) / 2);
+  const limitY = Math.max(0, (displayHeight - cropBoxHeight) / 2);
+
+  const clampOffset = useCallback(
+    (current: { x: number; y: number }, nextZoom: number) => {
+      const maxX = Math.max(0, (baseWidth * nextZoom - cropBoxWidth) / 2);
+      const maxY = Math.max(0, (baseHeight * nextZoom - cropBoxHeight) / 2);
+      return {
+        x: Math.min(Math.max(current.x, -maxX), maxX),
+        y: Math.min(Math.max(current.y, -maxY), maxY),
+      };
+    },
+    [baseHeight, baseWidth, cropBoxHeight, cropBoxWidth]
+  );
+
+  // Thu phóng kèm kẹp vị trí để ảnh không hở khung
+  const changeZoom = useCallback(
+    (nextZoom: number) => {
+      setView((prev) => {
+        const value = applyZoomStep(nextZoom);
+        return { zoom: value, offset: clampOffset(prev.offset, value) };
+      });
+    },
+    [clampOffset]
+  );
+
+  const zoomBy = useCallback(
+    (delta: number) => {
+      setView((prev) => {
+        const value = applyZoomStep(prev.zoom + delta);
+        return { zoom: value, offset: clampOffset(prev.offset, value) };
+      });
+    },
+    [clampOffset]
+  );
+
+  // Cuộn chuột để zoom (gắn native để preventDefault không bị passive)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      zoomBy(e.deltaY < 0 ? 0.1 : -0.1);
+    };
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, [zoomBy]);
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    if (naturalWidth > 0 && naturalHeight > 0) {
+      setNaturalSize({ width: naturalWidth, height: naturalHeight });
+    }
+    setImageLoaded(true);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!imageLoaded) return;
     setIsDragging(true);
-    setDragStart({
+    dragStartRef.current = {
       x: e.clientX - offset.x,
       y: e.clientY - offset.y,
-    });
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging) return;
-    setOffset({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    });
+    setView((prev) => ({
+      ...prev,
+      offset: {
+        x: Math.min(
+          Math.max(e.clientX - dragStartRef.current.x, -limitX),
+          limitX
+        ),
+        y: Math.min(
+          Math.max(e.clientY - dragStartRef.current.y, -limitY),
+          limitY
+        ),
+      },
+    }));
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsDragging(false);
     try {
-      (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+      e.currentTarget.releasePointerCapture?.(e.pointerId);
     } catch {
       // ignore
     }
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 0.1 : -0.1;
-    setZoom((prev) => Math.min(3, Math.max(1, +(prev + zoomFactor).toFixed(2))));
-  };
-
   const handleReset = () => {
-    setZoom(1);
-    setOffset({ x: 0, y: 0 });
+    setView({ zoom: 1, offset: { x: 0, y: 0 } });
   };
 
   const handleApplyCrop = useCallback(() => {
     const img = imgRef.current;
-    if (!img || !imageLoaded) return;
+    if (!img || !imageLoaded || naturalSize.width === 0 || displayWidth === 0) {
+      return;
+    }
 
     const outputHeight = Math.round(outputWidth / aspectRatio);
     const canvas = document.createElement("canvas");
@@ -93,32 +175,49 @@ export function ImageCropperModal({
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
 
-    // Tính toán tỉ lệ giữa ảnh gốc và khung hiển thị
-    const renderedWidth = img.clientWidth * zoom;
-    const renderedHeight = img.clientHeight * zoom;
+    // Quy đổi khung crop trên màn hình về đúng vùng pixel trên ảnh gốc
+    const scaleX = naturalSize.width / displayWidth;
+    const scaleY = naturalSize.height / displayHeight;
 
-    // Tỉ lệ scale thực tế giữa ảnh hiển thị và output canvas
-    const scaleRatio = outputWidth / cropBoxWidth;
+    const rawSourceX =
+      ((displayWidth - cropBoxWidth) / 2 - offset.x) * scaleX;
+    const rawSourceY =
+      ((displayHeight - cropBoxHeight) / 2 - offset.y) * scaleY;
+    const rawSourceWidth = cropBoxWidth * scaleX;
+    const rawSourceHeight = cropBoxHeight * scaleY;
 
-    // Vị trí tâm ảnh hiển thị so với tâm khung crop
-    const centerX = cropBoxWidth / 2 + offset.x;
-    const centerY = cropBoxHeight / 2 + offset.y;
+    // Kẹp trong biên ảnh để tránh sai số dấu phẩy động
+    const sourceX = Math.min(
+      Math.max(rawSourceX, 0),
+      Math.max(0, naturalSize.width - 1)
+    );
+    const sourceY = Math.min(
+      Math.max(rawSourceY, 0),
+      Math.max(0, naturalSize.height - 1)
+    );
+    const sourceWidth = Math.max(
+      1,
+      Math.min(rawSourceWidth, naturalSize.width - sourceX)
+    );
+    const sourceHeight = Math.max(
+      1,
+      Math.min(rawSourceHeight, naturalSize.height - sourceY)
+    );
 
-    const imgLeftInCrop = centerX - renderedWidth / 2;
-    const imgTopInCrop = centerY - renderedHeight / 2;
-
-    // Chuyển sang toạ độ trên canvas output
-    const drawX = imgLeftInCrop * scaleRatio;
-    const drawY = imgTopInCrop * scaleRatio;
-    const drawWidth = renderedWidth * scaleRatio;
-    const drawHeight = renderedHeight * scaleRatio;
-
-    // Làm nền trắng nếu có khoảng trống
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, outputWidth, outputHeight);
 
-    // Vẽ ảnh lên canvas
-    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+    ctx.drawImage(
+      img,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      outputWidth,
+      outputHeight
+    );
 
     canvas.toBlob(
       (blob) => {
@@ -133,9 +232,21 @@ export function ImageCropperModal({
       "image/webp",
       0.92
     );
-  }, [aspectRatio, cropBoxHeight, cropBoxWidth, imageLoaded, offset.x, offset.y, onClose, onCropComplete, outputWidth, zoom]);
-
-  if (!isOpen) return null;
+  }, [
+    aspectRatio,
+    cropBoxHeight,
+    cropBoxWidth,
+    displayHeight,
+    displayWidth,
+    imageLoaded,
+    naturalSize.height,
+    naturalSize.width,
+    offset.x,
+    offset.y,
+    onClose,
+    onCropComplete,
+    outputWidth,
+  ]);
 
   return (
     <div
@@ -168,16 +279,16 @@ export function ImageCropperModal({
         {/* Viewport & Crop Stage */}
         <div
           ref={containerRef}
-          onWheel={handleWheel}
           className="relative bg-zinc-900 p-6 flex items-center justify-center overflow-hidden select-none touch-none min-h-[440px]"
         >
           {/* Vùng Crop Box cố định tỉ lệ 2:3 */}
           <div
             style={{ width: `${cropBoxWidth}px`, height: `${cropBoxHeight}px` }}
-            className="relative rounded-md overflow-hidden shadow-2xl border-2 border-white ring-2 ring-black/40 cursor-grab active:cursor-grabbing"
+            className="relative rounded-md overflow-hidden shadow-2xl border-2 border-white ring-2 ring-black/40 cursor-grab active:cursor-grabbing touch-none"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
           >
             {/* Ảnh đang được dịch chuyển và zoom */}
             <div
@@ -190,16 +301,30 @@ export function ImageCropperModal({
                 ref={imgRef}
                 src={imageSrc}
                 alt="Crop preview"
-                onLoad={() => setImageLoaded(true)}
+                onLoad={handleImageLoad}
+                onError={() => {
+                  setImageLoaded(false);
+                  setImageError(true);
+                }}
                 draggable={false}
                 style={{
-                  transform: `scale(${zoom})`,
+                  width: displayWidth > 0 ? `${displayWidth}px` : undefined,
+                  height: displayHeight > 0 ? `${displayHeight}px` : undefined,
                   maxWidth: "none",
                   maxHeight: "none",
+                  opacity: imageLoaded ? 1 : 0,
                 }}
-                className="pointer-events-none transition-transform duration-75 ease-out select-none"
+                className="pointer-events-none select-none"
               />
             </div>
+
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-zinc-800/80 pointer-events-none">
+                <span className="text-[11px] font-medium text-zinc-300">
+                  {imageError ? "Không tải được ảnh" : "Đang tải ảnh..."}
+                </span>
+              </div>
+            )}
 
             {/* Lưới bố cục 1/3 (Rule of thirds grid) */}
             <div className="absolute inset-0 pointer-events-none grid grid-cols-3 grid-rows-3 border border-white/30">
@@ -227,23 +352,23 @@ export function ImageCropperModal({
             <span className="text-xs text-zinc-500 font-medium">Thu phóng:</span>
             <button
               type="button"
-              onClick={() => setZoom((z) => Math.max(1, +(z - 0.2).toFixed(2)))}
+              onClick={() => zoomBy(-0.2)}
               className="w-6 h-6 rounded bg-zinc-200 hover:bg-zinc-300 text-xs font-bold text-zinc-700 flex items-center justify-center cursor-pointer"
             >
               -
             </button>
             <input
               type="range"
-              min="1"
-              max="3"
+              min={MIN_ZOOM}
+              max={MAX_ZOOM}
               step="0.05"
               value={zoom}
-              onChange={(e) => setZoom(parseFloat(e.target.value))}
+              onChange={(e) => changeZoom(parseFloat(e.target.value))}
               className="flex-1 accent-sky-600 cursor-pointer"
             />
             <button
               type="button"
-              onClick={() => setZoom((z) => Math.min(3, +(z + 0.2).toFixed(2)))}
+              onClick={() => zoomBy(0.2)}
               className="w-6 h-6 rounded bg-zinc-200 hover:bg-zinc-300 text-xs font-bold text-zinc-700 flex items-center justify-center cursor-pointer"
             >
               +
@@ -277,7 +402,8 @@ export function ImageCropperModal({
           <button
             type="button"
             onClick={handleApplyCrop}
-            className="px-4 py-1.5 rounded-md text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white transition cursor-pointer shadow-2xs"
+            disabled={!imageLoaded || imageError}
+            className="px-4 py-1.5 rounded-md text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white transition cursor-pointer shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Áp dụng cắt ảnh
           </button>

@@ -69,6 +69,7 @@ export const StoryCommentsSection: React.FC<StoryCommentsSectionProps> = ({
           onSubmit={handlePostComment}
           isSubmitting={isSubmitting}
           placeholder="Cảm nhận của bạn về tác phẩm này thế nào? Hãy chia sẻ cùng mọi người nhé..."
+          loginTab="comments"
         />
       </div>
 

@@ -6,7 +6,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { storyService, storyKeys } from "@/features/stories";
 import { useAllCategories } from "@/features/categories";
-import type { StoryProgressState, StorySortOption } from "@/features/stories";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useFollowStatusBatch, useToggleFollow } from "@/features/follows";
+import { useLoginHref } from "@/lib/hooks/useLoginHref";
+import { toast } from "@/lib/toast";
+import type { FilteredStoryItem, StoryProgressState, StorySortOption } from "@/features/stories";
 import { StoryFilterBar, SORT_OPTIONS, PROGRESS_OPTIONS } from "./StoryFilterBar";
 import { StoryListItemCard } from "./StoryListItemCard";
 import { TopViewsWidget } from "./TopViewsWidget";
@@ -105,6 +109,25 @@ export const PublicStoriesListView: React.FC = () => {
   const pagination = storiesResponse?.pagination;
   const totalItems = pagination?.totalItems ?? 0;
   const totalPages = pagination?.totalPages ?? 1;
+
+  // Trạng thái lưu truyện (tủ truyện) cho từng card trong danh sách
+  const { isAuthenticated } = useAuth();
+  const loginHref = useLoginHref();
+  const storyIds = useMemo(
+    () => (storiesResponse?.items ?? []).map((story) => story._id),
+    [storiesResponse]
+  );
+  const { data: followStatusMap } = useFollowStatusBatch("STORY", storyIds, isAuthenticated);
+  const { mutate: toggleFollow, isPending: isTogglePending, variables } = useToggleFollow();
+
+  const handleToggleBookmark = (story: FilteredStoryItem) => {
+    if (!isAuthenticated) {
+      toast.info("Vui lòng đăng nhập để lưu truyện vào tủ truyện!");
+      router.push(loginHref);
+      return;
+    }
+    toggleFollow({ targetType: "STORY", targetId: story._id });
+  };
 
   // Lấy tên nhãn của bộ lọc hiện tại
   const currentGenreName = useMemo(() => {
@@ -226,7 +249,13 @@ export const PublicStoriesListView: React.FC = () => {
               </div>
             ) : (
               storiesList.map((story) => (
-                <StoryListItemCard key={story._id} story={story} />
+                <StoryListItemCard
+                  key={story._id}
+                  story={story}
+                  isFollowing={Boolean(followStatusMap?.[story._id])}
+                  isFollowPending={isTogglePending && variables?.targetId === story._id}
+                  onToggleBookmark={() => handleToggleBookmark(story)}
+                />
               ))
             )}
 

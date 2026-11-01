@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useLoginHref } from "@/lib/hooks/useLoginHref";
 import { StarRatingInput } from "./StarRatingInput";
 import { useMyRating, useRateStory, useDeleteMyRating } from "../queries/useRatingQueries";
 
@@ -16,6 +17,7 @@ export const UserRatingBox: React.FC<UserRatingBoxProps> = ({
   authorId,
 }) => {
   const { user, isAuthenticated } = useAuth();
+  const loginHref = useLoginHref("ratings");
   const { data: myRatingRes, isLoading: isLoadingMyRating } = useMyRating(
     storyId,
     isAuthenticated
@@ -50,7 +52,7 @@ export const UserRatingBox: React.FC<UserRatingBoxProps> = ({
           </p>
         </div>
         <Link
-          href="/dang-nhap"
+          href={loginHref}
           className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800 transition-colors shadow-2xs"
         >
           Đăng nhập ngay

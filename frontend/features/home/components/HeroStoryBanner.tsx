@@ -104,11 +104,6 @@ export function HeroStoryBanner() {
     setActiveIndex((prev) => (prev + 1) % total);
   }, [total]);
 
-  const prevSlide = useCallback(() => {
-    if (total === 0) return;
-    setActiveIndex((prev) => (prev - 1 + total) % total);
-  }, [total]);
-
   // Tự động chuyển slide sau mỗi 5 giây (nếu không hover)
   useEffect(() => {
     if (total <= 1 || isPaused) return;
@@ -178,10 +173,10 @@ export function HeroStoryBanner() {
         <div className="bg-dot-grid absolute inset-0 opacity-[0.35] [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_70%)]" />
       </div>
 
-      <div className="relative z-10 rounded-[calc(2rem-1px)] bg-white/60 px-5 py-8 backdrop-blur-xl sm:px-9 sm:py-11 lg:px-12">
+      <div className="relative z-10 rounded-[calc(2rem-1px)] bg-white/60 px-5 py-7 backdrop-blur-xl sm:px-9 sm:py-9 lg:px-12">
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-6 xl:gap-8">
           {/* ─── CỘT TRÁI: THÔNG TIN TRUYỆN ───────────────────── */}
-          <div className="space-y-5 lg:col-span-7 xl:col-span-8">
+          <div className="space-y-4 lg:col-span-7 xl:col-span-8">
             {/* Kicker + trạng thái */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/80 px-3.5 py-1.5 text-sm font-bold text-sky-600 shadow-[0_10px_30px_-22px_rgba(14,165,233,0.9)] backdrop-blur-md">
@@ -192,32 +187,31 @@ export function HeroStoryBanner() {
                 <span className="uppercase tracking-[0.12em]">Truyện mới xuất bản</span>
               </span>
 
-              <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50/80 px-3 py-1.5 text-sm font-semibold text-indigo-600 backdrop-blur-md">
+              <span className="inline-flex items-center text-sm font-semibold text-indigo-600">
                 {progressText}
               </span>
             </div>
 
-            {/* Tiêu đề */}
-            <h2
-              className="text-balance text-3xl font-extrabold leading-[1.15] tracking-tight text-slate-900 transition-colors hover:text-sky-600 sm:text-4xl md:text-5xl lg:text-6xl"
-              style={{ textWrap: "balance" }}
-            >
-              <Link href={`/truyen/${current.slug}`} className="hover:underline underline-offset-4">
-                {current.title}
-              </Link>
-            </h2>
+            {/* Tiêu đề: tối đa 2 hàng; nếu chỉ 1 hàng thì canh giữa khung để không trống dòng dưới */}
+            <div className="flex min-h-[2.3em] items-center text-3xl sm:text-4xl md:text-5xl">
+              <h2 className="line-clamp-2 w-full font-extrabold leading-[1.15] tracking-tight text-slate-900 transition-colors">
+                <Link href={`/truyen/${current.slug}`} className="hover:underline underline-offset-4">
+                  {current.title}
+                </Link>
+              </h2>
+            </div>
 
             {/* Tác giả + thể loại */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm sm:text-base">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3 py-1.5 backdrop-blur-md">
-                <span className="text-slate-400">Tác giả</span>
-                <span className="font-bold text-slate-800">{authorName}</span>
+              <div className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-white/80 bg-white/70 px-3 py-1.5 backdrop-blur-md">
+                <span className="shrink-0 text-slate-400">Tác giả</span>
+                <span className="max-w-[12rem] truncate font-bold text-slate-800">{authorName}</span>
               </div>
 
-              {genresList.slice(0, 3).map((genreName) => (
+              {genresList.slice(0, 3).map((genreName, idx) => (
                 <span
                   key={genreName}
-                  className="rounded-full border border-slate-200/70 bg-white/80 px-3 py-1 text-sm font-semibold text-slate-600 backdrop-blur-md"
+                  className={`inline-block max-w-[10rem] truncate rounded-full border border-slate-200/70 bg-white/80 px-3 py-1 text-sm font-semibold text-slate-600 backdrop-blur-md ${idx === 2 ? "hidden sm:inline-block" : ""}`}
                 >
                   {genreName}
                 </span>
@@ -256,11 +250,13 @@ export function HeroStoryBanner() {
               ) : null}
             </div>
 
-            {/* Tóm tắt */}
-            <p className="max-w-[65ch] text-base leading-relaxed text-slate-600 sm:text-lg line-clamp-3">
-              {current.description?.replace(/<[^>]*>?/gm, "") ||
-                "Một tác phẩm mới vừa được cập nhật tại StoryVN, mang đến những tình tiết hấp dẫn, mở ra thế giới câu chuyện kỳ thú cho độc giả yêu thích tiểu thuyết trực tuyến."}
-            </p>
+            {/* Tóm tắt: giới hạn 2 hàng, canh giữa khi chỉ có 1 hàng */}
+            <div className="flex min-h-[3.25em] items-center text-base sm:text-lg">
+              <p className="line-clamp-2 w-full max-w-[65ch] leading-relaxed text-slate-600">
+                {current.description?.replace(/<[^>]*>?/gm, "") ||
+                  "Một tác phẩm mới vừa được cập nhật tại StoryVN, mang đến những tình tiết hấp dẫn, mở ra thế giới câu chuyện kỳ thú cho độc giả yêu thích tiểu thuyết trực tuyến."}
+              </p>
+            </div>
 
             {/* CTA */}
             <div className="flex flex-wrap items-center gap-3 pt-1 sm:pt-2">
@@ -345,9 +341,9 @@ export function HeroStoryBanner() {
           </div>
         </div>
 
-        {/* ─── Thanh chuyển truyện dạng floating pill ─────────── */}
-        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/70 pt-6 sm:flex-row">
-          <div className="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-white/80 bg-white/70 p-1.5 shadow-[0_16px_40px_-32px_rgba(14,165,233,0.9)] backdrop-blur-xl">
+        {/* ─── Danh sách truyện + chấm chuyển ─────────── */}
+        <div className="mt-6 border-t border-white/70 pt-5">
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-5">
             {stories.map((story, idx) => {
               const isSelected = idx === activeIndex;
 
@@ -358,14 +354,14 @@ export function HeroStoryBanner() {
                   onClick={() => setActiveIndex(idx)}
                   aria-label={`Chuyển tới truyện: ${story.title}`}
                   aria-current={isSelected ? "true" : undefined}
-                  className={`flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm transition-all duration-200 ${
+                  className={`flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-full px-3 py-2 text-sm transition-all duration-200 ${
                     isSelected
                       ? "bg-sky-50 font-bold text-sky-700 shadow-[0_8px_20px_-14px_rgba(14,165,233,0.9)] ring-1 ring-sky-200"
                       : "font-medium text-slate-600 hover:bg-white hover:text-sky-600"
                   }`}
                 >
                   <span
-                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold tabular-nums ${
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums ${
                       isSelected
                         ? "bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-sm shadow-sky-500/40"
                         : "bg-slate-100 text-slate-500"
@@ -373,53 +369,27 @@ export function HeroStoryBanner() {
                   >
                     {idx + 1}
                   </span>
-                  <span className="max-w-[120px] truncate sm:max-w-[150px]">
-                    {story.title}
-                  </span>
+                  <span className="min-w-0 truncate">{story.title}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Điều hướng */}
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={prevSlide}
-              aria-label="Truyện trước"
-              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/90 bg-white/80 text-slate-600 shadow-sm backdrop-blur-md transition-colors hover:border-sky-200 hover:text-sky-600"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            <div className="flex items-center gap-1.5 px-2">
-              {stories.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setActiveIndex(i)}
-                  aria-label={`Trang ${i + 1}`}
-                  className={`h-2 cursor-pointer rounded-full transition-[width,background-color] duration-200 ${
-                    i === activeIndex
-                      ? "w-6 bg-gradient-to-r from-sky-500 to-indigo-500"
-                      : "w-2 bg-sky-200 hover:bg-sky-300"
-                  }`}
-                />
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={nextSlide}
-              aria-label="Truyện tiếp theo"
-              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/90 bg-white/80 text-slate-600 shadow-sm backdrop-blur-md transition-colors hover:border-sky-200 hover:text-sky-600"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+          {/* Chấm chuyển truyện */}
+          <div className="mt-3 flex items-center justify-center gap-1.5 px-2">
+            {stories.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setActiveIndex(i)}
+                aria-label={`Trang ${i + 1}`}
+                className={`h-2 cursor-pointer rounded-full transition-[width,background-color] duration-200 ${
+                  i === activeIndex
+                    ? "w-6 bg-gradient-to-r from-sky-500 to-indigo-500"
+                    : "w-2 bg-sky-200 hover:bg-sky-300"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
