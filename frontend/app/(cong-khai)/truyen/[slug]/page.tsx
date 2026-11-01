@@ -1,23 +1,32 @@
 import type { Metadata } from "next";
-import { StoryDetailView } from "@/features/stories";
+import { notFound } from "next/navigation";
+import { StoryDetailView, type StoryDetailData } from "@/features/stories";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+type StoryFetchResult =
+  | { status: "ok"; story: StoryDetailData }
+  | { status: "not-found" }
+  | { status: "error" };
+
 // Hàm lấy thông tin cơ bản của truyện từ API ở phía máy chủ (Server-side)
-async function getStory(slug: string) {
+async function getStory(slug: string): Promise<StoryFetchResult> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
     const res = await fetch(`${apiUrl}/stories/${slug}`, {
       next: { revalidate: 60 }, // Cache 60s để tăng tốc độ và giảm tải cho backend
     });
 
-    if (!res.ok) return null;
+    if (res.status === 404) return { status: "not-found" };
+    if (!res.ok) return { status: "error" };
+
     const json = await res.json();
-    return json?.data || null;
+    const story = json?.data as StoryDetailData | undefined;
+    return story ? { status: "ok", story } : { status: "not-found" };
   } catch {
-    return null;
+    return { status: "error" };
   }
 }
 
@@ -26,15 +35,16 @@ async function getStory(slug: string) {
 // ═══════════════════════════════════════════════════════════════
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const story = await getStory(slug);
+  const result = await getStory(slug);
 
-  if (!story) {
+  if (result.status !== "ok") {
     return {
-      title: "Chi tiết tác phẩm | StoryVN",
-      description: "Đọc truyện online tại nền tảng sáng tác StoryVN.",
+      title: "Không tìm thấy tác phẩm | StoryVN",
+      description: "Tác phẩm không tồn tại hoặc chưa được xuất bản công khai.",
     };
   }
 
+  const story = result.story;
   const authorName =
     story.author?.penName ||
     story.author?.displayName ||
@@ -82,5 +92,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // ═══════════════════════════════════════════════════════════════
 export default async function StoryDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const result = await getStory(slug);
+
+  // URL truyện không tồn tại (hoặc chưa xuất bản công khai) → trang 404
+  if (result.status === "not-found") {
+    notFound();
+  }
+
   return <StoryDetailView slug={slug} />;
 }

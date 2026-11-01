@@ -90,6 +90,22 @@ export function useFollowStatus(
   });
 }
 
+export function useFollowStatusBatch(
+  targetType: FollowTargetType,
+  targetIds: string[],
+  enabled = true
+) {
+  return useQuery({
+    queryKey: followsKeys.batchStatus(targetType, targetIds),
+    queryFn: async () => {
+      const res = await followsService.checkBatchStatus(targetType, targetIds);
+      return res?.data ?? {};
+    },
+    enabled: Boolean(targetIds.length) && enabled,
+    staleTime: 1000 * 60, // 1m
+  });
+}
+
 export function useToggleFollow() {
   const queryClient = useQueryClient();
 

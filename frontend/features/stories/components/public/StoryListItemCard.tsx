@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -7,9 +9,17 @@ import { formatDateTime, formatRelativeTime, formatNumber } from "./StoryDateUti
 
 interface StoryListItemCardProps {
   story: FilteredStoryItem;
+  isFollowing?: boolean;
+  isFollowPending?: boolean;
+  onToggleBookmark?: () => void;
 }
 
-export const StoryListItemCard: React.FC<StoryListItemCardProps> = ({ story }) => {
+export const StoryListItemCard: React.FC<StoryListItemCardProps> = ({
+  story,
+  isFollowing = false,
+  isFollowPending = false,
+  onToggleBookmark,
+}) => {
   const primaryGenre =
     story.genres && story.genres.length > 0
       ? story.genres[0].name
@@ -125,10 +135,18 @@ export const StoryListItemCard: React.FC<StoryListItemCardProps> = ({ story }) =
           </Link>
           <button
             type="button"
-            title="Lưu truyện"
-            className="p-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 transition-colors cursor-pointer"
+            onClick={onToggleBookmark}
+            disabled={isFollowPending}
+            aria-pressed={isFollowing}
+            aria-label={isFollowing ? "Bỏ lưu truyện" : "Lưu truyện"}
+            title={isFollowing ? "Bỏ lưu truyện" : "Lưu truyện"}
+            className={`p-1.5 rounded-lg border transition-colors cursor-pointer disabled:opacity-60 ${
+              isFollowing
+                ? "border-emerald-200 bg-emerald-50 text-[#0d5c46] hover:bg-emerald-100"
+                : "border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"
+            }`}
           >
-            <BookmarkIcon className="w-4 h-4" />
+            <BookmarkIcon className={`w-4 h-4 ${isFollowing ? "fill-current" : ""}`} />
           </button>
         </div>
       </div>
