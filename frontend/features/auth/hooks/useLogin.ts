@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authService } from "../services/auth.service";
 import { useAuth } from "@/lib/context/AuthContext";
 import { toast } from "@/lib/toast";
+import { getLoginReturnUrl } from "@/lib/utils/returnUrl";
 
 function getErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error) {
@@ -68,10 +69,8 @@ export function useLogin(options?: UseLoginOptions) {
 
         toast.success("Đăng nhập thành công!");
 
-        // Điều hướng theo returnUrl hoặc về trang chủ
-        const params = new URLSearchParams(window.location.search);
-        const returnUrl = params.get("returnUrl") || "/";
-        router.push(returnUrl);
+        // Điều hướng theo returnUrl (chỉ chấp nhận đường dẫn nội bộ) hoặc về trang chủ
+        router.push(getLoginReturnUrl());
         router.refresh();
       } catch (err: unknown) {
         const msg = getErrorMessage(err, "Email hoặc mật khẩu không chính xác!");

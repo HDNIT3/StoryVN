@@ -72,65 +72,81 @@ export function MyStoriesPreview({ stories, onManageChapters, onEdit }: MyStorie
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {displayStories.map((story) => {
             const genreNames = (story.genreIds || [])
-              .map((g: any) => (typeof g === "object" && g !== null ? g.name : g))
-              .filter(Boolean);
+              .map((g: string | { name?: string }) => (typeof g === "object" && g !== null ? g.name : g))
+              .filter((g): g is string => Boolean(g));
             const genres = genreNames.length > 0 ? genreNames : story.genres || [];
             const prog = story.progressState ? progressCfg[story.progressState] : null;
 
             return (
-              <div key={story._id || story.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                {/* Cover */}
-                <div className="relative w-full aspect-[16/9] overflow-hidden bg-zinc-100">
-                  {story.coverUrl ? (
-                    <img src={story.coverUrl} alt={story.title} className="w-full h-full object-cover" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full bg-linear-to-br from-[#1e3a5f] to-[#2d5a8e] flex flex-col items-center justify-center p-3 text-white">
-                      <span className="text-[10px] font-semibold uppercase bg-white/20 px-2 py-0.5 rounded mb-2">{genres[0] || "Truyện"}</span>
-                      <p className="text-[13px] font-bold text-center leading-tight">{story.title}</p>
-                    </div>
-                  )}
-                  {prog && (
-                    <span className={`absolute top-2 right-2 text-[11px] font-bold px-2.5 py-0.5 rounded-md backdrop-blur-sm ${prog.cls}`}>
-                      {prog.label}
-                    </span>
-                  )}
-                </div>
+              <div
+                key={story._id || story.id}
+                className="flex flex-col bg-white rounded-xl border border-zinc-200 overflow-hidden hover:border-zinc-300 hover:shadow-md transition-shadow"
+              >
+                <div className="flex gap-3 p-3">
+                  {/* Cover - giữ đúng tỉ lệ bìa truyện 2:3 */}
+                  <div className="relative w-[76px] shrink-0 aspect-[2/3] rounded-lg overflow-hidden bg-zinc-100">
+                    {story.coverUrl ? (
+                      <img src={story.coverUrl} alt={story.title} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full bg-linear-to-br from-[#1e3a5f] to-[#2d5a8e] flex flex-col items-center justify-center gap-1 p-1.5 text-white">
+                        <svg className="w-5 h-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Info */}
-                <div className="px-4 pt-3.5 pb-2.5">
-                  <h3 className="text-sm font-bold text-zinc-900 truncate mb-2">{story.title}</h3>
-                  <div className="flex gap-1.5 mb-2.5">
-                    {genres.slice(0, 2).map((g: string, i: number) => (
-                      <span key={i} className="text-[11px] font-medium text-gray-500 bg-zinc-100 px-2 py-0.5 rounded">{g}</span>
-                    ))}
+                  {/* Info */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="min-w-0 text-sm font-bold text-zinc-900 leading-snug line-clamp-2">{story.title}</h3>
+                      {prog && (
+                        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md ${prog.cls}`}>
+                          {prog.label}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {genres.slice(0, 2).map((g: string, i: number) => (
+                        <span key={i} className="text-[11px] font-medium text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded">{g}</span>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-500 mt-2">
+                      <span className="inline-flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        {formatNumber(story.stats?.viewCount)}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                        {formatNumber(story.stats?.followCount)}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        {story.stats?.chapterCount || 0} chương
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-zinc-400 mt-1.5">Cập nhật: {getTimeAgo(story.updatedAt)}</p>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-zinc-500 mb-1.5">
-                    <span className="inline-flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                      {formatNumber(story.stats?.viewCount)}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-                      {formatNumber(story.stats?.followCount)}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      {story.stats?.chapterCount || 0} chương
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400">Cập nhật: {getTimeAgo(story.updatedAt)}</p>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 px-4 py-2.5 border-t border-zinc-100">
-                  <button type="button" onClick={() => onManageChapters?.(story)} className="flex-1 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition cursor-pointer text-center">
+                <div className="mt-auto flex items-center gap-2 px-3 py-2.5 border-t border-zinc-100">
+                  <button
+                    type="button"
+                    onClick={() => onManageChapters?.(story)}
+                    className="flex-1 py-2 text-xs font-semibold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-lg hover:bg-zinc-100 transition cursor-pointer"
+                  >
                     Quản lý chương
                   </button>
-                  <button type="button" onClick={() => onEdit?.(story)} className="flex-1 py-1.5 text-xs font-semibold text-zinc-600 bg-zinc-100 border border-zinc-200 rounded-lg hover:bg-zinc-200 transition cursor-pointer text-center">
+                  <button
+                    type="button"
+                    onClick={() => onEdit?.(story)}
+                    className="flex-1 py-2 text-xs font-semibold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-lg hover:bg-zinc-100 transition cursor-pointer"
+                  >
                     Chỉnh sửa
-                  </button>
-                  <button type="button" title="Thêm" className="w-8 h-8 flex items-center justify-center text-zinc-500 bg-zinc-100 border border-zinc-200 rounded-lg hover:bg-zinc-200 transition cursor-pointer shrink-0">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" /></svg>
                   </button>
                 </div>
               </div>

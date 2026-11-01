@@ -6,6 +6,7 @@ import { authService } from "../../services/auth.service";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
+import { getLoginReturnUrl } from "@/lib/utils/returnUrl";
 
 export function SocialAuthButtons() {
   const { login } = useAuth();
@@ -30,8 +31,7 @@ export function SocialAuthButtons() {
 
         toast.success("Đăng nhập bằng Google thành công!");
 
-        const params = new URLSearchParams(window.location.search);
-        const returnUrl = params.get("returnUrl") || "/";
+        const returnUrl = getLoginReturnUrl();
         router.push(returnUrl);
         router.refresh();
       } catch (err: unknown) {
