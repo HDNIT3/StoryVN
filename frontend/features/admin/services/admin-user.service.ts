@@ -60,7 +60,6 @@ export interface QueryAdminUsersParams {
 
 export interface UpdateUserStatusPayload {
   status: UserStatus;
-  reason?: string;
 }
 
 export interface UpdateUserRolePayload {

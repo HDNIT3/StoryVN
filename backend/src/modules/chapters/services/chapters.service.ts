@@ -16,6 +16,7 @@ import {
   toRevisionView,
   trimRevisions,
 } from '../../../common/utils/revision.util.js';
+import { NotificationsService } from '../../notifications/notifications.service.js';
 import { UserRole } from '../../users/schemas/user.schema.js';
 import { Story, StoryDocument } from '../../stories/schemas/story.schema.js';
 import {
@@ -38,6 +39,7 @@ export class ChaptersService {
     private readonly chapterModel: Model<ChapterDocument>,
     @InjectModel(Story.name)
     private readonly storyModel: Model<StoryDocument>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -65,6 +67,23 @@ export class ChaptersService {
     }
 
     return story;
+  }
+
+  private async notifyChapterSubmitted(
+    story: StoryDocument,
+    chapter: ChapterDocument,
+    actorId: string | Types.ObjectId,
+    chapterTitle?: string,
+  ): Promise<void> {
+    await this.notificationsService.notifyModerationToModerators(
+      'Chương mới chờ kiểm duyệt',
+      `Chương ${chapter.chapterNumber}: "${chapterTitle || chapter.title}" của truyện "${story.title}" vừa được gửi duyệt và đang chờ kiểm duyệt.`,
+      {
+        storyId: story._id.toString(),
+        chapterId: chapter._id.toString(),
+        actorId: actorId.toString(),
+      },
+    );
   }
 
   /**
@@ -342,6 +361,10 @@ export class ChaptersService {
     // Cập nhật stats.chapterCount + stats.wordCount trên truyện
     await this.updateStoryStats(story._id);
 
+    if (status === ChapterStatus.PENDING_REVIEW) {
+      await this.notifyChapterSubmitted(story, saved, userId);
+    }
+
     return saved;
   }
 
@@ -596,14 +619,18 @@ export class ChaptersService {
       throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
     }
 
-    await this.verifyStoryOwnership(userId, chapter.storyId, userRole);
+    const story = await this.verifyStoryOwnership(
+      userId,
+      chapter.storyId,
+      userRole,
+    );
 
     // Chương chưa từng có bản chính thức: chỉnh sửa trực tiếp như bản nháp
     if (!this.chapterHasOfficialVersion(chapter)) {
-      return this.updateDraftChapter(chapter, dto);
+      return this.updateDraftChapter(chapter, dto, story, userId);
     }
 
-    return this.updateOfficialChapter(chapter, dto);
+    return this.updateOfficialChapter(chapter, dto, story, userId);
   }
 
   /**
@@ -612,6 +639,8 @@ export class ChaptersService {
   private async updateDraftChapter(
     chapter: ChapterDocument,
     dto: UpdateChapterDto,
+    story: StoryDocument,
+    userId: string | Types.ObjectId,
   ): Promise<any> {
     if (dto.action === ChapterAction.DISCARD_UPDATE) {
       return chapter;
@@ -722,6 +751,10 @@ export class ChaptersService {
     const updated = await chapter.save();
     await this.updateStoryStats(chapter.storyId);
 
+    if (dto.action === ChapterAction.SUBMIT) {
+      await this.notifyChapterSubmitted(story, updated, userId);
+    }
+
     return updated;
   }
 
@@ -732,6 +765,8 @@ export class ChaptersService {
   private async updateOfficialChapter(
     chapter: ChapterDocument,
     dto: UpdateChapterDto,
+    story: StoryDocument,
+    userId: string | Types.ObjectId,
   ): Promise<any> {
     const revisions = (chapter.revisions || []) as any[];
     const activeRevision = getActiveRevision(revisions);
@@ -786,6 +821,7 @@ export class ChaptersService {
 
     const contentChanged = this.chapterSnapshotChanged(base, merged);
     const now = new Date();
+    let submittedForReview = false;
 
     // Rút bản đang chờ duyệt (có thể kèm chỉnh sửa)
     if (dto.action === ChapterAction.WITHDRAW) {
@@ -850,6 +886,10 @@ export class ChaptersService {
           updatedAt: now,
         } as any);
       }
+
+      if (dto.action === ChapterAction.SUBMIT) {
+        submittedForReview = true;
+      }
     } else if (
       dto.action === ChapterAction.SUBMIT &&
       activeRevision &&
@@ -859,10 +899,23 @@ export class ChaptersService {
       activeRevision.status = RevisionStatus.PENDING_REVIEW;
       activeRevision.rejectReason = null;
       activeRevision.updatedAt = now;
+      submittedForReview = true;
     }
 
     trimRevisions(revisions);
     await chapter.save();
+
+    if (submittedForReview) {
+      const pendingTitle =
+        getActiveRevision(revisions)?.snapshot?.title || chapter.title;
+      await this.notifyChapterSubmitted(
+        story,
+        chapter,
+        userId,
+        pendingTitle,
+      );
+    }
+
     return this.buildChapterResponse(chapter._id);
   }
 
@@ -894,8 +947,9 @@ export class ChaptersService {
 
     // Xác thực quyền sở hữu cho từng câu chuyện
     const storyIds = [...new Set(chapters.map((c) => c.storyId.toString()))];
+    const storyMap = new Map<string, StoryDocument>();
     for (const sId of storyIds) {
-      await this.verifyStoryOwnership(userId, sId, userRole);
+      storyMap.set(sId, await this.verifyStoryOwnership(userId, sId, userRole));
     }
 
     // Kiểm tra thứ tự liên tục: đối với mỗi truyện, các chương gửi duyệt phải liên tục
@@ -939,6 +993,7 @@ export class ChaptersService {
     }
 
     let submittedCount = 0;
+    const submittedByStory = new Map<string, number>();
     const now = new Date();
 
     for (const chapter of chapters) {
@@ -971,7 +1026,23 @@ export class ChaptersService {
 
       if (changed) {
         await chapter.save();
+        const storyId = chapter.storyId.toString();
+        submittedByStory.set(
+          storyId,
+          (submittedByStory.get(storyId) || 0) + 1,
+        );
       }
+    }
+
+    for (const [storyId, count] of submittedByStory) {
+      const story = storyMap.get(storyId);
+      if (!story) continue;
+
+      await this.notificationsService.notifyModerationToModerators(
+        'Chương mới chờ kiểm duyệt',
+        `${count} chương của truyện "${story.title}" vừa được gửi duyệt và đang chờ kiểm duyệt.`,
+        { storyId, actorId: userId.toString() },
+      );
     }
 
     return {
@@ -1191,7 +1262,9 @@ export class ChaptersService {
 
     let queryBuilder = this.chapterModel
       .find(filter)
-      .select('chapterNumber title wordCount viewCount createdAt updatedAt')
+      .select(
+        'chapterNumber title wordCount viewCount isFree coinPrice createdAt updatedAt',
+      )
       .sort({ chapterNumber: sortOrder });
 
     if (options?.page && options?.limit) {

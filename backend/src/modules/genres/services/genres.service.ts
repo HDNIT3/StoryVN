@@ -14,11 +14,13 @@ import { CreateGenreDto } from '../dto/create-genre.dto.js';
 import { QueryGenreDto } from '../dto/query-genre.dto.js';
 import { UpdateGenreDto } from '../dto/update-genre.dto.js';
 import { Genre, GenreDocument } from '../schemas/genre.schema.js';
+import { Story, StoryDocument } from '../../stories/schemas/story.schema.js';
 
 @Injectable()
 export class GenresService {
   constructor(
     @InjectModel(Genre.name) private readonly genreModel: Model<GenreDocument>,
+    @InjectModel(Story.name) private readonly storyModel: Model<StoryDocument>,
   ) {}
 
   async create(dto: CreateGenreDto): Promise<GenreDocument> {
@@ -164,6 +166,13 @@ export class GenresService {
     const genre = await this.genreModel.findById(id);
     if (!genre) {
       throw new NotFoundException(ErrorCode.CATEGORY_NOT_FOUND);
+    }
+
+    const usedCount = await this.storyModel.countDocuments({
+      genreIds: new Types.ObjectId(id),
+    });
+    if (usedCount > 0) {
+      throw new BadRequestException(ErrorCode.CATEGORY_IN_USE);
     }
 
     await this.genreModel.findByIdAndDelete(id);

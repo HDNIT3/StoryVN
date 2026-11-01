@@ -14,11 +14,13 @@ import { CreateTagDto } from '../dto/create-tag.dto.js';
 import { QueryTagDto } from '../dto/query-tag.dto.js';
 import { UpdateTagDto } from '../dto/update-tag.dto.js';
 import { Tag, TagDocument } from '../schemas/tag.schema.js';
+import { Story, StoryDocument } from '../../stories/schemas/story.schema.js';
 
 @Injectable()
 export class TagsService {
   constructor(
     @InjectModel(Tag.name) private readonly tagModel: Model<TagDocument>,
+    @InjectModel(Story.name) private readonly storyModel: Model<StoryDocument>,
   ) {}
 
   async create(dto: CreateTagDto): Promise<TagDocument> {
@@ -158,6 +160,13 @@ export class TagsService {
     const tag = await this.tagModel.findById(id);
     if (!tag) {
       throw new NotFoundException(ErrorCode.TAG_NOT_FOUND);
+    }
+
+    const usedCount = await this.storyModel.countDocuments({
+      tagIds: new Types.ObjectId(id),
+    });
+    if (usedCount > 0) {
+      throw new BadRequestException(ErrorCode.TAG_IN_USE);
     }
 
     await this.tagModel.findByIdAndDelete(id);

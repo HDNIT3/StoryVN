@@ -9,7 +9,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { buildPaginationMeta, PaginatedResult } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
-import { Chapter, ChapterDocument } from '../../chapters/schemas/chapter.schema.js';
+import {
+  Chapter,
+  ChapterDocument,
+  ChapterStatus,
+} from '../../chapters/schemas/chapter.schema.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { NotificationType } from '../../notifications/schemas/notification.schema.js';
 import { Story, StoryDocument, StoryStatus } from '../../stories/schemas/story.schema.js';
@@ -70,6 +74,12 @@ export class CommentsService {
       const chapter = await this.chapterModel.findById(dto.chapterId).lean();
       if (!chapter || chapter.storyId.toString() !== dto.storyId) {
         throw new NotFoundException('Không tìm thấy chương trong tác phẩm này');
+      }
+      if (
+        chapter.status !== ChapterStatus.PUBLISHED ||
+        (chapter.scheduledAt && new Date(chapter.scheduledAt) > new Date())
+      ) {
+        throw new BadRequestException(ErrorCode.CHAPTER_NOT_PUBLISHED);
       }
       chapterObjectId = new Types.ObjectId(dto.chapterId);
     }

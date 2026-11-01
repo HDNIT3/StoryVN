@@ -45,13 +45,11 @@ export function useUpdateUserStatus() {
     mutationFn: async ({
       userId,
       status,
-      reason,
     }: {
       userId: string;
       status: "ACTIVE" | "BANNED";
-      reason?: string;
     }) => {
-      const res = await adminUserService.updateStatus(userId, { status, reason });
+      const res = await adminUserService.updateStatus(userId, { status });
       return res;
     },
     onSuccess: (_, variables) => {
