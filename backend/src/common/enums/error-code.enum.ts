@@ -293,4 +293,20 @@ export const ErrorCode = {
     error: 'INVALID_COMMENT_PARENT',
     message: 'Bình luận cha không thuộc tác phẩm hoặc chương này',
   },
+  COIN_PACKAGE_NOT_FOUND: {
+    error: 'COIN_PACKAGE_NOT_FOUND',
+    message: 'Không tìm thấy gói nạp xu',
+  },
+  COIN_PACKAGE_NAME_EXISTS: {
+    error: 'COIN_PACKAGE_NAME_EXISTS',
+    message: 'Tên gói nạp xu đã tồn tại trên hệ thống',
+  },
+  COIN_PACKAGE_PRICE_INVALID: {
+    error: 'COIN_PACKAGE_PRICE_INVALID',
+    message: 'Giá gói nạp phải là số không âm',
+  },
+  COIN_PACKAGE_AMOUNT_INVALID: {
+    error: 'COIN_PACKAGE_AMOUNT_INVALID',
+    message: 'Số lượng xu cơ bản phải lớn hơn 0',
+  },
 };

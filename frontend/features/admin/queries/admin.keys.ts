@@ -21,4 +21,6 @@ export const adminKeys = {
   ratings: (params?: Record<string, unknown>) =>
     ["admin", "ratings", ...(params ? [params] : [])] as const,
   ratingCounts: ["admin", "ratings", "counts"] as const,
+  transactions: (params?: Record<string, unknown>) =>
+    ["admin", "transactions", ...(params ? [params] : [])] as const,
 } as const;
