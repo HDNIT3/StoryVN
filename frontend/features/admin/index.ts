@@ -10,4 +10,5 @@ export * from "./queries/useAdminStoryQueries";
 export * from "./queries/useAdminChapterQueries";
 export * from "./queries/useAdminCommentQueries";
 export * from "./queries/useAdminRatingQueries";
+export * from "./queries/useAdminTransactionQueries";
 export * from "./components";

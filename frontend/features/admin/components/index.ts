@@ -8,4 +8,6 @@ export * from "./users";
 export * from "./media";
 export * from "./comments";
 export * from "./ratings";
+export * from "./coin-packages";
+export * from "./transactions";
 export * from "./layout";

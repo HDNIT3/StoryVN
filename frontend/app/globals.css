@@ -273,3 +273,53 @@ body {
 
 
 
+
+
+/* Hiệu ứng tích xanh xoay mượt mà cho trang thanh toán */
+@keyframes checkSpinDraw {
+  0% {
+    stroke-dashoffset: 166;
+    transform: rotate(-90deg);
+    transform-origin: center;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    transform: rotate(0deg);
+    transform-origin: center;
+  }
+}
+
+@keyframes checkPathDraw {
+  0% {
+    stroke-dashoffset: 48;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes badgeSpringIn {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-badge-spring {
+  animation: badgeSpringIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-circle-draw {
+  animation: checkSpinDraw 0.85s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.animate-check-draw {
+  animation: checkPathDraw 0.45s 0.5s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
