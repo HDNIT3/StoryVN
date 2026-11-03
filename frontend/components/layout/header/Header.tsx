@@ -165,6 +165,8 @@ export function SmartHeader() {
     activeNavId = "truyen";
   } else if (pathname.startsWith("/tac-gia")) {
     activeNavId = "tac-gia";
+  } else if (pathname.startsWith("/nap-xu")) {
+    activeNavId = "nap-xu";
   }
 
   const handleLogout = async () => {
@@ -181,11 +183,17 @@ export function SmartHeader() {
       }
     : undefined;
 
+  const wallet = {
+    ...DEFAULT_WALLET,
+    onRechargeClick: () => router.push("/nap-xu"),
+  };
+
   return (
     <Header
       activeNavId={activeNavId}
       isLoggedIn={isAuthenticated}
       user={userProfileForHeader}
+      wallet={wallet}
       bookmark={bookmark}
       onLogoutClick={handleLogout}
     />

@@ -8,10 +8,12 @@ import { DatabaseModule } from './database/database.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { ChaptersModule } from './modules/chapters/chapters.module.js';
 import { CommentsModule } from './modules/comments/comments.module.js';
+import { CoinPackagesModule } from './modules/coin-packages/coin-packages.module.js';
 import { FollowsModule } from './modules/follows/follows.module.js';
 import { GenresModule } from './modules/genres/genres.module.js';
 import { MailModule } from './modules/mail/mail.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { PaymentsModule } from './modules/payments/payments.module.js';
 import { ReadingHistoryModule } from './modules/reading-history/reading-history.module.js';
 import { RedisModule } from './modules/redis/redis.module.js';
 import { StoriesModule } from './modules/stories/stories.module.js';
@@ -40,6 +42,8 @@ import { UsersModule } from './modules/users/users.module.js';
     FollowsModule,
     StoryRatingsModule,
     CommentsModule,
+    CoinPackagesModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [

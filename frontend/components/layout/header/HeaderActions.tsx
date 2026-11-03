@@ -100,9 +100,10 @@ function HeaderWallet({
   };
 
   return (
-    <div
-      className={`inline-flex shrink-0 select-none items-center gap-1 rounded-full border border-amber-200/80 bg-gradient-to-r from-amber-100 to-yellow-50 px-1.5 py-0.5 shadow-[0_6px_18px_-12px_rgba(245,158,11,0.9)] transition-colors hover:from-amber-100 hover:to-amber-50 sm:gap-1.5 sm:px-2.5 sm:py-1 ${className}`}
-      title={`Số dư: ${coins.toLocaleString("vi-VN")} ${unit}`}
+    <Link
+      href="/nap-xu"
+      className={`inline-flex shrink-0 select-none items-center gap-1 rounded-full border border-amber-200/80 bg-gradient-to-r from-amber-100 to-yellow-50 px-1.5 py-0.5 shadow-[0_6px_18px_-12px_rgba(245,158,11,0.9)] transition-colors hover:from-amber-100 hover:to-amber-50 sm:gap-1.5 sm:px-2.5 sm:py-1 cursor-pointer ${className}`}
+      title={`Số dư: ${coins.toLocaleString("vi-VN")} ${unit} - Bấm để nạp thêm Xu`}
     >
       {/* Coin Icon from public/icon */}
       <div className="relative h-4 w-4 shrink-0 sm:h-5 sm:w-5">
@@ -123,12 +124,10 @@ function HeaderWallet({
 
       {/* Plus Recharge Button */}
       {showRechargeButton && (
-        <button
-          type="button"
-          onClick={handleRecharge}
+        <span
           aria-label="Nạp thêm xu"
           title="Nạp thêm xu"
-          className="ml-0.5 flex h-3 w-3 shrink-0 cursor-pointer items-center justify-center rounded-full text-amber-500 transition-colors hover:bg-amber-200/70 hover:text-amber-700 sm:h-4 sm:w-4"
+          className="ml-0.5 flex h-3 w-3 shrink-0 items-center justify-center rounded-full text-amber-500 transition-colors hover:bg-amber-200/70 hover:text-amber-700 sm:h-4 sm:w-4"
         >
           <div className="relative w-2 h-2 sm:w-3 sm:h-3 shrink-0">
             <Image
@@ -139,9 +138,9 @@ function HeaderWallet({
               className="w-full h-full object-contain"
             />
           </div>
-        </button>
+        </span>
       )}
-    </div>
+    </Link>
   );
 }
 
