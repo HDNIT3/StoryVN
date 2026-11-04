@@ -81,3 +81,41 @@ export interface QueryTransactionsParams {
   sortOrder?: "asc" | "desc";
 }
 
+export interface PaymentHistoryItem {
+  _id: string;
+  orderCode: string;
+  packageName: string;
+  amount: number;
+  coinAmount: number;
+  bonusCoin: number;
+  totalCoin: number;
+  status: TransactionStatus;
+  transactionNo?: string | null;
+  bankCode?: string | null;
+  cardType?: string | null;
+  payDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentHistoryPagination {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface PaymentHistoryResponse {
+  items: PaymentHistoryItem[];
+  pagination: PaymentHistoryPagination;
+}
+
+export interface QueryMyTransactionsParams {
+  page?: number;
+  limit?: number;
+  status?: TransactionStatus | "";
+  search?: string;
+}
+

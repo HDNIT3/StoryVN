@@ -3,6 +3,8 @@ import type { ApiResponse } from "@/lib/api";
 import type {
   AdminTransactionsResponse,
   CreatePaymentResponse,
+  PaymentHistoryResponse,
+  QueryMyTransactionsParams,
   QueryTransactionsParams,
   TransactionDetail,
 } from "../types";
@@ -30,6 +32,24 @@ export const paymentService = {
       endpoint += `?${search}`;
     }
     return api.get<ApiResponse<TransactionDetail>>(endpoint);
+  },
+
+  /**
+   * Lấy lịch sử thanh toán của chính người dùng đang đăng nhập
+   */
+  async getMyTransactions(
+    params?: QueryMyTransactionsParams
+  ): Promise<ApiResponse<PaymentHistoryResponse>> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append("status", params.status);
+    if (params?.search) searchParams.append("search", params.search.trim());
+    if (params?.page) searchParams.append("page", String(params.page));
+    if (params?.limit) searchParams.append("limit", String(params.limit));
+
+    const qs = searchParams.toString();
+    const endpoint = qs ? `/payments/transactions?${qs}` : "/payments/transactions";
+
+    return api.get<ApiResponse<PaymentHistoryResponse>>(endpoint);
   },
 
   /**

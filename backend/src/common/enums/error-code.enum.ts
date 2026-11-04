@@ -309,4 +309,16 @@ export const ErrorCode = {
     error: 'COIN_PACKAGE_AMOUNT_INVALID',
     message: 'Số lượng xu cơ bản phải lớn hơn 0',
   },
+  WALLET_NOT_FOUND: {
+    error: 'WALLET_NOT_FOUND',
+    message: 'Không tìm thấy ví của người dùng',
+  },
+  WALLET_INVALID_AMOUNT: {
+    error: 'WALLET_INVALID_AMOUNT',
+    message: 'Số Xu phải là số nguyên dương',
+  },
+  WALLET_INSUFFICIENT_BALANCE: {
+    error: 'WALLET_INSUFFICIENT_BALANCE',
+    message: 'Số dư Xu trong ví không đủ để thực hiện giao dịch',
+  },
 };
