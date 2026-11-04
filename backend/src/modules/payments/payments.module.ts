@@ -4,6 +4,7 @@ import { AuthModule } from '../auth/auth.module.js';
 import { CoinPackage, CoinPackageSchema } from '../coin-packages/schemas/coin-package.schema.js';
 import { User, UserSchema } from '../users/schemas/user.schema.js';
 import { UsersModule } from '../users/users.module.js';
+import { WalletModule } from '../wallet/wallet.module.js';
 import { PaymentsController } from './controllers/payments.controller.js';
 import { Transaction, TransactionSchema } from './schemas/transaction.schema.js';
 import { PaymentsService } from './services/payments.service.js';
@@ -17,6 +18,7 @@ import { PaymentsService } from './services/payments.service.js';
     ]),
     AuthModule,
     UsersModule,
+    WalletModule,
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService],

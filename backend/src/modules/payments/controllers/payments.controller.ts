@@ -20,6 +20,7 @@ import { AuthGuard } from '../../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../../common/guards/roles.guard.js';
 import { UserRole } from '../../users/schemas/user.schema.js';
 import { CreatePaymentDto } from '../dto/create-payment.dto.js';
+import { QueryMyTransactionsDto } from '../dto/query-my-transactions.dto.js';
 import { QueryTransactionsDto } from '../dto/query-transactions.dto.js';
 import { PaymentsService } from '../services/payments.service.js';
 import { getClientIp } from '../utils/vnpay.util.js';
@@ -87,6 +88,23 @@ export class PaymentsController {
   @HttpCode(HttpStatus.OK)
   async handleVnpayIpn(@Query() query: Record<string, any>) {
     return this.paymentsService.handleVnpayIpn(query);
+  }
+
+  @ApiOperation({ summary: 'Lấy lịch sử thanh toán của tôi (phân trang, lọc trạng thái, tìm mã đơn)' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get('transactions')
+  @HttpCode(HttpStatus.OK)
+  async getMyTransactions(
+    @CurrentUser('_id') userId: string,
+    @Query() dto: QueryMyTransactionsDto,
+  ) {
+    const data = await this.paymentsService.getMyTransactions(String(userId), dto);
+    return {
+      success: true,
+      message: 'Lấy lịch sử thanh toán thành công',
+      data,
+    };
   }
 
   @ApiOperation({ summary: 'Lấy trạng thái và chi tiết giao dịch theo mã đơn hàng' })

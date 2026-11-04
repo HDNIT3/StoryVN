@@ -7,9 +7,12 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import qs from 'qs';
+import { buildPaginationMeta } from '../../../common/dto/pagination.dto.js';
 import { CoinPackage, CoinPackageDocument } from '../../coin-packages/schemas/coin-package.schema.js';
 import { User, UserDocument } from '../../users/schemas/user.schema.js';
+import { WalletService } from '../../wallet/services/wallet.service.js';
 import { CreatePaymentDto } from '../dto/create-payment.dto.js';
+import { QueryMyTransactionsDto } from '../dto/query-my-transactions.dto.js';
 import { QueryTransactionsDto } from '../dto/query-transactions.dto.js';
 import { TransactionStatus } from '../enums/transaction-status.enum.js';
 import { Transaction, TransactionDocument } from '../schemas/transaction.schema.js';
@@ -29,8 +32,64 @@ export class PaymentsService {
     private readonly coinPackageModel: Model<CoinPackageDocument>,
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
+    private readonly walletService: WalletService,
     private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * Xác nhận thanh toán thành công và cộng Xu vào ví đúng một lần.
+   * Dùng findOneAndUpdate có điều kiện status = PENDING để tránh cộng trùng
+   * khi cả Return URL và IPN của VNPay cùng gọi về.
+   */
+  private async confirmPaymentSuccess(
+    transaction: TransactionDocument,
+    query: Record<string, any>,
+  ): Promise<void> {
+    const claimed = await this.transactionModel
+      .findOneAndUpdate(
+        { _id: transaction._id, status: TransactionStatus.PENDING },
+        {
+          $set: {
+            status: TransactionStatus.SUCCESS,
+            transactionNo: query['vnp_TransactionNo'] || null,
+            bankCode: query['vnp_BankCode'] || null,
+            cardType: query['vnp_CardType'] || null,
+            payDate: query['vnp_PayDate'] || null,
+            vnpResponseCode: query['vnp_ResponseCode'],
+          },
+        },
+        { new: true },
+      )
+      .exec();
+
+    if (!claimed) {
+      return;
+    }
+
+    try {
+      await this.walletService.creditFromPayment({
+        userId: String(claimed.userId),
+        totalCoin: claimed.totalCoin,
+        orderCode: claimed.orderCode,
+      });
+    } catch (error) {
+      // Cộng Xu thất bại -> đưa giao dịch về PENDING để VNPay có thể gọi lại
+      await this.transactionModel
+        .updateOne(
+          { _id: claimed._id, status: TransactionStatus.SUCCESS },
+          { $set: { status: TransactionStatus.PENDING } },
+        )
+        .exec();
+      throw error;
+    }
+
+    transaction.status = claimed.status;
+    transaction.transactionNo = claimed.transactionNo ?? null;
+    transaction.bankCode = claimed.bankCode ?? null;
+    transaction.cardType = claimed.cardType ?? null;
+    transaction.payDate = claimed.payDate ?? null;
+    transaction.vnpResponseCode = claimed.vnpResponseCode ?? null;
+  }
 
   /**
    * Tạo đơn hàng và sinh URL thanh toán VNPay Sandbox
@@ -138,13 +197,7 @@ export class PaymentsService {
       const responseCode = query['vnp_ResponseCode'];
       if (transaction.status === TransactionStatus.PENDING) {
         if (responseCode === '00') {
-          transaction.status = TransactionStatus.SUCCESS;
-          transaction.transactionNo = query['vnp_TransactionNo'] || null;
-          transaction.bankCode = query['vnp_BankCode'] || null;
-          transaction.cardType = query['vnp_CardType'] || null;
-          transaction.payDate = query['vnp_PayDate'] || null;
-          transaction.vnpResponseCode = responseCode;
-          await transaction.save();
+          await this.confirmPaymentSuccess(transaction, query);
         } else {
           transaction.status = TransactionStatus.FAILED;
           transaction.transactionNo = query['vnp_TransactionNo'] || null;
@@ -197,13 +250,7 @@ export class PaymentsService {
     // 5. Cập nhật kết quả thanh toán
     const responseCode = query['vnp_ResponseCode'];
     if (responseCode === '00') {
-      transaction.status = TransactionStatus.SUCCESS;
-      transaction.transactionNo = query['vnp_TransactionNo'] || null;
-      transaction.bankCode = query['vnp_BankCode'] || null;
-      transaction.cardType = query['vnp_CardType'] || null;
-      transaction.payDate = query['vnp_PayDate'] || null;
-      transaction.vnpResponseCode = responseCode;
-      await transaction.save();
+      await this.confirmPaymentSuccess(transaction, query);
 
       return { RspCode: '00', Message: 'Confirm Success' };
     } else {
@@ -236,13 +283,7 @@ export class PaymentsService {
       if (isValid) {
         const responseCode = queryParams.vnp_ResponseCode;
         if (responseCode === '00') {
-          transaction.status = TransactionStatus.SUCCESS;
-          transaction.transactionNo = queryParams.vnp_TransactionNo || null;
-          transaction.bankCode = queryParams.vnp_BankCode || null;
-          transaction.cardType = queryParams.vnp_CardType || null;
-          transaction.payDate = queryParams.vnp_PayDate || null;
-          transaction.vnpResponseCode = responseCode;
-          await transaction.save();
+          await this.confirmPaymentSuccess(transaction, queryParams);
         } else {
           transaction.status = TransactionStatus.FAILED;
           transaction.transactionNo = queryParams.vnp_TransactionNo || null;
@@ -277,6 +318,76 @@ export class PaymentsService {
       payDate: transaction.payDate,
       createdAt: transaction.createdAt,
       updatedAt: transaction.updatedAt,
+    };
+  }
+
+  /**
+   * Lấy lịch sử thanh toán của chính người dùng đang đăng nhập
+   */
+  async getMyTransactions(userId: string, dto: QueryMyTransactionsDto) {
+    const page = Math.max(1, dto.page || 1);
+    const limit = Math.max(1, Math.min(100, dto.limit || 10));
+    const userObjectId = new Types.ObjectId(userId);
+
+    // Đồng bộ trạng thái các đơn PENDING quá 15 phút thành FAILED (hết hạn phiên thanh toán)
+    await this.transactionModel.updateMany(
+      {
+        userId: userObjectId,
+        status: TransactionStatus.PENDING,
+        createdAt: { $lt: new Date(Date.now() - 15 * 60 * 1000) },
+      },
+      {
+        $set: {
+          status: TransactionStatus.FAILED,
+          vnpResponseCode: 'EXPIRED',
+        },
+      },
+    );
+
+    const filter: Record<string, any> = { userId: userObjectId };
+
+    if (dto.status) {
+      filter.status = dto.status;
+    }
+
+    if (dto.search?.trim()) {
+      const regex = new RegExp(dto.search.trim(), 'i');
+      filter.$or = [{ orderCode: regex }, { transactionNo: regex }];
+    }
+
+    const [items, totalItems] = await Promise.all([
+      this.transactionModel
+        .find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate('packageId', 'name')
+        .lean()
+        .exec(),
+      this.transactionModel.countDocuments(filter).exec(),
+    ]);
+
+    return {
+      items: items.map((item) => {
+        const pkg = item.packageId as unknown as { name?: string } | null;
+        return {
+          _id: String(item._id),
+          orderCode: item.orderCode,
+          packageName: pkg?.name || 'Gói Nạp Xu',
+          amount: item.amount,
+          coinAmount: item.coinAmount,
+          bonusCoin: item.bonusCoin,
+          totalCoin: item.totalCoin,
+          status: item.status,
+          transactionNo: item.transactionNo ?? null,
+          bankCode: item.bankCode ?? null,
+          cardType: item.cardType ?? null,
+          payDate: item.payDate ?? null,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        };
+      }),
+      pagination: buildPaginationMeta(totalItems, page, limit),
     };
   }
 
