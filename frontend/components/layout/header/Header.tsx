@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useFollowedStories } from "@/features/follows";
+import { useMyWallet } from "@/features/wallet";
 import {
   HeaderProps,
   LogoProps,
@@ -154,6 +155,9 @@ export function SmartHeader() {
     { limit: 1 },
     isAuthenticated
   );
+
+  // Số dư Xu thật của người dùng, hiển thị trên header
+  const { data: walletData } = useMyWallet(isAuthenticated);
   const bookmark = {
     count: followedStories?.pagination.totalItems ?? 0,
     iconSrc: "/icon/bookmark.svg",
@@ -185,6 +189,7 @@ export function SmartHeader() {
 
   const wallet = {
     ...DEFAULT_WALLET,
+    coins: walletData?.balance ?? 0,
     onRechargeClick: () => router.push("/nap-xu"),
   };
 

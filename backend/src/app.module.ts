@@ -21,6 +21,7 @@ import { StoryRatingsModule } from './modules/story-ratings/story-ratings.module
 import { TagsModule } from './modules/tags/tags.module.js';
 import { UploadModule } from './modules/upload/upload.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { WalletModule } from './modules/wallet/wallet.module.js';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { UsersModule } from './modules/users/users.module.js';
     CommentsModule,
     CoinPackagesModule,
     PaymentsModule,
+    WalletModule,
   ],
   controllers: [AppController],
   providers: [
