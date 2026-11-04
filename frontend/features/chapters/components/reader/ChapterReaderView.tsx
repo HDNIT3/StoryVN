@@ -10,9 +10,11 @@ import { useRecordReading } from "@/features/reading-history";
 import { READER_THEMES, CHAPTERS_PER_PAGE, type ReaderThemeMode } from "./ReaderThemes";
 import { ReaderTopBar } from "./ReaderTopBar";
 import { ReaderSettingsModal } from "./ReaderSettingsModal";
+import { ReaderTtsBar } from "./ReaderTtsBar";
 import { ReaderContent } from "./ReaderContent";
 import { ReaderNavigation } from "./ReaderNavigation";
 import { ReaderChapterModal } from "./ReaderChapterModal";
+import { useSpeechReader } from "../../hooks/useSpeechReader";
 import { ChapterCommentSection } from "@/features/comments";
 
 interface ChapterReaderViewProps {
@@ -32,8 +34,10 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   const [showSettings, setShowSettings] = useState(false);
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [chapterPage, setChapterPage] = useState(1);
+  const [showTts, setShowTts] = useState(false);
 
   const settingsRef = useRef<HTMLDivElement>(null);
+  const ttsRef = useRef<HTMLDivElement>(null);
 
   // Restore personal reader settings from localStorage
   useEffect(() => {
@@ -84,8 +88,12 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   // Close popup settings on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (settingsRef.current && !settingsRef.current.contains(target)) {
         setShowSettings(false);
+      }
+      if (ttsRef.current && !ttsRef.current.contains(target)) {
+        setShowTts(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -106,6 +114,9 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   const chapter = chapterRes?.data;
   const story = chapter?.story;
   const chapterId = chapter?._id;
+
+  // Đọc truyện bằng giọng nói tiếng Việt (Web Speech API, miễn phí)
+  const tts = useSpeechReader(chapter?.content);
 
   // Record reading history (if authenticated)
   const { isAuthenticated } = useAuth();
@@ -222,7 +233,10 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
         storyTitle={story?.title}
         chapterNumber={chapter.chapterNumber}
         theme={theme}
-        onToggleSettings={() => setShowSettings(!showSettings)}
+        onToggleSettings={() => {
+          setShowSettings(!showSettings);
+          setShowTts(false);
+        }}
         showSettings={showSettings}
         settingsRef={settingsRef}
         settingsContent={
@@ -235,6 +249,16 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
             onLineHeightChange={handleLineHeightChange}
           />
         }
+        onToggleTts={() => {
+          setShowTts(!showTts);
+          setShowSettings(false);
+        }}
+        showTts={showTts}
+        ttsRef={ttsRef}
+        ttsActive={
+          tts.status === "playing" || tts.status === "paused" || tts.status === "loading"
+        }
+        ttsContent={<ReaderTtsBar theme={theme} reader={tts} />}
       />
 
       {/* Main Reading Container */}
@@ -251,6 +275,9 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
           theme={theme}
           fontSize={fontSize}
           lineHeight={lineHeight}
+          activeBlockIndex={tts.activeBlockIndex}
+          activeText={tts.activeText}
+          highlighting={tts.highlighting}
         />
 
         {/* Bottom Navigation */}

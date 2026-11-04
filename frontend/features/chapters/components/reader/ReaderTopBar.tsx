@@ -11,6 +11,11 @@ interface ReaderTopBarProps {
   showSettings: boolean;
   settingsContent: React.ReactNode;
   settingsRef: React.RefObject<HTMLDivElement | null>;
+  onToggleTts: () => void;
+  showTts: boolean;
+  ttsContent: React.ReactNode;
+  ttsRef: React.RefObject<HTMLDivElement | null>;
+  ttsActive: boolean;
 }
 
 export const ReaderTopBar: React.FC<ReaderTopBarProps> = ({
@@ -22,6 +27,11 @@ export const ReaderTopBar: React.FC<ReaderTopBarProps> = ({
   showSettings,
   settingsContent,
   settingsRef,
+  onToggleTts,
+  showTts,
+  ttsContent,
+  ttsRef,
+  ttsActive,
 }) => {
   const t = READER_THEMES[theme];
 
@@ -39,22 +49,43 @@ export const ReaderTopBar: React.FC<ReaderTopBarProps> = ({
           <span className="truncate max-w-[150px] sm:max-w-xs">{storyTitle || "Trang truyện"}</span>
         </Link>
 
-        {/* Nút cài đặt hiển thị (Font, Size, Theme) */}
-        <div className="relative" ref={settingsRef}>
-          <button
-            type="button"
-            onClick={onToggleSettings}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${t.settingsBtn}`}
-            title="Cài đặt giao diện đọc"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span>Cài đặt</span>
-          </button>
+        <div className="flex items-center gap-2">
+          {/* Nút nghe truyện */}
+          <div className="relative" ref={ttsRef}>
+            <button
+              type="button"
+              onClick={onToggleTts}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${t.settingsBtn}`}
+              title="Nghe truyện bằng giọng nói"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5L6 9H3v6h3l5 4V5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.5 8.5a5 5 0 010 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M18.5 6a9 9 0 010 12" />
+              </svg>
+              <span className="hidden sm:inline">Nghe</span>
+              {ttsActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+            </button>
+            {showTts && ttsContent}
+          </div>
 
-          {showSettings && settingsContent}
+          {/* Nút cài đặt hiển thị (Font, Size, Theme) */}
+          <div className="relative" ref={settingsRef}>
+            <button
+              type="button"
+              onClick={onToggleSettings}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${t.settingsBtn}`}
+              title="Cài đặt giao diện đọc"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="hidden sm:inline">Cài đặt</span>
+            </button>
+
+            {showSettings && settingsContent}
+          </div>
         </div>
       </div>
     </header>
