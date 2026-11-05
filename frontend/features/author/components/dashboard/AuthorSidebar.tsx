@@ -73,6 +73,11 @@ export function AuthorSidebar() {
     }
   }, []);
 
+  // Chỉ cho phép hiển thị Sidebar nếu user là AUTHOR
+  if (!user || user.role !== "AUTHOR") {
+    return null;
+  }
+
   const toggleCollapse = () => {
     setIsCollapsed((prev) => {
       const next = !prev;

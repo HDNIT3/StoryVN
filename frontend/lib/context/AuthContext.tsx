@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, {
   createContext,
@@ -41,13 +41,25 @@ export function getStoredRefreshToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(REFRESH_KEY);
 }
+export function setAuthCookie(name: string, value: string, days = 7) {
+  if (typeof document === "undefined") return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; expires=${expires}; SameSite=Lax`;
+}
+export function deleteAuthCookie(name: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+}
 export function saveTokens(access: string, refresh: string) {
   localStorage.setItem(TOKEN_KEY, access);
   localStorage.setItem(REFRESH_KEY, refresh);
+  setAuthCookie(TOKEN_KEY, access);
 }
 export function clearTokens() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
+  deleteAuthCookie(TOKEN_KEY);
+  deleteAuthCookie("user_role");
 }
 
 // ─── Provider ────────────────────────────────────────────────────
@@ -63,7 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const res = await userService.getProfile();
-      return res.data?.user ?? null;
+      const profile = res.data?.user ?? null;
+      if (profile?.role) {
+        setAuthCookie("user_role", profile.role);
+      }
+      return profile;
     } catch {
       // 401 đã được api.ts xử lý refresh rồi, nếu vẫn fail thì clear
       clearTokens();
@@ -78,6 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     fetchProfile().then((profile) => {
       setUser(profile);
+      if (profile?.role) {
+        setAuthCookie("user_role", profile.role);
+      }
+      const token = getStoredAccessToken();
+      if (token) {
+        setAuthCookie(TOKEN_KEY, token);
+      }
       setIsLoading(false);
     });
   }, [fetchProfile]);
@@ -96,6 +119,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       saveTokens(accessToken, refreshToken);
       const profile = await fetchProfile();
       setUser(profile);
+      if (profile?.role) {
+        setAuthCookie("user_role", profile.role);
+      }
     },
     [fetchProfile]
   );
@@ -115,6 +141,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async () => {
     const profile = await fetchProfile();
     setUser(profile);
+    if (profile?.role) {
+      setAuthCookie("user_role", profile.role);
+    }
   }, [fetchProfile]);
 
   return (

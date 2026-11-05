@@ -19,6 +19,14 @@ export class UpdateAuthorProfileDto {
   penName?: string;
 
   @ApiPropertyOptional({
+    example: 'https://res.cloudinary.com/demo/cover.jpg',
+    description: 'Ảnh bìa hồ sơ tác giả',
+  })
+  @IsOptional()
+  @IsString({ message: 'Ảnh bìa phải là chuỗi ký tự' })
+  coverUrl?: string;
+
+  @ApiPropertyOptional({
     example: 'Tiểu sử hoặc giới thiệu tác giả...',
     description: 'Tiểu sử tác giả',
   })

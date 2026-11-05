@@ -24,6 +24,9 @@ export class AuthorProfile {
   penName: string;
 
   @Prop({ type: String, default: null, trim: true })
+  coverUrl?: string | null;
+
+  @Prop({ type: String, default: null, trim: true })
   biography?: string | null;
 
   @Prop({ type: String, default: null, trim: true })

@@ -199,6 +199,7 @@ export class AuthorsService {
     const penName =
       authorProfile?.penName || user.displayName || user.username;
     const avatarUrl = user.avatarUrl || null;
+    const coverUrl = authorProfile?.coverUrl || null;
     const biography = authorProfile?.biography || '';
     const website = authorProfile?.website || null;
     const socialLinks = authorProfile?.socialLinks || {};
@@ -228,6 +229,7 @@ export class AuthorsService {
       displayName: user.displayName,
       penName,
       avatarUrl,
+      coverUrl,
       biography,
       website,
       socialLinks,

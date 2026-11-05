@@ -5,5 +5,4 @@ export * from "./queries/useUserQueries";
 export * from "./components/ProfileView";
 export * from "./components/ProfileUserCard";
 export * from "./components/ProfileRolePanels";
-export * from "./components/EditProfileModal";
-export * from "./components/ChangePasswordModal";
+export * from "./components/EditProfileView";

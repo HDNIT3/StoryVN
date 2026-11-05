@@ -28,13 +28,13 @@ export function AuthorOverviewView() {
     const totalStories = stories.length;
     const totalChapters = stories.reduce((sum, s) => sum + (s.stats?.chapterCount || (s as any).chapterCount || 0), 0);
     const totalViews = stories.reduce((sum, s) => sum + (s.stats?.viewCount || (s as any).viewCount || 0), 0);
-    const totalCoins = totalViews > 0 ? totalViews * 10 : 2450000;
+    const totalCoins = totalViews > 0 ? totalViews * 10 : 0;
 
     return {
-      totalStories: totalStories > 0 ? totalStories : 3,
-      totalChapters: totalChapters > 0 ? totalChapters : 128,
-      totalViews: totalViews > 0 ? totalViews : 250400,
-      totalCoins: totalCoins,
+      totalStories,
+      totalChapters,
+      totalViews,
+      totalCoins,
     };
   }, [stories]);
 
