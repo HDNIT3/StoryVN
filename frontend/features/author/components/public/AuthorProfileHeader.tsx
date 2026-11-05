@@ -28,20 +28,34 @@ export function AuthorProfileHeader({
   effectiveFollowerCount,
 }: AuthorProfileHeaderProps) {
   return (
-    <div className="bg-white rounded-2xl border border-[#EDE7DF] p-5 sm:p-7 md:p-8 shadow-xs relative overflow-hidden">
-      {/* Decorative radial gradient */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#8B1E2D]/5 via-transparent to-transparent pointer-events-none" />
+    <div className="bg-white rounded-2xl border border-[#EDE7DF] shadow-xs relative overflow-hidden">
+      {/* Cover */}
+      <div className="relative aspect-[3/1] w-full bg-gradient-to-br from-[#8B1E2D] via-[#A8323F] to-[#5C1420]">
+        {author.coverUrl && (
+          <Image
+            src={author.coverUrl}
+            alt={`Ảnh bìa của ${author.penName}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 1024px) 100vw, 1152px"
+            priority
+            unoptimized
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/5 pointer-events-none" />
+      </div>
 
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-6 lg:gap-8 relative z-10">
+      <div className="px-5 sm:px-7 md:px-8 pt-5 sm:pt-6 pb-5 sm:pb-7 md:pb-8">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 lg:gap-8 relative z-10">
         {/* Avatar */}
-        <div className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-4 border-[#FAF7F2] shadow-md ring-2 ring-[#8B1E2D]/20 overflow-hidden shrink-0 bg-[#8B1E2D]/5 flex items-center justify-center">
+        <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-2 border-[#FAF7F2] shadow-md ring-2 ring-[#8B1E2D]/10 overflow-hidden shrink-0 bg-[#8B1E2D]/5 flex items-center justify-center">
           {author.avatarUrl ? (
             <Image
               src={author.avatarUrl}
               alt={author.penName}
               fill
               className="object-cover"
-              sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 160px"
+              sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 128px"
               priority
             />
           ) : (
@@ -230,6 +244,7 @@ export function AuthorProfileHeader({
               </span>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>

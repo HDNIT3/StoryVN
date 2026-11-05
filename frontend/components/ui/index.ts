@@ -4,3 +4,4 @@ export * from "./Card";
 export * from "./OtpInput";
 export * from "./Toast";
 export * from "./ImageUploader";
+export * from "./ImageCropModal";

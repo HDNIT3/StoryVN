@@ -7,7 +7,11 @@ import {
   type UpdateAvatarPayload,
   type ChangePasswordPayload,
 } from "../services/user.service";
-import { authorRequestService } from "@/features/author";
+import {
+  authorKeys,
+  authorRequestService,
+  type UpdateAuthorProfilePayload,
+} from "@/features/author";
 import { userKeys } from "./user.keys";
 import { authKeys } from "@/features/auth/queries/auth.keys";
 import { toast } from "@/lib/toast";
@@ -73,6 +77,27 @@ export function useUpdateAvatar() {
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Cập nhật ảnh đại diện thất bại";
+      toast.error(msg);
+    },
+  });
+}
+
+export function useUpdateAuthorProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: UpdateAuthorProfilePayload) => {
+      const res = await authorRequestService.updateAuthorProfile(payload);
+      if (!res.success) throw new Error(res.message);
+      return res;
+    },
+    onSuccess: () => {
+      toast.success("Cập nhật hồ sơ tác giả thành công!");
+      queryClient.invalidateQueries({ queryKey: userKeys.authorStatus });
+      queryClient.invalidateQueries({ queryKey: authorKeys.all });
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Cập nhật hồ sơ tác giả thất bại";
       toast.error(msg);
     },
   });

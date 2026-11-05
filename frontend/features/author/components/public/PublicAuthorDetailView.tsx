@@ -163,16 +163,19 @@ export function PublicAuthorDetailView({ username }: PublicAuthorDetailViewProps
     return (
       <div className="min-h-screen bg-[#FAF7F2] py-8 sm:py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6 animate-pulse">
-          <div className="bg-white rounded-2xl border border-[#EDE7DF] p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-xs">
-            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-[#EFE9DF] shrink-0" />
-            <div className="flex-1 space-y-3.5 w-full text-center sm:text-left">
-              <div className="h-5 w-28 bg-[#EFE9DF] rounded-full mx-auto sm:mx-0" />
-              <div className="h-8 w-56 bg-[#E8E1D5] rounded-xl mx-auto sm:mx-0" />
-              <div className="h-4 w-full max-w-xl bg-[#EFE9DF] rounded-lg mx-auto sm:mx-0" />
-              <div className="h-4 w-3/4 max-w-md bg-[#EFE9DF] rounded-lg mx-auto sm:mx-0" />
-              <div className="flex justify-center sm:justify-start gap-3 pt-2">
-                <div className="h-10 w-28 bg-[#E8E1D5] rounded-xl" />
-                <div className="h-10 w-28 bg-[#EFE9DF] rounded-xl" />
+          <div className="bg-white rounded-2xl border border-[#EDE7DF] overflow-hidden shadow-xs">
+            <div className="aspect-[3/1] w-full bg-[#EFE9DF]" />
+            <div className="px-6 sm:px-8 pt-5 pb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-[#EFE9DF] shrink-0" />
+              <div className="flex-1 space-y-3.5 w-full text-center sm:text-left">
+                <div className="h-5 w-28 bg-[#EFE9DF] rounded-full mx-auto sm:mx-0" />
+                <div className="h-8 w-56 bg-[#E8E1D5] rounded-xl mx-auto sm:mx-0" />
+                <div className="h-4 w-full max-w-xl bg-[#EFE9DF] rounded-lg mx-auto sm:mx-0" />
+                <div className="h-4 w-3/4 max-w-md bg-[#EFE9DF] rounded-lg mx-auto sm:mx-0" />
+                <div className="flex justify-center sm:justify-start gap-3 pt-2">
+                  <div className="h-10 w-28 bg-[#E8E1D5] rounded-xl" />
+                  <div className="h-10 w-28 bg-[#EFE9DF] rounded-xl" />
+                </div>
               </div>
             </div>
           </div>

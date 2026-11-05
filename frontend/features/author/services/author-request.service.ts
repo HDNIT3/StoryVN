@@ -2,9 +2,11 @@ import api from "@/lib/api";
 import type {
   CreateAuthorRequestPayload,
   UpdateAuthorRequestPayload,
+  UpdateAuthorProfilePayload,
   ReviewAuthorRequestPayload,
   QueryAuthorRequestsParams,
   AuthorRequestItem,
+  AuthorProfileItem,
   AuthorRequestStatusData,
   PaginatedAuthorRequests,
   AuthorRequestApiResponse,
@@ -36,6 +38,25 @@ export const authorRequestService = {
   updateRequest(payload: UpdateAuthorRequestPayload) {
     return api.put<AuthorRequestApiResponse<{ request: AuthorRequestItem }>>(
       "/users/author-request",
+      payload
+    );
+  },
+
+  /**
+   * Lấy hồ sơ tác giả của chính mình (dành cho tài khoản AUTHOR)
+   */
+  getAuthorProfile() {
+    return api.get<AuthorRequestApiResponse<{ authorProfile: AuthorProfileItem }>>(
+      "/users/author-profile"
+    );
+  },
+
+  /**
+   * Cập nhật hồ sơ tác giả công khai của chính mình (ảnh bìa, tiểu sử, mạng xã hội, ngân hàng)
+   */
+  updateAuthorProfile(payload: UpdateAuthorProfilePayload) {
+    return api.put<AuthorRequestApiResponse<{ authorProfile: AuthorProfileItem }>>(
+      "/users/author-profile",
       payload
     );
   },

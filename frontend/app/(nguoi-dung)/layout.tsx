@@ -36,8 +36,9 @@ export default function NguoiDungLayout({
 
   if (!isAuthenticated) return null;
 
-  // Khu vực dashboard sáng tác tác giả có sidebar riêng, các trang tài khoản người dùng (hồ sơ, lịch sử đọc...) hiển thị Footer
-  const isAuthorDashboard = pathname?.startsWith("/tac-gia");
+  // Khu vực dashboard sáng tác tác giả có sidebar riêng, các trang tài khoản người dùng (hồ sơ, lịch sử đọc, đăng ký tác giả...) hiển thị Footer
+  const isAuthorDashboard =
+    pathname?.startsWith("/tac-gia") && !pathname?.startsWith("/tac-gia/dang-ky");
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50/50">

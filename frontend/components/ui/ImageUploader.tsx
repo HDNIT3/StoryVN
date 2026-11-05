@@ -4,6 +4,7 @@ import React, { useState, useRef, ChangeEvent, DragEvent } from "react";
 import Image from "next/image";
 import { uploadService } from "@/features/upload";
 import { toast } from "@/lib/toast";
+import { ImageCropModal } from "./ImageCropModal";
 
 export interface ImageUploaderProps {
   value?: string | null;
@@ -11,6 +12,7 @@ export interface ImageUploaderProps {
   folder?: string;
   label?: string;
   aspectRatio?: "square" | "cover" | "any";
+  cropAspect?: number;
   className?: string;
   disabled?: boolean;
 }
@@ -21,6 +23,7 @@ export function ImageUploader({
   folder = "images",
   label,
   aspectRatio = "square",
+  cropAspect,
   className = "",
   disabled = false,
 }: ImageUploaderProps) {
@@ -28,12 +31,17 @@ export function ImageUploader({
   const [isDragging, setIsDragging] = useState(false);
   const [mode, setMode] = useState<"file" | "url">("file");
   const [urlInput, setUrlInput] = useState(value || "");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    await processAndUploadFile(file);
+    if (cropAspect) {
+      setPendingFile(file);
+    } else {
+      await processAndUploadFile(file);
+    }
     // Reset input so user can re-select same file if needed
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -99,7 +107,11 @@ export function ImageUploader({
 
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      await processAndUploadFile(file);
+      if (cropAspect) {
+        setPendingFile(file);
+      } else {
+        await processAndUploadFile(file);
+      }
     }
   };
 
@@ -121,7 +133,7 @@ export function ImageUploader({
     aspectRatio === "square"
       ? "w-24 h-24 sm:w-28 sm:h-28"
       : aspectRatio === "cover"
-      ? "w-full h-36 sm:h-44"
+      ? "w-full aspect-[3/1]"
       : "w-full min-h-[120px]";
 
   return (
@@ -172,7 +184,13 @@ export function ImageUploader({
             disabled={disabled || isUploading}
           />
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div
+            className={`flex gap-3 sm:gap-4 ${
+              aspectRatio === "cover"
+                ? "flex-col"
+                : "flex-col sm:flex-row sm:items-center"
+            }`}
+          >
             {/* Upload / Preview Box */}
             <div
               onClick={() => !isUploading && !disabled && fileInputRef.current?.click()}
@@ -251,6 +269,11 @@ export function ImageUploader({
                 <p className="text-zinc-400 mt-0.5">
                   Định dạng PNG, JPG, WEBP, GIF (Tối đa 5MB)
                 </p>
+                {cropAspect && (
+                  <p className="text-zinc-400 mt-0.5">
+                    Ảnh sẽ được cắt theo tỷ lệ {cropAspect}:1 trước khi tải lên.
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -299,14 +322,21 @@ export function ImageUploader({
 
           {value && (
             <div className="flex items-center gap-3 p-2 bg-zinc-50 rounded-xl border border-zinc-100">
-              <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-zinc-200">
+              <div
+                className={`relative rounded-lg overflow-hidden shrink-0 border border-zinc-200 ${
+                  aspectRatio === "cover" ? "w-24 aspect-[3/1]" : "w-12 h-12"
+                }`}
+              >
                 <Image
                   src={value}
                   alt="Preview"
                   fill
                   className="object-cover"
                   unoptimized
-                  onError={() => onChange("")}
+                  onError={() => {
+                    onChange("");
+                    toast.error("Không tải được ảnh từ đường dẫn này");
+                  }}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -326,6 +356,18 @@ export function ImageUploader({
             </div>
           )}
         </div>
+      )}
+
+      {pendingFile && cropAspect && (
+        <ImageCropModal
+          file={pendingFile}
+          aspect={cropAspect}
+          onCancel={() => setPendingFile(null)}
+          onComplete={async (croppedFile) => {
+            setPendingFile(null);
+            await processAndUploadFile(croppedFile);
+          }}
+        />
       )}
     </div>
   );
