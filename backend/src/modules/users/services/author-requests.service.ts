@@ -259,6 +259,9 @@ export class AuthorRequestsService {
       authorProfile.penName = trimmedPenName;
     }
 
+    if (dto.coverUrl !== undefined) {
+      authorProfile.coverUrl = dto.coverUrl ? dto.coverUrl.trim() : null;
+    }
     if (dto.biography !== undefined) {
       authorProfile.biography = dto.biography ? dto.biography.trim() : null;
     }

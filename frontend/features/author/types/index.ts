@@ -33,6 +33,17 @@ export interface UpdateAuthorRequestPayload {
   reason?: string;
 }
 
+/** Dữ liệu gửi lên khi tác giả cập nhật hồ sơ công khai của mình */
+export interface UpdateAuthorProfilePayload {
+  coverUrl?: string;
+  biography?: string;
+  website?: string;
+  socialLinks?: Record<string, string>;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountName?: string;
+}
+
 /** Dữ liệu gửi lên khi duyệt / từ chối đơn đăng ký */
 export interface ReviewAuthorRequestPayload {
   status: ReviewAction;
@@ -91,6 +102,7 @@ export interface AuthorProfileItem {
   _id: string;
   userId: string;
   penName: string;
+  coverUrl?: string | null;
   biography?: string | null;
   website?: string | null;
   socialLinks?: Record<string, any>;
@@ -158,6 +170,7 @@ export interface PublicAuthorProfile {
   displayName: string;
   penName: string;
   avatarUrl?: string | null;
+  coverUrl?: string | null;
   biography?: string | null;
   website?: string | null;
   socialLinks?: Record<string, any>;
