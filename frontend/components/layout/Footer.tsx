@@ -100,17 +100,30 @@ export function Footer() {
               Hỗ Trợ &amp; Chính Sách
             </h4>
             <ul className="space-y-2.5 text-sm">
-              {[
-                "Điều khoản dịch vụ",
-                "Chính sách bảo mật",
-                "Quy định bản quyền",
-              ].map((item) => (
-                <li key={item}>
-                  <span className="cursor-pointer transition-colors hover:text-sky-600">
-                    {item}
-                  </span>
-                </li>
-              ))}
+              <li>
+                <Link
+                  href="/dieu-khoan-dich-vu"
+                  className="transition-colors hover:text-sky-600"
+                >
+                  Điều khoản dịch vụ
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/chinh-sach-bao-mat"
+                  className="transition-colors hover:text-sky-600"
+                >
+                  Chính sách bảo mật
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/ban-quyen"
+                  className="transition-colors hover:text-sky-600"
+                >
+                  Quy định bản quyền
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -120,6 +133,16 @@ export function Footer() {
           <p>
             © {new Date().getFullYear()} StoryVN. Bản quyền thuộc về tác giả và
             dịch giả.
+          </p>
+          <p className="text-xs text-slate-400">
+            Thực hiện bởi: Huỳnh Duy Nguyên &amp; Huỳnh Duy Nguyễn (HCMUTE)
+          </p>
+        </div>
+
+        {/* Dòng miễn trừ trách nhiệm phục vụ đồ án SPKT */}
+        <div className="mt-3 text-center border-t border-slate-100/60 pt-3">
+          <p className="text-xs text-slate-400">
+            Lưu ý: Đây là website đồ án phục vụ mục đích học tập, không có giá trị thương mại.
           </p>
         </div>
       </div>

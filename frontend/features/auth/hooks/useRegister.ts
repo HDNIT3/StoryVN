@@ -70,7 +70,7 @@ export function useRegister() {
     }
 
     if (!termsAccepted) {
-      const errText = "Vui lòng đồng ý với điều khoản sử dụng!";
+      const errText = "Vui lòng đọc và đồng ý với Điều khoản dịch vụ và Chính sách bảo mật!";
       setBackendError(errText);
       toast.warning(errText);
       return;

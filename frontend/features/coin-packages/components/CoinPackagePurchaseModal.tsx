@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import type { CoinPackageItem } from "@/features/coin-packages/types";
 
 interface CoinPackagePurchaseModalProps {
@@ -19,7 +20,19 @@ export function CoinPackagePurchaseModal({
   onClose,
   onConfirm,
 }: CoinPackagePurchaseModalProps) {
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   if (!isOpen || !pkg) return null;
+
+  const handleConfirmClick = () => {
+    if (!termsAccepted) {
+      setErrorMessage("Vui lòng tích chọn đồng ý với Điều khoản dịch vụ và Chính sách bảo mật trước khi thanh toán!");
+      return;
+    }
+    setErrorMessage("");
+    onConfirm(pkg);
+  };
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -170,7 +183,54 @@ export function CoinPackagePurchaseModal({
                   </svg>
                 </div>
               </div>
+
+              {/* Alert Sandbox thu nhỏ trong modal */}
+              <div className="mt-3.5 p-3 rounded-lg border border-amber-300 bg-amber-50 text-[11px] sm:text-xs text-amber-800 flex items-start gap-2">
+                <span className="text-base shrink-0 leading-none">⚠️</span>
+                <span>
+                  <strong>Lưu ý:</strong> Cổng VNPay chạy sandbox thử nghiệm đồ án. Vui lòng chỉ sử dụng thông tin thẻ test.
+                </span>
+              </div>
             </div>
+          </div>
+
+          {/* Ô Checkbox Điều khoản bắt buộc */}
+          <div className="mt-5 pt-4 border-t border-slate-200">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none text-xs sm:text-sm text-slate-700">
+              <input
+                type="checkbox"
+                required
+                checked={termsAccepted}
+                onChange={(e) => {
+                  setTermsAccepted(e.target.checked);
+                  if (e.target.checked) setErrorMessage("");
+                }}
+                className="mt-0.5 w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer shrink-0"
+              />
+              <span>
+                Tôi đã đọc và đồng ý với{" "}
+                <Link
+                  href="/dieu-khoan-dich-vu"
+                  target="_blank"
+                  className="text-sky-600 font-bold hover:underline"
+                >
+                  Điều khoản dịch vụ
+                </Link>{" "}
+                và{" "}
+                <Link
+                  href="/chinh-sach-bao-mat"
+                  target="_blank"
+                  className="text-sky-600 font-bold hover:underline"
+                >
+                  Chính sách bảo mật
+                </Link>
+              </span>
+            </label>
+            {errorMessage && (
+              <p className="mt-1.5 text-xs text-rose-500 font-medium">
+                {errorMessage}
+              </p>
+            )}
           </div>
         </div>
 
@@ -194,9 +254,9 @@ export function CoinPackagePurchaseModal({
             </button>
             <button
               type="button"
-              disabled={isLoading}
-              onClick={() => onConfirm(pkg)}
-              className="flex-1 sm:flex-none px-5 py-2 rounded-md bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={isLoading || !termsAccepted}
+              onClick={handleConfirmClick}
+              className="flex-1 sm:flex-none px-5 py-2 rounded-md bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -224,7 +284,7 @@ export function CoinPackagePurchaseModal({
                 </>
               ) : (
                 <>
-                  <span>Đồng ý</span>
+                  <span>Xác nhận nạp</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
