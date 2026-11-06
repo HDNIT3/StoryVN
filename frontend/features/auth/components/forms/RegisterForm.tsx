@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Input, Button } from "@/components/ui";
 
 export interface RegisterFormProps {
@@ -164,21 +165,37 @@ export function RegisterForm({
         <label className="flex items-start gap-2.5 cursor-pointer select-none text-xs sm:text-sm text-zinc-700 font-medium">
           <input
             type="checkbox"
+            required
             checked={termsAccepted}
             onChange={(e) => setTermsAccepted(e.target.checked)}
             className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-sky-600 focus:ring-sky-500 cursor-pointer shrink-0"
           />
           <span>
-            Tôi đồng ý với{" "}
-            <span className="text-sky-600 font-bold hover:underline">
-              Điều khoản sử dụng
-            </span>{" "}
+            Tôi đã đọc và đồng ý với{" "}
+            <Link
+              href="/dieu-khoan-dich-vu"
+              target="_blank"
+              className="text-sky-600 font-bold hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Điều khoản dịch vụ
+            </Link>{" "}
             và{" "}
-            <span className="text-sky-600 font-bold hover:underline">
+            <Link
+              href="/chinh-sach-bao-mat"
+              target="_blank"
+              className="text-sky-600 font-bold hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
               Chính sách bảo mật
-            </span>
+            </Link>
           </span>
         </label>
+        {!termsAccepted && (
+          <p className="mt-1.5 text-xs text-rose-500 font-medium">
+            * Vui lòng đọc và tích chọn đồng ý với điều khoản dịch vụ và chính sách bảo mật để tiếp tục.
+          </p>
+        )}
       </div>
 
       {/* Submit Button */}
@@ -187,7 +204,8 @@ export function RegisterForm({
         fullWidth
         size="lg"
         isLoading={isLoading}
-        className="sm:col-span-2"
+        disabled={!termsAccepted}
+        className="sm:col-span-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Đăng Ký Tài Khoản
       </Button>
