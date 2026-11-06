@@ -7,6 +7,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { ToastContainer } from "@/components/ui/Toast";
+import { CookieBanner } from "@/components/ui/CookieBanner";
 import { toast } from "@/lib/toast";
 
 import { useRealtimeNotifications } from "@/features/notifications";
@@ -36,6 +37,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
           <AuthLogoutListener />
           <RealtimeNotificationListener />
           {children}
+          <CookieBanner />
           <ToastContainer />
         </AuthProvider>
       </GoogleOAuthProvider>
