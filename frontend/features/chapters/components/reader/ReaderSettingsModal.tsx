@@ -8,6 +8,7 @@ interface ReaderSettingsModalProps {
   onFontSizeChange: (size: number) => void;
   lineHeight: number;
   onLineHeightChange: (lh: number) => void;
+  className?: string;
 }
 
 export const ReaderSettingsModal: React.FC<ReaderSettingsModalProps> = ({
@@ -17,6 +18,7 @@ export const ReaderSettingsModal: React.FC<ReaderSettingsModalProps> = ({
   onFontSizeChange,
   lineHeight,
   onLineHeightChange,
+  className = "",
 }) => {
   const t = READER_THEMES[theme];
 
@@ -45,7 +47,13 @@ export const ReaderSettingsModal: React.FC<ReaderSettingsModalProps> = ({
   };
 
   return (
-    <div className={`absolute right-0 mt-2 w-72 rounded-2xl border p-4 z-50 animate-in fade-in zoom-in-95 duration-150 ${t.settingsPopup}`}>
+    <div
+      className={
+        className
+          ? `${className} ${t.settingsPopup}`
+          : `absolute right-0 mt-2 w-72 rounded-2xl border p-4 z-50 animate-in fade-in zoom-in-95 duration-150 ${t.settingsPopup}`
+      }
+    >
       {/* 1. Chọn chế độ giao diện Theme */}
       <div className="mb-4">
         <label className={`text-xs font-bold block mb-2 uppercase tracking-wide ${t.settingsLabel}`}>
