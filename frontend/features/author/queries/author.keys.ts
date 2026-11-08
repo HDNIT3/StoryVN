@@ -1,5 +1,6 @@
 export const authorKeys = {
   all: ["author"] as const,
+  overview: ["author", "overview"] as const,
   communityStats: ["author", "community-stats"] as const,
   list: (params?: Record<string, unknown>) =>
     ["author", "list", ...(params ? [params] : [])] as const,

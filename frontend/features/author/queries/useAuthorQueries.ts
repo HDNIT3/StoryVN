@@ -11,6 +11,18 @@ import type {
   QueryAuthorsParams,
 } from "../types";
 
+export function useAuthorOverview(enabled = true) {
+  return useQuery({
+    queryKey: authorKeys.overview,
+    queryFn: async () => {
+      const res = await authorService.getAuthorOverview();
+      return res.data;
+    },
+    enabled,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
 export function useCommunityStats() {
   return useQuery({
     queryKey: authorKeys.communityStats,

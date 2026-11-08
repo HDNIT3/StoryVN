@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const AUTHOR_STUDIO_PREFIXES = [
+  "/tac-gia/tong-quan",
+  "/tac-gia/tac-pham",
+  "/tac-gia/chuong-truyen",
+] as const;
+
+function matchesRoutePrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
 /**
  * Giải mã JWT payload an toàn ở Edge Runtime mà không cần external library
  */
@@ -8,10 +18,11 @@ function decodeJwtPayload(token: string): { sub?: string; role?: string; exp?: n
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padLength = (4 - (base64.length % 4)) % 4;
+    const padded = base64 + "=".repeat(padLength);
     const jsonPayload = decodeURIComponent(
-      atob(base64)
+      atob(padded)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
@@ -23,34 +34,29 @@ function decodeJwtPayload(token: string): { sub?: string; role?: string; exp?: n
 }
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
   const accessTokenCookie = request.cookies.get("accessToken")?.value;
   const userRoleCookie = request.cookies.get("user_role")?.value;
+  const hasRefreshTokenCookie = request.cookies.get("has_refresh_token")?.value === "1";
 
-  // Lấy role từ JWT payload hoặc từ cookie user_role
-  let userRole = userRoleCookie;
-  let isTokenExpired = false;
+  const payload = accessTokenCookie ? decodeJwtPayload(accessTokenCookie) : null;
+  // Ưu tiên user_role cookie (được cập nhật từ DB khi đổi vai trò), fallback về role trong JWT
+  const userRole = userRoleCookie || payload?.role;
 
-  if (accessTokenCookie) {
-    const payload = decodeJwtPayload(accessTokenCookie);
-    if (payload) {
-      if (payload.role) {
-        userRole = payload.role;
-      }
-      if (payload.exp && Date.now() >= payload.exp * 1000) {
-        isTokenExpired = true;
-      }
-    }
-  }
-
-  const isAuthenticated = Boolean(accessTokenCookie && !isTokenExpired);
+  const isAccessTokenValid = Boolean(
+    payload?.sub && (!payload.exp || Date.now() < payload.exp * 1000)
+  );
+  // Nếu accessToken hết hạn (15m) nhưng vẫn còn phiên refreshToken (7d),
+  // cho phép đi tiếp để client AuthProvider + api.ts tự refresh thầm lặng thay vì đá về /dang-nhap
+  const hasRefreshableSession =
+    isAccessTokenValid || hasRefreshTokenCookie || Boolean(payload?.sub);
 
   // ─── 1. BẢO VỆ PHÂN HỆ QUẢN LÝ (/quan-ly/*) ──────────────────────
-  if (pathname.startsWith("/quan-ly")) {
-    if (!isAuthenticated) {
+  if (matchesRoutePrefix(pathname, "/quan-ly")) {
+    if (!hasRefreshableSession) {
       const loginUrl = new URL("/dang-nhap", request.url);
-      loginUrl.searchParams.set("returnUrl", pathname);
+      loginUrl.searchParams.set("returnUrl", `${pathname}${search}`);
       return NextResponse.redirect(loginUrl);
     }
 
@@ -59,18 +65,16 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ─── 2. BẢO VỆ PHÂN HỆ TÁC GIẢ (/tac-gia/*) ──────────────────────
-  if (pathname.startsWith("/tac-gia")) {
-    // Riêng trang đăng ký làm tác giả: cho phép truy cập
-    if (pathname === "/tac-gia/dang-ky" || pathname.startsWith("/tac-gia/dang-ky")) {
-      return NextResponse.next();
-    }
+  // ─── 2. BẢO VỆ PHÂN HỆ STUDIO TÁC GIẢ ───────────────────────────
+  // Không chặn các route công khai (/tac-gia, /tac-gia/[username]) hay trang /tac-gia/dang-ky
+  const isAuthorStudioRoute = AUTHOR_STUDIO_PREFIXES.some((prefix) =>
+    matchesRoutePrefix(pathname, prefix)
+  );
 
-    // Các trang quản lý tác giả khác (/tac-gia/tong-quan, /tac-gia/tac-pham, /tac-gia/chuong-truyen, v.v.):
-    // Yêu cầu phải đăng nhập
-    if (!isAuthenticated) {
+  if (isAuthorStudioRoute) {
+    if (!hasRefreshableSession) {
       const loginUrl = new URL("/dang-nhap", request.url);
-      loginUrl.searchParams.set("returnUrl", pathname);
+      loginUrl.searchParams.set("returnUrl", `${pathname}${search}`);
       return NextResponse.redirect(loginUrl);
     }
 
@@ -82,9 +86,9 @@ export function middleware(request: NextRequest) {
   }
 
   // ─── 3. TRANG XÁC THỰC (/dang-nhap, /dang-ky) ───────────────────
-  // Nếu đã đăng nhập thành công thì không cần hiển thị lại form đăng nhập/đăng ký
+  // Chỉ redirect về "/" khi accessToken còn hạn thực sự để tránh loop khi token hết hạn
   if (pathname === "/dang-nhap" || pathname === "/dang-ky") {
-    if (isAuthenticated) {
+    if (isAccessTokenValid) {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
@@ -95,7 +99,9 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/quan-ly/:path*",
-    "/tac-gia/:path*",
+    "/tac-gia/tong-quan/:path*",
+    "/tac-gia/tac-pham/:path*",
+    "/tac-gia/chuong-truyen/:path*",
     "/dang-nhap",
     "/dang-ky",
   ],

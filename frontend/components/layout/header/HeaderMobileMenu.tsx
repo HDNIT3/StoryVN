@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -49,6 +50,11 @@ export function HeaderMobileMenu({
 }: HeaderMobileMenuProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Prevent background scroll when mobile drawer is open
   useEffect(() => {
@@ -100,17 +106,19 @@ export function HeaderMobileMenu({
       </button>
 
       {/* Drawer Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-200"
-            onClick={() => setIsOpen(false)}
-            aria-hidden="true"
-          />
+      {mounted &&
+        isOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[80] overflow-hidden lg:hidden">
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-200"
+              onClick={() => setIsOpen(false)}
+              aria-hidden="true"
+            />
 
-          {/* Drawer Sidebar */}
-          <div className="fixed top-0 right-0 bottom-0 z-10 flex h-screen h-[100dvh] w-full max-w-[320px] flex-col overflow-y-auto border-l border-white/70 bg-white/95 p-4 shadow-[0_30px_80px_-30px_rgba(14,165,233,0.45)] backdrop-blur-xl animate-in slide-in-from-right duration-250 sm:max-w-sm sm:p-5">
+            {/* Drawer Sidebar */}
+            <div className="fixed top-0 right-0 bottom-0 z-10 flex h-screen h-[100dvh] w-full max-w-[320px] flex-col overflow-y-auto border-l border-white/70 bg-white/95 p-4 shadow-[0_30px_80px_-30px_rgba(14,165,233,0.45)] backdrop-blur-xl animate-in slide-in-from-right duration-250 sm:max-w-sm sm:p-5">
             {/* Drawer Header */}
             <div className="mb-3.5 flex shrink-0 items-center justify-between border-b border-slate-100 pb-3.5">
               <div className="flex items-center gap-2">
@@ -324,7 +332,8 @@ export function HeaderMobileMenu({
               )}
             </nav>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

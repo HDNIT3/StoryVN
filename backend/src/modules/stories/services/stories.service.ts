@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -24,6 +25,7 @@ import {
 } from '../../../common/utils/slug.util.js';
 import { AuthorProfile, AuthorProfileDocument } from '../../users/schemas/author-profile.schema.js';
 import { Genre, GenreDocument } from '../../genres/schemas/genre.schema.js';
+import { ChapterReleaseService } from '../../chapters/services/chapter-release.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { CreateStoryDto, StoryAction } from '../dto/create-story.dto.js';
 import { FilterStoriesDto, StorySortOption } from '../dto/filter-stories.dto.js';
@@ -55,6 +57,8 @@ export class StoriesService {
     @InjectModel(Chapter.name)
     private readonly chapterModel: Model<ChapterDocument>,
     private readonly notificationsService: NotificationsService,
+    @Optional()
+    private readonly chapterReleaseService?: ChapterReleaseService,
   ) { }
 
   async createStory(
@@ -421,6 +425,26 @@ export class StoriesService {
     };
   }
 
+  private async releaseChaptersIfStoryBecamePublic(
+    story: StoryDocument,
+    wasPublishedPublic: boolean,
+  ): Promise<void> {
+    const isNowPublishedPublic =
+      story.status === StoryStatus.PUBLISHED &&
+      story.visibility === StoryVisibility.PUBLIC;
+
+    if (!wasPublishedPublic && isNowPublishedPublic) {
+      try {
+        await this.chapterReleaseService?.releaseAndNotifyStoryChapters(
+          story._id,
+          { bumpStoryUpdatedAt: true },
+        );
+      } catch {
+        // bỏ qua lỗi phát hành/thông báo chương mới
+      }
+    }
+  }
+
   async updateMyStory(
     authorId: Types.ObjectId,
     identifier: string,
@@ -428,6 +452,9 @@ export class StoriesService {
     actionOverride?: StoryAction,
   ): Promise<any> {
     const story = await this.findOwnedStory(authorId, identifier, true);
+    const wasPublishedPublic =
+      story.status === StoryStatus.PUBLISHED &&
+      story.visibility === StoryVisibility.PUBLIC;
     const action = actionOverride || dto.action;
 
     if (dto.title !== undefined && dto.title.trim() !== story.title) {
@@ -491,6 +518,7 @@ export class StoriesService {
       }
       trimRevisions(revisions);
       await story.save();
+      await this.releaseChaptersIfStoryBecamePublic(story, wasPublishedPublic);
       return this.buildStoryResponse(story._id);
     }
 
@@ -524,6 +552,7 @@ export class StoriesService {
       }
       trimRevisions(revisions);
       await story.save();
+      await this.releaseChaptersIfStoryBecamePublic(story, wasPublishedPublic);
       return this.buildStoryResponse(story._id);
     }
 
@@ -535,6 +564,7 @@ export class StoriesService {
         );
       }
       await story.save();
+      await this.releaseChaptersIfStoryBecamePublic(story, wasPublishedPublic);
       return this.buildStoryResponse(story._id);
     }
 
@@ -576,6 +606,7 @@ export class StoriesService {
 
     trimRevisions(revisions);
     await story.save();
+    await this.releaseChaptersIfStoryBecamePublic(story, wasPublishedPublic);
 
     if (submittedForReview) {
       const pendingTitle =

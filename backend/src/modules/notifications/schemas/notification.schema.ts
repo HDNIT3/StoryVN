@@ -66,3 +66,11 @@ export const NotificationSchema = SchemaFactory.createForClass(Notification);
 NotificationSchema.index({ userId: 1, createdAt: -1 });
 // Index cho unread count
 NotificationSchema.index({ userId: 1, isRead: 1 });
+// Index hỗ trợ đánh dấu đã đọc nhanh các thông báo chương mới theo truyện / chương
+NotificationSchema.index({
+  userId: 1,
+  type: 1,
+  isRead: 1,
+  storyId: 1,
+  chapterId: 1,
+});

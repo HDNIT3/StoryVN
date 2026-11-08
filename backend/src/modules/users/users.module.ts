@@ -3,8 +3,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { RefreshToken, RefreshTokenSchema } from '../auth/schemas/refresh-token.schema.js';
+import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema.js';
+import { Comment, CommentSchema } from '../comments/schemas/comment.schema.js';
+import { Follow, FollowSchema } from '../follows/schemas/follow.schema.js';
 import { Genre, GenreSchema } from '../genres/schemas/genre.schema.js';
+import { Notification, NotificationSchema } from '../notifications/schemas/notification.schema.js';
+import { ReadingHistory, ReadingHistorySchema } from '../reading-history/schemas/reading-history.schema.js';
 import { Story, StorySchema } from '../stories/schemas/story.schema.js';
+import { StoryRating, StoryRatingSchema } from '../story-ratings/schemas/story-rating.schema.js';
+import { Wallet, WalletSchema } from '../wallet/schemas/wallet.schema.js';
 import { AdminUsersController } from './controllers/admin-users.controller.js';
 import { AuthorRequestsController } from './controllers/author-requests.controller.js';
 import { AuthorsController } from './controllers/authors.controller.js';
@@ -29,6 +36,13 @@ import { UsersService } from './services/users.service.js';
       { name: RefreshToken.name, schema: RefreshTokenSchema },
       { name: Story.name, schema: StorySchema },
       { name: Genre.name, schema: GenreSchema },
+      { name: Chapter.name, schema: ChapterSchema },
+      { name: ReadingHistory.name, schema: ReadingHistorySchema },
+      { name: Comment.name, schema: CommentSchema },
+      { name: Notification.name, schema: NotificationSchema },
+      { name: Follow.name, schema: FollowSchema },
+      { name: StoryRating.name, schema: StoryRatingSchema },
+      { name: Wallet.name, schema: WalletSchema },
     ]),
   ],
   controllers: [

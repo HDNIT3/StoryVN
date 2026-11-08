@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -19,6 +20,7 @@ import {
   toRevisionView,
   trimRevisions,
 } from '../../../common/utils/revision.util.js';
+import { ChapterReleaseService } from '../../chapters/services/chapter-release.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { NotificationType } from '../../notifications/schemas/notification.schema.js';
 import {
@@ -44,7 +46,9 @@ export class AdminStoriesService {
     @InjectModel(AuthorProfile.name)
     private readonly authorProfileModel: Model<AuthorProfileDocument>,
     private readonly notificationsService: NotificationsService,
-  ) {}
+    @Optional()
+    private readonly chapterReleaseService?: ChapterReleaseService,
+  ) { }
 
   /**
    * Lấy danh sách truyện trong admin (lọc theo trạng thái, hiển thị công khai/riêng tư, thể loại, từ khóa, sắp xếp, phân trang)
@@ -311,6 +315,20 @@ export class AdminStoriesService {
     trimRevisions(revisions);
     await story.save();
 
+    if (
+      story.status === StoryStatus.PUBLISHED &&
+      story.visibility === StoryVisibility.PUBLIC
+    ) {
+      try {
+        await this.chapterReleaseService?.releaseAndNotifyStoryChapters(
+          story._id,
+          { bumpStoryUpdatedAt: true },
+        );
+      } catch {
+        // bỏ qua lỗi phát hành chương chờ thông báo
+      }
+    }
+
     // Gửi thông báo tới tác giả bằng hàm create có sẵn của NotificationsService
     try {
       await this.notificationsService.create({
@@ -426,9 +444,8 @@ export class AdminStoriesService {
         userId: story.authorId.toString(),
         type: NotificationType.MODERATION,
         title: '⚠️ Tác phẩm đã bị gỡ duyệt',
-        message: `Tác phẩm "${story.title}" của bạn đã bị gỡ khỏi trạng thái xuất bản (chuyển về bản nháp).${
-          reason ? ` Lý do: ${reason}` : ''
-        }`,
+        message: `Tác phẩm "${story.title}" của bạn đã bị gỡ khỏi trạng thái xuất bản (chuyển về bản nháp).${reason ? ` Lý do: ${reason}` : ''
+          }`,
         storyId: story._id.toString(),
         actorId: reviewerId,
       });
@@ -481,9 +498,8 @@ export class AdminStoriesService {
         userId: story.authorId.toString(),
         type: NotificationType.MODERATION,
         title: '🚫 Tác phẩm đã bị ẩn công khai',
-        message: `Tác phẩm "${story.title}" của bạn đã bị ban quản trị ẩn khỏi chế độ công khai.${
-          reason ? ` Lý do: ${reason}` : ''
-        }`,
+        message: `Tác phẩm "${story.title}" của bạn đã bị ban quản trị ẩn khỏi chế độ công khai.${reason ? ` Lý do: ${reason}` : ''
+          }`,
         storyId: story._id.toString(),
         actorId: reviewerId,
       });
@@ -513,6 +529,17 @@ export class AdminStoriesService {
     story.visibility = StoryVisibility.PUBLIC;
     story.rejectReason = null;
     await story.save();
+
+    if (story.status === StoryStatus.PUBLISHED) {
+      try {
+        await this.chapterReleaseService?.releaseAndNotifyStoryChapters(
+          story._id,
+          { bumpStoryUpdatedAt: true },
+        );
+      } catch {
+        // bỏ qua lỗi phát hành chương chờ thông báo
+      }
+    }
 
     // Gửi thông báo mở lại công khai
     try {

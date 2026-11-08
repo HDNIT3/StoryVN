@@ -79,12 +79,16 @@ export function Header({
   return (
     <header
       className={`w-full border-b border-slate-200/80 bg-white/95 transition-all ${
-        sticky
-          ? "sticky top-0 z-50 bg-white/95 shadow-xs backdrop-blur-xl supports-[backdrop-filter]:bg-white/90"
-          : ""
+        sticky ? "sticky top-0 z-50 shadow-xs" : "relative"
       } ${className}`}
     >
-      <div className="mx-auto flex h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-2 px-4 sm:h-20 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+      {sticky && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-white/95 backdrop-blur-xl supports-[backdrop-filter]:bg-white/90"
+        />
+      )}
+      <div className="relative mx-auto flex h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-2 px-3.5 sm:h-20 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         {/* Left Side: Logo & Desktop Navigation */}
         <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 lg:gap-4">
           <HeaderLogo {...logo} />

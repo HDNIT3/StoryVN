@@ -2,26 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 3600,
+    deviceSizes: [360, 480, 640, 750, 828, 1080, 1200],
+    imageSizes: [24, 36, 48, 64, 80, 96, 128, 176, 224, 280],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "*.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-      },
-      {
-        protocol: "https",
-        hostname: "*.googleusercontent.com",
-      },
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
+        hostname: "**",
       },
       {
         protocol: "http",
@@ -36,4 +24,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
 

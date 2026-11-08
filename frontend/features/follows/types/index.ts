@@ -1,6 +1,8 @@
 export type FollowTargetType = "STORY" | "AUTHOR";
 
-export type FollowStorySortOption = "followedAt" | "updated" | "title";
+export type FollowBookshelfTab = "STORY" | "UPDATES" | "AUTHOR";
+
+export type FollowStorySortOption = "followedAt" | "updatedAt" | "title";
 
 export interface FollowedStoryAuthor {
   _id: string;
@@ -8,6 +10,16 @@ export interface FollowedStoryAuthor {
   displayName: string;
   penName: string;
   avatarUrl: string | null;
+}
+
+export interface FollowedChapterBrief {
+  _id: string;
+  chapterNumber: number;
+  title: string;
+  wordCount: number;
+  releasedAt: string;
+  isUnread?: boolean;
+  isRead?: boolean;
 }
 
 export interface FollowedStoryStats {
@@ -28,6 +40,50 @@ export interface FollowedStoryItem {
   progressState: "ONGOING" | "COMPLETED" | "ON_HOLD" | string;
   updatedAt: string;
   followedAt: string;
+  latestChapter?: FollowedChapterBrief | null;
+  unreadChapterCount?: number;
+  lastReadChapterNumber?: number | null;
+}
+
+export interface FollowedStoryUpdateItem {
+  story: {
+    _id: string;
+    title: string;
+    slug: string;
+    coverUrl: string | null;
+    progressState: "ONGOING" | "COMPLETED" | "ON_HOLD" | string;
+    author: FollowedStoryAuthor | null;
+    stats: {
+      chapterCount: number;
+      viewCount: number;
+    };
+  };
+  followedAt: string;
+  updatesSeenAt: string | null;
+  latestChapter: FollowedChapterBrief;
+  recentNewChapters: FollowedChapterBrief[];
+  unreadChapterCount: number;
+  hasUnread: boolean;
+  lastReadChapterNumber: number | null;
+  targetChapterNumber: number;
+}
+
+export interface FollowedUpdatesSummary {
+  unreadStoriesCount: number;
+  unreadChaptersCount: number;
+}
+
+export interface PaginatedFollowedStoryUpdates {
+  items: FollowedStoryUpdateItem[];
+  pagination: PaginationMeta;
+  summary: FollowedUpdatesSummary;
+}
+
+export interface QueryFollowedUpdatesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  onlyUnread?: boolean;
 }
 
 export interface FollowedAuthorStoryItem {

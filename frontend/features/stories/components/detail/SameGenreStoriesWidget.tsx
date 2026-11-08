@@ -58,7 +58,7 @@ export const SameGenreStoriesWidget: React.FC<SameGenreStoriesWidgetProps> = ({
                     src={item.coverUrl}
                     alt={item.title}
                     fill
-                    unoptimized
+                    loading="lazy"
                     sizes="56px"
                     className="object-cover"
                   />

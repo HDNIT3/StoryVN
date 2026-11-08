@@ -14,8 +14,9 @@ interface DashboardStatsProps {
 }
 
 const formatNumber = (num: number) => {
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-  if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+  if (!num || isNaN(num)) return "0";
+  if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
   return num.toLocaleString("vi-VN");
 };
 
@@ -24,15 +25,15 @@ export function DashboardStats({
   totalChapters,
   totalViews,
   totalCoins,
-  storiesGrowth = "+1 tháng này",
-  chaptersGrowth = "+12 tháng này",
-  viewsGrowth = "+18% so với tháng trước",
-  coinsGrowth = "+320,000 tháng này",
+  storiesGrowth = "0 tháng này",
+  chaptersGrowth = "0 chương tháng này",
+  viewsGrowth = "0 lượt tháng này",
+  coinsGrowth = "0 xu tháng này",
 }: DashboardStatsProps) {
   const stats = [
     {
       label: "Tổng số tác phẩm",
-      value: totalStories,
+      value: totalStories.toLocaleString("vi-VN"),
       growth: storiesGrowth,
       iconBg: "bg-blue-50",
       iconColor: "text-blue-500",
@@ -40,7 +41,7 @@ export function DashboardStats({
     },
     {
       label: "Tổng số chương",
-      value: totalChapters,
+      value: totalChapters.toLocaleString("vi-VN"),
       growth: chaptersGrowth,
       iconBg: "bg-amber-50",
       iconColor: "text-amber-500",
@@ -66,23 +67,28 @@ export function DashboardStats({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-7">
-      {stats.map((s, i) => (
-        <div key={i} className="flex items-center gap-3.5 bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 hover:shadow-sm transition">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${s.iconBg}`}>
-            <svg className={`w-5 h-5 ${s.iconColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>{s.icon}</svg>
+      {stats.map((s, i) => {
+        const isPositive = s.growth.startsWith("+");
+        return (
+          <div key={i} className="flex items-center gap-3.5 bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 hover:shadow-sm transition min-w-0">
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${s.iconBg}`}>
+              <svg className={`w-5 h-5 ${s.iconColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>{s.icon}</svg>
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-xs font-medium text-zinc-500 mb-0.5 truncate">{s.label}</span>
+              <span className="text-xl sm:text-2xl font-extrabold text-zinc-900 tracking-tight leading-tight truncate">{s.value}</span>
+              <span className={`inline-flex items-center gap-1 text-[11px] font-semibold mt-0.5 truncate ${isPositive ? "text-emerald-600" : "text-zinc-500"}`}>
+                {isPositive && (
+                  <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
+                )}
+                <span className="truncate">{s.growth}</span>
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-xs font-medium text-zinc-500 mb-0.5">{s.label}</span>
-            <span className="text-2xl font-extrabold text-zinc-900 tracking-tight leading-tight">{s.value}</span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-500 mt-0.5">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              {s.growth}
-            </span>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

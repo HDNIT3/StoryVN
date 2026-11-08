@@ -99,11 +99,10 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
               onClick={() =>
                 setOpenDropdown(openDropdown === "genre" ? null : "genre")
               }
-              className={`w-full lg:w-auto min-w-[140px] flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors bg-white ${
-                selectedGenre
+              className={`w-full lg:w-auto min-w-[140px] flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors bg-white ${selectedGenre
                   ? "border-emerald-600 text-emerald-800 bg-emerald-50/40"
                   : "border-zinc-200 text-zinc-700 hover:border-zinc-300"
-              }`}
+                }`}
             >
               <span className="flex items-center gap-2 truncate">
                 <GridIcon className="w-4 h-4 text-zinc-400 shrink-0" />
@@ -113,18 +112,17 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
             </button>
 
             {openDropdown === "genre" && (
-              <div className="absolute top-full left-0 mt-1.5 w-60 max-h-72 overflow-y-auto bg-white rounded-xl shadow-lg border border-zinc-200 py-1.5 z-50">
+              <div className="absolute top-full left-0 mt-1.5 w-full sm:w-60 max-w-[calc(100vw-2.5rem)] max-h-72 overflow-y-auto bg-white rounded-xl shadow-lg border border-zinc-200 py-1.5 z-50">
                 <button
                   type="button"
                   onClick={() => {
                     setSelectedGenre("");
                     onApplyFilter({ genre: "" });
                   }}
-                  className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center justify-between ${
-                    !selectedGenre
+                  className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center justify-between ${!selectedGenre
                       ? "bg-emerald-50 text-emerald-800 font-semibold"
                       : "text-zinc-700 hover:bg-zinc-50"
-                  }`}
+                    }`}
                 >
                   Tất cả thể loại
                 </button>
@@ -140,11 +138,10 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
                         setSelectedGenre(val);
                         onApplyFilter({ genre: val });
                       }}
-                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center justify-between ${
-                        isSelected
+                      className={`w-full text-left px-3.5 py-2 text-sm transition-colors flex items-center justify-between ${isSelected
                           ? "bg-emerald-50 text-emerald-800 font-semibold"
                           : "text-zinc-700 hover:bg-zinc-50"
-                      }`}
+                        }`}
                     >
                       <span>{genre.name}</span>
                     </button>
@@ -161,11 +158,10 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
               onClick={() =>
                 setOpenDropdown(openDropdown === "progress" ? null : "progress")
               }
-              className={`w-full lg:w-auto min-w-[140px] flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors bg-white ${
-                selectedProgress
+              className={`w-full lg:w-auto min-w-[140px] flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors bg-white ${selectedProgress
                   ? "border-emerald-600 text-emerald-800 bg-emerald-50/40"
                   : "border-zinc-200 text-zinc-700 hover:border-zinc-300"
-              }`}
+                }`}
             >
               <span className="flex items-center gap-2 truncate">
                 <BookmarkIcon className="w-4 h-4 text-zinc-400 shrink-0" />
@@ -184,11 +180,10 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
                       setSelectedProgress(opt.value);
                       onApplyFilter({ progressState: opt.value });
                     }}
-                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${
-                      selectedProgress === opt.value
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${selectedProgress === opt.value
                         ? "bg-emerald-50 text-emerald-800 font-semibold"
                         : "text-zinc-700 hover:bg-zinc-50"
-                    }`}
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -223,11 +218,10 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
                       setSelectedSort(opt.value);
                       onApplyFilter({ sortBy: opt.value });
                     }}
-                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${
-                      selectedSort === opt.value
+                    className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${selectedSort === opt.value
                         ? "bg-emerald-50 text-emerald-800 font-semibold"
                         : "text-zinc-700 hover:bg-zinc-50"
-                    }`}
+                      }`}
                   >
                     {opt.label}
                   </button>

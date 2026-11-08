@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import api, { type ApiRequestInit } from "@/lib/api";
 import type { UserApiResponse, UserProfileData } from "../types";
 
 export interface UpdateProfilePayload {
@@ -19,8 +19,8 @@ export const userService = {
   /**
    * Lấy thông tin hồ sơ cá nhân của người dùng hiện tại (yêu cầu Bearer Token)
    */
-  getProfile() {
-    return api.get<UserApiResponse<UserProfileData>>("/users/profile");
+  getProfile(options?: ApiRequestInit) {
+    return api.get<UserApiResponse<UserProfileData>>("/users/profile", options);
   },
 
   /**

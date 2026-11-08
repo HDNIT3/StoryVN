@@ -177,18 +177,18 @@ function HeaderUserAvatar({
 
   if (!isLoggedIn) {
     return (
-      <div className={`flex items-center gap-1.5 sm:gap-2.5 shrink-0 ${className}`}>
+      <div className={`flex items-center gap-1 sm:gap-2.5 shrink-0 ${className}`}>
         <Link
           href="/dang-nhap"
           onClick={onLoginClick}
-          className="whitespace-nowrap rounded-lg px-4 py-2.5 text-base font-medium text-slate-600 transition-colors hover:bg-sky-50/70 hover:text-sky-600"
+          className="whitespace-nowrap rounded-lg px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-base font-medium text-slate-600 transition-colors hover:bg-sky-50/70 hover:text-sky-600"
         >
           Đăng nhập
         </Link>
         <Link
           href="/dang-ky"
           onClick={onLoginClick}
-          className="shimmer-hover whitespace-nowrap rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2.5 text-base font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/30"
+          className="shimmer-hover whitespace-nowrap rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-base font-semibold text-white shadow-md sm:shadow-lg shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/30"
         >
           Đăng ký
         </Link>

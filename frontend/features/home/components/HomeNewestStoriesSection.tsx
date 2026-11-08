@@ -106,8 +106,8 @@ export function HomeNewestStoriesSection({ stories, isLoading }: HomeNewestStori
                     src={story.coverUrl}
                     alt={story.title}
                     fill
-                    unoptimized
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    loading="lazy"
+                    sizes="(max-width: 640px) 46vw, (max-width: 1024px) 30vw, 18vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (

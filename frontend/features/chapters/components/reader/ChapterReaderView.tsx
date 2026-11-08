@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -9,24 +10,39 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useRecordReading } from "@/features/reading-history";
 import { READER_THEMES, CHAPTERS_PER_PAGE, type ReaderThemeMode } from "./ReaderThemes";
 import { ReaderTopBar } from "./ReaderTopBar";
-import { ReaderSettingsModal } from "./ReaderSettingsModal";
-import { ReaderTtsBar } from "./ReaderTtsBar";
 import { ReaderContent } from "./ReaderContent";
 import { ReaderNavigation } from "./ReaderNavigation";
-import { ReaderChapterModal } from "./ReaderChapterModal";
 import { ReaderSideToolbar } from "./ReaderSideToolbar";
-import { ReaderCommentDrawer } from "./ReaderCommentDrawer";
 import { useSpeechReader } from "../../hooks/useSpeechReader";
 import { useStoryComments } from "@/features/comments";
+
+const ReaderSettingsModal = dynamic(() =>
+  import("./ReaderSettingsModal").then((mod) => mod.ReaderSettingsModal)
+);
+const ReaderTtsBar = dynamic(() =>
+  import("./ReaderTtsBar").then((mod) => mod.ReaderTtsBar)
+);
+const ReaderChapterModal = dynamic(() =>
+  import("./ReaderChapterModal").then((mod) => mod.ReaderChapterModal)
+);
+const ReaderCommentDrawer = dynamic(() =>
+  import("./ReaderCommentDrawer").then((mod) => mod.ReaderCommentDrawer)
+);
+
+type ChapterReadingData = Awaited<
+  ReturnType<typeof chapterService.getChapterReadingBySlugAndNumber>
+>["data"];
 
 interface ChapterReaderViewProps {
   slug: string;
   chapterNumber: string;
+  initialChapter?: ChapterReadingData;
 }
 
 export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   slug,
   chapterNumber,
+  initialChapter,
 }) => {
   const router = useRouter();
 
@@ -91,11 +107,14 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   // Close popup settings on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (settingsRef.current && !settingsRef.current.contains(target)) {
+      const target = event.target as HTMLElement | null;
+      if (target && target.closest?.('[data-reader-toolbar="true"]')) {
+        return;
+      }
+      if (settingsRef.current && !settingsRef.current.contains(target as Node)) {
         setShowSettings(false);
       }
-      if (ttsRef.current && !ttsRef.current.contains(target)) {
+      if (ttsRef.current && !ttsRef.current.contains(target as Node)) {
         setShowTts(false);
       }
     };
@@ -112,6 +131,12 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
     queryFn: () =>
       chapterService.getChapterReadingBySlugAndNumber(slug, chapterNumber),
     enabled: Boolean(slug && chapterNumber),
+    initialData: initialChapter
+      ? {
+          success: true,
+          data: initialChapter,
+        }
+      : undefined,
   });
 
   const chapter = chapterRes?.data;
@@ -156,6 +181,8 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   const chapterList = chapter?.chaptersList ?? [];
 
   const openChapterModal = () => {
+    setShowSettings(false);
+    setShowTts(false);
     const idx = chapterList.findIndex(
       (c) => c.chapterNumber === chapter?.chapterNumber
     );
@@ -204,6 +231,8 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
       }
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
+    document.documentElement?.scrollTo?.({ top: 0, behavior: "smooth" });
+    document.body?.scrollTo?.({ top: 0, behavior: "smooth" });
   }, [chapterNumber]);
 
   const t = READER_THEMES[theme];
@@ -285,7 +314,7 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
             <ReaderTtsBar
               theme={theme}
               reader={tts}
-              className="w-80 rounded-2xl border p-4 shadow-2xl"
+              className="w-full lg:w-80 rounded-2xl border p-4 shadow-2xl"
             />
           }
           ttsRef={ttsRef}
@@ -302,12 +331,16 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
               onFontSizeChange={handleFontSizeChange}
               lineHeight={lineHeight}
               onLineHeightChange={handleLineHeightChange}
-              className="w-72 rounded-2xl border p-4 shadow-2xl"
+              className="w-full lg:w-72 rounded-2xl border p-4 shadow-2xl"
             />
           }
           settingsRef={settingsRef}
           commentCount={commentCount}
-          onToggleComments={() => setShowComments((prev) => !prev)}
+          onToggleComments={() => {
+            setShowSettings(false);
+            setShowTts(false);
+            setShowComments((prev) => !prev);
+          }}
           showComments={showComments}
         />
       )}
@@ -341,7 +374,11 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
           nextChapter={chapter.nextChapter}
           theme={theme}
           onOpenChapterModal={openChapterModal}
-          onScrollToTop={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onScrollToTop={() => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            document.documentElement?.scrollTo?.({ top: 0, behavior: "smooth" });
+            document.body?.scrollTo?.({ top: 0, behavior: "smooth" });
+          }}
         />
 
         {/* Nút mở khung bình luận ở cuối chương */}

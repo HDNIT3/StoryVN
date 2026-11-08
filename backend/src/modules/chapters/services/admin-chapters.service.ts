@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -30,6 +31,7 @@ import {
 import { AdminChapterModerationReasonDto } from '../dto/admin-chapter-moderation-reason.dto.js';
 import { AdminQueryChaptersDto } from '../dto/admin-query-chapters.dto.js';
 import { AdminRejectChapterDto } from '../dto/admin-reject-chapter.dto.js';
+import { ChapterReleaseService } from './chapter-release.service.js';
 
 @Injectable()
 export class AdminChaptersService {
@@ -39,6 +41,8 @@ export class AdminChaptersService {
     @InjectModel(Story.name)
     private readonly storyModel: Model<StoryDocument>,
     private readonly notificationsService: NotificationsService,
+    @Optional()
+    private readonly chapterReleaseService?: ChapterReleaseService,
   ) {}
 
   /**
@@ -453,6 +457,9 @@ export class AdminChaptersService {
     chapter.rejectReason = null;
     chapter.scheduledAt = chapter.scheduledAt || now;
     chapter.wordCount = countWords(chapter.content);
+    if (!chapter.followerNotifiedAt) {
+      chapter.notifyFollowersPending = true;
+    }
 
     // Tạo mốc bản chính thức nếu chương chưa từng có bản APPROVED
     if (!hasRevisionWithStatus(revisions, RevisionStatus.APPROVED)) {
@@ -474,6 +481,16 @@ export class AdminChaptersService {
     await chapter.save();
 
     await this.updateStoryStats(story._id);
+
+    // Phát hành và thông báo chương mới tới người theo dõi nếu đủ điều kiện (liên tục & đã đến giờ phát hành)
+    try {
+      await this.chapterReleaseService?.releaseAndNotifyStoryChapters(
+        story._id,
+        { bumpStoryUpdatedAt: true, now },
+      );
+    } catch {
+      // Không để lỗi thông báo làm hỏng luồng phê duyệt
+    }
 
     // Gửi thông báo tới tác giả truyện
     try {
@@ -623,6 +640,7 @@ export class AdminChaptersService {
     const reason = dto?.reason?.trim() || null;
     chapter.status = ChapterStatus.DRAFT;
     chapter.scheduledAt = null;
+    chapter.notifyFollowersPending = false;
     if (reason) {
       chapter.rejectReason = reason;
     }
@@ -688,6 +706,7 @@ export class AdminChaptersService {
 
     const reason = dto?.reason?.trim() || null;
     chapter.status = ChapterStatus.HIDDEN;
+    chapter.notifyFollowersPending = false;
     if (reason) {
       chapter.rejectReason = reason;
     }
@@ -746,9 +765,21 @@ export class AdminChaptersService {
 
     chapter.status = ChapterStatus.PUBLISHED;
     chapter.rejectReason = null;
+    if (!chapter.followerNotifiedAt) {
+      chapter.notifyFollowersPending = true;
+    }
     await chapter.save();
 
     await this.updateStoryStats(story._id);
+
+    try {
+      await this.chapterReleaseService?.releaseAndNotifyStoryChapters(
+        story._id,
+        { bumpStoryUpdatedAt: true },
+      );
+    } catch {
+      // Bỏ qua lỗi phát hành/thông báo người theo dõi
+    }
 
     try {
       await this.notificationsService.create({

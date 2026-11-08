@@ -1,4 +1,12 @@
 import { toast } from "./toast";
+import {
+  clearTokens,
+  getStoredAccessToken,
+  getStoredRefreshToken,
+  isJwtExpired,
+  saveTokens,
+  syncSessionCookies,
+} from "./auth-tokens";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
@@ -16,60 +24,140 @@ export interface ApiError {
   error?: string;
 }
 
-// ─── Token helpers ────────────────────────────────────────────────
-const TOKEN_KEY = "accessToken";
-const REFRESH_KEY = "refreshToken";
-
-function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
-}
-function getRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(REFRESH_KEY);
-}
-function saveTokens(access: string, refresh: string) {
-  localStorage.setItem(TOKEN_KEY, access);
-  localStorage.setItem(REFRESH_KEY, refresh);
-}
-function clearTokens() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(REFRESH_KEY);
+export interface ApiRequestInit extends RequestInit {
+  skipAuthLogout?: boolean;
 }
 
-// ─── Singleton refresh promise ────────────────────────────────────
-let _refreshPromise: Promise<string | null> | null = null;
+export type RefreshTokenResult =
+  | { status: "refreshed"; token: string }
+  | { status: "unauthorized" }
+  | { status: "transient_error" };
 
-async function doRefreshToken(): Promise<string | null> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return null;
+const AUTH_CREDENTIAL_PATHS = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/verify-register",
+  "/auth/resend-register-otp",
+  "/auth/google",
+  "/auth/refresh",
+  "/auth/logout",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+];
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
-    if (!res.ok) {
-      clearTokens();
-      return null;
+function isAuthCredentialEndpoint(endpoint: string): boolean {
+  let path = endpoint;
+  if (endpoint.startsWith("http")) {
+    try {
+      path = new URL(endpoint).pathname;
+    } catch {
+      path = endpoint;
     }
-    const data = await res.json();
-    if (data?.data?.accessToken) {
-      saveTokens(data.data.accessToken, data.data.refreshToken);
-      return data.data.accessToken;
-    }
-    clearTokens();
-    return null;
-  } catch {
-    clearTokens();
-    return null;
   }
+  path = path.split("?")[0].split("#")[0];
+  if (!path.startsWith("/")) path = `/${path}`;
+  if (path.startsWith("/api/")) {
+    path = path.slice(4);
+  }
+  return AUTH_CREDENTIAL_PATHS.some(
+    (authPath) => path === authPath || path.startsWith(`${authPath}/`)
+  );
 }
 
-async function ensureTokenRefreshed(): Promise<string | null> {
+// ─── Refresh token coordination (intra-tab + cross-tab lock) ──────
+let _refreshPromise: Promise<RefreshTokenResult> | null = null;
+
+async function runWithCrossTabRefreshLock(
+  task: () => Promise<RefreshTokenResult>
+): Promise<RefreshTokenResult> {
+  if (
+    typeof navigator !== "undefined" &&
+    navigator.locks &&
+    typeof navigator.locks.request === "function"
+  ) {
+    return navigator.locks.request("storyvn_auth_refresh", () => task());
+  }
+  return task();
+}
+
+async function doRefreshToken(
+  failedAccessToken?: string | null
+): Promise<RefreshTokenResult> {
+  return runWithCrossTabRefreshLock(async () => {
+    const latestAccessToken = getStoredAccessToken();
+    if (
+      latestAccessToken &&
+      latestAccessToken !== failedAccessToken &&
+      !isJwtExpired(latestAccessToken, 5)
+    ) {
+      syncSessionCookies(latestAccessToken);
+      return { status: "refreshed", token: latestAccessToken };
+    }
+
+    const refreshToken = getStoredRefreshToken();
+    if (!refreshToken) {
+      return { status: "unauthorized" };
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (res.status === 400 || res.status === 401 || res.status === 403) {
+        const currentRefreshToken = getStoredRefreshToken();
+        const currentAccessToken = getStoredAccessToken();
+        if (
+          currentRefreshToken &&
+          currentRefreshToken !== refreshToken &&
+          currentAccessToken &&
+          !isJwtExpired(currentAccessToken, 5)
+        ) {
+          syncSessionCookies(currentAccessToken);
+          return { status: "refreshed", token: currentAccessToken };
+        }
+
+        clearTokens();
+        return { status: "unauthorized" };
+      }
+
+      if (!res.ok) {
+        return { status: "transient_error" };
+      }
+
+      const data = await res.json();
+      if (data?.data?.accessToken) {
+        const nextAccessToken = String(data.data.accessToken);
+        const nextRefreshToken =
+          typeof data.data.refreshToken === "string" &&
+          data.data.refreshToken.length > 0
+            ? data.data.refreshToken
+            : refreshToken;
+        saveTokens(nextAccessToken, nextRefreshToken);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("auth:token-refreshed", {
+              detail: { accessToken: nextAccessToken },
+            })
+          );
+        }
+        return { status: "refreshed", token: nextAccessToken };
+      }
+
+      return { status: "transient_error" };
+    } catch {
+      return { status: "transient_error" };
+    }
+  });
+}
+
+export async function ensureTokenRefreshed(
+  failedAccessToken?: string | null
+): Promise<RefreshTokenResult> {
   if (!_refreshPromise) {
-    _refreshPromise = doRefreshToken().finally(() => {
+    _refreshPromise = doRefreshToken(failedAccessToken).finally(() => {
       _refreshPromise = null;
     });
   }
@@ -84,33 +172,31 @@ class ApiClient {
     this.baseUrl = baseUrl.replace(/\/$/, "");
   }
 
-  private getAuthHeader(): Record<string, string> {
-    const token = getAccessToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
   private async request<T = any>(
     endpoint: string,
-    options: RequestInit = {},
+    options: ApiRequestInit = {},
     retry = true
   ): Promise<T> {
+    const { skipAuthLogout, headers: optionHeaders, ...fetchOptions } = options;
+
     const url = endpoint.startsWith("http")
       ? endpoint
       : `${this.baseUrl}/${endpoint.replace(/^\//, "")}`;
 
     const isFormData =
-      typeof FormData !== "undefined" && options.body instanceof FormData;
+      typeof FormData !== "undefined" && fetchOptions.body instanceof FormData;
 
+    const requestToken = getStoredAccessToken();
     const headers: Record<string, string> = {
       ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      ...this.getAuthHeader(),
-      ...(options.headers as Record<string, string>),
+      ...(requestToken ? { Authorization: `Bearer ${requestToken}` } : {}),
+      ...(optionHeaders as Record<string, string> | undefined),
     };
 
     let response: Response;
     try {
       response = await fetch(url, {
-        ...options,
+        ...fetchOptions,
         headers,
       });
     } catch (networkError: any) {
@@ -125,19 +211,46 @@ class ApiClient {
       throw error;
     }
 
-    // 401 → thử refresh token một lần
-    if (response.status === 401 && retry) {
-      const newToken = await ensureTokenRefreshed();
-      if (newToken) {
-        return this.request<T>(endpoint, options, false);
+    // 401 → thử refresh token một lần (trừ các endpoint xác thực & khi chưa đăng nhập)
+    if (
+      response.status === 401 &&
+      retry &&
+      !isAuthCredentialEndpoint(endpoint)
+    ) {
+      const hasAnyToken = Boolean(requestToken || getStoredRefreshToken());
+      if (hasAnyToken) {
+        const currentToken = getStoredAccessToken();
+        if (
+          currentToken &&
+          currentToken !== requestToken &&
+          !isJwtExpired(currentToken, 5)
+        ) {
+          return this.request<T>(endpoint, options, false);
+        }
+
+        const refreshResult = await ensureTokenRefreshed(requestToken);
+        if (refreshResult.status === "refreshed") {
+          return this.request<T>(endpoint, options, false);
+        }
+        if (refreshResult.status === "transient_error") {
+          const error: ApiError = {
+            message: "Website chưa hoạt động vui lòng chờ",
+            statusCode: 503,
+          };
+          throw error;
+        }
+
+        // refresh thất bại thực sự → xóa phiên & logout mềm
+        clearTokens();
+        if (!skipAuthLogout && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("auth:logout"));
+        }
+        const error: ApiError = {
+          message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại",
+          statusCode: 401,
+        };
+        throw error;
       }
-      // refresh thất bại → logout mềm
-      clearTokens();
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("auth:logout"));
-      }
-      const error: ApiError = { message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại", statusCode: 401 };
-      throw error;
     }
 
     const isJson = response.headers
@@ -170,11 +283,11 @@ class ApiClient {
     return data as T;
   }
 
-  get<T = any>(endpoint: string, options?: RequestInit): Promise<T> {
+  get<T = any>(endpoint: string, options?: ApiRequestInit): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "GET" });
   }
 
-  post<T = any>(endpoint: string, body?: any, options?: RequestInit): Promise<T> {
+  post<T = any>(endpoint: string, body?: any, options?: ApiRequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: "POST",
@@ -182,7 +295,7 @@ class ApiClient {
     });
   }
 
-  put<T = any>(endpoint: string, body?: any, options?: RequestInit): Promise<T> {
+  put<T = any>(endpoint: string, body?: any, options?: ApiRequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: "PUT",
@@ -190,7 +303,7 @@ class ApiClient {
     });
   }
 
-  patch<T = any>(endpoint: string, body?: any, options?: RequestInit): Promise<T> {
+  patch<T = any>(endpoint: string, body?: any, options?: ApiRequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: "PATCH",
@@ -198,7 +311,7 @@ class ApiClient {
     });
   }
 
-  upload<T = any>(endpoint: string, formData: FormData, options?: RequestInit): Promise<T> {
+  upload<T = any>(endpoint: string, formData: FormData, options?: ApiRequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
       method: "POST",
@@ -206,7 +319,7 @@ class ApiClient {
     });
   }
 
-  delete<T = any>(endpoint: string, options?: RequestInit): Promise<T> {
+  delete<T = any>(endpoint: string, options?: ApiRequestInit): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "DELETE" });
   }
 }

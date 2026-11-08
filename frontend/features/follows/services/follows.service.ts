@@ -1,10 +1,13 @@
 import api from "@/lib/api";
 import type {
   FollowTargetType,
-  PaginatedFollowedStories,
+  FollowedUpdatesSummary,
   PaginatedFollowedAuthors,
-  QueryFollowedStoriesParams,
+  PaginatedFollowedStories,
+  PaginatedFollowedStoryUpdates,
   QueryFollowedAuthorsParams,
+  QueryFollowedStoriesParams,
+  QueryFollowedUpdatesParams,
   ToggleFollowPayload,
   ToggleFollowResult,
 } from "../types";
@@ -110,6 +113,47 @@ export const followsService = {
     const endpoint = qs ? `/follows/authors?${qs}` : "/follows/authors";
 
     return api.get<ApiResponse<PaginatedFollowedAuthors>>(endpoint);
+  },
+
+  /**
+   * Lấy danh sách cập nhật chương mới của các truyện đang theo dõi
+   */
+  getFollowedUpdates(
+    params?: QueryFollowedUpdatesParams
+  ): Promise<ApiResponse<PaginatedFollowedStoryUpdates>> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.search) searchParams.append("search", params.search);
+    if (params?.onlyUnread !== undefined) {
+      searchParams.append("onlyUnread", String(params.onlyUnread));
+    }
+
+    const qs = searchParams.toString();
+    const endpoint = qs ? `/follows/updates?${qs}` : "/follows/updates";
+
+    return api.get<ApiResponse<PaginatedFollowedStoryUpdates>>(endpoint);
+  },
+
+  /**
+   * Lấy số lượng truyện / chương mới chưa đọc hoặc chưa xem trong tủ truyện
+   */
+  getFollowedUpdatesUnreadCount(): Promise<ApiResponse<FollowedUpdatesSummary>> {
+    return api.get<ApiResponse<FollowedUpdatesSummary>>(
+      "/follows/updates/unread-count"
+    );
+  },
+
+  /**
+   * Đánh dấu đã xem chương mới cho 1 truyện hoặc toàn bộ tủ truyện
+   */
+  markFollowedUpdatesRead(
+    storyId?: string
+  ): Promise<ApiResponse<{ updatedCount: number; seenAt: string }>> {
+    return api.patch<ApiResponse<{ updatedCount: number; seenAt: string }>>(
+      "/follows/updates/read",
+      storyId ? { storyId } : {}
+    );
   },
 };
 
