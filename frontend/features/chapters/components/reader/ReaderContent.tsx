@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { READER_THEMES, formatReaderDate, type ReaderThemeMode } from "./ReaderThemes";
-import { CONTENT_BLOCK_SELECTOR } from "@/lib/utils/htmlToPlainText";
+import { parseChapterBlocks } from "@/lib/utils/htmlToPlainText";
 
 const HIGHLIGHT_NAME = "tts-sentence";
 
@@ -144,24 +144,13 @@ export const ReaderContent: React.FC<ReaderContentProps> = ({
   const contentRef = useRef<HTMLDivElement | null>(null);
   const lastScrolledBlockRef = useRef<number>(-1);
 
+  // Chuẩn hoá và phân tách nội dung thành từng đoạn văn mạch lạc
+  const blocks = useMemo(() => parseChapterBlocks(content), [content]);
+
   useEffect(() => {
     ensureHighlightStyle();
     const container = contentRef.current;
     if (!container) return;
-
-    const blocks = Array.from(
-      container.querySelectorAll<HTMLElement>(CONTENT_BLOCK_SELECTOR)
-    );
-
-    blocks.forEach((element, index) => {
-      element.classList.toggle(
-        "tts-reading-block",
-        highlighting && index === activeBlockIndex
-      );
-      element.setAttribute("data-block-index", String(index));
-      element.classList.add("reader-block-item");
-      element.setAttribute("title", "Bấm để nghe từ đoạn này");
-    });
 
     const registry =
       typeof CSS !== "undefined"
@@ -176,27 +165,32 @@ export const ReaderContent: React.FC<ReaderContentProps> = ({
       registry.delete(HIGHLIGHT_NAME);
 
       if (highlighting && activeBlockIndex >= 0 && activeText) {
-        const block = blocks[activeBlockIndex];
-        if (block) {
-          const range = findTextRange(block, activeText);
+        const targetBlock = container.querySelector<HTMLElement>(
+          `[data-block-index="${activeBlockIndex}"]`
+        );
+        if (targetBlock) {
+          const range = findTextRange(targetBlock, activeText);
           if (range) registry.set(HIGHLIGHT_NAME, new HighlightClass(range));
         }
       }
     }
 
+    // Tự động cuộn mượt tới đoạn văn đang phát thanh
     if (
       highlighting &&
       activeBlockIndex >= 0 &&
       lastScrolledBlockRef.current !== activeBlockIndex
     ) {
       lastScrolledBlockRef.current = activeBlockIndex;
-      const block = blocks[activeBlockIndex];
-      if (block) {
-        const rect = block.getBoundingClientRect();
+      const targetBlock = container.querySelector<HTMLElement>(
+        `[data-block-index="${activeBlockIndex}"]`
+      );
+      if (targetBlock) {
+        const rect = targetBlock.getBoundingClientRect();
         const outOfView =
           rect.top < 80 || rect.bottom > window.innerHeight - 80;
         if (outOfView) {
-          block.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetBlock.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       }
     }
@@ -206,13 +200,9 @@ export const ReaderContent: React.FC<ReaderContentProps> = ({
     }
 
     return () => {
-      blocks.forEach((element) => {
-        element.classList.remove("tts-reading-block");
-        element.classList.remove("reader-block-item");
-      });
       if (registry) registry.delete(HIGHLIGHT_NAME);
     };
-  }, [activeBlockIndex, activeText, highlighting, content]);
+  }, [activeBlockIndex, activeText, highlighting, blocks]);
 
   /**
    * Bấm vào đoạn văn để nghe từ đoạn đó.
@@ -229,9 +219,7 @@ export const ReaderContent: React.FC<ReaderContentProps> = ({
     if (!target) return;
     if (target.closest("a, button, input, textarea")) return;
 
-    const blockEl = target.closest(
-      CONTENT_BLOCK_SELECTOR
-    ) as HTMLElement | null;
+    const blockEl = target.closest("[data-block-index]") as HTMLElement | null;
     if (blockEl && contentRef.current?.contains(blockEl)) {
       const idxAttr = blockEl.getAttribute("data-block-index");
       if (idxAttr !== null) {
@@ -327,35 +315,28 @@ export const ReaderContent: React.FC<ReaderContentProps> = ({
       </div>
 
       {/* Nội dung chương chữ */}
-      {content ? (
-        /<\/?[a-z][\s\S]*>/i.test(content) ? (
-          <div
-            ref={contentRef}
-            onClick={handleContentClick}
-            style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
-            className={`font-serif sm:font-sans ${t.textColor} tracking-normal text-justify select-text leading-relaxed ${t.selection} prose max-w-none [&_p]:mb-4 [&_p]:text-indent-sm [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mb-2 [&_blockquote]:pl-4 [&_blockquote]:border-l-4 [&_blockquote]:border-zinc-300 [&_blockquote]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5`}
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
-        ) : (
-          <div
-            ref={contentRef}
-            onClick={handleContentClick}
-            style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
-            className={`font-serif sm:font-sans ${t.textColor} tracking-normal text-justify select-text whitespace-pre-wrap leading-relaxed ${t.selection}`}
-          >
-            {content.split("\n").map((para, idx) => {
-              const trimmed = para.trim();
-              if (!trimmed) {
-                return <div key={idx} className="h-4" />;
-              }
-              return (
-                <p key={idx} className="mb-4 text-indent-sm">
-                  {trimmed}
-                </p>
-              );
-            })}
-          </div>
-        )
+      {blocks.length > 0 ? (
+        <div
+          ref={contentRef}
+          onClick={handleContentClick}
+          style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
+          className={`font-serif sm:font-sans ${t.textColor} tracking-normal text-justify select-text leading-relaxed ${t.selection} prose max-w-none [&_blockquote]:pl-4 [&_blockquote]:border-l-4 [&_blockquote]:border-zinc-300 [&_blockquote]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5`}
+        >
+          {blocks.map((block) => {
+            const isReading = highlighting && activeBlockIndex === block.index;
+            return (
+              <p
+                key={block.index}
+                data-block-index={block.index}
+                className={`reader-block-item mb-5 text-indent-sm transition-all duration-150 ${
+                  isReading ? "tts-reading-block" : ""
+                }`}
+                title="Chạm để nghe từ đoạn này"
+                dangerouslySetInnerHTML={{ __html: block.html }}
+              />
+            );
+          })}
+        </div>
       ) : (
         <p className="italic opacity-60">
           Nội dung chương đang được cập nhật...
