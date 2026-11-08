@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
@@ -78,13 +78,23 @@ const PROGRESS_LABELS: Record<string, string> = {
    Hero carousel
    ───────────────────────────────────────────────────────────── */
 
-export function HeroStoryBanner() {
+interface HeroStoryBannerProps {
+  stories?: FilteredStoryItem[];
+  isLoading?: boolean;
+}
+
+export function HeroStoryBanner({
+  stories: externalStories,
+  isLoading: externalIsLoading,
+}: HeroStoryBannerProps = {}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Lấy các truyện mới nhất từ backend
-  const { data, isLoading } = useQuery({
+  const hasExternalProps = externalStories !== undefined;
+
+  // Lấy các truyện mới nhất từ backend (chỉ gọi khi không truyền sẵn từ HomeView)
+  const { data, isLoading: queryIsLoading } = useQuery({
     queryKey: ["stories", "hero-banner-newest"],
     queryFn: async () => {
       const res = await storyService.getStories({
@@ -94,9 +104,11 @@ export function HeroStoryBanner() {
       return res.data?.items || [];
     },
     staleTime: 1000 * 60 * 5, // 5 phút
+    enabled: !hasExternalProps,
   });
 
-  const stories: FilteredStoryItem[] = data || [];
+  const isLoading = hasExternalProps ? Boolean(externalIsLoading) : queryIsLoading;
+  const stories: FilteredStoryItem[] = hasExternalProps ? externalStories : data || [];
   const total = stories.length;
 
   const nextSlide = useCallback(() => {
@@ -165,7 +177,7 @@ export function HeroStoryBanner() {
       {/* Mesh gradient + lưới chấm siêu mảnh bên trong khung */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2rem]"
+        className="pointer-events-none absolute inset-0 hidden overflow-hidden rounded-[2rem] sm:block"
       >
         <div className="absolute -top-24 left-1/4 h-64 w-64 rounded-full bg-sky-300/35 opacity-40 blur-3xl" />
         <div className="absolute top-10 -right-16 h-72 w-72 rounded-full bg-indigo-300/35 opacity-35 blur-3xl" />
@@ -173,7 +185,7 @@ export function HeroStoryBanner() {
         <div className="bg-dot-grid absolute inset-0 opacity-[0.35] [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_70%)]" />
       </div>
 
-      <div className="relative z-10 rounded-[calc(2rem-1px)] bg-white/60 px-5 py-7 backdrop-blur-xl sm:px-9 sm:py-9 lg:px-12">
+      <div className="relative z-10 rounded-[calc(2rem-1px)] bg-white/90 px-5 py-7 sm:bg-white/60 sm:px-9 sm:py-9 sm:backdrop-blur-xl lg:px-12">
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-6 xl:gap-8">
           {/* ─── CỘT TRÁI: THÔNG TIN TRUYỆN ───────────────────── */}
           <div className="space-y-4 lg:col-span-7 xl:col-span-8">
@@ -279,26 +291,10 @@ export function HeroStoryBanner() {
 
           {/* ─── CỘT PHẢI: BÌA TRUYỆN + AMBIENT GLOW ───────────── */}
           <div className="flex justify-center lg:col-span-5 lg:justify-end xl:col-span-4">
-            <div className="animate-float-soft relative">
-              {/* Ambient glow lấy màu từ chính ảnh bìa */}
-              {current.coverUrl && (
-                <div
-                  aria-hidden="true"
-                  className="absolute -inset-6 -z-10 overflow-hidden rounded-[2.5rem] opacity-45 blur-2xl"
-                >
-                  <Image
-                    src={current.coverUrl}
-                    alt=""
-                    fill
-                    unoptimized
-                    sizes="320px"
-                    className="scale-110 object-cover"
-                  />
-                </div>
-              )}
+            <div className="sm:animate-float-soft relative">
               <div
                 aria-hidden="true"
-                className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-sky-300/45 via-indigo-300/35 to-fuchsia-300/25 blur-2xl"
+                className="absolute -inset-4 -z-10 hidden rounded-[2rem] bg-gradient-to-br from-sky-300/45 via-indigo-300/35 to-fuchsia-300/25 blur-2xl sm:block"
               />
 
               <Link
@@ -313,9 +309,9 @@ export function HeroStoryBanner() {
                       src={current.coverUrl}
                       alt={current.title}
                       fill
-                      unoptimized
                       priority
-                      sizes="(max-width: 768px) 200px, 280px"
+                      fetchPriority="high"
+                      sizes="(max-width: 640px) 176px, (max-width: 768px) 208px, 240px"
                       className="object-cover"
                     />
                   ) : (

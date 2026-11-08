@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage, Types } from 'mongoose';
@@ -12,6 +13,7 @@ import {
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
 import { Chapter, ChapterDocument } from '../../chapters/schemas/chapter.schema.js';
 import { Genre, GenreDocument } from '../../genres/schemas/genre.schema.js';
+import { NotificationsService } from '../../notifications/notifications.service.js';
 import { Story, StoryDocument } from '../../stories/schemas/story.schema.js';
 import {
   QueryReadingHistoryDto,
@@ -117,6 +119,8 @@ export class ReadingHistoryService {
     private readonly storyModel: Model<StoryDocument>,
     @InjectModel(Genre.name)
     private readonly genreModel: Model<GenreDocument>,
+    @Optional()
+    private readonly notificationsService?: NotificationsService,
   ) {}
 
   /**
@@ -142,6 +146,15 @@ export class ReadingHistoryService {
 
     if (!chapter) {
       throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    try {
+      await this.notificationsService?.markNewChapterNotificationsAsRead(
+        userId,
+        { chapterId: chapter._id },
+      );
+    } catch {
+      // Không làm gián đoạn việc ghi nhận lịch sử đọc nếu đồng bộ thông báo gặp lỗi
     }
 
     const dedupeSince = new Date(Date.now() - DEDUPE_WINDOW_MS);

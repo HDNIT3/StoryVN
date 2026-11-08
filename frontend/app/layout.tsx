@@ -13,25 +13,30 @@ const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "vietnamese"],
   variable: "--font-plus-jakarta",
   display: "swap",
+  preload: true,
 });
 
 const beVietnamPro = Be_Vietnam_Pro({
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700"],
   subsets: ["latin", "vietnamese"],
   variable: "--font-be-vietnam-pro",
   display: "swap",
+  preload: false,
 });
 
 const merriweather = Merriweather({
-  weight: ["300", "400", "700", "900"],
+  weight: ["400", "700"],
   subsets: ["latin", "vietnamese"],
   variable: "--font-merriweather",
   display: "swap",
+  preload: false,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -55,9 +60,9 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${plusJakarta.variable} ${beVietnamPro.variable} ${merriweather.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plusJakarta.variable} ${beVietnamPro.variable} ${merriweather.variable} ${geistMono.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-screen flex flex-col font-sans">
         <ClientProviders>{children}</ClientProviders>
       </body>
     </html>

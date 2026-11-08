@@ -1,9 +1,30 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 import type { StoryDetailData } from "@/features/stories";
-import { StoryRatingsSection } from "@/features/ratings";
-import { StoryCommentsSection } from "@/features/comments";
+
+const StoryRatingsSection = dynamic(
+  () => import("@/features/ratings").then((mod) => mod.StoryRatingsSection),
+  {
+    loading: () => (
+      <div className="py-8 text-center text-sm text-zinc-400 animate-pulse">
+        Đang tải đánh giá...
+      </div>
+    ),
+  }
+);
+
+const StoryCommentsSection = dynamic(
+  () => import("@/features/comments").then((mod) => mod.StoryCommentsSection),
+  {
+    loading: () => (
+      <div className="py-8 text-center text-sm text-zinc-400 animate-pulse">
+        Đang tải bình luận...
+      </div>
+    ),
+  }
+);
 
 export type StoryDetailTabKey = "about" | "chapters" | "ratings" | "comments";
 

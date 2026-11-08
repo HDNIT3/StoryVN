@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage, Types } from 'mongoose';
@@ -11,6 +12,16 @@ import {
   PaginatedResult,
 } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
+import {
+  Chapter,
+  ChapterDocument,
+  ChapterStatus,
+} from '../../chapters/schemas/chapter.schema.js';
+import { NotificationsService } from '../../notifications/notifications.service.js';
+import {
+  ReadingHistory,
+  ReadingHistoryDocument,
+} from '../../reading-history/schemas/reading-history.schema.js';
 import {
   AuthorProfile,
   AuthorProfileDocument,
@@ -30,6 +41,7 @@ import {
   FollowStorySortOption,
   QueryFollowedAuthorsDto,
   QueryFollowedStoriesDto,
+  QueryFollowedUpdatesDto,
 } from '../dto/query-follows.dto.js';
 import {
   Follow,
@@ -41,6 +53,16 @@ export interface ToggleFollowResult {
   isFollowing: boolean;
   targetType: FollowTargetType;
   targetId: string;
+}
+
+export interface FollowedChapterBrief {
+  _id: string;
+  chapterNumber: number;
+  title: string;
+  wordCount: number;
+  releasedAt: Date;
+  isUnread?: boolean;
+  isRead?: boolean;
 }
 
 export interface FollowedStoryItem {
@@ -65,6 +87,48 @@ export interface FollowedStoryItem {
   progressState: string;
   updatedAt: Date;
   followedAt: Date;
+  latestChapter?: FollowedChapterBrief | null;
+  unreadChapterCount?: number;
+  lastReadChapterNumber?: number | null;
+}
+
+export interface FollowedStoryUpdateItem {
+  story: {
+    _id: string;
+    title: string;
+    slug: string;
+    coverUrl: string | null;
+    progressState: string;
+    author: {
+      _id: string;
+      username: string;
+      displayName: string;
+      penName: string;
+      avatarUrl: string | null;
+    } | null;
+    stats: {
+      chapterCount: number;
+      viewCount: number;
+    };
+  };
+  followedAt: Date;
+  updatesSeenAt: Date | null;
+  latestChapter: FollowedChapterBrief;
+  recentNewChapters: FollowedChapterBrief[];
+  unreadChapterCount: number;
+  hasUnread: boolean;
+  lastReadChapterNumber: number | null;
+  targetChapterNumber: number;
+}
+
+export interface FollowedUpdatesSummary {
+  unreadStoriesCount: number;
+  unreadChaptersCount: number;
+}
+
+export interface PaginatedFollowedStoryUpdates
+  extends PaginatedResult<FollowedStoryUpdateItem> {
+  summary: FollowedUpdatesSummary;
 }
 
 export interface FollowedAuthorStoryItem {
@@ -96,6 +160,17 @@ export interface FollowedAuthorItem {
   followedStoryCount: number;
 }
 
+interface StoryUpdateSnapshot {
+  latestChapter: FollowedChapterBrief | null;
+  recentNewChapters: FollowedChapterBrief[];
+  unreadChapterCount: number;
+  hasUnread: boolean;
+  lastReadChapterNumber: number | null;
+  targetChapterNumber: number | null;
+  followedAt: Date;
+  updatesSeenAt: Date | null;
+}
+
 @Injectable()
 export class FollowsService {
   private readonly logger = new Logger(FollowsService.name);
@@ -109,6 +184,12 @@ export class FollowsService {
     private readonly userModel: Model<UserDocument>,
     @InjectModel(AuthorProfile.name)
     private readonly authorProfileModel: Model<AuthorProfileDocument>,
+    @InjectModel(Chapter.name)
+    private readonly chapterModel: Model<ChapterDocument>,
+    @InjectModel(ReadingHistory.name)
+    private readonly readingHistoryModel: Model<ReadingHistoryDocument>,
+    @Optional()
+    private readonly notificationsService?: NotificationsService,
   ) {}
 
   async toggleFollow(
@@ -383,10 +464,549 @@ export class FollowsService {
     }
 
     const [result] = await aggregate.exec();
-    const items = (result?.items ?? []) as FollowedStoryItem[];
+    const rawItems = (result?.items ?? []) as FollowedStoryItem[];
     const totalItems = result?.totalItems?.[0]?.count ?? 0;
 
+    if (rawItems.length === 0) {
+      return { items: [], pagination: buildPaginationMeta(totalItems, page, limit) };
+    }
+
+    const userObjectId = this.toObjectId(userId);
+    const storyIds = rawItems.map((item) => new Types.ObjectId(String(item._id)));
+    const followRows = await this.followModel
+      .find({
+        userId: userObjectId,
+        targetType: FollowTargetType.STORY,
+        targetId: { $in: storyIds },
+      })
+      .select('targetId createdAt updatesSeenAt')
+      .lean()
+      .exec();
+
+    const snapshotMap = await this.computeStoryUpdateSnapshots(
+      userObjectId,
+      followRows,
+    );
+
+    const items = rawItems.map((item) => {
+      const snap = snapshotMap.get(String(item._id));
+      return {
+        ...item,
+        latestChapter: snap?.latestChapter ?? null,
+        unreadChapterCount: snap?.unreadChapterCount ?? 0,
+        lastReadChapterNumber: snap?.lastReadChapterNumber ?? null,
+      };
+    });
+
     return { items, pagination: buildPaginationMeta(totalItems, page, limit) };
+  }
+
+  async getFollowedUpdatesSummary(
+    userId: string,
+  ): Promise<FollowedUpdatesSummary> {
+    const userObjectId = this.toObjectId(userId);
+
+    const followRows = await this.followModel
+      .find({
+        userId: userObjectId,
+        targetType: FollowTargetType.STORY,
+      })
+      .select('targetId createdAt updatesSeenAt')
+      .lean()
+      .exec();
+
+    if (!followRows.length) {
+      return { unreadStoriesCount: 0, unreadChaptersCount: 0 };
+    }
+
+    const publicStories = await this.storyModel
+      .find({
+        _id: { $in: followRows.map((f) => f.targetId) },
+        status: StoryStatus.PUBLISHED,
+        visibility: StoryVisibility.PUBLIC,
+      })
+      .select('_id')
+      .lean()
+      .exec();
+
+    if (!publicStories.length) {
+      return { unreadStoriesCount: 0, unreadChaptersCount: 0 };
+    }
+
+    const publicIdSet = new Set(publicStories.map((s) => String(s._id)));
+    const publicFollowRows = followRows.filter((f) =>
+      publicIdSet.has(String(f.targetId)),
+    );
+
+    const snapshotMap = await this.computeStoryUpdateSnapshots(
+      userObjectId,
+      publicFollowRows,
+    );
+
+    let unreadStoriesCount = 0;
+    let unreadChaptersCount = 0;
+
+    for (const snap of snapshotMap.values()) {
+      if (snap.unreadChapterCount > 0) {
+        unreadStoriesCount += 1;
+        unreadChaptersCount += snap.unreadChapterCount;
+      }
+    }
+
+    return { unreadStoriesCount, unreadChaptersCount };
+  }
+
+  async getFollowedStoryUpdates(
+    userId: string,
+    query: QueryFollowedUpdatesDto,
+  ): Promise<PaginatedFollowedStoryUpdates> {
+    const page = query.page || 1;
+    const limit = query.limit || 12;
+    const userObjectId = this.toObjectId(userId);
+
+    const followRows = await this.followModel
+      .find({
+        userId: userObjectId,
+        targetType: FollowTargetType.STORY,
+      })
+      .select('targetId createdAt updatesSeenAt')
+      .lean()
+      .exec();
+
+    if (!followRows.length) {
+      return {
+        items: [],
+        pagination: buildPaginationMeta(0, page, limit),
+        summary: { unreadStoriesCount: 0, unreadChaptersCount: 0 },
+      };
+    }
+
+    const storyDocs = await this.storyModel
+      .find({
+        _id: { $in: followRows.map((f) => f.targetId) },
+        status: StoryStatus.PUBLISHED,
+        visibility: StoryVisibility.PUBLIC,
+      })
+      .select('_id title slug coverUrl progressState authorId stats updatedAt')
+      .lean()
+      .exec();
+
+    if (!storyDocs.length) {
+      return {
+        items: [],
+        pagination: buildPaginationMeta(0, page, limit),
+        summary: { unreadStoriesCount: 0, unreadChaptersCount: 0 },
+      };
+    }
+
+    const storyMap = new Map(storyDocs.map((s) => [String(s._id), s]));
+    const publicFollowRows = followRows.filter((f) =>
+      storyMap.has(String(f.targetId)),
+    );
+
+    const snapshotMap = await this.computeStoryUpdateSnapshots(
+      userObjectId,
+      publicFollowRows,
+    );
+
+    let unreadStoriesCount = 0;
+    let unreadChaptersCount = 0;
+
+    for (const snap of snapshotMap.values()) {
+      if (snap.unreadChapterCount > 0) {
+        unreadStoriesCount += 1;
+        unreadChaptersCount += snap.unreadChapterCount;
+      }
+    }
+
+    const searchRegex = query.search?.trim()
+      ? new RegExp(query.search.trim(), 'i')
+      : null;
+
+    interface RankedUpdateCandidate {
+      storyDoc: any;
+      snapshot: StoryUpdateSnapshot;
+    }
+
+    const candidates: RankedUpdateCandidate[] = [];
+    for (const follow of publicFollowRows) {
+      const storyIdStr = String(follow.targetId);
+      const storyDoc = storyMap.get(storyIdStr);
+      const snap = snapshotMap.get(storyIdStr);
+
+      if (!storyDoc || !snap || !snap.latestChapter) {
+        continue;
+      }
+
+      if (query.onlyUnread && snap.unreadChapterCount <= 0) {
+        continue;
+      }
+
+      if (
+        searchRegex &&
+        !searchRegex.test(storyDoc.title || '') &&
+        !searchRegex.test(storyDoc.slug || '')
+      ) {
+        continue;
+      }
+
+      candidates.push({ storyDoc, snapshot: snap });
+    }
+
+    // Sắp xếp mới phát hành nhất lên đầu
+    candidates.sort((a, b) => {
+      const timeA = a.snapshot.latestChapter?.releasedAt?.getTime() ?? 0;
+      const timeB = b.snapshot.latestChapter?.releasedAt?.getTime() ?? 0;
+      if (timeB !== timeA) return timeB - timeA;
+      return String(a.storyDoc.title).localeCompare(
+        String(b.storyDoc.title),
+        'vi',
+      );
+    });
+
+    const totalItems = candidates.length;
+    const paged = candidates.slice((page - 1) * limit, page * limit);
+
+    // Chỉ truy vấn thông tin tác giả cho đúng trang hiện tại
+    const authorIds = Array.from(
+      new Set(
+        paged
+          .map((c) => c.storyDoc.authorId)
+          .filter(Boolean)
+          .map((id) => String(id)),
+      ),
+    ).map((id) => new Types.ObjectId(id));
+
+    const [authorUsers, authorProfiles] =
+      authorIds.length > 0
+        ? await Promise.all([
+            this.userModel
+              .find({ _id: { $in: authorIds } })
+              .select('username displayName avatarUrl')
+              .lean()
+              .exec(),
+            this.authorProfileModel
+              .find({ userId: { $in: authorIds } })
+              .select('userId penName')
+              .lean()
+              .exec(),
+          ])
+        : [[], []];
+
+    const authorUserMap = new Map(
+      authorUsers.map((u) => [String(u._id), u]),
+    );
+    const authorProfileMap = new Map(
+      authorProfiles.map((p) => [String(p.userId), p]),
+    );
+
+    const items: FollowedStoryUpdateItem[] = paged.map(
+      ({ storyDoc, snapshot }) => {
+        const authorIdStr = storyDoc.authorId ? String(storyDoc.authorId) : '';
+        const authorUser = authorUserMap.get(authorIdStr);
+        const authorProfile = authorProfileMap.get(authorIdStr);
+
+        return {
+          story: {
+            _id: String(storyDoc._id),
+            title: storyDoc.title,
+            slug: storyDoc.slug,
+            coverUrl: storyDoc.coverUrl ?? null,
+            progressState: storyDoc.progressState,
+            author: authorUser
+              ? {
+                  _id: String(authorUser._id),
+                  username: authorUser.username,
+                  displayName: authorUser.displayName,
+                  penName: authorProfile?.penName || authorUser.displayName,
+                  avatarUrl: authorUser.avatarUrl ?? null,
+                }
+              : null,
+            stats: {
+              chapterCount: storyDoc.stats?.chapterCount ?? 0,
+              viewCount: storyDoc.stats?.viewCount ?? 0,
+            },
+          },
+          followedAt: snapshot.followedAt,
+          updatesSeenAt: snapshot.updatesSeenAt,
+          latestChapter: snapshot.latestChapter!,
+          recentNewChapters: snapshot.recentNewChapters,
+          unreadChapterCount: snapshot.unreadChapterCount,
+          hasUnread: snapshot.hasUnread,
+          lastReadChapterNumber: snapshot.lastReadChapterNumber,
+          targetChapterNumber:
+            snapshot.targetChapterNumber ??
+            snapshot.latestChapter!.chapterNumber,
+        };
+      },
+    );
+
+    return {
+      items,
+      pagination: buildPaginationMeta(totalItems, page, limit),
+      summary: { unreadStoriesCount, unreadChaptersCount },
+    };
+  }
+
+  async markFollowedUpdatesSeen(
+    userId: string,
+    storyId?: string,
+  ): Promise<{ updatedCount: number; seenAt: Date }> {
+    const userObjectId = this.toObjectId(userId);
+    const now = new Date();
+
+    if (storyId) {
+      const storyObjectId = this.toObjectId(storyId);
+      const result = await this.followModel
+        .updateOne(
+          {
+            userId: userObjectId,
+            targetType: FollowTargetType.STORY,
+            targetId: storyObjectId,
+          },
+          { $set: { updatesSeenAt: now } },
+        )
+        .exec();
+
+      try {
+        await this.notificationsService?.markNewChapterNotificationsAsRead(
+          userId,
+          { storyId: storyObjectId },
+        );
+      } catch {
+        // Bỏ qua lỗi đồng bộ notification
+      }
+
+      return { updatedCount: result.modifiedCount ?? 0, seenAt: now };
+    }
+
+    const result = await this.followModel
+      .updateMany(
+        {
+          userId: userObjectId,
+          targetType: FollowTargetType.STORY,
+        },
+        { $set: { updatesSeenAt: now } },
+      )
+      .exec();
+
+    try {
+      await this.notificationsService?.markNewChapterNotificationsAsRead(
+        userId,
+        {},
+      );
+    } catch {
+      // Bỏ qua lỗi đồng bộ notification
+    }
+
+    return { updatedCount: result.modifiedCount ?? 0, seenAt: now };
+  }
+
+  /**
+   * Tính toán snapshot chương mới nhất, danh sách chương mới chưa đọc/chưa xem và tiến độ đọc
+   * cho một tập các truyện mà user đang theo dõi (tôn trọng ràng buộc liên tục & lịch phát hành).
+   */
+  private async computeStoryUpdateSnapshots(
+    userObjectId: Types.ObjectId,
+    followRows: Array<{
+      targetId: Types.ObjectId;
+      createdAt?: Date;
+      updatesSeenAt?: Date | null;
+      _id?: Types.ObjectId;
+    }>,
+  ): Promise<Map<string, StoryUpdateSnapshot>> {
+    const result = new Map<string, StoryUpdateSnapshot>();
+    if (!followRows || followRows.length === 0) {
+      return result;
+    }
+
+    const storyIds = followRows.map((f) => new Types.ObjectId(String(f.targetId)));
+    const now = new Date();
+
+    const [firstUnreleasedRows, publishedChapters, readHistoryRows] =
+      await Promise.all([
+        this.chapterModel.aggregate<{
+          _id: Types.ObjectId;
+          minUnreleasedNumber: number;
+        }>([
+          {
+            $match: {
+              storyId: { $in: storyIds },
+              $or: [
+                { status: { $ne: ChapterStatus.PUBLISHED } },
+                { scheduledAt: { $gt: now } },
+              ],
+            },
+          },
+          {
+            $group: {
+              _id: '$storyId',
+              minUnreleasedNumber: { $min: '$chapterNumber' },
+            },
+          },
+        ]),
+        this.chapterModel
+          .find({
+            storyId: { $in: storyIds },
+            status: ChapterStatus.PUBLISHED,
+            $or: [{ scheduledAt: null }, { scheduledAt: { $lte: now } }],
+          })
+          .select(
+            '_id storyId chapterNumber title wordCount releasedAt scheduledAt createdAt',
+          )
+          .sort({ storyId: 1, chapterNumber: -1 })
+          .lean()
+          .exec(),
+        this.readingHistoryModel.aggregate<{
+          _id: { storyId: Types.ObjectId; chapterId: Types.ObjectId };
+        }>([
+          {
+            $match: {
+              userId: userObjectId,
+              storyId: { $in: storyIds },
+            },
+          },
+          {
+            $group: {
+              _id: { storyId: '$storyId', chapterId: '$chapterId' },
+            },
+          },
+        ]),
+      ]);
+
+    const minUnreleasedMap = new Map<string, number>();
+    for (const row of firstUnreleasedRows) {
+      minUnreleasedMap.set(String(row._id), row.minUnreleasedNumber);
+    }
+
+    const readChapterIdSet = new Set<string>();
+    for (const row of readHistoryRows) {
+      if (row?._id?.chapterId) {
+        readChapterIdSet.add(String(row._id.chapterId));
+      }
+    }
+
+    const chaptersByStory = new Map<string, any[]>();
+    for (const ch of publishedChapters as any[]) {
+      const sId = String(ch.storyId);
+      const cutoff = minUnreleasedMap.get(sId);
+      if (cutoff !== undefined && ch.chapterNumber >= cutoff) {
+        continue;
+      }
+      const list = chaptersByStory.get(sId) ?? [];
+      list.push(ch);
+      chaptersByStory.set(sId, list);
+    }
+
+    for (const follow of followRows) {
+      const sId = String(follow.targetId);
+      const followedAt = this.resolveDateFallback(
+        follow.createdAt,
+        follow._id,
+      );
+      const updatesSeenAt = follow.updatesSeenAt
+        ? new Date(follow.updatesSeenAt)
+        : null;
+      const seenCutoff = updatesSeenAt ?? followedAt;
+
+      const releasedChapters = chaptersByStory.get(sId) ?? [];
+      if (releasedChapters.length === 0) {
+        result.set(sId, {
+          latestChapter: null,
+          recentNewChapters: [],
+          unreadChapterCount: 0,
+          hasUnread: false,
+          lastReadChapterNumber: null,
+          targetChapterNumber: null,
+          followedAt,
+          updatesSeenAt,
+        });
+        continue;
+      }
+
+      let lastReadChapterNumber: number | null = null;
+      const unreadChapters: FollowedChapterBrief[] = [];
+
+      const mappedChapters: FollowedChapterBrief[] = releasedChapters.map(
+        (ch) => {
+          const chId = String(ch._id);
+          const isRead = readChapterIdSet.has(chId);
+          if (
+            isRead &&
+            (lastReadChapterNumber === null ||
+              ch.chapterNumber > lastReadChapterNumber)
+          ) {
+            lastReadChapterNumber = ch.chapterNumber;
+          }
+
+          const releasedAt = this.resolveChapterReleasedAt(ch);
+          const isUnread =
+            !isRead && releasedAt.getTime() > seenCutoff.getTime();
+
+          const brief: FollowedChapterBrief = {
+            _id: chId,
+            chapterNumber: ch.chapterNumber,
+            title: ch.title,
+            wordCount: typeof ch.wordCount === 'number' ? ch.wordCount : 0,
+            releasedAt,
+            isUnread,
+            isRead,
+          };
+
+          if (isUnread) {
+            unreadChapters.push(brief);
+          }
+
+          return brief;
+        },
+      );
+
+      const latestChapter = mappedChapters[0] ?? null;
+      const recentNewChapters =
+        unreadChapters.length > 0
+          ? unreadChapters.slice(0, 4)
+          : mappedChapters.slice(0, 3);
+
+      const targetChapterNumber =
+        unreadChapters.length > 0
+          ? unreadChapters[unreadChapters.length - 1].chapterNumber
+          : (latestChapter?.chapterNumber ?? null);
+
+      result.set(sId, {
+        latestChapter,
+        recentNewChapters,
+        unreadChapterCount: unreadChapters.length,
+        hasUnread: unreadChapters.length > 0,
+        lastReadChapterNumber,
+        targetChapterNumber,
+        followedAt,
+        updatesSeenAt,
+      });
+    }
+
+    return result;
+  }
+
+  private resolveChapterReleasedAt(ch: {
+    releasedAt?: Date | null;
+    scheduledAt?: Date | null;
+    createdAt?: Date | null;
+    _id?: Types.ObjectId;
+  }): Date {
+    if (ch.releasedAt) return new Date(ch.releasedAt);
+    if (ch.scheduledAt) return new Date(ch.scheduledAt);
+    return this.resolveDateFallback(ch.createdAt, ch._id);
+  }
+
+  private resolveDateFallback(
+    value?: Date | null,
+    objectId?: Types.ObjectId,
+  ): Date {
+    if (value) return new Date(value);
+    if (objectId && typeof objectId.getTimestamp === 'function') {
+      return objectId.getTimestamp();
+    }
+    return new Date(0);
   }
 
   async getFollowedAuthors(

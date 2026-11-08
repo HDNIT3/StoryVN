@@ -14,9 +14,12 @@ type StoryFetchResult =
 // Hàm lấy thông tin cơ bản của truyện từ API ở phía máy chủ (Server-side)
 async function getStory(slug: string): Promise<StoryFetchResult> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+    const apiUrl = (
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"
+    ).replace(/\/$/, "");
     const res = await fetch(`${apiUrl}/stories/${slug}`, {
       next: { revalidate: 60 }, // Cache 60s để tăng tốc độ và giảm tải cho backend
+      signal: AbortSignal.timeout(2500),
     });
 
     if (res.status === 404) return { status: "not-found" };
@@ -99,5 +102,10 @@ export default async function StoryDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  return <StoryDetailView slug={slug} />;
+  return (
+    <StoryDetailView
+      slug={slug}
+      initialStory={result.status === "ok" ? result.story : undefined}
+    />
+  );
 }

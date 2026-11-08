@@ -101,10 +101,38 @@ export function AuthorSidebar() {
   };
 
   return (
-    <aside
-      className={`bg-white border-r border-slate-200/90 flex flex-col shrink-0 sticky top-16 h-[calc(100vh-64px)] transition-all duration-300 ease-in-out select-none shadow-[1px_0_4px_rgba(0,0,0,0.02)] z-30 hidden lg:flex ${isCollapsed ? "w-20 min-w-20" : "w-72 min-w-72"
-        }`}
-    >
+    <>
+      {/* ─── MOBILE / TABLET NAVIGATION BAR (Hiển thị trên màn hình < lg) ─── */}
+      <div className="lg:hidden w-full bg-white border-b border-slate-200/90 sticky top-16 sm:top-20 z-30 shadow-2xs">
+        <nav
+          aria-label="Điều hướng khu vực tác giả"
+          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar px-3.5 py-2.5"
+        >
+          {authorMenuItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
+                  active
+                    ? "bg-sky-600 text-white shadow-2xs"
+                    : "bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900"
+                }`}
+              >
+                <span className="scale-90">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* ─── DESKTOP SIDEBAR (Hiển thị trên màn hình >= lg) ──────────────── */}
+      <aside
+        className={`bg-white border-r border-slate-200/90 flex flex-col shrink-0 sticky top-16 h-[calc(100vh-64px)] transition-all duration-300 ease-in-out select-none shadow-[1px_0_4px_rgba(0,0,0,0.02)] z-30 hidden lg:flex ${isCollapsed ? "w-20 min-w-20" : "w-72 min-w-72"
+          }`}
+      >
       {/* Top Header / Profile Card */}
       <div className="border-b border-slate-100 flex flex-col transition-all">
         {isCollapsed ? (
@@ -253,5 +281,6 @@ export function AuthorSidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

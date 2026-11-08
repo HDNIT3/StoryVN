@@ -173,6 +173,37 @@ export class Chapter {
   })
   scheduledAt?: Date | null;
 
+  /**
+   * Thời điểm thực tế chương được phát hành công khai cho độc giả.
+   */
+  @Prop({
+    type: Date,
+    default: null,
+    index: true,
+  })
+  releasedAt?: Date | null;
+
+  /**
+   * Thời điểm hệ thống đã phát thông báo NEW_CHAPTER tới người theo dõi truyện.
+   * Dùng làm khóa chống gửi trùng khi kiểm duyệt lại / bỏ ẩn / chạy job định kỳ.
+   */
+  @Prop({
+    type: Date,
+    default: null,
+    index: true,
+  })
+  followerNotifiedAt?: Date | null;
+
+  /**
+   * Cờ đánh dấu chương đã được duyệt và đang chờ phát hành/gửi thông báo (ví dụ hẹn giờ tương lai).
+   * Tránh quét nhầm các chương lịch sử cũ chưa từng có trường followerNotifiedAt.
+   */
+  @Prop({
+    type: Boolean,
+    default: false,
+  })
+  notifyFollowersPending?: boolean;
+
   @Prop({
     type: String,
     default: null,
@@ -198,6 +229,7 @@ export const ChapterSchema = SchemaFactory.createForClass(Chapter);
 ChapterSchema.index({ storyId: 1, chapterNumber: 1 }, { unique: true });
 
 // Index phục vụ lọc trạng thái và sắp xếp theo truyện
-ChapterSchema.index({ storyId: 1, status: 1 });
+ChapterSchema.index({ storyId: 1, status: 1, chapterNumber: 1 });
 ChapterSchema.index({ storyId: 1, createdAt: -1 });
+ChapterSchema.index({ status: 1, notifyFollowersPending: 1, scheduledAt: 1 });
 ChapterSchema.index({ 'revisions.status': 1 });

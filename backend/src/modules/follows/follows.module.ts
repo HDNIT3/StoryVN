@@ -1,5 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema.js';
+import {
+  ReadingHistory,
+  ReadingHistorySchema,
+} from '../reading-history/schemas/reading-history.schema.js';
 import {
   AuthorProfile,
   AuthorProfileSchema,
@@ -15,6 +20,8 @@ import { FollowsService } from './services/follows.service.js';
     MongooseModule.forFeature([
       { name: Follow.name, schema: FollowSchema },
       { name: Story.name, schema: StorySchema },
+      { name: Chapter.name, schema: ChapterSchema },
+      { name: ReadingHistory.name, schema: ReadingHistorySchema },
       { name: User.name, schema: UserSchema },
       { name: AuthorProfile.name, schema: AuthorProfileSchema },
     ]),

@@ -36,6 +36,16 @@ export class Follow {
   })
   targetId: Types.ObjectId;
 
+  /**
+   * Thời điểm cuối cùng người dùng đánh dấu đã xem cập nhật chương mới của truyện này.
+   * Khi null, hệ thống lấy mốc createdAt (chỉ tính chương mới sau khi theo dõi).
+   */
+  @Prop({
+    type: Date,
+    default: null,
+  })
+  updatesSeenAt?: Date | null;
+
   createdAt: Date;
 }
 

@@ -41,9 +41,9 @@ export default function NguoiDungLayout({
     pathname?.startsWith("/tac-gia") && !pathname?.startsWith("/tac-gia/dang-ky");
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50/50">
+    <div className="min-h-screen flex flex-col overflow-x-clip bg-zinc-50/50">
       <SmartHeader />
-      <main className="flex-1 w-full">{children}</main>
+      <main className="flex-1 w-full min-w-0 overflow-x-clip">{children}</main>
       {!isAuthorDashboard && <Footer />}
     </div>
   );

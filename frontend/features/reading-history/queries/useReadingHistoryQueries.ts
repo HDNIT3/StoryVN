@@ -6,6 +6,8 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { followsKeys } from "@/features/follows/queries/follows.keys";
+import { notificationKeys } from "@/features/notifications/queries/notification.keys";
 import { readingHistoryService } from "../services/reading-history.service";
 import { readingHistoryKeys } from "./reading-history.keys";
 import type { QueryReadingHistoryParams } from "../types";
@@ -46,6 +48,8 @@ export function useRecordReading() {
       return res.data;
     },
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+      queryClient.invalidateQueries({ queryKey: followsKeys.all });
       if (!data?.recorded) return;
       queryClient.invalidateQueries({ queryKey: readingHistoryKeys.all });
     },

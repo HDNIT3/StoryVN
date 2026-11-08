@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { ToastContainer } from "@/components/ui/Toast";
 import { CookieBanner } from "@/components/ui/CookieBanner";
@@ -12,7 +11,16 @@ import { toast } from "@/lib/toast";
 
 import { useRealtimeNotifications } from "@/features/notifications";
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+const ReactQueryDevtools =
+  process.env.NODE_ENV === "development"
+    ? dynamic(
+        () =>
+          import("@tanstack/react-query-devtools").then(
+            (mod) => mod.ReactQueryDevtools
+          ),
+        { ssr: false }
+      )
+    : () => null;
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   // Tạo QueryClient instance theo component lifecycle (khuyến nghị cho Next.js App Router)
@@ -32,15 +40,13 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        <AuthProvider>
-          <AuthLogoutListener />
-          <RealtimeNotificationListener />
-          {children}
-          <CookieBanner />
-          <ToastContainer />
-        </AuthProvider>
-      </GoogleOAuthProvider>
+      <AuthProvider>
+        <AuthLogoutListener />
+        <RealtimeNotificationListener />
+        {children}
+        <CookieBanner />
+        <ToastContainer />
+      </AuthProvider>
       {process.env.NODE_ENV === "development" && (
         <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
       )}
@@ -57,10 +63,26 @@ function RealtimeNotificationListener() {
 // Lắng nghe event auth:logout khi 401 không refresh được
 function AuthLogoutListener() {
   const router = useRouter();
+  const lastHandledRef = useRef(0);
+
   useEffect(() => {
     const handler = () => {
+      const now = Date.now();
+      if (now - lastHandledRef.current < 2000) return;
+      lastHandledRef.current = now;
+
+      const pathname = window.location.pathname;
+      if (
+        pathname.startsWith("/dang-nhap") ||
+        pathname.startsWith("/dang-ky") ||
+        pathname.startsWith("/quen-mat-khau")
+      ) {
+        return;
+      }
+
       toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
-      router.push("/dang-nhap");
+      const returnTarget = `${pathname}${window.location.search}`;
+      router.push(`/dang-nhap?returnUrl=${encodeURIComponent(returnTarget)}`);
     };
     window.addEventListener("auth:logout", handler);
     return () => window.removeEventListener("auth:logout", handler);

@@ -86,7 +86,7 @@ function AuthorLink({ author }: { author?: StoryDetailData["author"] }) {
     <>
       {avatar && (
         <span className="relative w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-200">
-          <Image src={avatar} alt={name} fill unoptimized sizes="24px" className="object-cover" />
+          <Image src={avatar} alt={name} fill sizes="24px" className="object-cover" />
         </span>
       )}
       <span>{name}</span>
@@ -182,10 +182,10 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
                 src={story.coverUrl}
                 alt={story.title}
                 fill
-                unoptimized
                 sizes="(max-width: 640px) 176px, 224px"
                 className="object-cover"
                 priority
+                fetchPriority="high"
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 p-4 text-center">
@@ -231,7 +231,7 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
           </div>
 
           {/* Thống kê */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-2xl bg-zinc-50/80 border border-zinc-200/60">
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3 p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 border border-zinc-200/60">
             <div className="text-center">
               <div className="text-xs text-zinc-500 font-medium">Lượt đọc</div>
               <div className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5">
@@ -244,7 +244,7 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
                 {formatNumber(story.stats?.followCount)}
               </div>
             </div>
-            <button type="button" onClick={onOpenRatings} className="text-center border-l border-zinc-200/60 hover:bg-amber-50/50 rounded-lg p-1 transition-colors cursor-pointer">
+            <button type="button" onClick={onOpenRatings} className="text-center sm:border-l border-zinc-200/60 hover:bg-amber-50/50 rounded-lg p-1 transition-colors cursor-pointer">
               <div className="text-xs text-zinc-500 font-medium">Đánh giá</div>
               <div className="text-base sm:text-lg font-bold text-amber-600 mt-0.5 flex items-center justify-center gap-1">
                 <span>★</span>
@@ -257,7 +257,7 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
                 {publicChapterCount}
               </div>
             </div>
-            <div className="text-center border-l border-zinc-200/60">
+            <div className="col-span-2 sm:col-span-1 pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l border-zinc-200/60 text-center">
               <div className="text-xs text-zinc-500 font-medium">Số từ</div>
               <div
                 className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5"
@@ -310,11 +310,10 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
               type="button"
               onClick={onToggleFollow}
               disabled={isFollowPending}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all cursor-pointer ${
-                isFollowing
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all cursor-pointer ${isFollowing
                   ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 shadow-2xs"
                   : "bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 border-zinc-200/80"
-              } disabled:opacity-60`}
+                } disabled:opacity-60`}
             >
               {isFollowPending ? (
                 <div className="w-4 h-4 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />

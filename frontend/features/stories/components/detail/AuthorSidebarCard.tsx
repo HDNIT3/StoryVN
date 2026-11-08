@@ -40,7 +40,7 @@ export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({
                 src={avatar}
                 alt={name}
                 fill
-                unoptimized
+                loading="lazy"
                 sizes="80px"
                 className="object-cover"
               />

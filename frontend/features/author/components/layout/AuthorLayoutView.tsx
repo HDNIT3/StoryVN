@@ -61,12 +61,12 @@ export function AuthorLayoutView({ children }: AuthorLayoutViewProps) {
 
   // Chỉ người dùng là Tác giả chính thức mới hiển thị giao diện quản lý
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#f8fafc] flex w-full">
-      {/* Persistent Author Sidebar */}
+    <div className="min-h-[calc(100vh-64px)] bg-[#f8fafc] flex flex-col lg:flex-row w-full min-w-0">
+      {/* Persistent Author Sidebar (Desktop) & Top Nav Bar (Mobile/Tablet) */}
       <AuthorSidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0">{children}</main>
+      <main className="flex-1 min-w-0 w-full">{children}</main>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import { chapterService, chapterKeys } from "@/features/chapters";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useFollowStatus, useToggleFollow } from "@/features/follows";
 import { toast } from "@/lib/toast";
-import type { SameGenreStoryItem } from "@/features/stories";
+import type { SameGenreStoryItem, StoryDetailData } from "@/features/stories";
 import { StoryDetailHeader } from "./StoryDetailHeader";
 import { StoryDetailTabs } from "./StoryDetailTabs";
 import { StoryChapterList } from "./StoryChapterList";
@@ -18,9 +18,13 @@ import { SameGenreStoriesWidget } from "./SameGenreStoriesWidget";
 
 interface StoryDetailViewProps {
   slug?: string;
+  initialStory?: StoryDetailData;
 }
 
-export const StoryDetailView: React.FC<StoryDetailViewProps> = ({ slug: initialSlug }) => {
+export const StoryDetailView: React.FC<StoryDetailViewProps> = ({
+  slug: initialSlug,
+  initialStory,
+}) => {
   const params = useParams();
   const slugParam =
     initialSlug ||
@@ -60,6 +64,13 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({ slug: initialS
     queryKey: storyKeys.bySlug(slugParam),
     queryFn: () => storyService.getStoryBySlug(slugParam),
     enabled: !!slugParam,
+    initialData: initialStory
+      ? {
+          success: true,
+          message: "OK",
+          data: initialStory,
+        }
+      : undefined,
   });
 
   const story = storyRes?.data;
@@ -80,15 +91,18 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({ slug: initialS
   const publicChapterCount =
     chaptersRes?.data?.total ?? story?.stats?.chapterCount ?? 0;
 
-  // Chương đầu tiên
+  // Chương đầu tiên (nếu đang sort asc thì lấy luôn phần tử đầu tiên để tránh gọi trùng API)
   const firstChapterQuery = { page: 1, limit: 1, order: "asc" as const };
   const { data: firstChapterRes } = useQuery({
     queryKey: chapterKeys.bySlug(slugParam, firstChapterQuery),
     queryFn: () => chapterService.getChaptersBySlug(slugParam, firstChapterQuery),
-    enabled: !!slugParam,
+    enabled: !!slugParam && chapterOrder !== "asc",
     staleTime: 5 * 60 * 1000,
   });
-  const firstChapter = firstChapterRes?.data?.items?.[0];
+  const firstChapter =
+    chapterOrder === "asc"
+      ? chapters[0]
+      : firstChapterRes?.data?.items?.[0];
 
   // Handler chia sẻ liên kết truyện
   const handleShare = async () => {

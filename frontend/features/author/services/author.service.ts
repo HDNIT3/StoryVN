@@ -6,6 +6,7 @@ import type {
   AuthorCommunityStats,
   PaginatedAuthorsList,
   QueryAuthorsParams,
+  AuthorOverviewData,
 } from "../types";
 
 export interface ApiResponse<T = unknown> {
@@ -15,6 +16,13 @@ export interface ApiResponse<T = unknown> {
 }
 
 export const authorService = {
+  /**
+   * Lấy thống kê tổng quan studio của tác giả đang đăng nhập
+   */
+  getAuthorOverview() {
+    return api.get<ApiResponse<AuthorOverviewData>>("/authors/me/overview");
+  },
+
   /**
    * Lấy thống kê cộng đồng tác giả StoryVN (số tác giả, truyện, chương)
    */
