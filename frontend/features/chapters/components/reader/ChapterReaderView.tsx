@@ -252,7 +252,11 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   }
 
   return (
-    <div className={`min-h-screen ${t.bg} transition-colors duration-200`}>
+    <div
+      className={`min-h-screen ${t.bg} transition-all duration-300 ${
+        showComments ? "lg:pr-[420px] xl:pr-[460px]" : ""
+      }`}
+    >
       {/* Top bar (Thanh điều hướng đầu trang gọn gàng, không lặp lại nút cài đặt/nghe) */}
       <ReaderTopBar
         slug={slug}

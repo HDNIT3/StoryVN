@@ -83,7 +83,11 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
       {/* ─── DESKTOP TOOLBAR (Cố định bên trái nội dung đọc) ────────────── */}
       <aside
         aria-label="Bộ công cụ đọc truyện"
-        className={`hidden lg:flex fixed left-3 xl:left-[max(1rem,calc(50vw-24rem-5.5rem))] top-1/2 -translate-y-1/2 z-40 flex-col items-center p-1.5 rounded-2xl border backdrop-blur-md transition-all select-none ${themeClasses.dockBg}`}
+        className={`hidden lg:flex fixed ${
+          showComments
+            ? "left-2.5 xl:left-4"
+            : "left-3 xl:left-[max(1rem,calc(50vw-24rem-5.5rem))]"
+        } top-1/2 -translate-y-1/2 z-40 flex-col items-center p-1.5 rounded-2xl border backdrop-blur-md transition-all select-none ${themeClasses.dockBg}`}
       >
         {/* 1. Nút Mục lục / Phân chương */}
         <div className="relative group">

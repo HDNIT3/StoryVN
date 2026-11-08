@@ -110,76 +110,25 @@ export const ReaderCommentDrawer: React.FC<ReaderCommentDrawerProps> = ({
   }[theme];
 
   return (
-    <>
-      {/* Lớp nền mờ khi mở bình luận (click ra ngoài để đóng) */}
+    /* Khung bình luận cạnh phải màn hình (Không dùng lớp mờ backdrop để người đọc vừa xem truyện vừa chat/bình luận) */
+    <aside
+      ref={containerRef}
+      aria-label="Khung bình luận chương"
+      aria-hidden={!isOpen}
+      className={`fixed top-0 right-0 bottom-0 z-40 w-full sm:w-[380px] md:w-[420px] lg:w-[420px] xl:w-[460px] h-full flex flex-col shadow-[-8px_0_30px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-out select-none ${
+        isOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"
+      } ${themeClasses.panelBg}`}
+    >
+      {/* Header khung bình luận */}
       <div
-        className={`fixed inset-0 z-50 transition-opacity duration-300 ${
-          isOpen
-            ? "opacity-100 pointer-events-auto bg-black/40 backdrop-blur-xs"
-            : "opacity-0 pointer-events-none"
-        }`}
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Khung bình luận dạng trượt từ cạnh phải màn hình (giống YouTube Shorts) */}
-      <aside
-        ref={containerRef}
-        aria-label="Khung bình luận chương"
-        aria-hidden={!isOpen}
-        className={`fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[440px] md:w-[480px] h-full flex flex-col shadow-[-12px_0_35px_rgba(0,0,0,0.18)] transition-transform duration-300 ease-out select-none ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        } ${themeClasses.panelBg}`}
+        className={`flex items-center justify-between px-4 sm:px-5 py-3.5 shrink-0 ${themeClasses.headerBg}`}
       >
-        {/* Header khung bình luận */}
-        <div
-          className={`flex items-center justify-between px-4 sm:px-5 py-3.5 shrink-0 ${themeClasses.headerBg}`}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${themeClasses.iconBg}`}
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-bold truncate">
-                  Bình luận
-                </h2>
-                <span
-                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${themeClasses.badge}`}
-                >
-                  {totalComments}
-                </span>
-              </div>
-              <p className={`text-xs truncate ${themeClasses.subText}`}>
-                Chương {chapterNumber}
-              </p>
-            </div>
-          </div>
-
-          {/* Nút đóng (X) */}
-          <button
-            type="button"
-            onClick={onClose}
-            className={`p-2 rounded-xl transition-all cursor-pointer ${themeClasses.closeBtn}`}
-            title="Đóng bình luận (Esc)"
-            aria-label="Đóng bình luận"
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${themeClasses.iconBg}`}
           >
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -188,92 +137,129 @@ export const ReaderCommentDrawer: React.FC<ReaderCommentDrawerProps> = ({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-          </button>
-        </div>
-
-        {/* Khung nhập bình luận (cố định ở đầu danh sách như Shorts) */}
-        <div className={`p-4 shrink-0 select-text ${themeClasses.inputBg}`}>
-          <CommentInputBox
-            onSubmit={handlePostComment}
-            isSubmitting={isSubmitting}
-            placeholder={`Bình luận về chương ${chapterNumber}...`}
-          />
-        </div>
-
-        {/* Danh sách bình luận cuộn dọc */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 select-text custom-scrollbar">
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="p-4 rounded-2xl bg-black/5 dark:bg-white/5 animate-pulse h-20"
-                />
-              ))}
-            </div>
-          ) : isError ? (
-            <div className="p-6 rounded-2xl bg-black/5 dark:bg-white/5 text-center text-xs opacity-70">
-              Không thể tải bình luận của chương.
-            </div>
-          ) : items.length === 0 ? (
-            <div
-              className={`p-6 rounded-2xl border border-dashed text-center ${themeClasses.emptyBox}`}
-            >
-              <p className="text-xs sm:text-sm font-semibold">
-                Chưa có ai bình luận về chương này.
-              </p>
-              <p className="text-xs opacity-75 mt-1">
-                Hãy là người đầu tiên để lại cảm nghĩ nhé!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <CommentItemCard
-                  key={item._id}
-                  comment={item}
-                  storyId={storyId}
-                  storyAuthorId={storyAuthorId}
-                  storySlug={storySlug}
-                  targetCommentId={targetCommentId}
-                  targetParentId={targetParentId}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Phân trang danh sách */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between gap-2 pt-3 pb-1 border-t border-inherit/20 text-xs">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className={`px-3 py-1.5 rounded-lg border font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${themeClasses.pageBtn}`}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-bold truncate">
+                Bình luận
+              </h2>
+              <span
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${themeClasses.badge}`}
               >
-                Trang trước
-              </button>
-              <span className={`font-medium ${themeClasses.subText}`}>
-                Trang {pagination.page} / {pagination.totalPages}
+                {totalComments}
               </span>
-              <button
-                type="button"
-                disabled={page >= pagination.totalPages}
-                onClick={() =>
-                  setPage((p) => Math.min(pagination.totalPages, p + 1))
-                }
-                className={`px-3 py-1.5 rounded-lg border font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${themeClasses.pageBtn}`}
-              >
-                Trang sau
-              </button>
             </div>
-          )}
+            <p className={`text-xs truncate ${themeClasses.subText}`}>
+              Chương {chapterNumber}
+            </p>
+          </div>
         </div>
-      </aside>
-    </>
+
+        {/* Nút đóng (X) */}
+        <button
+          type="button"
+          onClick={onClose}
+          className={`p-2 rounded-xl transition-all cursor-pointer ${themeClasses.closeBtn}`}
+          title="Đóng bình luận (Esc)"
+          aria-label="Đóng bình luận"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Khung nhập bình luận (cố định ở đầu danh sách như Shorts) */}
+      <div className={`p-4 shrink-0 select-text ${themeClasses.inputBg}`}>
+        <CommentInputBox
+          onSubmit={handlePostComment}
+          isSubmitting={isSubmitting}
+          placeholder={`Bình luận về chương ${chapterNumber}...`}
+        />
+      </div>
+
+      {/* Danh sách bình luận cuộn dọc */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 select-text custom-scrollbar">
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="p-4 rounded-2xl bg-black/5 dark:bg-white/5 animate-pulse h-20"
+              />
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="p-6 rounded-2xl bg-black/5 dark:bg-white/5 text-center text-xs opacity-70">
+            Không thể tải bình luận của chương.
+          </div>
+        ) : items.length === 0 ? (
+          <div
+            className={`p-6 rounded-2xl border border-dashed text-center ${themeClasses.emptyBox}`}
+          >
+            <p className="text-xs sm:text-sm font-semibold">
+              Chưa có ai bình luận về chương này.
+            </p>
+            <p className="text-xs opacity-75 mt-1">
+              Hãy là người đầu tiên để lại cảm nghĩ nhé!
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {items.map((item) => (
+              <CommentItemCard
+                key={item._id}
+                comment={item}
+                storyId={storyId}
+                storyAuthorId={storyAuthorId}
+                storySlug={storySlug}
+                targetCommentId={targetCommentId}
+                targetParentId={targetParentId}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Phân trang danh sách */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between gap-2 pt-3 pb-1 border-t border-inherit/20 text-xs">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className={`px-3 py-1.5 rounded-lg border font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${themeClasses.pageBtn}`}
+            >
+              Trang trước
+            </button>
+            <span className={`font-medium ${themeClasses.subText}`}>
+              Trang {pagination.page} / {pagination.totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={page >= pagination.totalPages}
+              onClick={() =>
+                setPage((p) => Math.min(pagination.totalPages, p + 1))
+              }
+              className={`px-3 py-1.5 rounded-lg border font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${themeClasses.pageBtn}`}
+            >
+              Trang sau
+            </button>
+          </div>
+        )}
+      </div>
+    </aside>
   );
 };
-
