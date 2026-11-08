@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -22,18 +22,27 @@ export const PublicStoriesListView: React.FC = () => {
   const searchParams = useSearchParams();
 
   // Đọc params từ URL
-  const initialSearch = searchParams.get("search") || "";
-  const initialGenre = searchParams.get("genre") || "";
-  const initialProgress = (searchParams.get("progressState") as StoryProgressState) || "";
-  const initialSort = (searchParams.get("sortBy") as StorySortOption) || "published";
-  const initialPage = parseInt(searchParams.get("page") || "1", 10) || 1;
+  const urlSearch = searchParams.get("search") || "";
+  const urlGenre = searchParams.get("genre") || "";
+  const urlProgress = (searchParams.get("progressState") as StoryProgressState) || "";
+  const urlSort = (searchParams.get("sortBy") as StorySortOption) || "published";
+  const urlPage = parseInt(searchParams.get("page") || "1", 10) || 1;
 
   // State điều khiển
-  const [searchInput, setSearchInput] = useState(initialSearch);
-  const [selectedGenre, setSelectedGenre] = useState<string>(initialGenre);
-  const [selectedProgress, setSelectedProgress] = useState<string>(initialProgress);
-  const [selectedSort, setSelectedSort] = useState<StorySortOption>(initialSort);
-  const [currentPage, setCurrentPage] = useState<number>(initialPage);
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const [selectedGenre, setSelectedGenre] = useState<string>(urlGenre);
+  const [selectedProgress, setSelectedProgress] = useState<string>(urlProgress);
+  const [selectedSort, setSelectedSort] = useState<StorySortOption>(urlSort);
+  const [currentPage, setCurrentPage] = useState<number>(urlPage);
+
+  // Đồng bộ state khi searchParams trên URL thay đổi (ví dụ: click thể loại từ Header)
+  useEffect(() => {
+    setSearchInput(urlSearch);
+    setSelectedGenre(urlGenre);
+    setSelectedProgress(urlProgress);
+    setSelectedSort(urlSort);
+    setCurrentPage(urlPage);
+  }, [urlSearch, urlGenre, urlProgress, urlSort, urlPage]);
 
   // Popover state
   const [openDropdown, setOpenDropdown] = useState<"genre" | "progress" | "sort" | null>(null);
@@ -47,7 +56,7 @@ export const PublicStoriesListView: React.FC = () => {
     isLoading: isLoadingStories,
   } = useQuery({
     queryKey: storyKeys.filtered({
-      search: initialSearch,
+      search: urlSearch,
       genre: selectedGenre,
       progressState: selectedProgress,
       sortBy: selectedSort,
@@ -56,7 +65,7 @@ export const PublicStoriesListView: React.FC = () => {
     }),
     queryFn: async () => {
       const res = await storyService.getStories({
-        search: initialSearch || undefined,
+        search: urlSearch || undefined,
         genre: selectedGenre || undefined,
         progressState: (selectedProgress as StoryProgressState) || undefined,
         sortBy: selectedSort,

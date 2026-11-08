@@ -257,8 +257,8 @@ export function NotificationBell({
   }[size];
 
   const dropdownPositionClass = mobileDrawerMode
-    ? "left-0 top-full mt-2"
-    : "right-0 top-full mt-2";
+    ? "sm:left-0 sm:right-auto sm:top-full sm:mt-2"
+    : "sm:right-0 sm:left-auto sm:top-full sm:mt-2";
 
   return (
     <div ref={dropdownRef} className={`relative inline-block shrink-0 ${className}`}>
@@ -310,19 +310,28 @@ export function NotificationBell({
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <NotificationDropdown
-          dropdownPositionClass={dropdownPositionClass}
-          unreadCount={unreadCount}
-          notifications={notifications}
-          isLoading={isLoading}
-          onMarkAllRead={() => markAllMutation.mutate()}
-          isMarkingAllRead={markAllMutation.isPending}
-          onDeleteRead={() => deleteReadMutation.mutate()}
-          isDeletingRead={deleteReadMutation.isPending}
-          onMarkRead={handleMarkRead}
-          onDelete={handleDelete}
-          onNavigate={handleNavigate}
-        />
+        <>
+          {/* Mobile backdrop to easily close on tap outside */}
+          <div
+            className="fixed inset-0 z-[65] bg-black/20 backdrop-blur-[1px] sm:hidden"
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
+          />
+          <NotificationDropdown
+            dropdownPositionClass={dropdownPositionClass}
+            unreadCount={unreadCount}
+            notifications={notifications}
+            isLoading={isLoading}
+            onMarkAllRead={() => markAllMutation.mutate()}
+            isMarkingAllRead={markAllMutation.isPending}
+            onDeleteRead={() => deleteReadMutation.mutate()}
+            isDeletingRead={deleteReadMutation.isPending}
+            onMarkRead={handleMarkRead}
+            onDelete={handleDelete}
+            onNavigate={handleNavigate}
+            onClose={() => setIsOpen(false)}
+          />
+        </>
       )}
     </div>
   );

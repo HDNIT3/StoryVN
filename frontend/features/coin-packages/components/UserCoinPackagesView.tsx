@@ -95,21 +95,6 @@ export function UserCoinPackagesView() {
 
       {/* ─── Main Content Container (Căn cùng độ rộng max-w-5xl) ───────── */}
       <div className="max-w-5xl mx-auto">
-        {/* ─── Alert Sandbox Cảnh báo môi trường thử nghiệm ─── */}
-        <div className="mb-6 rounded-xl border-2 border-amber-400 bg-amber-50/90 p-4 sm:p-5 shadow-xs text-amber-900 flex items-start gap-3.5">
-          <div className="text-2xl sm:text-3xl shrink-0 leading-none">
-            ⚠️
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-sm sm:text-base font-extrabold text-amber-900 tracking-tight">
-              Hệ thống đang chạy trên môi trường Sandbox
-            </h3>
-            <p className="text-xs sm:text-sm text-amber-800 leading-relaxed font-medium">
-              Vui lòng <strong>CHỈ SỬ DỤNG</strong> tài khoản test, tuyệt đối không dùng tiền thật! Đây là chức năng mô phỏng thanh toán VNPay phục vụ đánh giá đồ án.
-            </p>
-          </div>
-        </div>
-
         {/* Loading Skeleton: Card nhỏ gọn */}
         {isLoading && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5">

@@ -6,3 +6,5 @@ export * from "./ReaderTtsBar";
 export * from "./ReaderContent";
 export * from "./ReaderNavigation";
 export * from "./ReaderChapterModal";
+export * from "./ReaderSideToolbar";
+export * from "./ReaderCommentDrawer";
