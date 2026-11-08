@@ -187,6 +187,7 @@ function HeaderGenreNavItem({
                       href={`/truyen?genre=${encodeURIComponent(
                         genre.slug || genre._id
                       )}`}
+                      scroll={true}
                       onClick={() => {
                         setIsOpen(false);
                         onClick?.(item);

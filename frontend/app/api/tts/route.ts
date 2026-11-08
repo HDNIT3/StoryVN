@@ -19,7 +19,16 @@ const BROWSER_HEADERS = {
  * Đặt ở server để tránh CORS và giấu chi tiết dịch vụ bên ngoài.
  */
 export async function GET(request: NextRequest) {
-  const text = (request.nextUrl.searchParams.get("text") ?? "").trim();
+  const rawText = (request.nextUrl.searchParams.get("text") ?? "").trim();
+
+  // Loại bỏ dấu ngoặc kép và các ký tự đặc biệt khiến Google TTS đọc thành chữ "ngoặc kép" / "dấu ngoặc kép"
+  const text = rawText
+    .replace(/["“”«»„‟″`]/g, " ")
+    .replace(/(^|[\s.,!?;:…])['‘]([^'’]+)['’]([\s.,!?;:…]|$)/g, "$1$2$3")
+    .replace(/['‘’]/g, " ")
+    .replace(/[*=\-_~]{2,}/g, " ")
+    .replace(/[ \t\f\v]+/g, " ")
+    .trim();
 
   if (!text) {
     return new Response("Thiếu nội dung cần đọc", { status: 400 });

@@ -15,7 +15,10 @@ const MAX_CHUNK_LENGTH = 170;
 const STORAGE_SPEED = "reader_tts_speed";
 
 interface TtsChunk {
+  /** Văn bản gốc (dùng để tô sáng đúng câu trong bài viết). */
   text: string;
+  /** Văn bản đã lọc bỏ ngoặc kép / ký tự lạ (dành riêng cho giọng đọc phát âm). */
+  spokenText: string;
   blockIndex: number;
 }
 
@@ -35,7 +38,30 @@ export interface UseSpeechReaderResult {
   play: () => void;
   pause: () => void;
   stop: () => void;
+  next: () => void;
+  prev: () => void;
+  /** Bắt đầu nghe từ đoạn văn cụ thể (người dùng bấm chọn đoạn). */
+  playFromBlock: (blockIndex: number) => void;
   setSpeed: (speed: number) => void;
+}
+
+/**
+ * Loại bỏ dấu ngoặc kép và các ký tự đặc biệt khiến Google TTS phát âm thành chữ "ngoặc kép", "dấu ngoặc kép".
+ */
+export function cleanTextForSpeech(text: string): string {
+  if (!text) return "";
+
+  return text
+    // Bỏ tất cả các loại dấu ngoặc kép đôi
+    .replace(/["“”«»„‟″`]/g, " ")
+    // Bỏ dấu nháy đơn bao quanh lời thoại hoặc đứng độc lập
+    .replace(/(^|[\s.,!?;:…])['‘]([^'’]+)['’]([\s.,!?;:…]|$)/g, "$1$2$3")
+    .replace(/['‘’]/g, " ")
+    // Bỏ các ký tự chia đoạn truyện (ví dụ: ***, ---, ===) tránh phát âm "sao sao sao"
+    .replace(/[*=\-_~]{2,}/g, " ")
+    // Gộp khoảng trắng thừa
+    .replace(/[ \t\f\v]+/g, " ")
+    .trim();
 }
 
 function splitIntoChunks(text: string): string[] {
@@ -94,7 +120,7 @@ export function useSpeechReader(content?: string | null): UseSpeechReaderResult 
   const generationRef = useRef(0);
   const speedRef = useRef(speed);
   const statusRef = useRef<TtsStatus>("idle");
-  /** text -> Promise<blob url> (đã tải xong hoặc đang tải). */
+  /** spokenText -> Promise<blob url> (đã tải xong hoặc đang tải). */
   const audioCacheRef = useRef<Map<string, Promise<string>>>(new Map());
   const playChunkRef = useRef<(index: number) => void>(() => {});
 
@@ -104,7 +130,14 @@ export function useSpeechReader(content?: string | null): UseSpeechReaderResult 
 
     blocks.forEach((block, blockIndex) => {
       for (const text of splitIntoChunks(block)) {
-        result.push({ text, blockIndex });
+        const spokenText = cleanTextForSpeech(text);
+        if (spokenText || text) {
+          result.push({
+            text,
+            spokenText: spokenText || text,
+            blockIndex,
+          });
+        }
       }
     });
 
@@ -144,30 +177,30 @@ export function useSpeechReader(content?: string | null): UseSpeechReaderResult 
     return audioRef.current;
   }, []);
 
-  const getAudioUrl = useCallback((text: string): Promise<string> => {
+  const getAudioUrl = useCallback((spokenText: string): Promise<string> => {
     const cache = audioCacheRef.current;
-    const cached = cache.get(text);
+    const cached = cache.get(spokenText);
     if (cached) return cached;
 
-    const promise = fetch(buildTtsUrl(text))
+    const promise = fetch(buildTtsUrl(spokenText))
       .then((response) => {
         if (!response.ok) throw new Error("TTS_FAILED");
         return response.blob();
       })
       .then((blob) => URL.createObjectURL(blob));
 
-    cache.set(text, promise);
+    cache.set(spokenText, promise);
     // Lỗi thì xoá khỏi cache để lần sau thử lại
-    promise.catch(() => cache.delete(text));
+    promise.catch(() => cache.delete(spokenText));
 
     return promise;
   }, []);
 
   const prefetch = useCallback(
     (index: number) => {
-      const next = chunksRef.current[index];
-      if (!next) return;
-      getAudioUrl(next.text).catch(() => {});
+      const nextChunk = chunksRef.current[index];
+      if (!nextChunk) return;
+      getAudioUrl(nextChunk.spokenText).catch(() => {});
     },
     [getAudioUrl]
   );
@@ -190,11 +223,11 @@ export function useSpeechReader(content?: string | null): UseSpeechReaderResult 
       setCurrentIndex(safeIndex);
 
       const generation = generationRef.current;
-      const text = list[safeIndex].text;
+      const spokenText = list[safeIndex].spokenText;
 
       setStatus("loading");
 
-      getAudioUrl(text)
+      getAudioUrl(spokenText)
         .then((url) => {
           if (generation !== generationRef.current) return;
 
@@ -302,6 +335,59 @@ export function useSpeechReader(content?: string | null): UseSpeechReaderResult 
     setStatus("idle");
   }, []);
 
+  /**
+   * Phát từ một đoạn văn (blockIndex) do người dùng chọn trên giao diện đọc.
+   */
+  const playFromBlock = useCallback(
+    (blockIndex: number) => {
+      const list = chunksRef.current;
+      if (list.length === 0) return;
+
+      // Tìm mẩu đầu tiên thuộc đoạn văn này
+      let targetIndex = list.findIndex((c) => c.blockIndex === blockIndex);
+      if (targetIndex === -1) {
+        targetIndex = list.findIndex((c) => c.blockIndex >= blockIndex);
+        if (targetIndex === -1) targetIndex = 0;
+      }
+
+      generationRef.current += 1;
+      const audio = audioRef.current;
+      if (audio) {
+        audio.pause();
+        audio.removeAttribute("src");
+      }
+
+      playChunk(targetIndex);
+    },
+    [playChunk]
+  );
+
+  /** Chuyển sang mẩu kế tiếp. */
+  const next = useCallback(() => {
+    const list = chunksRef.current;
+    if (indexRef.current < list.length - 1) {
+      generationRef.current += 1;
+      const audio = audioRef.current;
+      if (audio) {
+        audio.pause();
+        audio.removeAttribute("src");
+      }
+      playChunk(indexRef.current + 1);
+    }
+  }, [playChunk]);
+
+  /** Quay lại mẩu phía trước. */
+  const prev = useCallback(() => {
+    const target = Math.max(0, indexRef.current - 1);
+    generationRef.current += 1;
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute("src");
+    }
+    playChunk(target);
+  }, [playChunk]);
+
   const setSpeed = useCallback((value: number) => {
     setSpeedState(value);
     try {
@@ -325,6 +411,9 @@ export function useSpeechReader(content?: string | null): UseSpeechReaderResult 
     play,
     pause,
     stop,
+    next,
+    prev,
+    playFromBlock,
     setSpeed,
   };
 }

@@ -14,8 +14,10 @@ import { ReaderTtsBar } from "./ReaderTtsBar";
 import { ReaderContent } from "./ReaderContent";
 import { ReaderNavigation } from "./ReaderNavigation";
 import { ReaderChapterModal } from "./ReaderChapterModal";
+import { ReaderSideToolbar } from "./ReaderSideToolbar";
+import { ReaderCommentDrawer } from "./ReaderCommentDrawer";
 import { useSpeechReader } from "../../hooks/useSpeechReader";
-import { ChapterCommentSection } from "@/features/comments";
+import { useStoryComments } from "@/features/comments";
 
 interface ChapterReaderViewProps {
   slug: string;
@@ -35,6 +37,7 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [chapterPage, setChapterPage] = useState(1);
   const [showTts, setShowTts] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const settingsRef = useRef<HTMLDivElement>(null);
   const ttsRef = useRef<HTMLDivElement>(null);
@@ -119,8 +122,30 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   const tts = useSpeechReader(chapter?.content);
 
   // Record reading history (if authenticated)
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { mutate: recordReading } = useRecordReading();
+
+  // Kiểm tra quyền chỉnh sửa chương (Tác giả, Quản trị viên, Quản lý)
+  const canEdit = Boolean(
+    user &&
+      chapterId &&
+      (user.role === "ADMIN" ||
+        user.role === "MANAGER" ||
+        user.role === "AUTHOR" ||
+        user._id === (story as any)?.authorId ||
+        user._id === (story as any)?.author?._id ||
+        user._id === (story as any)?.author ||
+        user.username === (story as any)?.author?.username ||
+        user.username === (story as any)?.author)
+  );
+
+  // Lấy số lượng bình luận của chương hiện tại
+  const { data: commentsRes } = useStoryComments(story?._id || "", {
+    page: 1,
+    limit: 1,
+    chapterId: chapterId,
+  });
+  const commentCount = commentsRes?.data?.pagination?.totalItems ?? 0;
 
   useEffect(() => {
     if (isAuthenticated && chapterId) {
@@ -169,11 +194,12 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [chapter, router, slug, showChapterModal]);
 
-  // Scroll to top on chapter change (chỉ khi không có commentId đang cần scroll tới)
+  // Scroll to top on chapter change (nếu có commentId thì tự động mở khung bình luận)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.has("commentId") || window.location.hash.includes("comment-")) {
+        setShowComments(true);
         return;
       }
     }
@@ -227,39 +253,60 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
 
   return (
     <div className={`min-h-screen ${t.bg} transition-colors duration-200`}>
-      {/* Top bar */}
+      {/* Top bar (Thanh điều hướng đầu trang gọn gàng, không lặp lại nút cài đặt/nghe) */}
       <ReaderTopBar
         slug={slug}
         storyTitle={story?.title}
         chapterNumber={chapter.chapterNumber}
         theme={theme}
-        onToggleSettings={() => {
-          setShowSettings(!showSettings);
-          setShowTts(false);
-        }}
-        showSettings={showSettings}
-        settingsRef={settingsRef}
-        settingsContent={
-          <ReaderSettingsModal
-            theme={theme}
-            onThemeChange={handleThemeChange}
-            fontSize={fontSize}
-            onFontSizeChange={handleFontSizeChange}
-            lineHeight={lineHeight}
-            onLineHeightChange={handleLineHeightChange}
-          />
-        }
-        onToggleTts={() => {
-          setShowTts(!showTts);
-          setShowSettings(false);
-        }}
-        showTts={showTts}
-        ttsRef={ttsRef}
-        ttsActive={
-          tts.status === "playing" || tts.status === "paused" || tts.status === "loading"
-        }
-        ttsContent={<ReaderTtsBar theme={theme} reader={tts} />}
       />
+
+      {/* Bộ công cụ đọc truyện cố định bên trái (Desktop & Mobile) */}
+      {chapterId && (
+        <ReaderSideToolbar
+          slug={slug}
+          chapterNumber={chapter.chapterNumber}
+          chapterId={chapterId}
+          theme={theme}
+          onOpenChapterModal={openChapterModal}
+          onToggleTts={() => {
+            setShowTts(!showTts);
+            setShowSettings(false);
+          }}
+          ttsActive={
+            tts.status === "playing" || tts.status === "paused" || tts.status === "loading"
+          }
+          showTts={showTts}
+          ttsContent={
+            <ReaderTtsBar
+              theme={theme}
+              reader={tts}
+              className="w-80 rounded-2xl border p-4 shadow-2xl"
+            />
+          }
+          ttsRef={ttsRef}
+          onToggleSettings={() => {
+            setShowSettings(!showSettings);
+            setShowTts(false);
+          }}
+          showSettings={showSettings}
+          settingsContent={
+            <ReaderSettingsModal
+              theme={theme}
+              onThemeChange={handleThemeChange}
+              fontSize={fontSize}
+              onFontSizeChange={handleFontSizeChange}
+              lineHeight={lineHeight}
+              onLineHeightChange={handleLineHeightChange}
+              className="w-72 rounded-2xl border p-4 shadow-2xl"
+            />
+          }
+          settingsRef={settingsRef}
+          commentCount={commentCount}
+          onToggleComments={() => setShowComments((prev) => !prev)}
+          showComments={showComments}
+        />
+      )}
 
       {/* Main Reading Container */}
       <main className="max-w-3xl mx-auto px-4 sm:px-6">
@@ -278,6 +325,7 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
           activeBlockIndex={tts.activeBlockIndex}
           activeText={tts.activeText}
           highlighting={tts.highlighting}
+          onSelectBlock={tts.playFromBlock}
         />
 
         {/* Bottom Navigation */}
@@ -292,18 +340,102 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
           onScrollToTop={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         />
 
-        {/* Khu vực bình luận chương */}
+        {/* Nút mở khung bình luận ở cuối chương */}
         {story?._id && chapter?._id && (
-          <ChapterCommentSection
-            storyId={story._id}
-            chapterId={chapter._id}
-            chapterNumber={chapter.chapterNumber}
-            storyAuthorId={(story as any)?.authorId || (story as any)?.author?._id}
-            storySlug={slug}
-            theme={theme}
-          />
+          <div className="mt-8 mb-16">
+            <button
+              type="button"
+              onClick={() => setShowComments(true)}
+              className={`w-full p-4 sm:p-5 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${
+                theme === "dark"
+                  ? "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 text-zinc-100 hover:bg-zinc-900"
+                  : theme === "vintage"
+                  ? "bg-[#f5f0e6]/60 border-[#ede7de] hover:border-[#ded5c7] text-[#2c2725] hover:bg-[#f5f0e6]"
+                  : "bg-zinc-50 border-zinc-200 hover:border-zinc-300 text-zinc-800 hover:bg-zinc-100/80"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+                    theme === "dark"
+                      ? "bg-zinc-800 text-amber-400"
+                      : theme === "vintage"
+                      ? "bg-[#faedd9] text-[#8b1e17]"
+                      : "bg-sky-50 text-sky-600"
+                  }`}
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.8}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold">Bình luận chương</span>
+                    {commentCount > 0 && (
+                      <span
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                          theme === "dark"
+                            ? "bg-amber-500/20 text-amber-300"
+                            : theme === "vintage"
+                            ? "bg-[#8b1e17]/10 text-[#8b1e17]"
+                            : "bg-sky-100 text-sky-700"
+                        }`}
+                      >
+                        {commentCount}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    {commentCount > 0
+                      ? "Xem thảo luận và chia sẻ cảm nghĩ của bạn"
+                      : "Chưa có bình luận nào. Hãy là người đầu tiên để lại cảm nghĩ!"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-current opacity-80 group-hover:opacity-100">
+                <span>Mở khung bình luận</span>
+                <svg
+                  className="w-4 h-4 transition-transform group-hover:translate-x-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </button>
+          </div>
         )}
       </main>
+
+      {/* Khung bình luận cạnh phải (Kiểu YouTube Shorts) */}
+      {story?._id && chapter?._id && (
+        <ReaderCommentDrawer
+          isOpen={showComments}
+          onClose={() => setShowComments(false)}
+          storyId={story._id}
+          chapterId={chapter._id}
+          chapterNumber={chapter.chapterNumber}
+          storyAuthorId={(story as any)?.authorId || (story as any)?.author?._id}
+          storySlug={slug}
+          theme={theme}
+        />
+      )}
 
       {/* Modal mục lục */}
       <ReaderChapterModal

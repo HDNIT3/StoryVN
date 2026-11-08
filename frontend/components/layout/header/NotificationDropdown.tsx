@@ -16,6 +16,7 @@ interface NotificationDropdownProps {
   onMarkRead: (id: string) => void;
   onDelete: (id: string) => void;
   onNavigate: (notification: Notification) => void;
+  onClose?: () => void;
 }
 
 export function NotificationDropdown({
@@ -30,6 +31,7 @@ export function NotificationDropdown({
   onMarkRead,
   onDelete,
   onNavigate,
+  onClose,
 }: NotificationDropdownProps) {
   const hasRead = notifications.some((n) => n.isRead);
 
@@ -37,8 +39,8 @@ export function NotificationDropdown({
     <div
       role="dialog"
       aria-label="Thông báo"
-      className={`absolute ${dropdownPositionClass} z-[60]
-        w-[340px] sm:w-[380px] max-w-[calc(100vw-24px)]
+      className={`fixed left-3 right-3 top-[68px] sm:absolute ${dropdownPositionClass} z-[70]
+        w-auto sm:w-[380px] sm:max-w-[calc(100vw-24px)]
         bg-white rounded-2xl shadow-2xl border border-zinc-100
         overflow-hidden
         animate-in fade-in zoom-in-95 duration-150`}
@@ -95,6 +97,19 @@ export function NotificationDropdown({
                 />
               </svg>
               Xóa đã đọc
+            </button>
+          )}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Đóng bảng thông báo"
+              title="Đóng"
+              className="flex items-center justify-center w-7 h-7 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           )}
         </div>
