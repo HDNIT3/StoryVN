@@ -235,7 +235,7 @@ export function AuthorChapterHistoryView() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           {selectedChapterId && (
             <Link
               href={`/tac-gia/chuong-truyen/chinh-sua/${selectedChapterId}`}
@@ -311,11 +311,11 @@ export function AuthorChapterHistoryView() {
           </div>
 
           {/* Story Dropdown */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <select
               value={selectedStoryId}
               onChange={(e) => handleStoryChange(e.target.value)}
-              className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-md text-xs sm:text-sm text-zinc-700 font-medium focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 cursor-pointer min-w-[200px]"
+              className="w-full md:w-auto px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-md text-xs sm:text-sm text-zinc-700 font-medium focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 cursor-pointer md:min-w-[200px]"
             >
               <option value="">Tất cả tác phẩm</option>
               {stories.map((story) => (

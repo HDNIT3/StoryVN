@@ -2,146 +2,240 @@
 
 import React from "react";
 import Link from "next/link";
+import type {
+  AuthorRecentCommentItem,
+  AuthorRecentNotificationItem,
+} from "../../types";
 
-interface Comment {
-  id: string;
-  username: string;
-  avatarUrl?: string;
-  storyTitle: string;
-  storySlug: string;
-  content: string;
-  timeAgo: string;
+interface RecentActivityProps {
+  comments?: AuthorRecentCommentItem[];
+  notifications?: AuthorRecentNotificationItem[];
+  isLoading?: boolean;
 }
 
-interface Notification {
-  id: string;
-  icon: string;
-  content: string;
-  timeAgo: string;
+function formatTimeAgo(dateStr?: string): string {
+  if (!dateStr) return "Vừa xong";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "Vừa xong";
+    const diffMs = Date.now() - d.getTime();
+    if (diffMs < 60_000) return "Vừa xong";
+    const mins = Math.floor(diffMs / 60_000);
+    if (mins < 60) return `${mins} phút trước`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} giờ trước`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days} ngày trước`;
+    const months = Math.floor(days / 30);
+    return `${months} tháng trước`;
+  } catch {
+    return "Vừa xong";
+  }
 }
 
-const mockComments: Comment[] = [
-  {
-    id: "1",
-    username: "Trần Minh",
-    storyTitle: "Thiên Đạo Chi Lộ",
-    storySlug: "thien-dao-chi-lo",
-    content: "Truyện rất hay! Mong tác giả ra chương mới sớm ạ!",
-    timeAgo: "2 giờ trước",
-  },
-  {
-    id: "2",
-    username: "Linh Nguyễn",
-    storyTitle: "Dưới Bầu Trời Sao",
-    storySlug: "duoi-bau-troi-sao",
-    content: "Chương mới quá cảm động, cảm ơn tác giả ❤️",
-    timeAgo: "5 giờ trước",
-  },
-  {
-    id: "3",
-    username: "Hùng Vũ",
-    storyTitle: "Thiên Đạo Chi Lộ",
-    storySlug: "thien-dao-chi-lo",
-    content: "Plot twist chương 45 thật sự bất ngờ!",
-    timeAgo: "1 ngày trước",
-  },
-];
+function getNotificationIcon(type?: string): string {
+  switch (type) {
+    case "NEW_CHAPTER":
+      return "📖";
+    case "STORY_MILESTONE":
+      return "🎉";
+    case "COMMENT":
+    case "COMMENT_REPLY":
+      return "💬";
+    case "WALLET":
+    case "COIN":
+      return "💰";
+    default:
+      return "📢";
+  }
+}
 
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    icon: "🎉",
-    content: "Tác phẩm của bạn đã đạt 100K lượt đọc!",
-    timeAgo: "3 ngày trước",
-  },
-  {
-    id: "2",
-    icon: "📢",
-    content: "Chương mới của \"Thiên Đạo Chi Lộ\" đã được duyệt.",
-    timeAgo: "5 ngày trước",
-  },
-  {
-    id: "3",
-    icon: "💰",
-    content: "Bạn nhận được 50,000 xu từ độc giả.",
-    timeAgo: "1 tuần trước",
-  },
-];
-
-export function RecentActivity() {
+export function RecentActivity({
+  comments = [],
+  notifications = [],
+  isLoading = false,
+}: RecentActivityProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
       {/* Latest Comments */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500" />
-            Bình luận mới nhất
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden min-w-0">
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-4 border-b border-slate-100">
+          <h3 className="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2 truncate">
+            <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+            <span className="truncate">Bình luận mới nhất</span>
           </h3>
           <Link
             href="/tac-gia/tac-pham"
-            className="text-xs font-semibold text-sky-600 hover:text-sky-700 transition"
+            className="text-xs font-semibold text-sky-600 hover:text-sky-700 transition shrink-0"
           >
-            Xem tất cả →
+            Xem tác phẩm →
           </Link>
         </div>
-        <div className="divide-y divide-slate-100">
-          {mockComments.map((comment) => (
-            <div key={comment.id} className="p-4 flex items-start gap-3.5 hover:bg-slate-50/50 transition">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center shrink-0 text-sm shadow-xs">
-                {comment.avatarUrl ? (
-                  <img src={comment.avatarUrl} alt={comment.username} className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  comment.username.charAt(0)
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 mb-1">
-                  <strong className="font-semibold text-slate-900">{comment.username}</strong>
-                  <span>đã bình luận ở</span>
-                  <Link href={`/truyen/${comment.storySlug}`} className="text-sky-600 font-medium hover:underline truncate max-w-[150px]">
-                    {comment.storyTitle}
-                  </Link>
-                  <span className="text-slate-400">• {comment.timeAgo}</span>
+
+        {isLoading ? (
+          <div className="divide-y divide-slate-100">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="p-4 flex items-start gap-3.5 animate-pulse">
+                <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-slate-200 rounded w-2/3" />
+                  <div className="h-10 bg-slate-100 rounded w-full" />
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 rounded-lg p-2.5 border border-slate-100">
-                  {comment.content}
-                </p>
               </div>
+            ))}
+          </div>
+        ) : comments.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2.5 text-xl">
+              💬
             </div>
-          ))}
-        </div>
+            <p className="text-xs sm:text-sm font-semibold text-slate-700">
+              Chưa có bình luận nào
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Khi độc giả bình luận ở tác phẩm hoặc chương truyện của bạn, nội dung sẽ hiển thị tại đây.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {comments.map((comment) => {
+              const displayName =
+                comment.user?.displayName || comment.user?.username || "Độc giả";
+              const storyTitle = comment.story?.title || "Tác phẩm";
+              const storySlug = comment.story?.slug || "";
+              const chapterNum = comment.chapter?.chapterNumber;
+              const targetHref =
+                storySlug && chapterNum
+                  ? `/truyen/${storySlug}/chuong/${chapterNum}`
+                  : storySlug
+                  ? `/truyen/${storySlug}`
+                  : "/tac-gia/tac-pham";
+
+              return (
+                <div
+                  key={comment._id}
+                  className="p-4 flex items-start gap-3.5 hover:bg-slate-50/50 transition"
+                >
+                  <div className="w-10 h-10 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center shrink-0 text-sm shadow-xs overflow-hidden">
+                    {comment.user?.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={comment.user.avatarUrl}
+                        alt={displayName}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      displayName.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 mb-1">
+                      <strong className="font-semibold text-slate-900">
+                        {displayName}
+                      </strong>
+                      <span>đã bình luận ở</span>
+                      <Link
+                        href={targetHref}
+                        className="text-sky-600 font-medium hover:underline truncate max-w-[160px] sm:max-w-[220px]"
+                      >
+                        {storyTitle}
+                        {chapterNum ? ` - Chương ${chapterNum}` : ""}
+                      </Link>
+                      <span className="text-slate-400">
+                        • {formatTimeAgo(comment.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 rounded-lg p-2.5 border border-slate-100 break-words">
+                      {comment.content}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Notifications */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            Thông báo
+      {/* Notifications & Recent Milestones */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden min-w-0">
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-4 border-b border-slate-100">
+          <h3 className="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2 truncate">
+            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+            <span className="truncate">Hoạt động & Thông báo</span>
           </h3>
           <Link
-            href="/thong-bao"
-            className="text-xs font-semibold text-sky-600 hover:text-sky-700 transition"
+            href="/tac-gia/chuong-truyen"
+            className="text-xs font-semibold text-sky-600 hover:text-sky-700 transition shrink-0"
           >
-            Xem tất cả →
+            Quản lý chương →
           </Link>
         </div>
-        <div className="divide-y divide-slate-100">
-          {mockNotifications.map((notif) => (
-            <div key={notif.id} className="p-4 flex items-start gap-3.5 hover:bg-slate-50/50 transition">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 text-lg">
-                {notif.icon}
+
+        {isLoading ? (
+          <div className="divide-y divide-slate-100">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="p-4 flex items-start gap-3.5 animate-pulse">
+                <div className="w-10 h-10 rounded-xl bg-slate-200 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 bg-slate-200 rounded w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded w-1/2" />
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-slate-800 mb-1 leading-snug">
-                  {notif.content}
-                </p>
-                <span className="text-[11px] text-slate-400">{notif.timeAgo}</span>
-              </div>
+            ))}
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center mx-auto mb-2.5 text-xl">
+              🔔
             </div>
-          ))}
-        </div>
+            <p className="text-xs sm:text-sm font-semibold text-slate-700">
+              Chưa có thông báo mới
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Các thông báo duyệt chương, cột mốc lượt đọc và tương tác mới sẽ xuất hiện tại đây.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {notifications.map((notif) => {
+              const href =
+                notif.storySlug && notif.chapterNumber
+                  ? `/truyen/${notif.storySlug}/chuong/${notif.chapterNumber}`
+                  : notif.storySlug
+                  ? `/truyen/${notif.storySlug}`
+                  : null;
+
+              const inner = (
+                <div className="p-4 flex items-start gap-3.5 hover:bg-slate-50/50 transition">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 text-lg">
+                    {getNotificationIcon(notif.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 mb-0.5 leading-snug break-words">
+                      {notif.title}
+                    </p>
+                    {notif.message && (
+                      <p className="text-xs text-slate-600 mb-1 leading-relaxed break-words">
+                        {notif.message}
+                      </p>
+                    )}
+                    <span className="text-[11px] text-slate-400">
+                      {formatTimeAgo(notif.createdAt)}
+                    </span>
+                  </div>
+                </div>
+              );
+
+              return href ? (
+                <Link key={notif._id} href={href} className="block">
+                  {inner}
+                </Link>
+              ) : (
+                <div key={notif._id}>{inner}</div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

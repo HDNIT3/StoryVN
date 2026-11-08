@@ -70,11 +70,10 @@ export function FollowedStoryCard({ item }: FollowedStoryCardProps) {
 
             {/* Nhãn tiến độ đáy ảnh bìa */}
             <span
-              className={`absolute bottom-0 inset-x-0 py-0.5 text-center text-[10px] font-bold tracking-wider uppercase text-white ${
-                isCompleted
+              className={`absolute bottom-0 inset-x-0 py-0.5 text-center text-[10px] font-bold tracking-wider uppercase text-white ${isCompleted
                   ? "bg-emerald-600/90"
                   : "bg-zinc-900/85 backdrop-blur-xs"
-              }`}
+                }`}
             >
               {isCompleted ? "Hoàn thành" : "Đang ra"}
             </span>
@@ -143,37 +142,67 @@ export function FollowedStoryCard({ item }: FollowedStoryCardProps) {
           </div>
         </div>
 
-        {/* Thông tin ngày theo dõi */}
-        <div className="flex items-center justify-between text-[11px] text-zinc-400">
-          <span className="inline-flex items-center gap-1.5">
-            <svg
-              className="w-3.5 h-3.5 text-zinc-400 shrink-0"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        {/* Thông tin ngày theo dõi & chương mới */}
+        <div className="space-y-1.5">
+          {(item.unreadChapterCount ?? 0) > 0 ? (
+            <Link
+              href={`/truyen/${item.slug}/chuong/${item.latestChapter?.chapterNumber ?? 1}`}
+              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 hover:bg-emerald-100/80 transition-colors text-xs"
             >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span>Theo dõi: {formatRelativeTime(item.followedAt)}</span>
-          </span>
-          <span className="text-zinc-500 font-medium tabular-nums inline-flex items-center gap-1">
-            <svg
-              className="w-3 h-3 text-zinc-400 shrink-0"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-            {formatNumber(item.stats?.followCount)} theo dõi
-          </span>
+              <span className="inline-flex items-center gap-1.5 font-semibold truncate">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
+                <span className="truncate">
+                  Có {item.unreadChapterCount} chương mới
+                  {item.latestChapter
+                    ? ` (Ch. ${item.latestChapter.chapterNumber})`
+                    : ""}
+                </span>
+              </span>
+              <span className="text-[11px] font-semibold shrink-0">Đọc →</span>
+            </Link>
+          ) : item.latestChapter ? (
+            <div className="flex items-center justify-between gap-2 text-[11px] text-zinc-500">
+              <span className="truncate">
+                Mới nhất: Ch. {item.latestChapter.chapterNumber}:{" "}
+                {item.latestChapter.title}
+              </span>
+              <span className="text-zinc-400 shrink-0">
+                {formatRelativeTime(item.latestChapter.releasedAt)}
+              </span>
+            </div>
+          ) : null}
+
+          <div className="flex items-center justify-between text-[11px] text-zinc-400">
+            <span className="inline-flex items-center gap-1.5">
+              <svg
+                className="w-3.5 h-3.5 text-zinc-400 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <span>Theo dõi: {formatRelativeTime(item.followedAt)}</span>
+            </span>
+            <span className="text-zinc-500 font-medium tabular-nums inline-flex items-center gap-1">
+              <svg
+                className="w-3 h-3 text-zinc-400 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+              {formatNumber(item.stats?.followCount)} theo dõi
+            </span>
+          </div>
         </div>
       </div>
 

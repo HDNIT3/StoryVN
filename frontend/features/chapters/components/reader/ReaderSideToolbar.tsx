@@ -44,7 +44,11 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const handleScrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      document.documentElement?.scrollTo?.({ top: 0, behavior: "smooth" });
+      document.body?.scrollTo?.({ top: 0, behavior: "smooth" });
+    }
   };
 
   // Theme styling cho thanh công cụ
@@ -82,6 +86,7 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
     <>
       {/* ─── DESKTOP TOOLBAR (Cố định bên trái nội dung đọc) ────────────── */}
       <aside
+        data-reader-toolbar="true"
         aria-label="Bộ công cụ đọc truyện"
         className={`hidden lg:flex fixed ${
           showComments
@@ -301,8 +306,46 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
         </div>
       </aside>
 
+      {/* ─── MOBILE POPUP PANEL CHO TTS (NGHE) & CÀI ĐẶT ─────────────────── */}
+      {(showTts || showSettings) && (
+        <div
+          data-reader-toolbar="true"
+          className="lg:hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-6 bg-black/40 backdrop-blur-[1px] animate-in fade-in duration-150"
+          onClick={() => {
+            if (showTts) onToggleTts();
+            if (showSettings) onToggleSettings();
+          }}
+        >
+          <div
+            className="relative w-full max-w-sm animate-in slide-in-from-bottom-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                if (showTts) onToggleTts();
+                if (showSettings) onToggleSettings();
+              }}
+              aria-label="Đóng bảng công cụ"
+              className={`absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors cursor-pointer ${
+                theme === "dark"
+                  ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                  : "bg-stone-200/80 text-stone-700 hover:bg-stone-300"
+              }`}
+            >
+              ✕
+            </button>
+            {showTts && ttsContent}
+            {showSettings && settingsContent}
+          </div>
+        </div>
+      )}
+
       {/* ─── MOBILE TOOLBAR (Cố định góc trái phía dưới trên Mobile/Tablet) ──── */}
-      <div className="lg:hidden fixed left-2.5 bottom-20 z-40 select-none">
+      <div
+        data-reader-toolbar="true"
+        className="lg:hidden fixed left-3 bottom-20 z-40 select-none touch-manipulation"
+      >
         {/* Thanh công cụ mở rộng */}
         {isMobileOpen ? (
           <div
@@ -315,7 +358,7 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                 setIsMobileOpen(false);
                 onOpenChapterModal();
               }}
-              className={`flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all cursor-pointer ${themeClasses.btn}`}
+              className={`flex flex-col items-center justify-center w-12 h-11 rounded-xl transition-all cursor-pointer active:scale-95 ${themeClasses.btn}`}
               title="Mục lục chương"
             >
               <svg
@@ -331,7 +374,7 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                   d="M4 6h16M4 12h16M4 18h7"
                 />
               </svg>
-              <span className="text-[9px] font-semibold">Chương</span>
+              <span className="text-[10px] font-semibold mt-0.5">Chương</span>
             </button>
 
             {/* Phát thanh (TTS) */}
@@ -341,8 +384,8 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                 setIsMobileOpen(false);
                 onToggleTts();
               }}
-              className={`relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all mt-1 cursor-pointer ${
-                ttsActive ? themeClasses.btnActive : themeClasses.btn
+              className={`relative flex flex-col items-center justify-center w-12 h-11 rounded-xl transition-all mt-1 cursor-pointer active:scale-95 ${
+                showTts || ttsActive ? themeClasses.btnActive : themeClasses.btn
               }`}
               title="Phát thanh"
             >
@@ -359,11 +402,11 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                   d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"
                 />
               </svg>
-              <span className="text-[9px] font-semibold">Nghe</span>
+              <span className="text-[10px] font-semibold mt-0.5">Nghe</span>
               {ttsActive && (
-                <span className="absolute top-1 right-1 flex h-1.5 w-1.5">
+                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
               )}
             </button>
@@ -375,7 +418,7 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                 setIsMobileOpen(false);
                 onToggleComments();
               }}
-              className={`relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all mt-1 cursor-pointer ${
+              className={`relative flex flex-col items-center justify-center w-12 h-11 rounded-xl transition-all mt-1 cursor-pointer active:scale-95 ${
                 showComments ? themeClasses.btnActive : themeClasses.btn
               }`}
               title={showComments ? "Đóng bình luận" : "Bình luận"}
@@ -393,10 +436,10 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              <span className="text-[9px] font-semibold">Bình luận</span>
+              <span className="text-[10px] font-semibold mt-0.5">Bình luận</span>
               {commentCount > 0 && !showComments && (
                 <span
-                  className={`absolute -top-1 -right-1 min-w-[15px] h-[15px] px-0.5 text-[8px] font-bold rounded-full flex items-center justify-center ${themeClasses.badge}`}
+                  className={`absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 text-[9px] font-bold rounded-full flex items-center justify-center ${themeClasses.badge}`}
                 >
                   {commentCount > 99 ? "99+" : commentCount}
                 </span>
@@ -410,7 +453,9 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                 setIsMobileOpen(false);
                 onToggleSettings();
               }}
-              className={`flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all mt-1 cursor-pointer ${themeClasses.btn}`}
+              className={`flex flex-col items-center justify-center w-12 h-11 rounded-xl transition-all mt-1 cursor-pointer active:scale-95 ${
+                showSettings ? themeClasses.btnActive : themeClasses.btn
+              }`}
               title="Cài đặt"
             >
               <svg
@@ -426,7 +471,7 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                   d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
                 />
               </svg>
-              <span className="text-[9px] font-semibold">Cài đặt</span>
+              <span className="text-[10px] font-semibold mt-0.5">Cài đặt</span>
             </button>
 
             {/* Lên đầu */}
@@ -436,7 +481,7 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                 setIsMobileOpen(false);
                 handleScrollToTop();
               }}
-              className={`flex flex-col items-center justify-center w-10 h-9 rounded-xl transition-all mt-1 cursor-pointer ${themeClasses.btn}`}
+              className={`flex flex-col items-center justify-center w-12 h-10 rounded-xl transition-all mt-1 cursor-pointer active:scale-95 ${themeClasses.btn}`}
               title="Lên đầu trang"
             >
               <svg
@@ -452,14 +497,14 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                   d="M5 10l7-7m0 0l7 7m-7-7v18"
                 />
               </svg>
-              <span className="text-[8px] font-semibold">Lên đầu</span>
+              <span className="text-[9px] font-semibold mt-0.5">Lên đầu</span>
             </button>
 
             {/* Nút đóng / thu gọn */}
             <button
               type="button"
               onClick={() => setIsMobileOpen(false)}
-              className="mt-1 pt-1 border-t border-inherit/40 flex items-center justify-center w-10 h-7 text-xs opacity-60 hover:opacity-100 cursor-pointer"
+              className="mt-1 pt-1 border-t border-inherit/40 flex items-center justify-center w-12 h-7 text-xs opacity-60 hover:opacity-100 cursor-pointer"
               aria-label="Thu gọn công cụ"
             >
               <svg
@@ -483,7 +528,7 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
             type="button"
             onClick={() => setIsMobileOpen(true)}
             aria-label="Mở bộ công cụ đọc truyện"
-            className={`flex items-center gap-1.5 px-2.5 py-2 rounded-full border shadow-lg backdrop-blur-md transition-all cursor-pointer active:scale-95 ${themeClasses.dockBg}`}
+            className={`flex items-center gap-1.5 px-3 py-2.5 rounded-full border shadow-lg backdrop-blur-md transition-all cursor-pointer active:scale-95 ${themeClasses.dockBg}`}
           >
             <div className="relative">
               <svg
@@ -506,7 +551,7 @@ export const ReaderSideToolbar: React.FC<ReaderSideToolbarProps> = ({
                 </span>
               )}
             </div>
-            <span className="text-[11px] font-bold pr-0.5">Công cụ</span>
+            <span className="text-xs font-bold pr-0.5">Công cụ</span>
           </button>
         )}
       </div>

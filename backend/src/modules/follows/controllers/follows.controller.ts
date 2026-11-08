@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -15,8 +16,10 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator.j
 import { AuthGuard } from '../../../common/guards/auth.guard.js';
 import { User } from '../../users/schemas/user.schema.js';
 import {
+  MarkFollowUpdatesReadDto,
   QueryFollowedAuthorsDto,
   QueryFollowedStoriesDto,
+  QueryFollowedUpdatesDto,
 } from '../dto/query-follows.dto.js';
 import { ToggleFollowDto } from '../dto/toggle-follow.dto.js';
 import { FollowTargetType } from '../schemas/follow.schema.js';
@@ -148,6 +151,63 @@ export class FollowsController {
     return {
       success: true,
       message: 'Lấy danh sách truyện đang theo dõi thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({ summary: 'Lấy danh sách cập nhật chương mới của truyện đang theo dõi' })
+  @Get('updates')
+  @HttpCode(HttpStatus.OK)
+  async getFollowedUpdates(
+    @CurrentUser() user: User & { _id: any },
+    @Query() query: QueryFollowedUpdatesDto,
+  ) {
+    const data = await this.followsService.getFollowedStoryUpdates(
+      user._id.toString(),
+      query,
+    );
+
+    return {
+      success: true,
+      message: 'Lấy danh sách chương mới của truyện theo dõi thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({ summary: 'Lấy tổng số truyện/chương mới chưa xem trong tủ truyện' })
+  @Get('updates/unread-count')
+  @HttpCode(HttpStatus.OK)
+  async getFollowedUpdatesUnreadCount(
+    @CurrentUser() user: User & { _id: any },
+  ) {
+    const data = await this.followsService.getFollowedUpdatesSummary(
+      user._id.toString(),
+    );
+
+    return {
+      success: true,
+      message: 'Lấy thống kê chương mới chưa xem thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({ summary: 'Đánh dấu đã xem cập nhật chương mới cho 1 truyện hoặc tất cả' })
+  @Patch('updates/read')
+  @HttpCode(HttpStatus.OK)
+  async markFollowedUpdatesRead(
+    @CurrentUser() user: User & { _id: any },
+    @Body() dto: MarkFollowUpdatesReadDto,
+  ) {
+    const data = await this.followsService.markFollowedUpdatesSeen(
+      user._id.toString(),
+      dto.storyId,
+    );
+
+    return {
+      success: true,
+      message: dto.storyId
+        ? 'Đã đánh dấu đã xem chương mới cho truyện'
+        : 'Đã đánh dấu đã xem tất cả chương mới',
       data,
     };
   }

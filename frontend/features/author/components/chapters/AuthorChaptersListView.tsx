@@ -307,26 +307,26 @@ export function AuthorChaptersListView() {
 
             {/* Quick Stats overview */}
             {stats && (
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 shrink-0">
-                <div className="bg-zinc-50 border border-zinc-200 rounded-md p-2.5 text-center min-w-[85px]">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5 shrink-0">
+                <div className="bg-zinc-50 border border-zinc-200 rounded-md p-2.5 text-center sm:min-w-[85px]">
                   <span className="text-[11px] text-zinc-400 font-medium block">Tổng chương</span>
                   <span className="text-base font-bold text-zinc-800">{stats.totalChapters}</span>
                 </div>
-                <div className="bg-sky-50 border border-sky-200 rounded-md p-2.5 text-center min-w-[85px]">
+                <div className="bg-sky-50 border border-sky-200 rounded-md p-2.5 text-center sm:min-w-[85px]">
                   <span className="text-[11px] text-sky-600 font-medium block">Tổng từ</span>
                   <span className="text-base font-bold text-sky-700">
                     {(stats.totalWords ?? 0).toLocaleString("vi-VN")}
                   </span>
                 </div>
-                <div className="bg-emerald-50 border border-emerald-200 rounded-md p-2.5 text-center min-w-[85px]">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-md p-2.5 text-center sm:min-w-[85px]">
                   <span className="text-[11px] text-emerald-600 font-medium block">Xuất bản</span>
                   <span className="text-base font-bold text-emerald-700">{stats.published}</span>
                 </div>
-                <div className="bg-amber-50 border border-amber-200 rounded-md p-2.5 text-center min-w-[85px]">
+                <div className="bg-amber-50 border border-amber-200 rounded-md p-2.5 text-center sm:min-w-[85px]">
                   <span className="text-[11px] text-amber-600 font-medium block">Chờ duyệt</span>
                   <span className="text-base font-bold text-amber-700">{stats.pending}</span>
                 </div>
-                <div className="bg-zinc-100 border border-zinc-200 rounded-md p-2.5 text-center min-w-[85px]">
+                <div className="col-span-2 sm:col-span-1 bg-zinc-100 border border-zinc-200 rounded-md p-2.5 text-center sm:min-w-[85px]">
                   <span className="text-[11px] text-zinc-500 font-medium block">Bản nháp</span>
                   <span className="text-base font-bold text-zinc-700">{stats.draft}</span>
                 </div>
@@ -365,26 +365,28 @@ export function AuthorChaptersListView() {
 
       {/* Floating Bulk Action Bar */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900/95 backdrop-blur-md text-white px-5 py-2.5 rounded-lg shadow-xl flex items-center gap-4 border border-zinc-700/80 animate-in fade-in slide-in-from-bottom-4">
-          <span className="text-xs font-semibold">
+        <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100vw-2rem)] sm:w-auto max-w-md bg-zinc-900/95 backdrop-blur-md text-white px-4 sm:px-5 py-2.5 rounded-xl shadow-xl flex items-center justify-between sm:justify-center gap-3 sm:gap-4 border border-zinc-700/80 animate-in fade-in slide-in-from-bottom-4">
+          <span className="text-xs font-semibold whitespace-nowrap">
             Đã chọn <strong className="text-sky-400 font-bold">{selectedIds.length}</strong> chương
           </span>
-          <div className="h-4 w-px bg-zinc-700" />
-          <button
-            type="button"
-            disabled={bulkSubmitMutation.isPending}
-            onClick={handleBulkSubmit}
-            className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-md text-xs font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer"
-          >
-            {bulkSubmitMutation.isPending ? "Đang gửi duyệt..." : `Gửi duyệt (${selectedIds.length})`}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedIds([])}
-            className="text-xs text-zinc-400 hover:text-white transition cursor-pointer"
-          >
-            Bỏ chọn
-          </button>
+          <div className="h-4 w-px bg-zinc-700 hidden sm:block" />
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              disabled={bulkSubmitMutation.isPending}
+              onClick={handleBulkSubmit}
+              className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-md text-xs font-semibold transition shadow-xs disabled:opacity-50 cursor-pointer whitespace-nowrap"
+            >
+              {bulkSubmitMutation.isPending ? "Đang gửi duyệt..." : `Gửi duyệt (${selectedIds.length})`}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="text-xs text-zinc-400 hover:text-white transition cursor-pointer whitespace-nowrap"
+            >
+              Bỏ chọn
+            </button>
+          </div>
         </div>
       )}
 

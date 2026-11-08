@@ -107,7 +107,7 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
     <section id="bang-xep-hang" aria-labelledby="leaderboard-heading" className="relative scroll-mt-36">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-8 top-10 -z-10 h-[280px] rounded-[3rem] bg-gradient-to-r from-sky-200/30 via-indigo-200/25 to-fuchsia-200/20 opacity-70 blur-3xl"
+        className="pointer-events-none absolute inset-x-8 top-10 -z-10 hidden h-[280px] rounded-[3rem] bg-gradient-to-r from-sky-200/30 via-indigo-200/25 to-fuchsia-200/20 opacity-70 blur-3xl sm:block"
       />
 
       <div className="mb-7 flex flex-col gap-4 sm:mb-9 sm:flex-row sm:items-end sm:justify-between">
@@ -213,7 +213,7 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
                               src={story.coverUrl}
                               alt={story.title}
                               fill
-                              unoptimized
+                              loading="lazy"
                               sizes="80px"
                               className="object-cover transition-transform duration-500 group-hover:scale-105"
                             />
@@ -270,7 +270,7 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
                             src={story.coverUrl}
                             alt={story.title}
                             fill
-                            unoptimized
+                            loading="lazy"
                             sizes="48px"
                             className="object-cover"
                           />

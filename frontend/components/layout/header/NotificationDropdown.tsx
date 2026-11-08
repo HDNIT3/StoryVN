@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import type { Notification } from "@/features/notifications";
 import { NotificationItem } from "./NotificationItem";
 
@@ -159,13 +160,20 @@ export function NotificationDropdown({
       </div>
 
       {/* Footer */}
-      {notifications.length > 0 && (
-        <div className="px-4 py-2.5 border-t border-zinc-100 bg-zinc-50/50">
-          <p className="text-[11px] text-zinc-400 text-center">
-            Hiển thị {notifications.length} thông báo gần nhất
-          </p>
-        </div>
-      )}
+      <div className="px-4 py-2.5 border-t border-zinc-100 bg-zinc-50/70 flex items-center justify-between gap-2">
+        <span className="text-[11px] text-zinc-400">
+          {notifications.length > 0
+            ? `Hiển thị ${notifications.length} thông báo gần nhất`
+            : "Cập nhật theo dõi truyện"}
+        </span>
+        <Link
+          href="/tai-khoan/theo-doi?tab=chuong-moi"
+          onClick={onClose}
+          className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 hover:underline transition-colors shrink-0"
+        >
+          Chương mới trong Tủ truyện →
+        </Link>
+      </div>
     </div>
   );
 }

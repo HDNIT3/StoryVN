@@ -77,13 +77,32 @@ const VERIFIED_BADGE_COLORS = [
   "bg-amber-500",
 ];
 
-export function HomeFeaturedAuthorsSection() {
+interface HomeFeaturedAuthorsSectionProps {
+  initialAuthors?: AuthorListItem[];
+}
+
+export function HomeFeaturedAuthorsSection({
+  initialAuthors,
+}: HomeFeaturedAuthorsSectionProps = {}) {
   const { data: authorsData, isLoading } = useQuery({
     queryKey: authorKeys.list({ limit: 8, sortBy: "featured" }),
     queryFn: async () => {
       const res = await authorService.getAuthorsList({ limit: 8, sortBy: "featured" });
       return res.data;
     },
+    initialData: initialAuthors
+      ? {
+          items: initialAuthors,
+          pagination: {
+            page: 1,
+            limit: 8,
+            totalItems: initialAuthors.length,
+            totalPages: 1,
+            hasNextPage: false,
+            hasPrevPage: false,
+          },
+        }
+      : undefined,
   });
 
   const authors: AuthorListItem[] = authorsData?.items || [];

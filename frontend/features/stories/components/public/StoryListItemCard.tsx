@@ -39,7 +39,7 @@ export const StoryListItemCard: React.FC<StoryListItemCardProps> = ({
             src={story.coverUrl}
             alt={story.title}
             fill
-            unoptimized
+            loading="lazy"
             sizes="(max-width: 640px) 112px, 128px"
             className="object-cover"
           />

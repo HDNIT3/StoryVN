@@ -22,6 +22,26 @@ export interface NotificationStreamEvent {
   notification: any;
 }
 
+export interface NotificationPopulatedRefs {
+  story?: {
+    _id: any;
+    title: string;
+    slug: string;
+    coverUrl?: string | null;
+  };
+  chapter?: {
+    _id: any;
+    chapterNumber: number;
+    title: string;
+  };
+  actor?: {
+    _id: any;
+    displayName?: string;
+    username?: string;
+    avatarUrl?: string | null;
+  };
+}
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
@@ -32,7 +52,7 @@ export class NotificationsService {
     private notificationModel: Model<NotificationDocument>,
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
-  ) {}
+  ) { }
 
   /**
    * Tạo stream SSE cho 1 user
@@ -100,8 +120,12 @@ export class NotificationsService {
   /**
    * Tạo nhiều thông báo cùng lúc (batch insert)
    */
-  async createMany(dtos: CreateNotificationDto[]): Promise<void> {
+  async createMany(
+    dtos: CreateNotificationDto[],
+    populatedRefs?: NotificationPopulatedRefs,
+  ): Promise<void> {
     if (!dtos || dtos.length === 0) return;
+
     const docs = dtos.map((dto) => ({
       userId: new Types.ObjectId(dto.userId),
       type: dto.type,
@@ -113,15 +137,164 @@ export class NotificationsService {
       referenceId: dto.referenceId ?? null,
       isRead: false,
     }));
-    const inserted = await this.notificationModel.insertMany(docs);
 
-    // Phát sự kiện realtime cho từng recipient
-    for (const doc of inserted) {
-      this.notificationSubject.next({
-        targetUserIds: [doc.userId.toString()],
-        notification: doc,
-      });
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+      const batch = docs.slice(i, i + BATCH_SIZE);
+      const inserted = await this.notificationModel.insertMany(batch);
+
+      // Phát sự kiện realtime cho từng recipient
+      for (const doc of inserted as any[]) {
+        let notificationForEvent: any =
+          typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
+
+        if (populatedRefs) {
+          if (
+            populatedRefs.story &&
+            doc.storyId &&
+            String(doc.storyId) === String(populatedRefs.story._id)
+          ) {
+            notificationForEvent = {
+              ...notificationForEvent,
+              storyId: populatedRefs.story,
+            };
+          }
+          if (
+            populatedRefs.chapter &&
+            doc.chapterId &&
+            String(doc.chapterId) === String(populatedRefs.chapter._id)
+          ) {
+            notificationForEvent = {
+              ...notificationForEvent,
+              chapterId: populatedRefs.chapter,
+            };
+          }
+          if (
+            populatedRefs.actor &&
+            doc.actorId &&
+            String(doc.actorId) === String(populatedRefs.actor._id)
+          ) {
+            notificationForEvent = {
+              ...notificationForEvent,
+              actorId: populatedRefs.actor,
+            };
+          }
+        }
+
+        this.notificationSubject.next({
+          targetUserIds: [doc.userId.toString()],
+          notification: notificationForEvent,
+        });
+      }
     }
+  }
+
+  /**
+   * Tạo thông báo NEW_CHAPTER gửi tới tất cả độc giả đang theo dõi truyện khi chương mới phát hành
+   */
+  async notifyFollowersNewChapter(params: {
+    followerIds: (string | Types.ObjectId)[];
+    story: {
+      _id: Types.ObjectId | string;
+      title: string;
+      slug: string;
+      coverUrl?: string | null;
+      authorId?: Types.ObjectId | string | null;
+    };
+    chapter: {
+      _id: Types.ObjectId | string;
+      chapterNumber: number;
+      title: string;
+    };
+  }): Promise<number> {
+    const authorIdStr = params.story.authorId
+      ? String(params.story.authorId)
+      : null;
+
+    const uniqueFollowerIds = Array.from(
+      new Set(
+        (params.followerIds || [])
+          .map((id) => String(id))
+          .filter((id) => Types.ObjectId.isValid(id) && id !== authorIdStr),
+      ),
+    );
+
+    if (uniqueFollowerIds.length === 0) return 0;
+
+    const title = `Chương mới: ${params.story.title}`;
+    const message = `Chương ${params.chapter.chapterNumber}: "${params.chapter.title}" vừa được phát hành. Bấm để đọc ngay!`;
+
+    const dtos: CreateNotificationDto[] = uniqueFollowerIds.map((userId) => ({
+      userId,
+      type: NotificationType.NEW_CHAPTER,
+      title,
+      message,
+      storyId: String(params.story._id),
+      chapterId: String(params.chapter._id),
+      actorId: authorIdStr ?? undefined,
+      referenceId: String(params.chapter._id),
+    }));
+
+    try {
+      await this.createMany(dtos, {
+        story: {
+          _id: params.story._id,
+          title: params.story.title,
+          slug: params.story.slug,
+          coverUrl: params.story.coverUrl ?? null,
+        },
+        chapter: {
+          _id: params.chapter._id,
+          chapterNumber: params.chapter.chapterNumber,
+          title: params.chapter.title,
+        },
+      });
+      return uniqueFollowerIds.length;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(
+        `Không thể gửi thông báo chương mới (story=${String(params.story._id)}, chapter=${String(params.chapter._id)}): ${msg}`,
+      );
+      return 0;
+    }
+  }
+
+  /**
+   * Đánh dấu đã đọc các thông báo NEW_CHAPTER (khi đọc chương hoặc đánh dấu đã xem trong Tủ truyện)
+   */
+  async markNewChapterNotificationsAsRead(
+    userId: string,
+    filter: {
+      chapterId?: string | Types.ObjectId;
+      storyId?: string | Types.ObjectId;
+      storyIds?: (string | Types.ObjectId)[];
+    } = {},
+  ): Promise<number> {
+    if (!Types.ObjectId.isValid(userId)) return 0;
+
+    const query: Record<string, any> = {
+      userId: new Types.ObjectId(userId),
+      type: NotificationType.NEW_CHAPTER,
+      isRead: false,
+    };
+
+    if (filter.chapterId && Types.ObjectId.isValid(String(filter.chapterId))) {
+      query.chapterId = new Types.ObjectId(String(filter.chapterId));
+    } else if (filter.storyId && Types.ObjectId.isValid(String(filter.storyId))) {
+      query.storyId = new Types.ObjectId(String(filter.storyId));
+    } else if (filter.storyIds && filter.storyIds.length > 0) {
+      const validStoryIds = filter.storyIds
+        .map((id) => String(id))
+        .filter((id) => Types.ObjectId.isValid(id))
+        .map((id) => new Types.ObjectId(id));
+      if (validStoryIds.length === 0) return 0;
+      query.storyId = { $in: validStoryIds };
+    }
+
+    const result = await this.notificationModel.updateMany(query, {
+      $set: { isRead: true, readAt: new Date() },
+    });
+    return result.modifiedCount ?? 0;
   }
 
   /**

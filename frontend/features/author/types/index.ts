@@ -62,16 +62,16 @@ export interface QueryAuthorRequestsParams {
 export interface AuthorRequestItem {
   _id: string;
   userId:
-    | string
-    | {
-        _id: string;
-        email: string;
-        username: string;
-        displayName: string;
-        avatarUrl?: string | null;
-        role: UserRole;
-        status: string;
-      };
+  | string
+  | {
+    _id: string;
+    email: string;
+    username: string;
+    displayName: string;
+    avatarUrl?: string | null;
+    role: UserRole;
+    status: string;
+  };
   penName: string;
   biography?: string | null;
   website?: string | null;
@@ -82,15 +82,15 @@ export interface AuthorRequestItem {
   reason?: string | null;
   status: AuthorRequestStatus;
   processedBy?:
-    | string
-    | {
-        _id: string;
-        email: string;
-        username: string;
-        displayName: string;
-        role: UserRole;
-      }
-    | null;
+  | string
+  | {
+    _id: string;
+    email: string;
+    username: string;
+    displayName: string;
+    role: UserRole;
+  }
+  | null;
   processedAt?: string | null;
   adminNote?: string | null;
   createdAt?: string;
@@ -265,4 +265,97 @@ export interface QueryAuthorsParams {
 export interface PaginatedAuthorsList {
   items: AuthorListItem[];
   pagination: PaginationMeta;
+}
+
+/** Điểm dữ liệu biểu đồ theo ngày */
+export interface AuthorChartPoint {
+  date: string;
+  label: string;
+  value: number;
+}
+
+/** Chuỗi dữ liệu biểu đồ theo kỳ (7 / 30 / 90 ngày) */
+export interface AuthorChartSeries {
+  items: AuthorChartPoint[];
+  total: number;
+  growthPercent: number;
+}
+
+/** Bình luận gần đây trên tác phẩm của tác giả */
+export interface AuthorRecentCommentItem {
+  _id: string;
+  user: {
+    displayName: string;
+    username: string;
+    avatarUrl?: string | null;
+  };
+  story: {
+    _id: string;
+    title: string;
+    slug: string;
+  } | null;
+  chapter: {
+    _id: string;
+    chapterNumber: number;
+    title: string;
+  } | null;
+  content: string;
+  likeCount: number;
+  createdAt: string;
+}
+
+/** Thông báo / cột mốc hoạt động gần đây của tác giả */
+export interface AuthorRecentNotificationItem {
+  _id: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  storySlug?: string | null;
+  chapterNumber?: number | null;
+  createdAt: string;
+}
+
+/** Dữ liệu tổng quan Studio của tác giả */
+export interface AuthorOverviewData {
+  stats: {
+    totalStories: number;
+    publishedStories: number;
+    storiesThisMonth: number;
+    totalChapters: number;
+    publishedChapters: number;
+    chaptersThisMonth: number;
+    totalViews: number;
+    viewsThisMonth: number;
+    viewsGrowthPercent: number;
+    totalCoins: number;
+    walletBalance: number;
+    coinsThisMonth: number;
+    coinsGrowthPercent: number;
+    totalWords: number;
+    totalFollowers: number;
+    followersThisMonth: number;
+    followersGrowthPercent: number;
+    totalComments: number;
+    commentsThisMonth: number;
+    commentsGrowthPercent: number;
+    totalRatings: number;
+    ratingsThisMonth: number;
+    ratingsGrowthPercent: number;
+    ratingAverage: number;
+  };
+  charts: {
+    reads: {
+      "7days": AuthorChartSeries;
+      "30days": AuthorChartSeries;
+      "90days": AuthorChartSeries;
+    };
+    revenue: {
+      "7days": AuthorChartSeries;
+      "30days": AuthorChartSeries;
+      "90days": AuthorChartSeries;
+    };
+  };
+  recentComments: AuthorRecentCommentItem[];
+  recentNotifications: AuthorRecentNotificationItem[];
 }

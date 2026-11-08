@@ -48,10 +48,10 @@ export const TopViewsWidget: React.FC<TopViewsWidgetProps> = ({ items, isLoading
               rank === 1
                 ? "bg-amber-100 text-amber-800 font-bold"
                 : rank === 2
-                ? "bg-orange-100 text-orange-800 font-bold"
-                : rank === 3
-                ? "bg-yellow-100 text-yellow-800 font-bold"
-                : "bg-zinc-100 text-zinc-600 font-medium";
+                  ? "bg-orange-100 text-orange-800 font-bold"
+                  : rank === 3
+                    ? "bg-yellow-100 text-yellow-800 font-bold"
+                    : "bg-zinc-100 text-zinc-600 font-medium";
 
             return (
               <Link
@@ -71,7 +71,7 @@ export const TopViewsWidget: React.FC<TopViewsWidgetProps> = ({ items, isLoading
                       src={item.coverUrl}
                       alt={item.title}
                       fill
-                      unoptimized
+                      loading="lazy"
                       sizes="40px"
                       className="object-cover"
                     />
