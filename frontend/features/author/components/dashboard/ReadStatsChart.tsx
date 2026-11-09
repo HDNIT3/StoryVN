@@ -211,17 +211,111 @@ export function ReadStatsChart({ readsChartData, stats }: ReadStatsChartProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 min-w-0">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <h3 className="text-[15px] font-bold text-zinc-900 truncate">Thống kê lượt đọc</h3>
-        <select
-          value={range}
-          onChange={(e) => setRange(e.target.value as TimeRange)}
-          className="text-xs font-medium text-zinc-600 bg-zinc-100 border border-zinc-200 rounded-md px-2.5 py-1 cursor-pointer focus:outline-none focus:border-blue-500 shrink-0"
-        >
-          <option value="7days">7 ngày qua</option>
-          <option value="30days">30 ngày qua</option>
-          <option value="90days">90 ngày qua</option>
-        </select>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div>
+          <h3 className="text-[15px] font-bold text-zinc-900 truncate">
+            Biểu đồ lượt đọc theo ngày
+          </h3>
+          <p className="text-[11px] text-zinc-400">
+            Dữ liệu thực tế từ lượt đọc hàng ngày của toàn bộ tác phẩm
+          </p>
+        </div>
+        <div className="inline-flex items-center rounded-lg bg-zinc-100 p-0.5 border border-zinc-200/80">
+          {(
+            [
+              { key: "7days", label: "7 ngày" },
+              { key: "30days", label: "30 ngày" },
+              { key: "90days", label: "90 ngày" },
+            ] as { key: TimeRange; label: string }[]
+          ).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setRange(tab.key)}
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
+                range === tab.key
+                  ? "bg-white text-blue-600 shadow-2xs"
+                  : "text-zinc-600 hover:text-zinc-900"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Period View Breakdown Pills */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+        <div className="rounded-lg bg-sky-50/70 border border-sky-100 px-3 py-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-600 block">
+            Hôm nay
+          </span>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5">
+            <span className="text-sm font-extrabold text-zinc-900">
+              +{(stats?.viewsToday ?? 0).toLocaleString("vi-VN")}
+            </span>
+            {stats?.viewsTodayGrowthPercent !== undefined && (
+              <span
+                className={`text-[10px] font-bold ${
+                  stats.viewsTodayGrowthPercent >= 0
+                    ? "text-emerald-600"
+                    : "text-rose-500"
+                }`}
+              >
+                {fmtGrowth(stats.viewsTodayGrowthPercent)}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="rounded-lg bg-indigo-50/70 border border-indigo-100 px-3 py-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 block">
+            7 ngày qua
+          </span>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5">
+            <span className="text-sm font-extrabold text-zinc-900">
+              +{(stats?.viewsWeek ?? readsChartData?.["7days"]?.total ?? 0).toLocaleString("vi-VN")}
+            </span>
+            <span
+              className={`text-[10px] font-bold ${
+                (readsChartData?.["7days"]?.growthPercent ?? 0) >= 0
+                  ? "text-emerald-600"
+                  : "text-rose-500"
+              }`}
+            >
+              {fmtGrowth(readsChartData?.["7days"]?.growthPercent ?? 0)}
+            </span>
+          </div>
+        </div>
+        <div className="rounded-lg bg-emerald-50/70 border border-emerald-100 px-3 py-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 block">
+            30 ngày qua
+          </span>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5">
+            <span className="text-sm font-extrabold text-zinc-900">
+              +{(stats?.views30Days ?? readsChartData?.["30days"]?.total ?? 0).toLocaleString("vi-VN")}
+            </span>
+            <span
+              className={`text-[10px] font-bold ${
+                (readsChartData?.["30days"]?.growthPercent ?? 0) >= 0
+                  ? "text-emerald-600"
+                  : "text-rose-500"
+              }`}
+            >
+              {fmtGrowth(readsChartData?.["30days"]?.growthPercent ?? 0)}
+            </span>
+          </div>
+        </div>
+        <div className="rounded-lg bg-amber-50/70 border border-amber-100 px-3 py-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 block">
+            Toàn thời gian
+          </span>
+          <div className="flex items-baseline justify-between gap-1 mt-0.5">
+            <span className="text-sm font-extrabold text-zinc-900">
+              {(stats?.totalViews ?? 0).toLocaleString("vi-VN")}
+            </span>
+            <span className="text-[10px] font-medium text-amber-700">tổng</span>
+          </div>
+        </div>
       </div>
 
       {/* Canvas */}

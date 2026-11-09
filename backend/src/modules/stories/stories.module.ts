@@ -7,6 +7,10 @@ import { ChaptersModule } from '../chapters/chapters.module.js';
 import { AdminStoriesController } from './controllers/admin-stories.controller.js';
 import { StoriesController } from './controllers/stories.controller.js';
 import { Story, StorySchema } from './schemas/story.schema.js';
+import {
+  StoryDailyView,
+  StoryDailyViewSchema,
+} from './schemas/story-daily-view.schema.js';
 import { AdminStoriesService } from './services/admin-stories.service.js';
 import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema.js';
 import { StoriesService } from './services/stories.service.js';
@@ -16,6 +20,7 @@ import { StoriesService } from './services/stories.service.js';
     ChaptersModule,
     MongooseModule.forFeature([
       { name: Story.name, schema: StorySchema },
+      { name: StoryDailyView.name, schema: StoryDailyViewSchema },
       { name: AuthorProfile.name, schema: AuthorProfileSchema },
       { name: User.name, schema: UserSchema },
       { name: Genre.name, schema: GenreSchema },

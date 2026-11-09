@@ -70,11 +70,7 @@ export function AuthorOverviewView() {
       : `${fallbackChapters} chương`;
 
     const viewsGrowth = ovStats
-      ? ovStats.viewsThisMonth > 0
-        ? `+${ovStats.viewsThisMonth.toLocaleString("vi-VN")} lượt tháng này (${
-            ovStats.viewsGrowthPercent >= 0 ? "+" : ""
-          }${ovStats.viewsGrowthPercent}%)`
-        : `${(ovStats.totalFollowers || 0).toLocaleString("vi-VN")} người theo dõi`
+      ? `Hôm nay: +${(ovStats.viewsToday || 0).toLocaleString("vi-VN")} • 7 ngày: +${(ovStats.viewsWeek || 0).toLocaleString("vi-VN")} • Tháng: +${(ovStats.viewsThisMonth || 0).toLocaleString("vi-VN")}`
       : `${fallbackViews.toLocaleString("vi-VN")} lượt đọc`;
 
     const coinsGrowth = ovStats

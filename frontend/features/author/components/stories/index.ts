@@ -10,3 +10,4 @@ export * from "./GenrePickerModal";
 export * from "./TagPickerModal";
 export * from "./ImageCropperModal";
 export * from "./AuthorStoriesView";
+export * from "./StoryViewsAnalyticsModal";

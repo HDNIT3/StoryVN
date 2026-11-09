@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -255,9 +255,29 @@ export function StoryTable({
                     <span className="text-[10px] text-slate-400 block mt-0.5">
                       {story.stats?.wordCount?.toLocaleString("vi-VN") ?? 0} từ
                     </span>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
-                      {story.stats?.viewCount?.toLocaleString() ?? 0} lượt xem
+                    <span className="text-[11px] font-semibold text-slate-700 block mt-0.5">
+                      {(story.stats?.viewCount ?? 0).toLocaleString("vi-VN")} lượt xem
                     </span>
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      <span
+                        className="inline-flex items-center px-1.5 py-0.2 rounded bg-sky-50 text-sky-700 border border-sky-100 text-[9px] font-bold"
+                        title="Lượt đọc hôm nay"
+                      >
+                        Ngày: +{(story.stats?.viewsToday ?? 0).toLocaleString("vi-VN")}
+                      </span>
+                      <span
+                        className="inline-flex items-center px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-bold"
+                        title="Lượt đọc 7 ngày qua"
+                      >
+                        Tuần: +{(story.stats?.viewsWeek ?? 0).toLocaleString("vi-VN")}
+                      </span>
+                      <span
+                        className="inline-flex items-center px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-bold"
+                        title="Lượt đọc 30 ngày qua"
+                      >
+                        Tháng: +{(story.stats?.viewsMonth ?? 0).toLocaleString("vi-VN")}
+                      </span>
+                    </div>
                   </td>
 
                   {/* Cột Trạng thái & Hiển thị kết hợp */}

@@ -20,6 +20,10 @@ import { NotificationsService } from '../../notifications/notifications.service.
 import { UserRole } from '../../users/schemas/user.schema.js';
 import { Story, StoryDocument } from '../../stories/schemas/story.schema.js';
 import {
+  StoryDailyView,
+  StoryDailyViewDocument,
+} from '../../stories/schemas/story-daily-view.schema.js';
+import {
   Chapter,
   ChapterDocument,
   ChapterStatus,
@@ -39,8 +43,22 @@ export class ChaptersService {
     private readonly chapterModel: Model<ChapterDocument>,
     @InjectModel(Story.name)
     private readonly storyModel: Model<StoryDocument>,
+    @InjectModel(StoryDailyView.name)
+    private readonly storyDailyViewModel: Model<StoryDailyViewDocument>,
     private readonly notificationsService: NotificationsService,
   ) {}
+
+  /**
+   * Lấy ngày hiện tại theo giờ Việt Nam, định dạng YYYY-MM-DD
+   */
+  private getTodayDateKey(): string {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+  }
 
   /**
    * Helper kiểm tra quyền sở hữu truyện của tác giả
@@ -1371,6 +1389,15 @@ export class ChaptersService {
       { $inc: { 'stats.viewCount': 1 } },
       { timestamps: false },
     );
+    // Ghi nhận lượt đọc theo ngày (có rồi thì +1, chưa có thì tạo record mới cho ngày hôm nay)
+    // Lỗi thống kê không được làm gián đoạn việc đọc truyện
+    await this.storyDailyViewModel
+      .updateOne(
+        { storyId: story._id, date: this.getTodayDateKey() },
+        { $inc: { views: 1 } },
+        { upsert: true },
+      )
+      .catch(() => undefined);
 
     // Tìm chương trước và chương sau — chỉ lấy chương PUBLISHED + scheduledAt <= now cho độc giả
     const now = new Date();

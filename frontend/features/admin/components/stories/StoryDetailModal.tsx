@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -268,9 +268,9 @@ export function StoryDetailModal({
                   </p>
                 </div>
                 <div className="bg-slate-50 p-2 rounded-md border border-slate-200">
-                  <p className="text-[10px] text-slate-400">Lượt xem</p>
+                  <p className="text-[10px] text-slate-400">Tổng lượt xem</p>
                   <p className="text-xs font-bold text-slate-800">
-                    {story.stats?.viewCount?.toLocaleString() ?? 0}
+                    {(story.stats?.viewCount ?? 0).toLocaleString("vi-VN")}
                   </p>
                 </div>
                 <div className="bg-slate-50 p-2 rounded-md border border-slate-200">
@@ -283,6 +283,34 @@ export function StoryDetailModal({
                   <p className="text-[10px] text-slate-400">Đánh giá</p>
                   <p className="text-xs font-bold text-amber-600">
                     ★ {story.stats?.ratingAverage ?? 0}
+                  </p>
+                </div>
+              </div>
+
+              {/* Thống kê lượt xem theo chu kỳ (Ngày / Tuần / Tháng / Năm) */}
+              <div className="grid grid-cols-4 gap-2 text-center">
+                <div className="bg-sky-50/70 p-2 rounded-md border border-sky-100">
+                  <p className="text-[10px] font-semibold text-sky-600">Hôm nay</p>
+                  <p className="text-xs font-bold text-slate-800">
+                    +{(story.stats?.viewsToday ?? 0).toLocaleString("vi-VN")}
+                  </p>
+                </div>
+                <div className="bg-indigo-50/70 p-2 rounded-md border border-indigo-100">
+                  <p className="text-[10px] font-semibold text-indigo-600">7 ngày qua</p>
+                  <p className="text-xs font-bold text-slate-800">
+                    +{(story.stats?.viewsWeek ?? 0).toLocaleString("vi-VN")}
+                  </p>
+                </div>
+                <div className="bg-emerald-50/70 p-2 rounded-md border border-emerald-100">
+                  <p className="text-[10px] font-semibold text-emerald-700">30 ngày qua</p>
+                  <p className="text-xs font-bold text-slate-800">
+                    +{(story.stats?.viewsMonth ?? 0).toLocaleString("vi-VN")}
+                  </p>
+                </div>
+                <div className="bg-amber-50/70 p-2 rounded-md border border-amber-100">
+                  <p className="text-[10px] font-semibold text-amber-700">Năm nay</p>
+                  <p className="text-xs font-bold text-slate-800">
+                    +{(story.stats?.viewsYear ?? 0).toLocaleString("vi-VN")}
                   </p>
                 </div>
               </div>

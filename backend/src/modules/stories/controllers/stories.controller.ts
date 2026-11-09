@@ -42,12 +42,21 @@ export class StoriesController {
     description: 'Số lượng truyện cần lấy (mặc định: 10)',
     type: Number,
   })
+  @ApiQuery({
+    name: 'timeFrame',
+    required: false,
+    description: 'Khung thời gian: all (Tất cả), today (Hôm nay), week (7 ngày), month (30 ngày), year (365 ngày)',
+    type: String,
+  })
   @Public()
   @Get('top-views')
   @HttpCode(HttpStatus.OK)
-  async getTopViews(@Query('limit') limitQuery?: string) {
+  async getTopViews(
+    @Query('limit') limitQuery?: string,
+    @Query('timeFrame') timeFrame?: string,
+  ) {
     const limit = limitQuery ? parseInt(limitQuery, 10) : 10;
-    const data = await this.storiesService.getTopViews(limit);
+    const data = await this.storiesService.getTopViews(limit, timeFrame);
 
     return {
       success: true,
@@ -163,6 +172,32 @@ export class StoriesController {
     return {
       success: true,
       message: 'Lấy số lượng thống kê tác phẩm của tác giả thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Lấy thống kê lượt đọc theo ngày của 1 tác phẩm (Tác giả)',
+    description: 'Trả về chuỗi lượt đọc theo từng ngày (7, 30, 90 ngày) và tổng hợp Hôm nay / 7 ngày / 30 ngày / 365 ngày',
+  })
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN)
+  @Get('my/:id/daily-views')
+  @HttpCode(HttpStatus.OK)
+  async getMyStoryDailyViews(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Query('days') daysQuery?: string,
+  ) {
+    const days = daysQuery ? parseInt(daysQuery, 10) : 30;
+    const data = await this.storiesService.getMyStoryDailyViews(
+      user._id,
+      id,
+      days,
+    );
+
+    return {
+      success: true,
+      message: 'Lấy thống kê lượt đọc theo ngày của tác phẩm thành công',
       data,
     };
   }

@@ -3,11 +3,19 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMyStories, useUpdateStory, StoryItem, StoryStatus, StoryVisibility } from "@/features/stories";
+import {
+  useMyStories,
+  useUpdateStory,
+  MyStorySortOption,
+  StoryItem,
+  StoryStatus,
+  StoryVisibility,
+} from "@/features/stories";
 import {
   StoryStatsCards,
   StoryFilterBar,
   StoryCardItem,
+  StoryViewsAnalyticsModal,
 } from "./index";
 
 export function AuthorStoriesView() {
@@ -17,7 +25,8 @@ export function AuthorStoriesView() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | StoryStatus>("ALL");
   const [visibilityFilter, setVisibilityFilter] = useState<"ALL" | StoryVisibility>("ALL");
-  const [sortBy, setSortBy] = useState<"updatedAt" | "createdAt" | "title" | "viewCount" | "chapterCount">("updatedAt");
+  const [sortBy, setSortBy] = useState<MyStorySortOption>("updatedAt");
+  const [analyticsStory, setAnalyticsStory] = useState<StoryItem | null>(null);
 
   // Fetch stories using TanStack Query Hook
   const {
@@ -188,6 +197,7 @@ export function AuthorStoriesView() {
               key={story._id || story.id}
               story={story}
               onEdit={handleOpenEditModal}
+              onViewStats={setAnalyticsStory}
               onSubmitReview={handleSubmitReview}
               isSubmittingReview={updateStoryMutation.isPending}
             />
@@ -229,6 +239,13 @@ export function AuthorStoriesView() {
           </div>
         </div>
       )}
+
+      {/* Modal thống kê lượt đọc theo ngày của từng tác phẩm */}
+      <StoryViewsAnalyticsModal
+        story={analyticsStory}
+        isOpen={Boolean(analyticsStory)}
+        onClose={() => setAnalyticsStory(null)}
+      />
     </div>
   );
 }

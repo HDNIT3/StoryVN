@@ -28,10 +28,20 @@ import { Genre, GenreDocument } from '../../genres/schemas/genre.schema.js';
 import { ChapterReleaseService } from '../../chapters/services/chapter-release.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { CreateStoryDto, StoryAction } from '../dto/create-story.dto.js';
-import { FilterStoriesDto, StorySortOption } from '../dto/filter-stories.dto.js';
+import {
+  FilterStoriesDto,
+  StorySortOption,
+  StoryViewTimeFrame,
+} from '../dto/filter-stories.dto.js';
 import { QueryMyStoriesDto } from '../dto/query-my-stories.dto.js';
 import { QueryRecentStoriesDto } from '../dto/query-recent-stories.dto.js';
 import { UpdateStoryDto } from '../dto/update-story.dto.js';
+import {
+  formatDateKeyLabel,
+  getStandardPeriodStartKeys,
+  getTimeFrameStartDateKey,
+  getVnDateKeyDaysAgo,
+} from '../../../common/utils/date-key.util.js';
 import {
   Chapter,
   ChapterDocument,
@@ -45,6 +55,10 @@ import {
   StoryStatus,
   StoryVisibility,
 } from '../schemas/story.schema.js';
+import {
+  StoryDailyView,
+  StoryDailyViewDocument,
+} from '../schemas/story-daily-view.schema.js';
 
 @Injectable()
 export class StoriesService {
@@ -59,7 +73,81 @@ export class StoriesService {
     private readonly notificationsService: NotificationsService,
     @Optional()
     private readonly chapterReleaseService?: ChapterReleaseService,
+    @Optional()
+    @InjectModel(StoryDailyView.name)
+    private readonly storyDailyViewModel?: Model<StoryDailyViewDocument>,
   ) { }
+
+  /**
+   * Tính lượt đọc theo Hôm nay / 7 ngày / 30 ngày / 365 ngày cho danh sách storyIds từ bảng story_daily_views
+   */
+  async computePeriodViewsMap(
+    storyIds: Types.ObjectId[],
+  ): Promise<
+    Map<
+      string,
+      {
+        viewsToday: number;
+        viewsWeek: number;
+        viewsMonth: number;
+        viewsYear: number;
+      }
+    >
+  > {
+    const result = new Map<
+      string,
+      {
+        viewsToday: number;
+        viewsWeek: number;
+        viewsMonth: number;
+        viewsYear: number;
+      }
+    >();
+
+    if (!this.storyDailyViewModel || storyIds.length === 0) {
+      return result;
+    }
+
+    const { todayKey, weekStartKey, monthStartKey, yearStartKey } =
+      getStandardPeriodStartKeys();
+
+    const docs = await this.storyDailyViewModel
+      .find({
+        storyId: { $in: storyIds },
+        date: { $gte: yearStartKey },
+      })
+      .select('storyId date views')
+      .lean()
+      .exec();
+
+    for (const doc of docs) {
+      const sId = doc.storyId?.toString();
+      if (!sId) continue;
+      const v = Number(doc.views) || 0;
+      if (v <= 0) continue;
+
+      let entry = result.get(sId);
+      if (!entry) {
+        entry = { viewsToday: 0, viewsWeek: 0, viewsMonth: 0, viewsYear: 0 };
+        result.set(sId, entry);
+      }
+
+      if (doc.date === todayKey) {
+        entry.viewsToday += v;
+      }
+      if (doc.date >= weekStartKey) {
+        entry.viewsWeek += v;
+      }
+      if (doc.date >= monthStartKey) {
+        entry.viewsMonth += v;
+      }
+      if (doc.date >= yearStartKey) {
+        entry.viewsYear += v;
+      }
+    }
+
+    return result;
+  }
 
   async createStory(
     authorId: Types.ObjectId,
@@ -177,6 +265,62 @@ export class StoriesService {
       }
     }
 
+    const periodSortFields = ['viewsToday', 'viewsWeek', 'viewsMonth', 'viewsYear'];
+    const isPeriodSort = periodSortFields.includes(query.sortBy || '');
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+
+    if (isPeriodSort) {
+      const allMatchingStories = await this.storyModel
+        .find(filter)
+        .select('+revisions')
+        .populate('genreIds', 'name slug')
+        .populate('tagIds', 'name slug')
+        .lean()
+        .exec();
+
+      const totalItems = allMatchingStories.length;
+      const periodMap = await this.computePeriodViewsMap(
+        allMatchingStories.map((s) => s._id),
+      );
+
+      const enriched = allMatchingStories.map((item: any) => {
+        const activeRevision = getActiveRevision(item.revisions);
+        delete item.revisions;
+        const pViews = periodMap.get(item._id.toString()) || {
+          viewsToday: 0,
+          viewsWeek: 0,
+          viewsMonth: 0,
+          viewsYear: 0,
+        };
+        return {
+          ...item,
+          stats: {
+            ...(item.stats || {}),
+            viewCount: item.stats?.viewCount ?? 0,
+            viewsToday: pViews.viewsToday,
+            viewsWeek: pViews.viewsWeek,
+            viewsMonth: pViews.viewsMonth,
+            viewsYear: pViews.viewsYear,
+          },
+          pendingRevision: toRevisionView(activeRevision),
+        };
+      });
+
+      const sortKey = query.sortBy as 'viewsToday' | 'viewsWeek' | 'viewsMonth' | 'viewsYear';
+      enriched.sort((a, b) => {
+        const diff = ((a.stats?.[sortKey] || 0) - (b.stats?.[sortKey] || 0)) * sortOrder;
+        if (diff !== 0) return diff;
+        return ((b.stats?.viewCount || 0) - (a.stats?.viewCount || 0));
+      });
+
+      const items = enriched.slice(query.skip, query.skip + query.limit);
+
+      return {
+        items,
+        pagination: buildPaginationMeta(totalItems, query.page, query.limit),
+      };
+    }
+
     const sortMap: Record<string, string> = {
       updatedAt: 'updatedAt',
       createdAt: 'createdAt',
@@ -186,7 +330,6 @@ export class StoriesService {
     };
 
     const sortField = sortMap[query.sortBy || 'updatedAt'] || 'updatedAt';
-    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const sort: any = { [sortField]: sortOrder };
 
     const [rawItems, totalItems] = await Promise.all([
@@ -203,11 +346,29 @@ export class StoriesService {
       this.storyModel.countDocuments(filter),
     ]);
 
+    const periodMap = await this.computePeriodViewsMap(
+      rawItems.map((s: any) => s._id),
+    );
+
     const items = rawItems.map((item: any) => {
       const activeRevision = getActiveRevision(item.revisions);
       delete item.revisions;
+      const pViews = periodMap.get(item._id.toString()) || {
+        viewsToday: 0,
+        viewsWeek: 0,
+        viewsMonth: 0,
+        viewsYear: 0,
+      };
       return {
         ...item,
+        stats: {
+          ...(item.stats || {}),
+          viewCount: item.stats?.viewCount ?? 0,
+          viewsToday: pViews.viewsToday,
+          viewsWeek: pViews.viewsWeek,
+          viewsMonth: pViews.viewsMonth,
+          viewsYear: pViews.viewsYear,
+        },
         pendingRevision: toRevisionView(activeRevision),
       };
     });
@@ -215,6 +376,71 @@ export class StoriesService {
     return {
       items,
       pagination: buildPaginationMeta(totalItems, query.page, query.limit),
+    };
+  }
+
+  /**
+   * Lấy thống kê lượt đọc theo từng ngày của 1 tác phẩm thuộc tác giả (phục vụ biểu đồ chi tiết)
+   */
+  async getMyStoryDailyViews(
+    authorId: Types.ObjectId,
+    identifier: string,
+    days = 30,
+  ): Promise<any> {
+    const story = await this.findOwnedStory(authorId, identifier, false);
+    const safeDays = [7, 30, 90].includes(Number(days)) ? Number(days) : 30;
+    const startDateKey = getVnDateKeyDaysAgo(safeDays - 1);
+
+    const [periodMap, dailyDocs] = await Promise.all([
+      this.computePeriodViewsMap([story._id]),
+      this.storyDailyViewModel
+        ? this.storyDailyViewModel
+            .find({
+              storyId: story._id,
+              date: { $gte: startDateKey },
+            })
+            .select('date views')
+            .lean()
+            .exec()
+        : Promise.resolve([]),
+    ]);
+
+    const viewsByDate = new Map<string, number>();
+    for (const doc of dailyDocs) {
+      viewsByDate.set(doc.date, (viewsByDate.get(doc.date) || 0) + (Number(doc.views) || 0));
+    }
+
+    const series: { date: string; label: string; views: number }[] = [];
+    for (let i = safeDays - 1; i >= 0; i--) {
+      const dKey = getVnDateKeyDaysAgo(i);
+      series.push({
+        date: dKey,
+        label: formatDateKeyLabel(dKey),
+        views: viewsByDate.get(dKey) || 0,
+      });
+    }
+
+    const pViews = periodMap.get(story._id.toString()) || {
+      viewsToday: 0,
+      viewsWeek: 0,
+      viewsMonth: 0,
+      viewsYear: 0,
+    };
+
+    return {
+      story: {
+        _id: story._id,
+        title: story.title,
+        slug: story.slug,
+        coverUrl: story.coverUrl || null,
+        totalViews: story.stats?.viewCount ?? 0,
+        viewsToday: pViews.viewsToday,
+        viewsWeek: pViews.viewsWeek,
+        viewsMonth: pViews.viewsMonth,
+        viewsYear: pViews.viewsYear,
+      },
+      days: safeDays,
+      series,
     };
   }
 
@@ -859,24 +1085,94 @@ export class StoriesService {
 
   /**
    * Lấy danh sách truyện nổi bật theo lượt xem cao nhất (Top views)
+   * Hỗ trợ timeFrame: all | today | week | month | year
    * Yêu cầu: Ảnh bìa, Tên truyện, Tác giả, Lượt xem
    * Lọc: status = PUBLISHED, visibility = PUBLIC
-   * Sắp xếp: stats.viewCount giảm dần
    */
-  async getTopViews(limit = 10): Promise<any[]> {
+  async getTopViews(limit = 10, timeFrame?: string): Promise<any[]> {
     const take = Math.min(Math.max(Number(limit) || 10, 1), 50);
+    const startDateKey = getTimeFrameStartDateKey(timeFrame);
 
-    const stories = await this.storyModel
-      .find({
-        status: StoryStatus.PUBLISHED,
-        visibility: StoryVisibility.PUBLIC,
-      })
-      .select('title slug coverUrl stats.viewCount authorId updatedAt')
-      .sort({ 'stats.viewCount': -1, updatedAt: -1 })
-      .limit(take)
-      .populate('authorId', 'displayName username')
-      .lean()
-      .exec();
+    let stories: any[] = [];
+    const periodViewsByStory = new Map<string, number>();
+
+    if (startDateKey && this.storyDailyViewModel) {
+      const agg = await this.storyDailyViewModel
+        .aggregate([
+          { $match: { date: { $gte: startDateKey } } },
+          {
+            $group: {
+              _id: '$storyId',
+              periodViews: { $sum: '$views' },
+            },
+          },
+          { $sort: { periodViews: -1 } },
+          { $limit: take * 3 },
+        ])
+        .exec();
+
+      const topIds: Types.ObjectId[] = [];
+      for (const row of agg) {
+        if (row._id && row.periodViews > 0) {
+          topIds.push(row._id);
+          periodViewsByStory.set(row._id.toString(), row.periodViews);
+        }
+      }
+
+      const periodStories =
+        topIds.length > 0
+          ? await this.storyModel
+              .find({
+                _id: { $in: topIds },
+                status: StoryStatus.PUBLISHED,
+                visibility: StoryVisibility.PUBLIC,
+              })
+              .select('title slug coverUrl stats.viewCount authorId updatedAt')
+              .populate('authorId', 'displayName username')
+              .lean()
+              .exec()
+          : [];
+
+      periodStories.sort((a, b) => {
+        const pA = periodViewsByStory.get(a._id.toString()) || 0;
+        const pB = periodViewsByStory.get(b._id.toString()) || 0;
+        if (pB !== pA) return pB - pA;
+        return (b.stats?.viewCount || 0) - (a.stats?.viewCount || 0);
+      });
+
+      stories = periodStories.slice(0, take);
+
+      // Nếu số truyện có lượt đọc trong kỳ ít hơn limit, điền tiếp các truyện nổi bật chung để danh sách không bị trống
+      if (stories.length < take) {
+        const existingIds = stories.map((s) => s._id);
+        const fallbackStories = await this.storyModel
+          .find({
+            _id: { $nin: existingIds },
+            status: StoryStatus.PUBLISHED,
+            visibility: StoryVisibility.PUBLIC,
+          })
+          .select('title slug coverUrl stats.viewCount authorId updatedAt')
+          .sort({ 'stats.viewCount': -1, updatedAt: -1 })
+          .limit(take - stories.length)
+          .populate('authorId', 'displayName username')
+          .lean()
+          .exec();
+
+        stories = [...stories, ...fallbackStories];
+      }
+    } else {
+      stories = await this.storyModel
+        .find({
+          status: StoryStatus.PUBLISHED,
+          visibility: StoryVisibility.PUBLIC,
+        })
+        .select('title slug coverUrl stats.viewCount authorId updatedAt')
+        .sort({ 'stats.viewCount': -1, updatedAt: -1 })
+        .limit(take)
+        .populate('authorId', 'displayName username')
+        .lean()
+        .exec();
+    }
 
     const authorUserIds = Array.from(
       new Set(
@@ -909,13 +1205,19 @@ export class StoriesService {
         authorUser?.username ||
         'Tác giả ẩn danh';
 
+      const totalViewCount = story.stats?.viewCount ?? 0;
+      const periodViews = periodViewsByStory.get(story._id.toString()) ?? 0;
+
       return {
         _id: story._id,
         title: story.title,
         slug: story.slug,
         coverUrl: story.coverUrl || null,
         author: authorName,
-        viewCount: story.stats?.viewCount ?? 0,
+        viewCount: startDateKey && periodViews > 0 ? periodViews : totalViewCount,
+        totalViewCount,
+        periodViews,
+        timeFrame: timeFrame || 'all',
       };
     });
   }
@@ -1065,46 +1367,129 @@ export class StoriesService {
       ];
     }
 
-    // 4. Sắp xếp kết quả
-    const sort: any = {};
-    switch (query.sortBy) {
-      case StorySortOption.LATEST_UPDATED:
-        sort.updatedAt = -1;
-        break;
-      case StorySortOption.MOST_VIEWED:
-        sort['stats.viewCount'] = -1;
-        sort.updatedAt = -1;
-        break;
-      case StorySortOption.CHAPTER_COUNT:
-        sort['stats.chapterCount'] = -1;
-        sort.updatedAt = -1;
-        break;
-      case StorySortOption.TOP_RATED:
-        sort['stats.ratingAverage'] = -1;
-        sort['stats.ratingCount'] = -1;
-        break;
-      case StorySortOption.NEWEST_PUBLISHED:
-      default:
-        sort.publishedAt = -1;
-        sort.createdAt = -1;
-        break;
+    // 4. Xác định xem người dùng có sắp xếp theo lượt đọc theo chu kỳ (hôm nay / tuần / tháng / năm) hay không
+    let activeTimeFrame: string = query.timeFrame || StoryViewTimeFrame.ALL;
+    if (query.sortBy === StorySortOption.VIEWS_TODAY) activeTimeFrame = 'today';
+    else if (query.sortBy === StorySortOption.VIEWS_WEEK) activeTimeFrame = 'week';
+    else if (query.sortBy === StorySortOption.VIEWS_MONTH) activeTimeFrame = 'month';
+    else if (query.sortBy === StorySortOption.VIEWS_YEAR) activeTimeFrame = 'year';
+
+    const isViewsSort =
+      query.sortBy === StorySortOption.MOST_VIEWED ||
+      query.sortBy === StorySortOption.VIEWS_TODAY ||
+      query.sortBy === StorySortOption.VIEWS_WEEK ||
+      query.sortBy === StorySortOption.VIEWS_MONTH ||
+      query.sortBy === StorySortOption.VIEWS_YEAR;
+
+    const periodStartDateKey =
+      isViewsSort && activeTimeFrame !== 'all'
+        ? getTimeFrameStartDateKey(activeTimeFrame)
+        : null;
+
+    let stories: any[] = [];
+    let totalItems = 0;
+
+    if (periodStartDateKey && this.storyDailyViewModel) {
+      const [candidates, dailyAgg] = await Promise.all([
+        this.storyModel
+          .find(filter)
+          .select('_id stats.viewCount updatedAt')
+          .lean()
+          .exec(),
+        this.storyDailyViewModel
+          .aggregate([
+            { $match: { date: { $gte: periodStartDateKey } } },
+            {
+              $group: {
+                _id: '$storyId',
+                periodViews: { $sum: '$views' },
+              },
+            },
+          ])
+          .exec(),
+      ]);
+
+      totalItems = candidates.length;
+      const pMap = new Map<string, number>();
+      for (const row of dailyAgg) {
+        if (row._id) {
+          pMap.set(row._id.toString(), Number(row.periodViews) || 0);
+        }
+      }
+
+      candidates.sort((a: any, b: any) => {
+        const pA = pMap.get(a._id.toString()) || 0;
+        const pB = pMap.get(b._id.toString()) || 0;
+        if (pB !== pA) return pB - pA;
+        const vDiff = (b.stats?.viewCount || 0) - (a.stats?.viewCount || 0);
+        if (vDiff !== 0) return vDiff;
+        return (
+          new Date(b.updatedAt || 0).getTime() -
+          new Date(a.updatedAt || 0).getTime()
+        );
+      });
+
+      const pageIds = candidates
+        .slice(query.skip, query.skip + query.limit)
+        .map((c: any) => c._id);
+
+      if (pageIds.length > 0) {
+        const fetched = await this.storyModel
+          .find({ _id: { $in: pageIds } })
+          .populate('genreIds', 'name slug')
+          .populate('authorId', 'displayName username avatarUrl')
+          .lean()
+          .exec();
+
+        const fetchedById = new Map(fetched.map((s: any) => [s._id.toString(), s]));
+        stories = pageIds
+          .map((id: Types.ObjectId) => fetchedById.get(id.toString()))
+          .filter(Boolean);
+      }
+    } else {
+      const sort: any = {};
+      switch (query.sortBy) {
+        case StorySortOption.LATEST_UPDATED:
+          sort.updatedAt = -1;
+          break;
+        case StorySortOption.MOST_VIEWED:
+        case StorySortOption.VIEWS_TODAY:
+        case StorySortOption.VIEWS_WEEK:
+        case StorySortOption.VIEWS_MONTH:
+        case StorySortOption.VIEWS_YEAR:
+          sort['stats.viewCount'] = -1;
+          sort.updatedAt = -1;
+          break;
+        case StorySortOption.CHAPTER_COUNT:
+          sort['stats.chapterCount'] = -1;
+          sort.updatedAt = -1;
+          break;
+        case StorySortOption.TOP_RATED:
+          sort['stats.ratingAverage'] = -1;
+          sort['stats.ratingCount'] = -1;
+          break;
+        case StorySortOption.NEWEST_PUBLISHED:
+        default:
+          sort.publishedAt = -1;
+          sort.createdAt = -1;
+          break;
+      }
+
+      [stories, totalItems] = await Promise.all([
+        this.storyModel
+          .find(filter)
+          .sort(sort)
+          .skip(query.skip)
+          .limit(query.limit)
+          .populate('genreIds', 'name slug')
+          .populate('authorId', 'displayName username avatarUrl')
+          .lean()
+          .exec(),
+        this.storyModel.countDocuments(filter),
+      ]);
     }
 
-    // 5. Truy vấn danh sách và đếm tổng số
-    const [stories, totalItems] = await Promise.all([
-      this.storyModel
-        .find(filter)
-        .sort(sort)
-        .skip(query.skip)
-        .limit(query.limit)
-        .populate('genreIds', 'name slug')
-        .populate('authorId', 'displayName username avatarUrl')
-        .lean()
-        .exec(),
-      this.storyModel.countDocuments(filter),
-    ]);
-
-    // 6. Lấy profile tác giả (bút danh)
+    // 6. Lấy profile tác giả (bút danh) và thống kê lượt đọc theo kỳ cho trang hiện tại
     const authorUserIds = Array.from(
       new Set(
         stories
@@ -1113,18 +1498,22 @@ export class StoriesService {
       ),
     );
 
-    let profileMap = new Map<string, any>();
-    if (authorUserIds.length > 0) {
-      const profiles = await this.authorProfileModel
-        .find({
-          userId: { $in: authorUserIds.map((id) => new Types.ObjectId(id)) },
-        })
-        .select('userId penName')
-        .lean()
-        .exec();
+    const [profileDocs, periodViewsMap] = await Promise.all([
+      authorUserIds.length > 0
+        ? this.authorProfileModel
+            .find({
+              userId: { $in: authorUserIds.map((id) => new Types.ObjectId(id)) },
+            })
+            .select('userId penName')
+            .lean()
+            .exec()
+        : Promise.resolve([]),
+      this.computePeriodViewsMap(stories.map((s) => s._id)),
+    ]);
 
-      profileMap = new Map(profiles.map((p) => [p.userId.toString(), p]));
-    }
+    const profileMap = new Map(
+      profileDocs.map((p: any) => [p.userId.toString(), p]),
+    );
 
     // 7. Format dữ liệu trả về cho Frontend (đồng bộ chapterCount + wordCount chuẩn xác theo thời gian thực)
     const items = await Promise.all(
@@ -1159,6 +1548,13 @@ export class StoriesService {
           slug: g.slug,
         }));
 
+        const pViews = periodViewsMap.get(story._id.toString()) || {
+          viewsToday: 0,
+          viewsWeek: 0,
+          viewsMonth: 0,
+          viewsYear: 0,
+        };
+
         return {
           _id: story._id,
           title: story.title,
@@ -1170,6 +1566,10 @@ export class StoriesService {
             chapterCount: liveStats.chapterCount,
             wordCount: liveStats.wordCount,
             viewCount: story.stats?.viewCount ?? 0,
+            viewsToday: pViews.viewsToday,
+            viewsWeek: pViews.viewsWeek,
+            viewsMonth: pViews.viewsMonth,
+            viewsYear: pViews.viewsYear,
             ratingAverage: story.stats?.ratingAverage ?? 0,
             ratingCount: story.stats?.ratingCount ?? 0,
           },

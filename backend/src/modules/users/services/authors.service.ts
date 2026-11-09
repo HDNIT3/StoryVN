@@ -35,6 +35,11 @@ import {
   StoryVisibility,
 } from '../../stories/schemas/story.schema.js';
 import {
+  StoryDailyView,
+  StoryDailyViewDocument,
+} from '../../stories/schemas/story-daily-view.schema.js';
+import { formatDateKeyLabel, toVnDateKey } from '../../../common/utils/date-key.util.js';
+import {
   StoryRating,
   StoryRatingDocument,
   StoryRatingStatus,
@@ -78,6 +83,8 @@ export class AuthorsService {
     private readonly storyRatingModel: Model<StoryRatingDocument>,
     @InjectModel(Wallet.name)
     private readonly walletModel: Model<WalletDocument>,
+    @InjectModel(StoryDailyView.name)
+    private readonly storyDailyViewModel: Model<StoryDailyViewDocument>,
   ) {}
 
   /**
@@ -966,25 +973,12 @@ export class AuthorsService {
           )
         : 0;
 
-    // 2. Xây dựng chuỗi thời gian 180 ngày (90 ngày hiện tại + 90 ngày kỳ trước)
-    const toDateKey = (d: Date): string => {
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
+    // 2. Xây dựng chuỗi thời gian 180 ngày (90 ngày hiện tại + 90 ngày kỳ trước) theo chuẩn giờ VN
+    const toDateKey = (d: Date): string => toVnDateKey(d);
+    const toDateLabel = (d: Date): string => formatDateKeyLabel(toVnDateKey(d));
 
-    const toDateLabel = (d: Date): string => {
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      return `${day}/${month}`;
-    };
-
-    const start180DaysAgo = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() - 179,
-    );
+    const start180DaysAgo = new Date(now.getTime() - 179 * 24 * 60 * 60 * 1000);
+    const start180DateKey = toDateKey(start180DaysAgo);
 
     const dailyMap = new Map<
       string,
@@ -992,7 +986,7 @@ export class AuthorsService {
     >();
 
     for (let i = 179; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
       const key = toDateKey(d);
       dailyMap.set(key, {
         date: key,
@@ -1007,34 +1001,72 @@ export class AuthorsService {
       chapterMap.set(ch._id.toString(), ch);
     });
 
-    const readingLogs =
+    const [readingLogs, dailyViewDocs] =
       storyIds.length > 0
-        ? await this.readingHistoryModel
-            .find({
-              storyId: { $in: storyIds },
-            })
-            .select('storyId chapterId readAt updatedAt createdAt')
-            .lean()
-            .exec()
-        : [];
+        ? await Promise.all([
+            this.readingHistoryModel
+              .find({
+                storyId: { $in: storyIds },
+              })
+              .select('storyId chapterId readAt updatedAt createdAt')
+              .lean()
+              .exec(),
+            this.storyDailyViewModel
+              .find({
+                storyId: { $in: storyIds },
+              })
+              .select('storyId date views')
+              .lean()
+              .exec(),
+          ])
+        : [[], []];
+
+    // Ghi nhận lượt đọc theo ngày từ bảng story_daily_views (chuẩn xác cho cả khách + thành viên)
+    const dailyViewsByDate = new Map<string, number>();
+    const recordedDailyViewsByStory = new Map<string, number>();
+
+    dailyViewDocs.forEach((doc: any) => {
+      const sId = doc.storyId ? doc.storyId.toString() : '';
+      const v = Number(doc.views) || 0;
+      if (v <= 0) return;
+      if (sId) {
+        recordedDailyViewsByStory.set(
+          sId,
+          (recordedDailyViewsByStory.get(sId) || 0) + v,
+        );
+      }
+      if (doc.date && doc.date >= start180DateKey) {
+        dailyViewsByDate.set(
+          doc.date,
+          (dailyViewsByDate.get(doc.date) || 0) + v,
+        );
+      }
+    });
 
     const loggedReadsByChapter = new Map<string, number>();
+    const loggedReadsByDate = new Map<string, number>();
+    const loggedReadsByStory = new Map<string, number>();
 
     readingLogs.forEach((log: any) => {
       const chId = log.chapterId ? log.chapterId.toString() : '';
+      const sId = log.storyId ? log.storyId.toString() : '';
       if (chId) {
         loggedReadsByChapter.set(chId, (loggedReadsByChapter.get(chId) || 0) + 1);
+      }
+      if (sId) {
+        loggedReadsByStory.set(sId, (loggedReadsByStory.get(sId) || 0) + 1);
       }
 
       const rawDate = log.readAt || log.updatedAt || log.createdAt;
       if (!rawDate) return;
       const d = new Date(rawDate);
-      if (d < start180DaysAgo) return;
-
       const key = toDateKey(d);
+      if (key < start180DateKey) return;
+
+      loggedReadsByDate.set(key, (loggedReadsByDate.get(key) || 0) + 1);
+
       const bucket = dailyMap.get(key);
       if (bucket) {
-        bucket.reads += 1;
         const ch = chId ? chapterMap.get(chId) : null;
         if (ch && !ch.isFree && (ch.coinPrice || 0) > 0) {
           bucket.coins += ch.coinPrice || 0;
@@ -1042,7 +1074,14 @@ export class AuthorsService {
       }
     });
 
-    // Cộng phần lượt đọc khách (guest views trên chapter.viewCount chưa nằm trong ReadingHistory)
+    // Điền lượt đọc mỗi ngày: ưu tiên số thực tế từ story_daily_views, fallback về reading_history cho các ngày lịch sử cũ
+    dailyMap.forEach((bucket, key) => {
+      const fromDailyViews = dailyViewsByDate.get(key) || 0;
+      const fromReadingHistory = loggedReadsByDate.get(key) || 0;
+      bucket.reads = Math.max(fromDailyViews, fromReadingHistory);
+    });
+
+    // Cộng doanh thu xu của các chương trả phí & phần lượt đọc lịch sử (trước khi có story_daily_views)
     let totalPaidChapterCoins = 0;
 
     chapters.forEach((ch) => {
@@ -1057,38 +1096,39 @@ export class AuthorsService {
       const loggedCount = loggedReadsByChapter.get(chId) || 0;
       const unloggedViews = Math.max(0, chViews - loggedCount);
 
-      if (unloggedViews > 0) {
+      if (unloggedViews > 0 && coinPrice > 0) {
         const refDate = new Date(ch.updatedAt || ch.createdAt || now);
         const key = toDateKey(refDate);
         const bucket = dailyMap.get(key);
         if (bucket) {
-          bucket.reads += unloggedViews;
-          if (coinPrice > 0) {
-            bucket.coins += unloggedViews * coinPrice;
-          }
+          bucket.coins += unloggedViews * coinPrice;
         }
       }
     });
 
-    // Nếu tổng lượt xem cấp truyện lớn hơn tổng lượt xem các chương, gán phần chênh lệch vào ngày cập nhật của truyện
-    const unattributedStoryViews = Math.max(0, totalViews - viewsFromChapters);
-    if (unattributedStoryViews > 0 && stories.length > 0) {
-      stories.forEach((s) => {
-        const sViews = s.stats?.viewCount || 0;
-        const sChaptersViews = chapters
-          .filter((c) => c.storyId.toString() === s._id.toString())
-          .reduce((sum, c) => sum + (c.viewCount || 0), 0);
-        const diff = Math.max(0, sViews - sChaptersViews);
-        if (diff > 0) {
-          const refDate = new Date(s.updatedAt || s.publishedAt || s.createdAt || now);
-          const key = toDateKey(refDate);
-          const bucket = dailyMap.get(key);
-          if (bucket) {
-            bucket.reads += diff;
-          }
+    // Phân bổ phần lượt đọc lịch sử cũ (nếu truyện đã có viewCount trước khi tạo bảng story_daily_views)
+    stories.forEach((s) => {
+      const sId = s._id.toString();
+      const sViews = s.stats?.viewCount || 0;
+      const sChaptersViews = chapters
+        .filter((c) => c.storyId.toString() === sId)
+        .reduce((sum, c) => sum + (c.viewCount || 0), 0);
+      const effectiveStoryViews = Math.max(sViews, sChaptersViews);
+      const alreadyTracked = Math.max(
+        recordedDailyViewsByStory.get(sId) || 0,
+        loggedReadsByStory.get(sId) || 0,
+      );
+      const legacyUntrackedViews = Math.max(0, effectiveStoryViews - alreadyTracked);
+
+      if (legacyUntrackedViews > 0) {
+        const refDate = new Date(s.updatedAt || s.publishedAt || s.createdAt || now);
+        const key = toDateKey(refDate);
+        const bucket = dailyMap.get(key);
+        if (bucket) {
+          bucket.reads += legacyUntrackedViews;
         }
-      });
-    }
+      }
+    });
 
     const all180Days = Array.from(dailyMap.values());
     const last90Days = all180Days.slice(-90);
@@ -1128,6 +1168,12 @@ export class AuthorsService {
       (item) => item.date >= startOfPrevMonthKey && item.date < startOfMonthKey,
     );
 
+    const viewsToday = last7Days[last7Days.length - 1]?.reads || 0;
+    const viewsYesterday = last7Days[last7Days.length - 2]?.reads || 0;
+    const viewsTodayGrowthPercent = calcGrowthPercent(viewsToday, viewsYesterday);
+    const viewsWeek = reads7Total;
+    const viewsWeekGrowthPercent = calcGrowthPercent(reads7Total, reads7Prev);
+    const views30Days = reads30Total;
     const viewsThisMonth = sumReads(currentMonthBuckets);
     const viewsPrevMonth = sumReads(prevMonthBuckets);
     const viewsGrowthPercent = calcGrowthPercent(viewsThisMonth, viewsPrevMonth);
@@ -1263,6 +1309,12 @@ export class AuthorsService {
         publishedChapters,
         chaptersThisMonth,
         totalViews,
+        viewsToday,
+        viewsYesterday,
+        viewsTodayGrowthPercent,
+        viewsWeek,
+        viewsWeekGrowthPercent,
+        views30Days,
         viewsThisMonth,
         viewsGrowthPercent,
         totalCoins,

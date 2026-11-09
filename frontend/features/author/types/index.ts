@@ -326,6 +326,12 @@ export interface AuthorOverviewData {
     publishedChapters: number;
     chaptersThisMonth: number;
     totalViews: number;
+    viewsToday?: number;
+    viewsYesterday?: number;
+    viewsTodayGrowthPercent?: number;
+    viewsWeek?: number;
+    viewsWeekGrowthPercent?: number;
+    views30Days?: number;
     viewsThisMonth: number;
     viewsGrowthPercent: number;
     totalCoins: number;

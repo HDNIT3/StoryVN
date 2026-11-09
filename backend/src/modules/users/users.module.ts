@@ -10,6 +10,10 @@ import { Genre, GenreSchema } from '../genres/schemas/genre.schema.js';
 import { Notification, NotificationSchema } from '../notifications/schemas/notification.schema.js';
 import { ReadingHistory, ReadingHistorySchema } from '../reading-history/schemas/reading-history.schema.js';
 import { Story, StorySchema } from '../stories/schemas/story.schema.js';
+import {
+  StoryDailyView,
+  StoryDailyViewSchema,
+} from '../stories/schemas/story-daily-view.schema.js';
 import { StoryRating, StoryRatingSchema } from '../story-ratings/schemas/story-rating.schema.js';
 import { Wallet, WalletSchema } from '../wallet/schemas/wallet.schema.js';
 import { AdminUsersController } from './controllers/admin-users.controller.js';
@@ -35,6 +39,7 @@ import { UsersService } from './services/users.service.js';
       { name: AuthorRequest.name, schema: AuthorRequestSchema },
       { name: RefreshToken.name, schema: RefreshTokenSchema },
       { name: Story.name, schema: StorySchema },
+      { name: StoryDailyView.name, schema: StoryDailyViewSchema },
       { name: Genre.name, schema: GenreSchema },
       { name: Chapter.name, schema: ChapterSchema },
       { name: ReadingHistory.name, schema: ReadingHistorySchema },

@@ -10,9 +10,11 @@ import type {
   SameGenreStoryItem,
   StoryAction,
   StoryApiResponse,
+  StoryDailyViewsData,
   StoryDetailData,
   StoryItem,
   StoryRevisionItem,
+  StoryViewTimeFrame,
   TopViewStoryItem,
   TopWordCountStoryItem,
   UpdateStoryPayload,
@@ -20,7 +22,7 @@ import type {
 
 export const storyService = {
   /**
-   * Lấy danh sách truyện có bộ lọc (Công khai): thể loại, trạng thái, sắp xếp, tìm kiếm, phân trang
+   * Lấy danh sách truyện có bộ lọc (Công khai): thể loại, trạng thái, sắp xếp, khung thời gian view, tìm kiếm, phân trang
    */
   async getStories(
     params?: FilterStoriesParams
@@ -30,6 +32,9 @@ export const storyService = {
     if (params?.genre) searchParams.append("genre", params.genre);
     if (params?.progressState) searchParams.append("progressState", params.progressState);
     if (params?.sortBy) searchParams.append("sortBy", params.sortBy);
+    if (params?.timeFrame && params.timeFrame !== "all") {
+      searchParams.append("timeFrame", params.timeFrame);
+    }
     if (params?.page) searchParams.append("page", params.page.toString());
     if (params?.limit) searchParams.append("limit", params.limit.toString());
 
@@ -41,8 +46,14 @@ export const storyService = {
   /**
    * Lấy top truyện nổi bật có nhiều lượt xem nhất (Công khai)
    */
-  async getTopViews(limit = 10): Promise<StoryApiResponse<TopViewStoryItem[]>> {
-    return api.get<StoryApiResponse<TopViewStoryItem[]>>(`/stories/top-views?limit=${limit}`);
+  async getTopViews(
+    limit = 10,
+    timeFrame: StoryViewTimeFrame = "all"
+  ): Promise<StoryApiResponse<TopViewStoryItem[]>> {
+    const tfParam = timeFrame && timeFrame !== "all" ? `&timeFrame=${timeFrame}` : "";
+    return api.get<StoryApiResponse<TopViewStoryItem[]>>(
+      `/stories/top-views?limit=${limit}${tfParam}`
+    );
   },
 
   /**
@@ -102,6 +113,18 @@ export const storyService = {
     const queryString = searchParams.toString();
     const endpoint = queryString ? `/stories/my?${queryString}` : "/stories/my";
     return api.get<StoryApiResponse<PaginatedStories>>(endpoint);
+  },
+
+  /**
+   * Lấy thống kê lượt đọc theo ngày của 1 tác phẩm thuộc tác giả (7 / 30 / 90 ngày)
+   */
+  async getMyStoryDailyViews(
+    slugOrId: string,
+    days = 30
+  ): Promise<StoryApiResponse<StoryDailyViewsData>> {
+    return api.get<StoryApiResponse<StoryDailyViewsData>>(
+      `/stories/my/${slugOrId}/daily-views?days=${days}`
+    );
   },
 
   /**
