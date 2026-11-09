@@ -29,6 +29,10 @@ export interface PopulatedRef {
 
 export interface StoryStats {
   viewCount: number;
+  viewsToday?: number;
+  viewsWeek?: number;
+  viewsMonth?: number;
+  viewsYear?: number;
   followCount: number;
   ratingCount: number;
   ratingAverage: number;
@@ -80,13 +84,44 @@ export interface CreateStoryPayload {
 
 export interface UpdateStoryPayload extends Partial<CreateStoryPayload> {}
 
+export type MyStorySortOption =
+  | "updatedAt"
+  | "createdAt"
+  | "title"
+  | "viewCount"
+  | "viewsToday"
+  | "viewsWeek"
+  | "viewsMonth"
+  | "viewsYear"
+  | "chapterCount";
+
 export interface QueryMyStoriesParams {
   status?: StoryStatus;
   search?: string;
   page?: number;
   limit?: number;
-  sortBy?: "updatedAt" | "createdAt" | "title" | "viewCount" | "chapterCount";
+  sortBy?: MyStorySortOption;
   sortOrder?: "asc" | "desc";
+}
+
+export interface StoryDailyViewsData {
+  story: {
+    _id: string;
+    title: string;
+    slug: string;
+    coverUrl?: string | null;
+    totalViews: number;
+    viewsToday: number;
+    viewsWeek: number;
+    viewsMonth: number;
+    viewsYear: number;
+  };
+  days: number;
+  series: Array<{
+    date: string;
+    label: string;
+    views: number;
+  }>;
 }
 
 export interface PaginationMeta {
@@ -186,6 +221,9 @@ export interface TopViewStoryItem {
   coverUrl?: string | null;
   author: string;
   viewCount: number;
+  totalViewCount?: number;
+  periodViews?: number;
+  timeFrame?: StoryViewTimeFrame;
 }
 
 export interface TopWordCountStoryItem {
@@ -199,13 +237,25 @@ export interface TopWordCountStoryItem {
   viewCount: number;
 }
 
-export type StorySortOption = "published" | "updated" | "views" | "chapters" | "rating";
+export type StorySortOption =
+  | "published"
+  | "updated"
+  | "views"
+  | "viewsToday"
+  | "viewsWeek"
+  | "viewsMonth"
+  | "viewsYear"
+  | "chapters"
+  | "rating";
+
+export type StoryViewTimeFrame = "all" | "today" | "week" | "month" | "year";
 
 export interface FilterStoriesParams {
   search?: string;
   genre?: string;
   progressState?: StoryProgressState;
   sortBy?: StorySortOption;
+  timeFrame?: StoryViewTimeFrame;
   page?: number;
   limit?: number;
 }

@@ -7,8 +7,21 @@ export enum StorySortOption {
   NEWEST_PUBLISHED = 'published', // Mới xuất bản
   LATEST_UPDATED = 'updated',     // Mới cập nhật
   MOST_VIEWED = 'views',          // Lượt xem/đọc cao nhất
+  VIEWS_TODAY = 'viewsToday',     // Lượt đọc hôm nay
+  VIEWS_WEEK = 'viewsWeek',       // Lượt đọc tuần này (7 ngày)
+  VIEWS_MONTH = 'viewsMonth',     // Lượt đọc tháng này (30 ngày)
+  VIEWS_YEAR = 'viewsYear',       // Lượt đọc năm nay (365 ngày)
   CHAPTER_COUNT = 'chapters',     // Nhiều chương nhất
   TOP_RATED = 'rating',           // Đánh giá cao nhất
+}
+
+export enum StoryViewTimeFrame {
+  ALL = 'all',
+  TODAY = 'today',
+  DAY = 'day',
+  WEEK = 'week',
+  MONTH = 'month',
+  YEAR = 'year',
 }
 
 export class FilterStoriesDto extends PaginationQueryDto {
@@ -37,9 +50,20 @@ export class FilterStoriesDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     enum: StorySortOption,
     default: StorySortOption.NEWEST_PUBLISHED,
-    description: 'Tiêu chí sắp xếp: published (Mới xuất bản), updated (Mới cập nhật), views (Lượt đọc), chapters (Số chương), rating (Đánh giá)',
+    description:
+      'Tiêu chí sắp xếp: published (Mới xuất bản), updated (Mới cập nhật), views (Lượt đọc), viewsToday, viewsWeek, viewsMonth, viewsYear, chapters (Số chương), rating (Đánh giá)',
   })
   @IsOptional()
   @IsEnum(StorySortOption, { message: 'Tiêu chí sắp xếp không hợp lệ' })
   sortBy?: StorySortOption = StorySortOption.NEWEST_PUBLISHED;
+
+  @ApiPropertyOptional({
+    enum: StoryViewTimeFrame,
+    default: StoryViewTimeFrame.ALL,
+    description:
+      'Khung thời gian thống kê lượt đọc: all (Tất cả), today (Hôm nay), week (7 ngày), month (30 ngày), year (365 ngày)',
+  })
+  @IsOptional()
+  @IsEnum(StoryViewTimeFrame, { message: 'Khung thời gian không hợp lệ' })
+  timeFrame?: StoryViewTimeFrame = StoryViewTimeFrame.ALL;
 }

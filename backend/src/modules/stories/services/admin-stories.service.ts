@@ -31,12 +31,17 @@ import { User, UserDocument } from '../../users/schemas/user.schema.js';
 import { AdminModerationReasonDto } from '../dto/admin-moderation-reason.dto.js';
 import { AdminQueryStoriesDto } from '../dto/admin-query-stories.dto.js';
 import { AdminRejectStoryDto } from '../dto/admin-reject-story.dto.js';
+import { getStandardPeriodStartKeys } from '../../../common/utils/date-key.util.js';
 import {
   Story,
   StoryDocument,
   StoryStatus,
   StoryVisibility,
 } from '../schemas/story.schema.js';
+import {
+  StoryDailyView,
+  StoryDailyViewDocument,
+} from '../schemas/story-daily-view.schema.js';
 
 @Injectable()
 export class AdminStoriesService {
@@ -48,7 +53,70 @@ export class AdminStoriesService {
     private readonly notificationsService: NotificationsService,
     @Optional()
     private readonly chapterReleaseService?: ChapterReleaseService,
+    @Optional()
+    @InjectModel(StoryDailyView.name)
+    private readonly storyDailyViewModel?: Model<StoryDailyViewDocument>,
   ) { }
+
+  private async computePeriodViewsMap(
+    storyIds: Types.ObjectId[],
+  ): Promise<
+    Map<
+      string,
+      {
+        viewsToday: number;
+        viewsWeek: number;
+        viewsMonth: number;
+        viewsYear: number;
+      }
+    >
+  > {
+    const result = new Map<
+      string,
+      {
+        viewsToday: number;
+        viewsWeek: number;
+        viewsMonth: number;
+        viewsYear: number;
+      }
+    >();
+
+    if (!this.storyDailyViewModel || storyIds.length === 0) {
+      return result;
+    }
+
+    const { todayKey, weekStartKey, monthStartKey, yearStartKey } =
+      getStandardPeriodStartKeys();
+
+    const docs = await this.storyDailyViewModel
+      .find({
+        storyId: { $in: storyIds },
+        date: { $gte: yearStartKey },
+      })
+      .select('storyId date views')
+      .lean()
+      .exec();
+
+    for (const doc of docs) {
+      const sId = doc.storyId?.toString();
+      if (!sId) continue;
+      const v = Number(doc.views) || 0;
+      if (v <= 0) continue;
+
+      let entry = result.get(sId);
+      if (!entry) {
+        entry = { viewsToday: 0, viewsWeek: 0, viewsMonth: 0, viewsYear: 0 };
+        result.set(sId, entry);
+      }
+
+      if (doc.date === todayKey) entry.viewsToday += v;
+      if (doc.date >= weekStartKey) entry.viewsWeek += v;
+      if (doc.date >= monthStartKey) entry.viewsMonth += v;
+      if (doc.date >= yearStartKey) entry.viewsYear += v;
+    }
+
+    return result;
+  }
 
   /**
    * Lấy danh sách truyện trong admin (lọc theo trạng thái, hiển thị công khai/riêng tư, thể loại, từ khóa, sắp xếp, phân trang)
@@ -116,6 +184,64 @@ export class AdminStoriesService {
       filter.$and = andConditions;
     }
 
+    const periodSortFields = ['viewsToday', 'viewsWeek', 'viewsMonth', 'viewsYear'];
+    const isPeriodSort = periodSortFields.includes(query.sortBy || '');
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
+
+    if (isPeriodSort) {
+      const allMatching = await this.storyModel
+        .find(filter)
+        .select('+revisions')
+        .populate('authorId', 'displayName username email avatarUrl role')
+        .populate('genreIds', 'name slug')
+        .populate('tagIds', 'name slug')
+        .lean()
+        .exec();
+
+      const totalItems = allMatching.length;
+      const periodMap = await this.computePeriodViewsMap(
+        allMatching.map((s: any) => s._id),
+      );
+
+      const enriched = allMatching.map((item: any) => {
+        const activeRevision = getActiveRevision(item.revisions);
+        delete item.revisions;
+        const pViews = periodMap.get(item._id.toString()) || {
+          viewsToday: 0,
+          viewsWeek: 0,
+          viewsMonth: 0,
+          viewsYear: 0,
+        };
+        return {
+          ...item,
+          stats: {
+            ...(item.stats || {}),
+            viewCount: item.stats?.viewCount ?? 0,
+            viewsToday: pViews.viewsToday,
+            viewsWeek: pViews.viewsWeek,
+            viewsMonth: pViews.viewsMonth,
+            viewsYear: pViews.viewsYear,
+          },
+          pendingRevision: toRevisionView(activeRevision),
+          isPendingReview:
+            activeRevision?.status === RevisionStatus.PENDING_REVIEW,
+        };
+      });
+
+      const sortKey = query.sortBy as 'viewsToday' | 'viewsWeek' | 'viewsMonth' | 'viewsYear';
+      enriched.sort((a, b) => {
+        const diff = ((a.stats?.[sortKey] || 0) - (b.stats?.[sortKey] || 0)) * sortOrder;
+        if (diff !== 0) return diff;
+        return (b.stats?.viewCount || 0) - (a.stats?.viewCount || 0);
+      });
+
+      const items = enriched.slice(query.skip, query.skip + query.limit);
+      return {
+        items,
+        pagination: buildPaginationMeta(totalItems, query.page, query.limit),
+      };
+    }
+
     const sortMap: Record<string, string> = {
       createdAt: 'createdAt',
       updatedAt: 'updatedAt',
@@ -125,7 +251,6 @@ export class AdminStoriesService {
     };
 
     const sortField = sortMap[query.sortBy || 'createdAt'] || 'createdAt';
-    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
     const sort: any = { [sortField]: sortOrder };
 
     const [rawItems, totalItems] = await Promise.all([
@@ -143,11 +268,29 @@ export class AdminStoriesService {
       this.storyModel.countDocuments(filter),
     ]);
 
+    const periodMap = await this.computePeriodViewsMap(
+      rawItems.map((s: any) => s._id),
+    );
+
     const items = rawItems.map((item: any) => {
       const activeRevision = getActiveRevision(item.revisions);
       delete item.revisions;
+      const pViews = periodMap.get(item._id.toString()) || {
+        viewsToday: 0,
+        viewsWeek: 0,
+        viewsMonth: 0,
+        viewsYear: 0,
+      };
       return {
         ...item,
+        stats: {
+          ...(item.stats || {}),
+          viewCount: item.stats?.viewCount ?? 0,
+          viewsToday: pViews.viewsToday,
+          viewsWeek: pViews.viewsWeek,
+          viewsMonth: pViews.viewsMonth,
+          viewsYear: pViews.viewsYear,
+        },
         pendingRevision: toRevisionView(activeRevision),
         isPendingReview:
           activeRevision?.status === RevisionStatus.PENDING_REVIEW,
@@ -232,8 +375,24 @@ export class AdminStoriesService {
     const activeRevision = getActiveRevision(story.revisions);
     delete story.revisions;
 
+    const periodMap = await this.computePeriodViewsMap([story._id]);
+    const pViews = periodMap.get(story._id.toString()) || {
+      viewsToday: 0,
+      viewsWeek: 0,
+      viewsMonth: 0,
+      viewsYear: 0,
+    };
+
     return {
       ...story,
+      stats: {
+        ...(story.stats || {}),
+        viewCount: story.stats?.viewCount ?? 0,
+        viewsToday: pViews.viewsToday,
+        viewsWeek: pViews.viewsWeek,
+        viewsMonth: pViews.viewsMonth,
+        viewsYear: pViews.viewsYear,
+      },
       authorProfile,
       pendingRevision: toRevisionView(activeRevision),
       isPendingReview:

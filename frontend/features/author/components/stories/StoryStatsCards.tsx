@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import { StoryItem } from "@/features/stories";
@@ -16,6 +16,9 @@ export function StoryStatsCards({ stories }: StoryStatsCardsProps) {
   const draftCount = stories.filter((s) => s.status === "DRAFT").length;
 
   const totalViews = stories.reduce((sum, s) => sum + (s.stats?.viewCount || 0), 0);
+  const viewsToday = stories.reduce((sum, s) => sum + (s.stats?.viewsToday || 0), 0);
+  const viewsWeek = stories.reduce((sum, s) => sum + (s.stats?.viewsWeek || 0), 0);
+  const viewsMonth = stories.reduce((sum, s) => sum + (s.stats?.viewsMonth || 0), 0);
   const totalChapters = stories.reduce((sum, s) => sum + (s.stats?.chapterCount || 0), 0);
 
   const formatNumber = (num: number) => {
@@ -91,8 +94,14 @@ export function StoryStatsCards({ stories }: StoryStatsCardsProps) {
           </span>
           <span className="text-xs text-zinc-500">lượt</span>
         </div>
-        <div className="mt-1 text-xs text-zinc-500">
-          Thống kê toàn bộ tác phẩm
+        <div className="mt-1 text-[11px] text-zinc-500 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="text-emerald-600 font-semibold">
+            Hôm nay: +{formatNumber(viewsToday)}
+          </span>
+          <span>•</span>
+          <span>7 ngày: +{formatNumber(viewsWeek)}</span>
+          <span>•</span>
+          <span>30 ngày: +{formatNumber(viewsMonth)}</span>
         </div>
       </div>
     </div>

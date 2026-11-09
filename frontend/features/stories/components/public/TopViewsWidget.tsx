@@ -1,29 +1,67 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import type { TopViewStoryItem } from "@/features/stories";
+import type { StoryViewTimeFrame, TopViewStoryItem } from "@/features/stories";
 import { BookIcon } from "./StoryIcons";
 import { formatNumber } from "./StoryDateUtils";
 
 interface TopViewsWidgetProps {
   items?: TopViewStoryItem[];
   isLoading: boolean;
+  timeFrame?: StoryViewTimeFrame;
+  onTimeFrameChange?: (tf: StoryViewTimeFrame) => void;
 }
 
-export const TopViewsWidget: React.FC<TopViewsWidgetProps> = ({ items, isLoading }) => {
+export const TopViewsWidget: React.FC<TopViewsWidgetProps> = ({
+  items,
+  isLoading,
+  timeFrame = "all",
+  onTimeFrameChange,
+}) => {
+  const tabs: { key: StoryViewTimeFrame; label: string }[] = [
+    { key: "today", label: "Ngày" },
+    { key: "week", label: "Tuần" },
+    { key: "month", label: "Tháng" },
+    { key: "all", label: "Tất cả" },
+  ];
+
   return (
     <div className="bg-white rounded-2xl border border-zinc-200/80 p-5 shadow-xs sticky top-24">
       {/* Header Widget */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100">
-        <h2 className="text-base sm:text-lg font-bold text-zinc-900">
-          Truyện nổi bật
-        </h2>
-        <Link
-          href="/bang-xep-hang"
-          className="text-xs text-zinc-500 hover:text-emerald-700 transition-colors"
-        >
-          Xem tất cả
-        </Link>
+      <div className="mb-4 pb-3 border-b border-zinc-100 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base sm:text-lg font-bold text-zinc-900">
+            Truyện nổi bật
+          </h2>
+          <Link
+            href="/#bang-xep-hang"
+            className="text-xs text-zinc-500 hover:text-emerald-700 transition-colors"
+          >
+            Xem tất cả
+          </Link>
+        </div>
+
+        {onTimeFrameChange && (
+          <div className="grid grid-cols-4 gap-1 bg-zinc-100 p-1 rounded-xl">
+            {tabs.map((t) => {
+              const active = timeFrame === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => onTimeFrameChange(t.key)}
+                  className={`py-1 rounded-lg text-[11px] font-semibold transition cursor-pointer ${
+                    active
+                      ? "bg-white text-[#0d5c46] shadow-2xs"
+                      : "text-zinc-600 hover:text-zinc-900"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Danh sách 6 truyện nổi bật */}

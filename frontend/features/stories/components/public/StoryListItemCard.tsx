@@ -3,12 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import type { FilteredStoryItem } from "@/features/stories";
+import type { FilteredStoryItem, StoryViewTimeFrame } from "@/features/stories";
 import { BookIcon, WordsIcon, EyeIcon, ClockIcon, BookmarkIcon } from "./StoryIcons";
 import { formatDateTime, formatRelativeTime, formatNumber } from "./StoryDateUtils";
 
 interface StoryListItemCardProps {
   story: FilteredStoryItem;
+  activeTimeFrame?: StoryViewTimeFrame;
   isFollowing?: boolean;
   isFollowPending?: boolean;
   onToggleBookmark?: () => void;
@@ -16,10 +17,44 @@ interface StoryListItemCardProps {
 
 export const StoryListItemCard: React.FC<StoryListItemCardProps> = ({
   story,
+  activeTimeFrame = "all",
   isFollowing = false,
   isFollowPending = false,
   onToggleBookmark,
 }) => {
+  const periodViewBadge = React.useMemo(() => {
+    if (activeTimeFrame === "today") {
+      return {
+        label: "hôm nay",
+        count: story.stats?.viewsToday ?? 0,
+      };
+    }
+    if (activeTimeFrame === "week") {
+      return {
+        label: "tuần này",
+        count: story.stats?.viewsWeek ?? 0,
+      };
+    }
+    if (activeTimeFrame === "month") {
+      return {
+        label: "tháng này",
+        count: story.stats?.viewsMonth ?? 0,
+      };
+    }
+    if (activeTimeFrame === "year") {
+      return {
+        label: "năm nay",
+        count: story.stats?.viewsYear ?? 0,
+      };
+    }
+    if ((story.stats?.viewsWeek ?? 0) > 0) {
+      return {
+        label: "7 ngày",
+        count: story.stats?.viewsWeek ?? 0,
+      };
+    }
+    return null;
+  }, [activeTimeFrame, story.stats]);
   const primaryGenre =
     story.genres && story.genres.length > 0
       ? story.genres[0].name
@@ -116,6 +151,13 @@ export const StoryListItemCard: React.FC<StoryListItemCardProps> = ({
             <EyeIcon className="w-3.5 h-3.5 text-zinc-400" />
             <span>{formatNumber(story.stats?.viewCount)} lượt đọc</span>
           </div>
+          {periodViewBadge && (
+            <div className="flex sm:justify-end">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-[10px] font-semibold">
+                +{formatNumber(periodViewBadge.count)} {periodViewBadge.label}
+              </span>
+            </div>
+          )}
           <div className="flex sm:justify-end items-center gap-1.5 text-zinc-500">
             <ClockIcon className="w-3.5 h-3.5 text-zinc-400" />
             <span>{formatRelativeTime(story.updatedAt)}</span>

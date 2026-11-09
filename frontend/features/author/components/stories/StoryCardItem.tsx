@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { StoryItem, StoryAgeRating } from "@/features/stories";
 
 interface StoryCardItemProps {
   story: StoryItem;
   onEdit: (story: StoryItem) => void;
+  onViewStats?: (story: StoryItem) => void;
   onSubmitReview?: (story: StoryItem) => void;
   isSubmittingReview?: boolean;
 }
@@ -12,6 +13,7 @@ interface StoryCardItemProps {
 export function StoryCardItem({
   story,
   onEdit,
+  onViewStats,
   onSubmitReview,
   isSubmittingReview = false,
 }: StoryCardItemProps) {
@@ -247,13 +249,22 @@ export function StoryCardItem({
 
         {/* Bottom Row: Stats & Actions */}
         <div className="mt-4 pt-3 border-t border-zinc-100 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 text-xs text-zinc-500">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-zinc-500">
             <span>
               <strong className="text-zinc-800 font-semibold">{story.stats?.chapterCount || 0}</strong> chương
             </span>
             <span>•</span>
             <span>
               <strong className="text-zinc-800 font-semibold">{formatNumber(story.stats?.viewCount)}</strong> lượt đọc
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100 text-[11px] font-medium">
+              Hôm nay: <strong>+{formatNumber(story.stats?.viewsToday || 0)}</strong>
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[11px] font-medium">
+              7 ngày: <strong>+{formatNumber(story.stats?.viewsWeek || 0)}</strong>
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-medium">
+              30 ngày: <strong>+{formatNumber(story.stats?.viewsMonth || 0)}</strong>
             </span>
             {story.stats?.wordCount ? (
               <>
@@ -266,6 +277,20 @@ export function StoryCardItem({
           </div>
 
           <div className="flex items-center gap-2">
+            {onViewStats && (
+              <button
+                type="button"
+                onClick={() => onViewStats(story)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-sky-200 bg-sky-50/70 text-sky-700 hover:bg-sky-100 transition cursor-pointer"
+                title="Xem biểu đồ thống kê lượt đọc theo ngày"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>Thống kê</span>
+              </button>
+            )}
+
             {((story.status === "DRAFT" || story.status === "REJECTED") ||
               (story.status === "PUBLISHED" &&
                 story.pendingRevision &&

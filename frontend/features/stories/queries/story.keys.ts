@@ -2,8 +2,10 @@ export const storyKeys = {
   all: ["stories"] as const,
   filtered: (params?: Record<string, unknown>) =>
     ["stories", "filtered", ...(params ? [params] : [])] as const,
-  topViews: (limit?: number) =>
-    ["stories", "top-views", limit || 10] as const,
+  topViews: (limit?: number, timeFrame?: string) =>
+    ["stories", "top-views", limit || 10, timeFrame || "all"] as const,
+  myStoryDailyViews: (id: string, days?: number) =>
+    ["stories", "my-daily-views", id, days || 30] as const,
   topWordCount: (limit?: number) =>
     ["stories", "top-word-count", limit || 10] as const,
   myList: (params?: Record<string, unknown>) =>
