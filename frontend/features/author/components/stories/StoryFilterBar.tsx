@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import React from "react";
-import { StoryStatus, StoryVisibility } from "@/features/stories";
+import { MyStorySortOption, StoryStatus, StoryVisibility } from "@/features/stories";
 
 interface StoryFilterBarProps {
   search: string;
@@ -10,8 +10,8 @@ interface StoryFilterBarProps {
   onStatusFilterChange: (status: "ALL" | StoryStatus) => void;
   visibilityFilter: "ALL" | StoryVisibility;
   onVisibilityFilterChange: (vis: "ALL" | StoryVisibility) => void;
-  sortBy: "updatedAt" | "createdAt" | "title" | "viewCount" | "chapterCount";
-  onSortByChange: (sort: "updatedAt" | "createdAt" | "title" | "viewCount" | "chapterCount") => void;
+  sortBy: MyStorySortOption;
+  onSortByChange: (sort: MyStorySortOption) => void;
   statusCounts: Record<string, number>;
   onOpenCreateModal: () => void;
 }
@@ -82,15 +82,16 @@ export function StoryFilterBar({
           <select
             value={sortBy}
             onChange={(e) =>
-              onSortByChange(
-                e.target.value as "updatedAt" | "createdAt" | "title" | "viewCount" | "chapterCount"
-              )
+              onSortByChange(e.target.value as MyStorySortOption)
             }
             className="px-2.5 py-2 bg-zinc-50 border border-zinc-200 rounded-md text-xs sm:text-sm text-zinc-700 font-medium focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 cursor-pointer"
           >
             <option value="updatedAt">Mới cập nhật</option>
             <option value="createdAt">Ngày tạo mới nhất</option>
-            <option value="viewCount">Lượt đọc cao nhất</option>
+            <option value="viewsToday">Lượt đọc hôm nay</option>
+            <option value="viewsWeek">Lượt đọc 7 ngày qua</option>
+            <option value="viewsMonth">Lượt đọc 30 ngày qua</option>
+            <option value="viewCount">Tổng lượt đọc cao nhất</option>
             <option value="chapterCount">Nhiều chương nhất</option>
             <option value="title">Tên tác phẩm (A-Z)</option>
           </select>

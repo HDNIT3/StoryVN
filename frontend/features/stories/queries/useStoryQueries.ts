@@ -29,13 +29,24 @@ export function useStories(params?: FilterStoriesParams) {
   });
 }
 
-export function useTopViews(limit = 10) {
+export function useTopViews(limit = 10, timeFrame: "all" | "today" | "week" | "month" | "year" = "all") {
   return useQuery({
-    queryKey: storyKeys.topViews(limit),
+    queryKey: storyKeys.topViews(limit, timeFrame),
     queryFn: async () => {
-      const res = await storyService.getTopViews(limit);
+      const res = await storyService.getTopViews(limit, timeFrame);
       return res.data;
     },
+  });
+}
+
+export function useMyStoryDailyViews(slugOrId: string, days = 30, enabled = true) {
+  return useQuery({
+    queryKey: storyKeys.myStoryDailyViews(slugOrId, days),
+    queryFn: async () => {
+      const res = await storyService.getMyStoryDailyViews(slugOrId, days);
+      return res.data;
+    },
+    enabled: Boolean(slugOrId) && enabled,
   });
 }
 

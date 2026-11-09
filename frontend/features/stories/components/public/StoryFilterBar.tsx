@@ -2,7 +2,11 @@
 
 import React, { useRef, useEffect } from "react";
 import type { CategoryItem } from "@/features/categories";
-import type { StoryProgressState, StorySortOption } from "@/features/stories";
+import type {
+  StoryProgressState,
+  StorySortOption,
+  StoryViewTimeFrame,
+} from "@/features/stories";
 import { GridIcon, BookmarkIcon, SortIcon, SearchIcon, ChevronDownIcon } from "./StoryIcons";
 
 export const SORT_OPTIONS: { label: string; value: StorySortOption }[] = [
@@ -11,6 +15,14 @@ export const SORT_OPTIONS: { label: string; value: StorySortOption }[] = [
   { label: "Lượt đọc nhiều nhất", value: "views" },
   { label: "Nhiều chương nhất", value: "chapters" },
   { label: "Đánh giá cao nhất", value: "rating" },
+];
+
+export const VIEW_TIMEFRAME_OPTIONS: { label: string; value: StoryViewTimeFrame }[] = [
+  { label: "Toàn thời gian", value: "all" },
+  { label: "Hôm nay", value: "today" },
+  { label: "Tuần này (7 ngày)", value: "week" },
+  { label: "Tháng này (30 ngày)", value: "month" },
+  { label: "Năm nay (365 ngày)", value: "year" },
 ];
 
 export const PROGRESS_OPTIONS: { label: string; value: StoryProgressState | "" }[] = [
@@ -29,6 +41,8 @@ interface StoryFilterBarProps {
   setSelectedProgress: (val: string) => void;
   selectedSort: StorySortOption;
   setSelectedSort: (val: StorySortOption) => void;
+  selectedTimeFrame: StoryViewTimeFrame;
+  setSelectedTimeFrame: (val: StoryViewTimeFrame) => void;
   genresData: CategoryItem[];
   currentGenreName: string;
   currentProgressName: string;
@@ -40,6 +54,7 @@ interface StoryFilterBarProps {
     genre?: string;
     progressState?: string;
     sortBy?: StorySortOption;
+    timeFrame?: StoryViewTimeFrame;
     page?: number;
   }) => void;
 }
@@ -53,6 +68,8 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
   setSelectedProgress,
   selectedSort,
   setSelectedSort,
+  selectedTimeFrame,
+  setSelectedTimeFrame,
   genresData,
   currentGenreName,
   currentProgressName,
@@ -255,6 +272,42 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
           >
             Tìm kiếm
           </button>
+        </div>
+
+        {/* Bộ lọc chu kỳ lượt đọc (Ngày / Tuần / Tháng / Năm / Tất cả) */}
+        <div className="mt-4 pt-3.5 border-t border-zinc-100 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-zinc-500 mr-1 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Thống kê lượt đọc theo:
+          </span>
+          {VIEW_TIMEFRAME_OPTIONS.map((tf) => {
+            const isActive =
+              selectedSort === "views" && selectedTimeFrame === tf.value;
+            return (
+              <button
+                key={tf.value}
+                type="button"
+                onClick={() => {
+                  setSelectedSort("views");
+                  setSelectedTimeFrame(tf.value);
+                  onApplyFilter({
+                    sortBy: "views",
+                    timeFrame: tf.value,
+                    page: 1,
+                  });
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition cursor-pointer ${
+                  isActive
+                    ? "bg-[#0d5c46] text-white shadow-2xs"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-emerald-50 hover:text-emerald-800"
+                }`}
+              >
+                {tf.label}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

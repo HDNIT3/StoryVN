@@ -22,13 +22,27 @@ export class QueryMyStoriesDto extends PaginationQueryDto {
 
   @ApiPropertyOptional({
     example: 'updatedAt',
-    description: 'Trường sắp xếp (updatedAt, createdAt, title, viewCount, chapterCount)',
+    description:
+      'Trường sắp xếp (updatedAt, createdAt, title, viewCount, viewsToday, viewsWeek, viewsMonth, viewsYear, chapterCount)',
     default: 'updatedAt',
   })
   @IsOptional()
-  @IsIn(['updatedAt', 'createdAt', 'title', 'viewCount', 'chapterCount'], {
-    message: 'Trường sắp xếp không hợp lệ',
-  })
+  @IsIn(
+    [
+      'updatedAt',
+      'createdAt',
+      'title',
+      'viewCount',
+      'viewsToday',
+      'viewsWeek',
+      'viewsMonth',
+      'viewsYear',
+      'chapterCount',
+    ],
+    {
+      message: 'Trường sắp xếp không hợp lệ',
+    },
+  )
   sortBy?: string = 'updatedAt';
 
   @ApiPropertyOptional({

@@ -10,8 +10,18 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useFollowStatusBatch, useToggleFollow } from "@/features/follows";
 import { useLoginHref } from "@/lib/hooks/useLoginHref";
 import { toast } from "@/lib/toast";
-import type { FilteredStoryItem, StoryProgressState, StorySortOption } from "@/features/stories";
-import { StoryFilterBar, SORT_OPTIONS, PROGRESS_OPTIONS } from "./StoryFilterBar";
+import type {
+  FilteredStoryItem,
+  StoryProgressState,
+  StorySortOption,
+  StoryViewTimeFrame,
+} from "@/features/stories";
+import {
+  StoryFilterBar,
+  SORT_OPTIONS,
+  PROGRESS_OPTIONS,
+  VIEW_TIMEFRAME_OPTIONS,
+} from "./StoryFilterBar";
 import { StoryListItemCard } from "./StoryListItemCard";
 import { TopViewsWidget } from "./TopViewsWidget";
 import { BookIcon } from "./StoryIcons";
@@ -26,6 +36,7 @@ export const PublicStoriesListView: React.FC = () => {
   const urlGenre = searchParams.get("genre") || "";
   const urlProgress = (searchParams.get("progressState") as StoryProgressState) || "";
   const urlSort = (searchParams.get("sortBy") as StorySortOption) || "published";
+  const urlTimeFrame = (searchParams.get("timeFrame") as StoryViewTimeFrame) || "all";
   const urlPage = parseInt(searchParams.get("page") || "1", 10) || 1;
 
   // State điều khiển
@@ -33,6 +44,8 @@ export const PublicStoriesListView: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = useState<string>(urlGenre);
   const [selectedProgress, setSelectedProgress] = useState<string>(urlProgress);
   const [selectedSort, setSelectedSort] = useState<StorySortOption>(urlSort);
+  const [selectedTimeFrame, setSelectedTimeFrame] = useState<StoryViewTimeFrame>(urlTimeFrame);
+  const [widgetTimeFrame, setWidgetTimeFrame] = useState<StoryViewTimeFrame>("week");
   const [currentPage, setCurrentPage] = useState<number>(urlPage);
 
   // Đồng bộ state khi searchParams trên URL thay đổi (ví dụ: click thể loại từ Header)
@@ -41,8 +54,9 @@ export const PublicStoriesListView: React.FC = () => {
     setSelectedGenre(urlGenre);
     setSelectedProgress(urlProgress);
     setSelectedSort(urlSort);
+    setSelectedTimeFrame(urlTimeFrame);
     setCurrentPage(urlPage);
-  }, [urlSearch, urlGenre, urlProgress, urlSort, urlPage]);
+  }, [urlSearch, urlGenre, urlProgress, urlSort, urlTimeFrame, urlPage]);
 
   // Popover state
   const [openDropdown, setOpenDropdown] = useState<"genre" | "progress" | "sort" | null>(null);
@@ -60,6 +74,7 @@ export const PublicStoriesListView: React.FC = () => {
       genre: selectedGenre,
       progressState: selectedProgress,
       sortBy: selectedSort,
+      timeFrame: selectedSort === "views" ? selectedTimeFrame : "all",
       page: currentPage,
       limit: 10,
     }),
@@ -69,6 +84,7 @@ export const PublicStoriesListView: React.FC = () => {
         genre: selectedGenre || undefined,
         progressState: (selectedProgress as StoryProgressState) || undefined,
         sortBy: selectedSort,
+        timeFrame: selectedSort === "views" ? selectedTimeFrame : "all",
         page: currentPage,
         limit: 10,
       });
@@ -76,11 +92,11 @@ export const PublicStoriesListView: React.FC = () => {
     },
   });
 
-  // Lấy Top 6 Truyện nổi bật cho cột bên phải
+  // Lấy Top 6 Truyện nổi bật cho cột bên phải theo chu kỳ
   const { data: topViewsData, isLoading: isLoadingTopViews } = useQuery({
-    queryKey: storyKeys.topViews(6),
+    queryKey: storyKeys.topViews(6, widgetTimeFrame),
     queryFn: async () => {
-      const res = await storyService.getTopViews(6);
+      const res = await storyService.getTopViews(6, widgetTimeFrame);
       return res.data || [];
     },
     staleTime: 5 * 60 * 1000,
@@ -92,12 +108,15 @@ export const PublicStoriesListView: React.FC = () => {
     genre?: string;
     progressState?: string;
     sortBy?: StorySortOption;
+    timeFrame?: StoryViewTimeFrame;
     page?: number;
   }) => {
     const qSearch = overrideParams?.search !== undefined ? overrideParams.search : searchInput;
     const qGenre = overrideParams?.genre !== undefined ? overrideParams.genre : selectedGenre;
     const qProgress = overrideParams?.progressState !== undefined ? overrideParams.progressState : selectedProgress;
     const qSort = overrideParams?.sortBy !== undefined ? overrideParams.sortBy : selectedSort;
+    const qTimeFrame =
+      overrideParams?.timeFrame !== undefined ? overrideParams.timeFrame : selectedTimeFrame;
     const qPage = overrideParams?.page !== undefined ? overrideParams.page : 1;
 
     setCurrentPage(qPage);
@@ -107,6 +126,9 @@ export const PublicStoriesListView: React.FC = () => {
     if (qGenre) params.set("genre", qGenre);
     if (qProgress) params.set("progressState", qProgress);
     if (qSort) params.set("sortBy", qSort);
+    if (qSort === "views" && qTimeFrame && qTimeFrame !== "all") {
+      params.set("timeFrame", qTimeFrame);
+    }
     if (qPage > 1) params.set("page", qPage.toString());
 
     const qs = params.toString();
@@ -155,8 +177,13 @@ export const PublicStoriesListView: React.FC = () => {
 
   const currentSortName = useMemo(() => {
     const found = SORT_OPTIONS.find((s) => s.value === selectedSort);
-    return found ? found.label : "Mới xuất bản";
-  }, [selectedSort]);
+    const baseLabel = found ? found.label : "Mới xuất bản";
+    if (selectedSort === "views" && selectedTimeFrame !== "all") {
+      const tfFound = VIEW_TIMEFRAME_OPTIONS.find((t) => t.value === selectedTimeFrame);
+      if (tfFound) return `${baseLabel} • ${tfFound.label}`;
+    }
+    return baseLabel;
+  }, [selectedSort, selectedTimeFrame]);
 
   return (
     <div className="min-h-screen bg-[#fafaf8] py-5 sm:py-8">
@@ -184,6 +211,8 @@ export const PublicStoriesListView: React.FC = () => {
           setSelectedProgress={setSelectedProgress}
           selectedSort={selectedSort}
           setSelectedSort={setSelectedSort}
+          selectedTimeFrame={selectedTimeFrame}
+          setSelectedTimeFrame={setSelectedTimeFrame}
           genresData={genresData}
           currentGenreName={currentGenreName}
           currentProgressName={currentProgressName}
@@ -249,6 +278,7 @@ export const PublicStoriesListView: React.FC = () => {
                     setSelectedGenre("");
                     setSelectedProgress("");
                     setSelectedSort("published");
+                    setSelectedTimeFrame("all");
                     router.push("/truyen");
                   }}
                   className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm rounded-xl font-medium transition-colors cursor-pointer"
@@ -261,6 +291,7 @@ export const PublicStoriesListView: React.FC = () => {
                 <StoryListItemCard
                   key={story._id}
                   story={story}
+                  activeTimeFrame={selectedSort === "views" ? selectedTimeFrame : "all"}
                   isFollowing={Boolean(followStatusMap?.[story._id])}
                   isFollowPending={isTogglePending && variables?.targetId === story._id}
                   onToggleBookmark={() => handleToggleBookmark(story)}
@@ -327,7 +358,12 @@ export const PublicStoriesListView: React.FC = () => {
 
           {/* CỘT PHẢI */}
           <div className="lg:col-span-4 xl:col-span-4">
-            <TopViewsWidget items={topViewsData} isLoading={isLoadingTopViews} />
+            <TopViewsWidget
+              items={topViewsData}
+              isLoading={isLoadingTopViews}
+              timeFrame={widgetTimeFrame}
+              onTimeFrameChange={setWidgetTimeFrame}
+            />
           </div>
         </div>
       </div>

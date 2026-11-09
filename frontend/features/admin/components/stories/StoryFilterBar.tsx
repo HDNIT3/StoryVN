@@ -80,9 +80,13 @@ export function StoryFilterBar({
         >
           <option value="createdAt">Mới tạo nhất</option>
           <option value="updatedAt">Cập nhật mới nhất</option>
-          <option value="title">Tên truyện (A-Z)</option>
-          <option value="viewCount">Lượt xem cao nhất</option>
+          <option value="viewsToday">Lượt xem hôm nay cao nhất</option>
+          <option value="viewsWeek">Lượt xem 7 ngày cao nhất</option>
+          <option value="viewsMonth">Lượt xem 30 ngày cao nhất</option>
+          <option value="viewsYear">Lượt xem năm nay cao nhất</option>
+          <option value="viewCount">Tổng lượt xem cao nhất</option>
           <option value="chapterCount">Nhiều chương nhất</option>
+          <option value="title">Tên truyện (A-Z)</option>
         </select>
 
         {/* Nút Làm mới */}

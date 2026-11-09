@@ -36,13 +36,27 @@ export class AdminQueryStoriesDto extends PaginationQueryDto {
 
   @ApiPropertyOptional({
     example: 'createdAt',
-    description: 'Trường sắp xếp (createdAt, updatedAt, title, viewCount, chapterCount)',
+    description:
+      'Trường sắp xếp (createdAt, updatedAt, title, viewCount, viewsToday, viewsWeek, viewsMonth, viewsYear, chapterCount)',
     default: 'createdAt',
   })
   @IsOptional()
-  @IsIn(['createdAt', 'updatedAt', 'title', 'viewCount', 'chapterCount'], {
-    message: 'Trường sắp xếp không hợp lệ',
-  })
+  @IsIn(
+    [
+      'createdAt',
+      'updatedAt',
+      'title',
+      'viewCount',
+      'viewsToday',
+      'viewsWeek',
+      'viewsMonth',
+      'viewsYear',
+      'chapterCount',
+    ],
+    {
+      message: 'Trường sắp xếp không hợp lệ',
+    },
+  )
   sortBy?: string = 'createdAt';
 
   @ApiPropertyOptional({
