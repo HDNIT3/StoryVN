@@ -5,17 +5,22 @@ import React from "react";
 export interface AuthHeaderProps {
   title: string;
   subtitle: string;
+  align?: "left" | "center";
 }
 
-export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
+export function AuthHeader({ title, subtitle, align = "left" }: AuthHeaderProps) {
+  const alignClass = align === "center" ? "text-center" : "text-left";
+
   return (
-    <div className="text-center space-y-1.5">
-      <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+    <div className={`space-y-1.5 ${alignClass}`}>
+      <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900">
         {title}
-      </h1>
-      <p className="text-sm text-zinc-500">
+      </h2>
+      <p className="text-sm text-zinc-500 font-normal">
         {subtitle}
       </p>
     </div>
   );
 }
+
+export default AuthHeader;
