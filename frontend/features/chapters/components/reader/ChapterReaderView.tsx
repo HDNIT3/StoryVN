@@ -4,15 +4,22 @@ import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { chapterService, chapterKeys } from "@/features/chapters";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  chapterService,
+  chapterKeys,
+  useUnlockChapter,
+  type UnlockChapterResponse,
+} from "@/features/chapters";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useMyWallet } from "@/features/wallet";
 import { useRecordReading } from "@/features/reading-history";
 import { READER_THEMES, CHAPTERS_PER_PAGE, type ReaderThemeMode } from "./ReaderThemes";
 import { ReaderTopBar } from "./ReaderTopBar";
 import { ReaderContent } from "./ReaderContent";
 import { ReaderNavigation } from "./ReaderNavigation";
 import { ReaderSideToolbar } from "./ReaderSideToolbar";
+import { ReaderUnlockModal } from "./ReaderUnlockModal";
 import { useSpeechReader } from "../../hooks/useSpeechReader";
 import { useStoryComments } from "@/features/comments";
 
@@ -45,6 +52,7 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   initialChapter,
 }) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [fontSize, setFontSize] = useState<number>(18);
   const [lineHeight, setLineHeight] = useState<number>(1.8);
@@ -54,6 +62,9 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   const [chapterPage, setChapterPage] = useState(1);
   const [showTts, setShowTts] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [unlockResult, setUnlockResult] = useState<UnlockChapterResponse | null>(null);
 
   const settingsRef = useRef<HTMLDivElement>(null);
   const ttsRef = useRef<HTMLDivElement>(null);
@@ -122,22 +133,38 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const { user, isAuthenticated } = useAuth();
+
   const {
     data: chapterRes,
     isLoading,
     isError,
+    refetch: refetchChapter,
   } = useQuery({
-    queryKey: chapterKeys.reading(slug, chapterNumber),
+    queryKey: [...chapterKeys.reading(slug, chapterNumber), user?._id ?? "guest"],
     queryFn: () =>
       chapterService.getChapterReadingBySlugAndNumber(slug, chapterNumber),
     enabled: Boolean(slug && chapterNumber),
-    initialData: initialChapter
-      ? {
-          success: true,
-          data: initialChapter,
-        }
-      : undefined,
+    initialData:
+      initialChapter && (initialChapter.isFree || !isAuthenticated)
+        ? {
+            success: true,
+            data: initialChapter,
+          }
+        : undefined,
   });
+
+  // Nếu chương trả phí được SSR dưới dạng khách, tự động tải lại kèm token khi user đã đăng nhập
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      chapterRes?.data &&
+      !chapterRes.data.isFree &&
+      chapterRes.data.isUnlocked === false
+    ) {
+      refetchChapter();
+    }
+  }, [isAuthenticated, user?._id, slug, chapterNumber, refetchChapter]);
 
   const chapter = chapterRes?.data;
   const story = chapter?.story;
@@ -147,22 +174,57 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   const tts = useSpeechReader(chapter?.content);
 
   // Record reading history (if authenticated)
-  const { user, isAuthenticated } = useAuth();
   const { mutate: recordReading } = useRecordReading();
+  const unlockChapterMutation = useUnlockChapter();
 
-  // Kiểm tra quyền chỉnh sửa chương (Tác giả, Quản trị viên, Quản lý)
-  const canEdit = Boolean(
-    user &&
-      chapterId &&
-      (user.role === "ADMIN" ||
-        user.role === "MANAGER" ||
-        user.role === "AUTHOR" ||
-        user._id === (story as any)?.authorId ||
-        user._id === (story as any)?.author?._id ||
-        user._id === (story as any)?.author ||
-        user.username === (story as any)?.author?.username ||
-        user.username === (story as any)?.author)
+  // Trạng thái khóa chương được quyết định trực tiếp từ kết quả kiểm tra quyền sở hữu / mở khóa của Backend
+  const isLocked = Boolean(
+    chapter &&
+      !chapter.isFree &&
+      (chapter.coinPrice ?? 0) > 0 &&
+      (chapter.isUnlocked === false || (!chapter.content && chapter.isUnlocked !== true))
   );
+
+  const { data: myWallet, isLoading: isLoadingWallet } = useMyWallet(
+    Boolean(isAuthenticated && (isLocked || showUnlockModal))
+  );
+
+  const handleOpenUnlockModal = () => {
+    setUnlockError(null);
+    setUnlockResult(null);
+    setShowUnlockModal(true);
+  };
+
+  const handleConfirmUnlock = async () => {
+    if (!chapterId || unlockChapterMutation.isPending) return;
+    setUnlockError(null);
+    try {
+      const res = await unlockChapterMutation.mutateAsync(chapterId);
+      setUnlockResult(res.data);
+      // Cập nhật tức thì nội dung chương vào bộ nhớ đệm để hiển thị ngay không cần tải lại trang
+      queryClient.setQueryData(
+        [...chapterKeys.reading(slug, chapterNumber), user?._id ?? "guest"],
+        (old: any) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              content: res.data.chapter.content,
+              viewCount: res.data.chapter.viewCount,
+              isUnlocked: true,
+            },
+          };
+        }
+      );
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Không thể hoàn tất giao dịch mở khóa chương.";
+      setUnlockError(msg);
+    }
+  };
 
   // Lấy số lượng bình luận của chương hiện tại
   const { data: commentsRes } = useStoryComments(story?._id || "", {
@@ -173,10 +235,10 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   const commentCount = commentsRes?.data?.pagination?.totalItems ?? 0;
 
   useEffect(() => {
-    if (isAuthenticated && chapterId) {
+    if (isAuthenticated && chapterId && !isLocked) {
       recordReading(chapterId);
     }
-  }, [isAuthenticated, chapterId, recordReading]);
+  }, [isAuthenticated, chapterId, isLocked, recordReading]);
 
   const chapterList = chapter?.chaptersList ?? [];
 
@@ -359,6 +421,11 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
           theme={theme}
           fontSize={fontSize}
           lineHeight={lineHeight}
+          isLocked={isLocked}
+          coinPrice={chapter.coinPrice}
+          requirePreviousChapter={chapter.requirePreviousChapter}
+          isAuthenticated={isAuthenticated}
+          onRequestUnlock={handleOpenUnlockModal}
           activeBlockIndex={tts.activeBlockIndex}
           activeText={tts.activeText}
           highlighting={tts.highlighting}
@@ -488,6 +555,23 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
         chapterPage={chapterPage}
         onPageChange={setChapterPage}
         theme={theme}
+      />
+
+      {/* Modal xác nhận mua chương & kết quả giao dịch (Task 1) */}
+      <ReaderUnlockModal
+        isOpen={showUnlockModal}
+        storyTitle={story?.title}
+        chapterNumber={chapter.chapterNumber}
+        chapterTitle={chapter.title}
+        coinPrice={chapter.coinPrice || 0}
+        walletBalance={myWallet?.balance ?? 0}
+        isLoadingWallet={isLoadingWallet}
+        isPending={unlockChapterMutation.isPending}
+        errorMessage={unlockError}
+        unlockResult={unlockResult}
+        theme={theme}
+        onConfirm={handleConfirmUnlock}
+        onClose={() => setShowUnlockModal(false)}
       />
     </div>
   );

@@ -83,11 +83,9 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
   const handleSubmit = async (action: ChapterAction) => {
     if (!validateForm() || !chapterId) return;
 
-    // Chương đã xuất bản: không gửi chapterNumber/scheduledAt để tránh bị chặn
-    // do lệch múi giờ/độ chính xác khi so sánh với giá trị đã lưu.
+    // Không gửi chapterNumber khi chỉnh sửa (việc đổi vị trí dùng chức năng Sắp xếp thứ tự)
     const isPublished = chapter?.status === "PUBLISHED";
     const payload = {
-      ...(isPublished ? {} : { chapterNumber }),
       title: title.trim(),
       content,
       isFree,
@@ -347,16 +345,21 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
                   type="number"
                   min={1}
                   value={chapterNumber}
-                  disabled={chapter.status === "PUBLISHED"}
+                  disabled
+                  readOnly
                   title={
                     chapter.status === "PUBLISHED"
                       ? "Không thể đổi số thứ tự chương sau khi đã xuất bản"
-                      : undefined
+                      : "Sử dụng chức năng Sắp xếp thứ tự ở danh sách chương để đổi vị trí"
                   }
-                  onChange={(e) => setChapterNumber(parseInt(e.target.value, 10) || 1)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-md pl-7 pr-3 py-2 text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md pl-7 pr-3 py-2 text-sm font-bold text-slate-900 transition disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
+              {chapter.status !== "PUBLISHED" && (
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Đổi vị trí tại mục Sắp xếp thứ tự.
+                </p>
+              )}
             </div>
 
             <div className="sm:col-span-3">

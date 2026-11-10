@@ -272,11 +272,13 @@ export function AuthorNewChapterView() {
                 type="number"
                 min={1}
                 value={chapterNumber}
-                onChange={(e) => setChapterNumber(parseInt(e.target.value, 10) || 1)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
+                disabled
+                readOnly
+                title="Số thứ tự chương được cấp tự động theo chương tiếp theo"
+                className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3.5 py-2.5 text-sm font-bold text-slate-600 cursor-not-allowed opacity-80 transition"
               />
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Hệ thống tự điền chương tiếp theo.</p>
+            <p className="text-[11px] text-slate-400 mt-1">Tự động gán số chương tiếp theo.</p>
           </div>
 
           <div className="sm:col-span-3">

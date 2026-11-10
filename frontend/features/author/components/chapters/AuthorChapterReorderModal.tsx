@@ -20,6 +20,12 @@ export function AuthorChapterReorderModal({
 }: AuthorChapterReorderModalProps) {
   if (!isOpen) return null;
 
+  const lastLockedIndex = reorderList.reduce(
+    (maxIdx, ch, idx) =>
+      ch.status === "PUBLISHED" || ch.status === "HIDDEN" ? idx : maxIdx,
+    -1
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="bg-white rounded-lg border border-zinc-200 shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
@@ -38,41 +44,56 @@ export function AuthorChapterReorderModal({
 
         <div className="p-4 overflow-y-auto flex-1 space-y-2">
           <p className="text-xs text-zinc-500 mb-3">
-            Sử dụng nút mũi tên Lên/Xuống để điều chỉnh vị trí hiển thị các chương trong truyện:
+            Sử dụng nút mũi tên Lên/Xuống để hoán đổi vị trí các chương chưa xuất bản (chương đã xuất bản được khóa cố định vị trí):
           </p>
-          {reorderList.map((c, index) => (
-            <div
-              key={c._id || c.id}
-              className="flex items-center justify-between p-2.5 bg-zinc-50 border border-zinc-200 rounded-md text-xs font-semibold text-zinc-800"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-6 h-6 rounded bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 font-bold shrink-0">
-                  {index + 1}
-                </span>
-                <span className="truncate">{c.title}</span>
+          {reorderList.map((c, index) => {
+            const isLocked = index <= lastLockedIndex;
+            const canMoveUp = !isLocked && index > lastLockedIndex + 1;
+            const canMoveDown = !isLocked && index < reorderList.length - 1;
+
+            return (
+              <div
+                key={c._id || c.id}
+                className={`flex items-center justify-between p-2.5 border rounded-md text-xs font-semibold ${
+                  isLocked
+                    ? "bg-zinc-100/80 border-zinc-200 text-zinc-500"
+                    : "bg-zinc-50 border-zinc-200 text-zinc-800"
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-6 h-6 rounded bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 font-bold shrink-0">
+                    {index + 1}
+                  </span>
+                  <span className="truncate">{c.title}</span>
+                  {isLocked && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 rounded shrink-0">
+                      Đã xuất bản (Cố định)
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    disabled={!canMoveUp}
+                    onClick={() => onMoveChapter(index, "up")}
+                    className="p-1 rounded hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+                    title={isLocked ? "Chương đã xuất bản không thể đổi vị trí" : "Di chuyển lên"}
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canMoveDown}
+                    onClick={() => onMoveChapter(index, "down")}
+                    className="p-1 rounded hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+                    title={isLocked ? "Chương đã xuất bản không thể đổi vị trí" : "Di chuyển xuống"}
+                  >
+                    ▼
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  disabled={index === 0}
-                  onClick={() => onMoveChapter(index, "up")}
-                  className="p-1 rounded hover:bg-zinc-200 disabled:opacity-30 transition cursor-pointer"
-                  title="Di chuyển lên"
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  disabled={index === reorderList.length - 1}
-                  onClick={() => onMoveChapter(index, "down")}
-                  className="p-1 rounded hover:bg-zinc-200 disabled:opacity-30 transition cursor-pointer"
-                  title="Di chuyển xuống"
-                >
-                  ▼
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="px-6 py-4 border-t border-zinc-200 flex items-center justify-end gap-2.5 bg-zinc-50/50">

@@ -38,6 +38,7 @@ export interface ChapterItem {
   isFree: boolean;
   coinPrice: number;
   requirePreviousChapter: boolean;
+  isUnlocked?: boolean;
   viewCount: number;
   wordCount?: number;
   scheduledAt?: string | null;
@@ -46,6 +47,35 @@ export interface ChapterItem {
   pendingRevision?: ChapterRevisionItem | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UnlockChapterResponse {
+  unlock: {
+    _id: string;
+    userId: string;
+    chapterId: string;
+    coinPrice: number;
+    unlockedAt: string;
+  };
+  wallet: {
+    userId: string;
+    balance: number;
+    totalSpent: number;
+    createdAt: string | null;
+    updatedAt: string | null;
+  };
+  chapter: {
+    _id: string;
+    chapterNumber: number;
+    title: string;
+    content: string;
+    wordCount: number;
+    viewCount: number;
+    isFree: boolean;
+    coinPrice: number;
+    requirePreviousChapter: boolean;
+    isUnlocked: boolean;
+  };
 }
 
 export interface PublicChapterItem {

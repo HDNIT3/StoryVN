@@ -26,6 +26,11 @@ interface ReaderContentProps {
   theme: ReaderThemeMode;
   fontSize: number;
   lineHeight: number;
+  isLocked?: boolean;
+  coinPrice?: number;
+  requirePreviousChapter?: boolean;
+  isAuthenticated?: boolean;
+  onRequestUnlock?: () => void;
   /** Đoạn văn đang được đọc — dùng để tô sáng. */
   activeBlockIndex?: number;
   /** Câu đang được đọc — tô sáng chính xác trong đoạn. */
@@ -135,6 +140,11 @@ export const ReaderContent: React.FC<ReaderContentProps> = ({
   theme,
   fontSize,
   lineHeight,
+  isLocked = false,
+  coinPrice = 0,
+  requirePreviousChapter = false,
+  isAuthenticated = false,
+  onRequestUnlock,
   activeBlockIndex = -1,
   activeText = "",
   highlighting = false,
@@ -314,8 +324,64 @@ export const ReaderContent: React.FC<ReaderContentProps> = ({
         </span>
       </div>
 
-      {/* Nội dung chương chữ */}
-      {blocks.length > 0 ? (
+      {/* Nội dung chương chữ hoặc Khung mở khóa chương trả phí */}
+      {isLocked ? (
+        <div
+          className={`rounded-3xl border p-8 sm:p-10 text-center space-y-5 my-8 ${
+            theme === "dark"
+              ? "bg-zinc-900/70 border-zinc-800 text-zinc-100"
+              : theme === "vintage"
+              ? "bg-[#f5f0e6]/80 border-[#e2d8c7] text-[#2c2725]"
+              : "bg-zinc-50 border-zinc-200 text-zinc-900"
+          }`}
+        >
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/15 text-amber-600 flex items-center justify-center">
+            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
+
+          <div className="space-y-2 max-w-md mx-auto">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300">
+              Chương trả phí • {coinPrice.toLocaleString("vi-VN")} Xu
+            </span>
+            <h2 className="text-lg sm:text-xl font-bold">
+              Mở khóa để đọc toàn bộ Chương {chapterNumber}
+            </h2>
+            <p className={`text-xs sm:text-sm ${t.secondaryText} leading-relaxed`}>
+              Chương này yêu cầu <strong className="font-bold">{coinPrice.toLocaleString("vi-VN")} Xu</strong> để mở khóa. Bạn chỉ cần thanh toán một lần duy nhất để sở hữu vĩnh viễn chương này.
+            </p>
+            {requirePreviousChapter && Number(chapterNumber) > 1 && (
+              <p className="text-xs text-amber-600 font-medium">
+                Lưu ý: Chương này yêu cầu đã mở khóa chương trả phí liền trước.
+              </p>
+            )}
+          </div>
+
+          <div className="pt-2">
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={onRequestUnlock}
+                className="px-6 py-3 rounded-xl text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition shadow-sm cursor-pointer"
+              >
+                Mở khóa chương ({coinPrice.toLocaleString("vi-VN")} Xu)
+              </button>
+            ) : (
+              <Link
+                href={`/dang-nhap?returnUrl=${encodeURIComponent(`/truyen/${slug}/chuong/${chapterNumber}`)}`}
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition shadow-sm"
+              >
+                Đăng nhập để mở khóa ({coinPrice.toLocaleString("vi-VN")} Xu)
+              </Link>
+            )}
+          </div>
+        </div>
+      ) : blocks.length > 0 ? (
         <div
           ref={contentRef}
           onClick={handleContentClick}
