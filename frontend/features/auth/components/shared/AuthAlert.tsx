@@ -17,9 +17,9 @@ export function AuthAlert({ message, error }: AuthAlertProps) {
         : error;
 
     return (
-      <div className="p-3.5 bg-red-50 border border-red-200/80 rounded-2xl flex items-start gap-2.5 text-red-600 text-xs animate-in fade-in duration-200">
+      <div className="p-3.5 bg-rose-50 border border-rose-200/80 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs animate-in fade-in duration-200 shadow-2xs">
         <svg
-          className="w-4 h-4 shrink-0 mt-0.5 text-red-500"
+          className="w-4 h-4 shrink-0 mt-0.5 text-rose-500"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -37,7 +37,7 @@ export function AuthAlert({ message, error }: AuthAlertProps) {
   }
 
   return (
-    <div className="p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-2xl flex items-start gap-2.5 text-emerald-700 text-xs animate-in fade-in duration-200">
+    <div className="p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-start gap-2.5 text-emerald-700 text-xs animate-in fade-in duration-200 shadow-2xs">
       <svg
         className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600"
         fill="none"
@@ -55,3 +55,5 @@ export function AuthAlert({ message, error }: AuthAlertProps) {
     </div>
   );
 }
+
+export default AuthAlert;

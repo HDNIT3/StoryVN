@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { chapterService } from "../services/chapter.service";
 import { chapterKeys } from "./chapter.keys";
 import { storyKeys } from "@/features/stories";
+import { walletKeys } from "@/features/wallet";
 import { toast } from "@/lib/toast";
 import type {
   CreateChapterPayload,
@@ -215,6 +216,28 @@ export function useBulkSubmitChapters() {
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Gửi phê duyệt hàng loạt thất bại!";
+      toast.error(msg);
+    },
+  });
+}
+
+export function useUnlockChapter() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (chapterId: string) => {
+      return chapterService.unlockChapter(chapterId);
+    },
+    onSuccess: (res) => {
+      if (res.data?.wallet) {
+        queryClient.setQueryData(walletKeys.me(), res.data.wallet);
+      }
+      queryClient.invalidateQueries({ queryKey: walletKeys.all });
+      queryClient.invalidateQueries({ queryKey: chapterKeys.all });
+      toast.success(res.message || "Mở khóa chương truyện thành công!");
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Mở khóa chương thất bại!";
       toast.error(msg);
     },
   });

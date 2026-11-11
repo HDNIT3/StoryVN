@@ -266,6 +266,30 @@ export class ChaptersController {
   }
 
   @ApiOperation({
+    summary: 'Mua / mở khóa chương trả phí bằng Xu - Task 1',
+    description:
+      'Trừ Xu trong ví người dùng, ghi nhận bản ghi mở khóa vào chapter_unlocks và cấp quyền sở hữu chương',
+  })
+  @Post(':id/unlock')
+  @HttpCode(HttpStatus.OK)
+  async unlockChapter(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ) {
+    const data = await this.chaptersService.unlockChapter(
+      user._id,
+      id,
+      user.role,
+    );
+
+    return {
+      success: true,
+      message: 'Mở khóa chương truyện thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
     summary: 'Lấy lịch sử các bản sửa đổi của chương - UC-15 & UC-16',
     description: 'Tác giả hoặc Quản lý xem toàn bộ các bản sửa đổi của chương truyện',
   })

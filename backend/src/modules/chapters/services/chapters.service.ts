@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -23,11 +24,16 @@ import {
   StoryDailyView,
   StoryDailyViewDocument,
 } from '../../stories/schemas/story-daily-view.schema.js';
+import { WalletService } from '../../wallet/services/wallet.service.js';
 import {
   Chapter,
   ChapterDocument,
   ChapterStatus,
 } from '../schemas/chapter.schema.js';
+import {
+  ChapterUnlock,
+  ChapterUnlockDocument,
+} from '../schemas/chapter-unlock.schema.js';
 import {
   ChapterAction,
   CreateChapterDto,
@@ -38,6 +44,8 @@ import { UpdateChapterDto } from '../dto/update-chapter.dto.js';
 
 @Injectable()
 export class ChaptersService {
+  private readonly inFlightUnlocks = new Set<string>();
+
   constructor(
     @InjectModel(Chapter.name)
     private readonly chapterModel: Model<ChapterDocument>,
@@ -46,6 +54,11 @@ export class ChaptersService {
     @InjectModel(StoryDailyView.name)
     private readonly storyDailyViewModel: Model<StoryDailyViewDocument>,
     private readonly notificationsService: NotificationsService,
+    @Optional()
+    @InjectModel(ChapterUnlock.name)
+    private readonly chapterUnlockModel?: Model<ChapterUnlockDocument>,
+    @Optional()
+    private readonly walletService?: WalletService,
   ) {}
 
   /**
@@ -601,6 +614,22 @@ export class ChaptersService {
     const chapterObj: any = chapter.toObject();
     chapterObj.wordCount = this.countChapterWords(chapterObj.content);
 
+    // Kiểm tra trạng thái mở khóa đối với chương trả phí
+    if (
+      !chapter.isFree &&
+      chapter.coinPrice > 0 &&
+      !isOwner &&
+      !isAdminOrManager
+    ) {
+      const unlocked = await this.isChapterUnlockedByUser(chapter._id, userId);
+      chapterObj.isUnlocked = unlocked;
+      if (!unlocked) {
+        chapterObj.content = '';
+      }
+    } else {
+      chapterObj.isUnlocked = true;
+    }
+
     // Nếu là tác giả hoặc quản trị viên, đính kèm bản chỉnh sửa đang mở (nếu có)
     if (isOwner || isAdminOrManager) {
       const withRevisions: any = await this.chapterModel
@@ -664,20 +693,14 @@ export class ChaptersService {
       return chapter;
     }
 
-    // Kiểm tra trùng chapterNumber nếu cập nhật
+    // Không cho phép đổi số thứ tự chương trực tiếp trong form chỉnh sửa
     if (
       dto.chapterNumber !== undefined &&
       dto.chapterNumber !== chapter.chapterNumber
     ) {
-      const exists = await this.chapterModel.findOne({
-        storyId: chapter.storyId,
-        chapterNumber: dto.chapterNumber,
-        _id: { $ne: chapter._id },
-      });
-      if (exists) {
-        throw new BadRequestException(ErrorCode.CHAPTER_NUMBER_EXISTS);
-      }
-      chapter.chapterNumber = dto.chapterNumber;
+      throw new BadRequestException(
+        'Không thể thay đổi trực tiếp số thứ tự chương khi chỉnh sửa. Vui lòng sử dụng chức năng Sắp xếp thứ tự ở danh sách chương.',
+      );
     }
 
     if (dto.title !== undefined) {
@@ -1157,8 +1180,116 @@ export class ChaptersService {
   ): Promise<{ success: boolean; message: string }> {
     const story = await this.verifyStoryOwnership(userId, storyId, userRole);
 
+    const existingChapters = await this.chapterModel
+      .find({ storyId: story._id })
+      .select('+revisions')
+      .sort({ chapterNumber: 1 });
+
+    if (dto.orders.length !== existingChapters.length) {
+      throw new BadRequestException(
+        'Danh sách sắp xếp phải bao gồm đầy đủ tất cả các chương của truyện.',
+      );
+    }
+
+    const chapterMap = new Map<string, ChapterDocument>();
+    for (const ch of existingChapters) {
+      chapterMap.set(ch._id.toString(), ch);
+    }
+
+    // Xác định ranh giới khóa: vị trí chương cuối cùng đã từng xuất bản
+    let maxLockedChapterNumber = 0;
+    for (const ch of existingChapters) {
+      if (
+        this.chapterHasOfficialVersion(ch) &&
+        ch.chapterNumber > maxLockedChapterNumber
+      ) {
+        maxLockedChapterNumber = ch.chapterNumber;
+      }
+    }
+
+    const seenIds = new Set<string>();
+    const seenNumbers = new Set<number>();
+
+    for (const item of dto.orders) {
+      const ch = chapterMap.get(item.chapterId);
+      if (!ch) {
+        throw new BadRequestException(
+          'Có chương không thuộc tác phẩm này trong danh sách sắp xếp.',
+        );
+      }
+      if (seenIds.has(item.chapterId)) {
+        throw new BadRequestException('Danh sách sắp xếp có chương bị lặp lại.');
+      }
+      if (
+        item.chapterNumber < 1 ||
+        item.chapterNumber > existingChapters.length ||
+        seenNumbers.has(item.chapterNumber)
+      ) {
+        throw new BadRequestException(
+          `Số thứ tự chương phải liên tục từ 1 đến ${existingChapters.length} và không được trùng lặp.`,
+        );
+      }
+
+      seenIds.add(item.chapterId);
+      seenNumbers.add(item.chapterNumber);
+
+      // Các chương nằm trong vùng đã xuất bản (<= maxLockedChapterNumber) phải giữ nguyên vị trí
+      const isLocked =
+        this.chapterHasOfficialVersion(ch) ||
+        ch.chapterNumber <= maxLockedChapterNumber;
+
+      if (isLocked && item.chapterNumber !== ch.chapterNumber) {
+        throw new BadRequestException(
+          `Không thể thay đổi vị trí của Chương ${ch.chapterNumber} ("${ch.title}") vì chương này đã xuất bản hoặc nằm trước chương đã xuất bản.`,
+        );
+      }
+
+      if (
+        !isLocked &&
+        item.chapterNumber <= maxLockedChapterNumber
+      ) {
+        throw new BadRequestException(
+          `Không thể di chuyển chương chưa xuất bản ("${ch.title}") lên trước Chương ${maxLockedChapterNumber} đã xuất bản.`,
+        );
+      }
+    }
+
+    // Kiểm tra tính hợp lệ của lịch hẹn giờ (scheduledAt) theo thứ tự mới
+    const sortedNewOrders = [...dto.orders].sort(
+      (a, b) => a.chapterNumber - b.chapterNumber,
+    );
+    let latestScheduled: { chapterNumber: number; time: Date } | null = null;
+    for (const item of sortedNewOrders) {
+      const ch = chapterMap.get(item.chapterId)!;
+      if (ch.scheduledAt) {
+        const scheduledDate = new Date(ch.scheduledAt);
+        if (latestScheduled && scheduledDate < latestScheduled.time) {
+          throw new BadRequestException(
+            `Không thể đổi thứ tự vì lịch hẹn giờ của Chương #${item.chapterNumber} (${scheduledDate.toLocaleString('vi-VN')}) sớm hơn Chương #${latestScheduled.chapterNumber} (${latestScheduled.time.toLocaleString('vi-VN')}).`,
+          );
+        }
+        latestScheduled = {
+          chapterNumber: item.chapterNumber,
+          time: scheduledDate,
+        };
+      }
+    }
+
+    // Chỉ cập nhật các chương thực sự thay đổi số thứ tự
+    const changedOrders = dto.orders.filter((item) => {
+      const ch = chapterMap.get(item.chapterId)!;
+      return ch.chapterNumber !== item.chapterNumber;
+    });
+
+    if (changedOrders.length === 0) {
+      return {
+        success: true,
+        message: 'Thứ tự chương không có thay đổi',
+      };
+    }
+
     // Tạm thời gán số âm để tránh xung đột unique index { storyId: 1, chapterNumber: 1 }
-    const bulkTempOps = dto.orders.map((item, index) => ({
+    const bulkTempOps = changedOrders.map((item, index) => ({
       updateOne: {
         filter: { _id: new Types.ObjectId(item.chapterId), storyId: story._id },
         update: { $set: { chapterNumber: -(index + 1) } },
@@ -1168,7 +1299,7 @@ export class ChaptersService {
     await this.chapterModel.bulkWrite(bulkTempOps);
 
     // Gán lại số thứ tự mới chính thức
-    const bulkFinalOps = dto.orders.map((item) => ({
+    const bulkFinalOps = changedOrders.map((item) => ({
       updateOne: {
         filter: { _id: new Types.ObjectId(item.chapterId), storyId: story._id },
         update: { $set: { chapterNumber: item.chapterNumber } },
@@ -1378,26 +1509,37 @@ export class ChaptersService {
       }
     }
 
-    // Tăng lượt đọc ngầm (atomic increment, không cập nhật updatedAt)
-    await this.chapterModel.updateOne(
-      { _id: chapter._id },
-      { $inc: { viewCount: 1 } },
-      { timestamps: false },
-    );
-    await this.storyModel.updateOne(
-      { _id: story._id },
-      { $inc: { 'stats.viewCount': 1 } },
-      { timestamps: false },
-    );
-    // Ghi nhận lượt đọc theo ngày (có rồi thì +1, chưa có thì tạo record mới cho ngày hôm nay)
-    // Lỗi thống kê không được làm gián đoạn việc đọc truyện
-    await this.storyDailyViewModel
-      .updateOne(
-        { storyId: story._id, date: this.getTodayDateKey() },
-        { $inc: { views: 1 } },
-        { upsert: true },
-      )
-      .catch(() => undefined);
+    // Kiểm tra quyền đọc nội dung chương trả phí (UC-15)
+    let isUnlocked = true;
+    if (
+      !chapter.isFree &&
+      chapter.coinPrice > 0 &&
+      !isOwner &&
+      !isAdminOrManager
+    ) {
+      isUnlocked = await this.isChapterUnlockedByUser(chapter._id, userId);
+    }
+
+    // Chỉ tăng lượt đọc khi người dùng thực sự được xem nội dung chương
+    if (isUnlocked) {
+      await this.chapterModel.updateOne(
+        { _id: chapter._id },
+        { $inc: { viewCount: 1 } },
+        { timestamps: false },
+      );
+      await this.storyModel.updateOne(
+        { _id: story._id },
+        { $inc: { 'stats.viewCount': 1 } },
+        { timestamps: false },
+      );
+      await this.storyDailyViewModel
+        .updateOne(
+          { storyId: story._id, date: this.getTodayDateKey() },
+          { $inc: { views: 1 } },
+          { upsert: true },
+        )
+        .catch(() => undefined);
+    }
 
     // Tìm chương trước và chương sau — chỉ lấy chương PUBLISHED + scheduledAt <= now cho độc giả
     const now = new Date();
@@ -1465,11 +1607,13 @@ export class ChaptersService {
       _id: chapter._id,
       chapterNumber: chapter.chapterNumber,
       title: chapter.title,
-      content: chapter.content,
-      viewCount: (chapter.viewCount || 0) + 1,
+      content: isUnlocked ? chapter.content : '',
+      viewCount: isUnlocked ? (chapter.viewCount || 0) + 1 : chapter.viewCount || 0,
       wordCount,
       isFree: chapter.isFree,
       coinPrice: chapter.coinPrice,
+      requirePreviousChapter: Boolean(chapter.requirePreviousChapter),
+      isUnlocked,
       createdAt: chapter.createdAt,
       updatedAt: chapter.updatedAt,
       story: {
@@ -1493,6 +1637,241 @@ export class ChaptersService {
         title: c.title,
       })),
     };
+  }
+
+  /**
+   * Kiểm tra một người dùng đã mở khóa chương trả phí này hay chưa
+   */
+  private async isChapterUnlockedByUser(
+    chapterId: Types.ObjectId | string,
+    userId?: Types.ObjectId | string,
+  ): Promise<boolean> {
+    if (!userId || !this.chapterUnlockModel) return false;
+    if (!Types.ObjectId.isValid(userId) || !Types.ObjectId.isValid(chapterId)) {
+      return false;
+    }
+
+    const found = await this.chapterUnlockModel
+      .findOne({
+        userId: new Types.ObjectId(userId.toString()),
+        chapterId: new Types.ObjectId(chapterId.toString()),
+      })
+      .select('_id')
+      .lean();
+
+    return Boolean(found);
+  }
+
+  /**
+   * Task 1: Xử lý mua / mở khóa chương bằng Xu.
+   * Đảm bảo mỗi chương chỉ bị tính phí 1 lần cho mỗi người dùng và an toàn trước giao dịch đồng thời.
+   */
+  async unlockChapter(
+    userId: string | Types.ObjectId,
+    chapterId: string,
+    userRole?: string,
+  ) {
+    if (
+      !userId ||
+      !Types.ObjectId.isValid(userId) ||
+      !Types.ObjectId.isValid(chapterId)
+    ) {
+      throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
+    }
+
+    if (!this.chapterUnlockModel || !this.walletService) {
+      throw new BadRequestException(ErrorCode.INTERNAL_SERVER_ERROR);
+    }
+
+    const userObjectId = new Types.ObjectId(userId.toString());
+    const chapterObjectId = new Types.ObjectId(chapterId);
+
+    const chapter = await this.chapterModel.findById(chapterObjectId);
+    if (!chapter) {
+      throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    const story = await this.storyModel.findById(chapter.storyId).lean();
+    if (!story) {
+      throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
+    }
+
+    const isOwner = story.authorId.toString() === userObjectId.toString();
+    const isAdminOrManager =
+      userRole === UserRole.ADMIN || userRole === UserRole.MANAGER;
+
+    if (isOwner || isAdminOrManager) {
+      throw new BadRequestException(ErrorCode.CHAPTER_AUTHOR_NO_NEED_UNLOCK);
+    }
+
+    const now = new Date();
+    if (
+      chapter.status !== ChapterStatus.PUBLISHED ||
+      (chapter.scheduledAt && chapter.scheduledAt > now)
+    ) {
+      throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    // Kiểm tra chương trước chưa phát hành tới độc giả
+    const unreleasedPrev = await this.chapterModel
+      .findOne({
+        storyId: story._id,
+        chapterNumber: { $lt: chapter.chapterNumber },
+        $or: [
+          { status: { $ne: ChapterStatus.PUBLISHED } },
+          { scheduledAt: { $gt: now } },
+        ],
+      })
+      .sort({ chapterNumber: 1 })
+      .select('chapterNumber')
+      .lean();
+
+    if (unreleasedPrev) {
+      throw new NotFoundException(
+        `Chương này chưa thể mở khóa vì Chương ${unreleasedPrev.chapterNumber} trước đó chưa đến thời gian phát hành.`,
+      );
+    }
+
+    if (chapter.isFree || !chapter.coinPrice || chapter.coinPrice <= 0) {
+      throw new BadRequestException(ErrorCode.CHAPTER_IS_FREE);
+    }
+
+    // Kiểm tra ràng buộc phải mua chương trả phí liền trước (UC-15: requirePreviousChapter)
+    if (chapter.requirePreviousChapter && chapter.chapterNumber > 1) {
+      const prevChapter = await this.chapterModel
+        .findOne({
+          storyId: story._id,
+          chapterNumber: chapter.chapterNumber - 1,
+          status: ChapterStatus.PUBLISHED,
+        })
+        .select('_id chapterNumber title isFree coinPrice')
+        .lean();
+
+      if (prevChapter && !prevChapter.isFree && prevChapter.coinPrice > 0) {
+        const prevUnlocked = await this.isChapterUnlockedByUser(
+          prevChapter._id,
+          userObjectId,
+        );
+        if (!prevUnlocked) {
+          throw new BadRequestException({
+            error: ErrorCode.CHAPTER_PREVIOUS_REQUIRED.error,
+            message: `Bạn cần mở khóa Chương ${prevChapter.chapterNumber}: "${prevChapter.title}" trước khi mở khóa chương này.`,
+          });
+        }
+      }
+    }
+
+    // Khóa đồng thời trong tiến trình (chặn spam / double-click tức thời trên cùng cặp userId + chapterId)
+    const lockKey = `${userObjectId.toString()}:${chapterObjectId.toString()}`;
+    if (this.inFlightUnlocks.has(lockKey)) {
+      throw new ConflictException(ErrorCode.CHAPTER_ALREADY_UNLOCKED);
+    }
+
+    this.inFlightUnlocks.add(lockKey);
+    try {
+      const existingUnlock = await this.chapterUnlockModel
+        .findOne({
+          userId: userObjectId,
+          chapterId: chapterObjectId,
+        })
+        .select('_id')
+        .lean();
+
+      if (existingUnlock) {
+        throw new ConflictException(ErrorCode.CHAPTER_ALREADY_UNLOCKED);
+      }
+
+      // Kiểm tra số dư ví trước khi ghi khóa
+      const currentWallet = await this.walletService.getMyWallet(
+        userObjectId.toString(),
+      );
+      if (currentWallet.balance < chapter.coinPrice) {
+        throw new BadRequestException(ErrorCode.WALLET_INSUFFICIENT_BALANCE);
+      }
+
+      // Bước 1: Tạo bản ghi mở khóa trước (Unique Index { userId: 1, chapterId: 1 } chặn mọi request trùng lặp ở tầng DB)
+      let createdUnlock: ChapterUnlockDocument;
+      try {
+        createdUnlock = await this.chapterUnlockModel.create({
+          userId: userObjectId,
+          chapterId: chapterObjectId,
+          coinPrice: chapter.coinPrice,
+          unlockedAt: new Date(),
+        });
+      } catch (err: any) {
+        if (err?.code === 11000) {
+          throw new ConflictException(ErrorCode.CHAPTER_ALREADY_UNLOCKED);
+        }
+        throw err;
+      }
+
+      // Bước 2: Trừ Xu nguyên tử trên ví ({ balance: { $gte: coinPrice } }). Nếu trừ thất bại thì hoàn tác bản ghi mở khóa ngay lập tức.
+      let updatedWallet;
+      try {
+        updatedWallet = await this.walletService.debit(
+          userObjectId.toString(),
+          chapter.coinPrice,
+        );
+      } catch (debitError) {
+        await this.chapterUnlockModel
+          .deleteOne({ _id: createdUnlock._id })
+          .catch(() => undefined);
+        throw debitError;
+      }
+
+      // Bước 3: Tăng lượt đọc khi mở khóa thành công
+      await this.chapterModel
+        .updateOne(
+          { _id: chapter._id },
+          { $inc: { viewCount: 1 } },
+          { timestamps: false },
+        )
+        .catch(() => undefined);
+      await this.storyModel
+        .updateOne(
+          { _id: story._id },
+          { $inc: { 'stats.viewCount': 1 } },
+          { timestamps: false },
+        )
+        .catch(() => undefined);
+      await this.storyDailyViewModel
+        .updateOne(
+          { storyId: story._id, date: this.getTodayDateKey() },
+          { $inc: { views: 1 } },
+          { upsert: true },
+        )
+        .catch(() => undefined);
+
+      const wordCount =
+        typeof chapter.wordCount === 'number'
+          ? chapter.wordCount
+          : this.countChapterWords(chapter.content);
+
+      return {
+        unlock: {
+          _id: createdUnlock._id,
+          userId: createdUnlock.userId,
+          chapterId: createdUnlock.chapterId,
+          coinPrice: createdUnlock.coinPrice,
+          unlockedAt: createdUnlock.unlockedAt,
+        },
+        wallet: updatedWallet,
+        chapter: {
+          _id: chapter._id,
+          chapterNumber: chapter.chapterNumber,
+          title: chapter.title,
+          content: chapter.content,
+          wordCount,
+          viewCount: (chapter.viewCount || 0) + 1,
+          isFree: chapter.isFree,
+          coinPrice: chapter.coinPrice,
+          requirePreviousChapter: Boolean(chapter.requirePreviousChapter),
+          isUnlocked: true,
+        },
+      };
+    } finally {
+      this.inFlightUnlocks.delete(lockKey);
+    }
   }
 
   private buildRevisionHistoryItem(

@@ -321,4 +321,20 @@ export const ErrorCode = {
     error: 'WALLET_INSUFFICIENT_BALANCE',
     message: 'Số dư Xu trong ví không đủ để thực hiện giao dịch',
   },
+  CHAPTER_IS_FREE: {
+    error: 'CHAPTER_IS_FREE',
+    message: 'Chương này là chương miễn phí, không cần mở khóa bằng Xu',
+  },
+  CHAPTER_ALREADY_UNLOCKED: {
+    error: 'CHAPTER_ALREADY_UNLOCKED',
+    message: 'Bạn đã mở khóa chương này trước đó',
+  },
+  CHAPTER_PREVIOUS_REQUIRED: {
+    error: 'CHAPTER_PREVIOUS_REQUIRED',
+    message: 'Bạn cần mở khóa chương trả phí liền trước trước khi mua chương này',
+  },
+  CHAPTER_AUTHOR_NO_NEED_UNLOCK: {
+    error: 'CHAPTER_AUTHOR_NO_NEED_UNLOCK',
+    message: 'Tác giả hoặc quản trị viên không cần mua chương này',
+  },
 };
