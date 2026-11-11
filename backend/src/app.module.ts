@@ -22,6 +22,7 @@ import { TagsModule } from './modules/tags/tags.module.js';
 import { UploadModule } from './modules/upload/upload.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { WalletModule } from './modules/wallet/wallet.module.js';
+import { AdminDashboardModule } from './modules/admin-dashboard/admin-dashboard.module.js';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { WalletModule } from './modules/wallet/wallet.module.js';
     CoinPackagesModule,
     PaymentsModule,
     WalletModule,
+    AdminDashboardModule,
   ],
   controllers: [AppController],
   providers: [

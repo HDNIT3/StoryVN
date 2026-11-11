@@ -10,4 +10,6 @@ export * from "./comments";
 export * from "./ratings";
 export * from "./coin-packages";
 export * from "./transactions";
+export * from "./charts";
+export * from "./dashboard";
 export * from "./layout";

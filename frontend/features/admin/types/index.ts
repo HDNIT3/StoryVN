@@ -28,3 +28,4 @@ export type {
 
 export * from "./comment.types";
 export * from "./rating.types";
+export * from "./dashboard.types";

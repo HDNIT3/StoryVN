@@ -14,10 +14,24 @@ interface SidebarItem {
   icon: React.ReactNode;
   badge?: number;
   roles: string[];
-  section: "content" | "taxonomy" | "finance";
+  section: "overview" | "content" | "taxonomy" | "finance";
 }
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
+  // Nhóm 0: Tổng quan
+  {
+    id: "tong-quan",
+    label: "Tổng quan",
+    href: "/quan-ly",
+    roles: ["ADMIN", "MANAGER"],
+    section: "overview",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
+
   // Nhóm 1: Nội dung & Kiểm duyệt
   {
     id: "duyet-tac-gia",
@@ -331,6 +345,11 @@ export function AdminSidebar({
         <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
           {[
             {
+              key: "overview",
+              title: "Trung Tâm Điều Hành",
+              items: visibleItems.filter((i) => i.section === "overview"),
+            },
+            {
               key: "content",
               title: "Nội Dung & Kiểm Duyệt",
               items: visibleItems.filter((i) => i.section === "content"),
@@ -358,7 +377,10 @@ export function AdminSidebar({
                 </p>
                 <ul className="space-y-0.5">
                   {group.items.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
+                    const isActive =
+                      item.href === "/quan-ly"
+                        ? pathname === "/quan-ly"
+                        : pathname.startsWith(item.href);
                     return (
                       <li key={item.id}>
                         <Link
