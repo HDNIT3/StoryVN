@@ -7,6 +7,7 @@ import type {
   QueryChaptersParams,
   ReorderChaptersPayload,
   StoryChaptersResponse,
+  UnlockChapterResponse,
   UpdateChapterPayload,
 } from "../types";
 
@@ -190,6 +191,18 @@ export const chapterService = {
   },
 
   /**
+   * Mua / mở khóa chương trả phí bằng Xu (Task 1)
+   */
+  async unlockChapter(
+    id: string
+  ): Promise<ApiResponse<UnlockChapterResponse>> {
+    return api.post<ApiResponse<UnlockChapterResponse>>(
+      `/chapters/${id}/unlock`,
+      {}
+    );
+  },
+
+  /**
    * Lấy chi tiết nội dung chương để đọc theo slug truyện và số chương
    */
   async getChapterReadingBySlugAndNumber(
@@ -204,6 +217,8 @@ export const chapterService = {
     wordCount: number;
     isFree: boolean;
     coinPrice: number;
+    requirePreviousChapter?: boolean;
+    isUnlocked?: boolean;
     createdAt: string;
     updatedAt: string;
     story: {

@@ -17,7 +17,6 @@ export function SocialAuthButtons() {
     onSuccess: async (tokenResponse) => {
       setIsGoogleLoading(true);
       try {
-        // Gửi access_token của Google lên backend
         const res = await authService.googleLogin({
           token: tokenResponse.access_token,
         });
@@ -59,22 +58,23 @@ export function SocialAuthButtons() {
   });
 
   return (
-    <div className="space-y-3">
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-zinc-200" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-zinc-400">Hoặc tiếp tục với</span>
-        </div>
+    <div className="space-y-4">
+      {/* Clean Divider */}
+      <div className="relative flex items-center justify-center my-5">
+        <div className="border-t border-zinc-200/80 w-full" />
+        <span className="bg-white px-3 text-[11px] font-bold tracking-wider text-zinc-400 uppercase whitespace-nowrap">
+          HOẶC TIẾP TỤC VỚI
+        </span>
+        <div className="border-t border-zinc-200/80 w-full" />
       </div>
 
+      {/* Google Button */}
       <button
         type="button"
         id="btn-google-login"
         onClick={() => handleGoogleLogin()}
         disabled={isGoogleLoading}
-        className="w-full flex items-center justify-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-xs sm:text-sm font-medium hover:bg-zinc-50 hover:border-zinc-300 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed shadow-xs cursor-pointer"
+        className="w-full h-11 sm:h-12 flex items-center justify-center gap-3 px-4 rounded-xl border border-zinc-200/90 bg-white text-zinc-700 text-sm font-semibold hover:bg-zinc-50 hover:border-zinc-300 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed shadow-2xs active:scale-[0.99] cursor-pointer"
       >
         {isGoogleLoading ? (
           <svg
@@ -97,7 +97,7 @@ export function SocialAuthButtons() {
             />
           </svg>
         ) : (
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -121,3 +121,5 @@ export function SocialAuthButtons() {
     </div>
   );
 }
+
+export default SocialAuthButtons;

@@ -152,13 +152,30 @@ export function AuthorChaptersListView() {
   const [reorderList, setReorderList] = useState<ChapterItem[]>([]);
 
   const handleOpenReorder = () => {
+    if (statusFilter !== "ALL") {
+      setStatusFilter("ALL");
+    }
     setReorderList([...chapters].sort((a, b) => a.chapterNumber - b.chapterNumber));
     setIsReorderOpen(true);
   };
 
+  useEffect(() => {
+    if (isReorderOpen && statusFilter === "ALL" && chapters.length > 0 && reorderList.length !== chapters.length) {
+      setReorderList([...chapters].sort((a, b) => a.chapterNumber - b.chapterNumber));
+    }
+  }, [isReorderOpen, statusFilter, chapters, reorderList.length]);
+
   const handleMoveChapter = (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= reorderList.length) return;
+
+    const lastLockedIndex = reorderList.reduce(
+      (maxIdx, ch, idx) =>
+        ch.status === "PUBLISHED" || ch.status === "HIDDEN" ? idx : maxIdx,
+      -1
+    );
+    if (index <= lastLockedIndex || targetIndex <= lastLockedIndex) return;
+
     const updated = [...reorderList];
     const temp = updated[index];
     updated[index] = updated[targetIndex];
