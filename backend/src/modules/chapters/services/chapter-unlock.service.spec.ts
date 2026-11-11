@@ -13,8 +13,10 @@ function createChainQuery(result: any) {
   const q: any = {
     select: vi.fn().mockReturnThis(),
     sort: vi.fn().mockReturnThis(),
+    skip: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
     populate: vi.fn().mockReturnThis(),
-    lean: vi.fn().mockResolvedValue(result),
+    lean: vi.fn().mockImplementation(() => q),
     exec: vi.fn().mockResolvedValue(result),
     then: (resolve: any, reject: any) =>
       Promise.resolve(result).then(resolve, reject),
@@ -43,6 +45,7 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
       findById: vi.fn(),
       findOne: vi.fn(),
       find: vi.fn(),
+      countDocuments: vi.fn(),
       updateOne: vi.fn().mockResolvedValue({}),
     };
 
@@ -62,6 +65,9 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
 
     mockChapterUnlockModel = {
       findOne: vi.fn(),
+      find: vi.fn().mockImplementation(() => createChainQuery([])),
+      countDocuments: vi.fn(),
+      aggregate: vi.fn(),
       create: vi.fn(),
       deleteOne: vi.fn().mockResolvedValue({ deletedCount: 1 }),
     };
@@ -445,6 +451,182 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
     expect(data.isUnlocked).toBe(false);
     expect(data.content).toBe('');
     expect(mockChapterModel.updateOne).not.toHaveBeenCalled();
+  });
+
+  it('lấy danh sách ID các chương đã mua cho user (getPurchasedChapterIds)', async () => {
+    mockChapterUnlockModel.find.mockReturnValue(
+      createChainQuery([
+        { chapterId: chapter1Id },
+        { chapterId: chapter2Id },
+      ]),
+    );
+
+    const result = await service.getPurchasedChapterIds(readerId);
+    expect(result.total).toBe(2);
+    expect(result.purchasedChapterIds).toContain(chapter1Id.toString());
+    expect(result.purchasedChapterIds).toContain(chapter2Id.toString());
+  });
+
+  it('kiểm tra trạng thái mở khóa chương (checkChapterUnlockStatus)', async () => {
+    // 1. Chương miễn phí -> luôn isUnlocked: true
+    mockChapterModel.findById.mockReturnValueOnce(
+      createChainQuery({
+        _id: chapter1Id,
+        storyId,
+        isFree: true,
+        coinPrice: 0,
+        requirePreviousChapter: false,
+      }),
+    );
+    const freeRes = await service.checkChapterUnlockStatus(chapter1Id.toString(), readerId);
+    expect(freeRes.isUnlocked).toBe(true);
+    expect(freeRes.isFree).toBe(true);
+
+    // 2. Chương trả phí, tác giả sở hữu -> isUnlocked: true
+    mockChapterModel.findById.mockReturnValueOnce(
+      createChainQuery({
+        _id: chapter2Id,
+        storyId,
+        isFree: false,
+        coinPrice: 15,
+        requirePreviousChapter: false,
+      }),
+    );
+    mockStoryModel.findById.mockReturnValueOnce(
+      createChainQuery({
+        _id: storyId,
+        authorId,
+      }),
+    );
+    const authorRes = await service.checkChapterUnlockStatus(chapter2Id.toString(), authorId);
+    expect(authorRes.isUnlocked).toBe(true);
+
+    // 3. Chương trả phí, độc giả đã mua -> isUnlocked: true
+    mockChapterModel.findById.mockReturnValueOnce(
+      createChainQuery({
+        _id: chapter2Id,
+        storyId,
+        isFree: false,
+        coinPrice: 15,
+        requirePreviousChapter: false,
+      }),
+    );
+    mockStoryModel.findById.mockReturnValueOnce(
+      createChainQuery({
+        _id: storyId,
+        authorId,
+      }),
+    );
+    mockChapterUnlockModel.findOne.mockReturnValueOnce(
+      createChainQuery({
+        unlockedAt: new Date('2026-11-10T12:00:00.000Z'),
+        coinPrice: 15,
+      }),
+    );
+    const unlockedRes = await service.checkChapterUnlockStatus(chapter2Id.toString(), readerId);
+    expect(unlockedRes.isUnlocked).toBe(true);
+    expect(unlockedRes.unlockedAt).toBeDefined();
+
+    // 4. Chương trả phí, độc giả chưa mua -> isUnlocked: false
+    mockChapterModel.findById.mockReturnValueOnce(
+      createChainQuery({
+        _id: chapter2Id,
+        storyId,
+        isFree: false,
+        coinPrice: 15,
+        requirePreviousChapter: false,
+      }),
+    );
+    mockStoryModel.findById.mockReturnValueOnce(
+      createChainQuery({
+        _id: storyId,
+        authorId,
+      }),
+    );
+    mockChapterUnlockModel.findOne.mockReturnValueOnce(createChainQuery(null));
+    const lockedRes = await service.checkChapterUnlockStatus(chapter2Id.toString(), readerId);
+    expect(lockedRes.isUnlocked).toBe(false);
+  });
+
+  it('lấy lịch sử mua chương của người dùng kèm phân trang và thống kê (getChapterPurchaseHistory)', async () => {
+    mockChapterUnlockModel.countDocuments.mockResolvedValue(1);
+    mockChapterUnlockModel.find.mockReturnValue(
+      createChainQuery([
+        {
+          _id: unlockRecordId,
+          coinPrice: 20,
+          unlockedAt: new Date('2026-11-10T08:00:00.000Z'),
+          chapterId: {
+            _id: chapter1Id,
+            chapterNumber: 1,
+            title: 'Chương 1 VIP',
+            coinPrice: 20,
+            isFree: false,
+            storyId: {
+              _id: storyId,
+              title: 'Truyện Thần Thoại',
+              slug: 'truyen-than-thoai',
+              coverUrl: 'https://example.com/cover.jpg',
+              authorId: {
+                displayName: 'Tác giả VIP',
+              },
+            },
+          },
+        },
+      ]),
+    );
+    mockChapterUnlockModel.aggregate.mockResolvedValue([
+      { totalUnlocked: 1, totalCoinsSpent: 20 },
+    ]);
+
+    const history = await service.getChapterPurchaseHistory(readerId, { page: 1, limit: 10 });
+    expect(history.total).toBe(1);
+    expect(history.items).toHaveLength(1);
+    expect(history.items[0].coinPrice).toBe(20);
+    expect(history.items[0].chapter?.title).toBe('Chương 1 VIP');
+    expect(history.items[0].story?.title).toBe('Truyện Thần Thoại');
+    expect(history.summary.totalUnlocked).toBe(1);
+    expect(history.summary.totalCoinsSpent).toBe(20);
+  });
+
+  it('lấy danh sách chương theo slug kèm đồng bộ trạng thái isUnlocked (getChaptersBySlug)', async () => {
+    mockStoryModel.findOne.mockReturnValue(
+      createChainQuery({
+        _id: storyId,
+        title: 'Truyện Hay',
+        slug: 'truyen-hay',
+        authorId,
+      }),
+    );
+    mockChapterModel.findOne.mockReturnValue(createChainQuery(null));
+    mockChapterModel.countDocuments.mockResolvedValue(2);
+    mockChapterModel.find.mockReturnValue(
+      createChainQuery([
+        {
+          _id: chapter1Id,
+          chapterNumber: 1,
+          title: 'Chương 1 Free',
+          isFree: true,
+          coinPrice: 0,
+        },
+        {
+          _id: chapter2Id,
+          chapterNumber: 2,
+          title: 'Chương 2 VIP',
+          isFree: false,
+          coinPrice: 20,
+        },
+      ]),
+    );
+    // Reader đã mở khóa chapter2
+    mockChapterUnlockModel.find.mockReturnValue(
+      createChainQuery([{ chapterId: chapter2Id }]),
+    );
+
+    const res = await service.getChaptersBySlug('truyen-hay', { order: 'asc' }, readerId, UserRole.USER);
+    expect(res.items).toHaveLength(2);
+    expect(res.items[0].isUnlocked).toBe(true); // Free
+    expect(res.items[1].isUnlocked).toBe(true); // Đã mua
   });
 });
 

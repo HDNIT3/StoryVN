@@ -9,6 +9,7 @@ import type {
   CreateAuthorRequestPayload,
   QueryAuthorPublicStoriesParams,
   QueryAuthorsParams,
+  QueryAuthorRevenueParams,
 } from "../types";
 
 export function useAuthorOverview(enabled = true) {
@@ -121,5 +122,21 @@ export function useUpdateAuthorRequest() {
       const msg = err instanceof Error ? err.message : "Cập nhật thất bại, vui lòng thử lại";
       toast.error(msg);
     },
+  });
+}
+
+export function useAuthorRevenueHistory(
+  params?: QueryAuthorRevenueParams,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: authorKeys.revenueHistory(params as Record<string, unknown>),
+    queryFn: async () => {
+      const res = await authorService.getAuthorRevenueHistory(params);
+      return res.data;
+    },
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60,
   });
 }

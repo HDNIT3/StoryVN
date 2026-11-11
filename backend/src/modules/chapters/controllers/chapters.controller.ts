@@ -30,7 +30,7 @@ import { UpdateChapterDto } from '../dto/update-chapter.dto.js';
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('chapters')
 export class ChaptersController {
-  constructor(private readonly chaptersService: ChaptersService) {}
+  constructor(private readonly chaptersService: ChaptersService) { }
 
   @ApiOperation({
     summary: 'Tạo chương mới (Tác giả) - UC-14 & UC-15',
@@ -106,22 +106,28 @@ export class ChaptersController {
   @ApiOperation({
     summary: 'Lấy danh sách chương theo slug truyện (Công khai)',
     description:
-      'Trả về danh sách tất cả chương (kể cả chưa duyệt) với: số chương, tên, ngày tạo, ngày cập nhật',
+      'Trả về danh sách tất cả chương (kể cả chưa duyệt) với: số chương, tên, ngày tạo, ngày cập nhật, trạng thái mở khóa',
   })
   @Public()
   @Get('story/:slug')
   @HttpCode(HttpStatus.OK)
   async getChaptersBySlug(
+    @CurrentUser() user: any,
     @Param('slug') slug: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('order') order?: 'asc' | 'desc',
   ) {
-    const data = await this.chaptersService.getChaptersBySlug(slug, {
-      page: page ? parseInt(page, 10) : undefined,
-      limit: limit ? parseInt(limit, 10) : undefined,
-      order: order || 'asc',
-    });
+    const data = await this.chaptersService.getChaptersBySlug(
+      slug,
+      {
+        page: page ? parseInt(page, 10) : undefined,
+        limit: limit ? parseInt(limit, 10) : undefined,
+        order: order || 'asc',
+      },
+      user?._id,
+      user?.role,
+    );
 
     return {
       success: true,
@@ -238,6 +244,76 @@ export class ChaptersController {
     return {
       success: true,
       message: 'Lấy danh sách lịch sử sửa đổi thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Lấy danh sách ID các chương đã mua của người dùng',
+  })
+  @Get('purchased')
+  @HttpCode(HttpStatus.OK)
+  async getPurchasedChapters(
+    @CurrentUser() user: any,
+    @Query('storyId') storyId?: string,
+  ) {
+    const data = await this.chaptersService.getPurchasedChapterIds(
+      user._id,
+      storyId,
+    );
+    return {
+      success: true,
+      message: 'Lấy danh sách chương đã mua thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Lấy lịch sử mua / mở khóa chương truyện của người dùng',
+  })
+  @Get('purchase-history')
+  @HttpCode(HttpStatus.OK)
+  async getPurchaseHistory(
+    @CurrentUser() user: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('storyId') storyId?: string,
+  ) {
+    const data = await this.chaptersService.getChapterPurchaseHistory(
+      user._id,
+      {
+        page: page ? parseInt(page, 10) : undefined,
+        limit: limit ? parseInt(limit, 10) : undefined,
+        search,
+        storyId,
+      },
+    );
+    return {
+      success: true,
+      message: 'Lấy lịch sử mua chương thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Kiểm tra trạng thái mở khóa của một chương truyện',
+  })
+  @Public()
+  @Get(':id/unlock-status')
+  @HttpCode(HttpStatus.OK)
+  async checkUnlockStatus(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ) {
+    const data = await this.chaptersService.checkChapterUnlockStatus(
+      id,
+      user?._id,
+      user?.role,
+    );
+    return {
+      success: true,
+      message: 'Kiểm tra trạng thái mở khóa thành công',
       data,
     };
   }

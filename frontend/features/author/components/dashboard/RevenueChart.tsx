@@ -207,12 +207,20 @@ export function RevenueChart({
               : "0% so với kỳ trước"}
           </span>
         </div>
-        <Link
-          href="/vi-cua-toi"
-          className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-3.5 py-1.5 rounded-lg hover:bg-blue-100 transition cursor-pointer shrink-0"
-        >
-          Xem ví xu →
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/tac-gia/doanh-thu"
+            className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3.5 py-1.5 rounded-lg hover:bg-amber-100 transition cursor-pointer shrink-0 inline-flex items-center gap-1"
+          >
+            Chi tiết nhận xu →
+          </Link>
+          <Link
+            href="/vi"
+            className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition cursor-pointer shrink-0"
+          >
+            Ví cá nhân
+          </Link>
+        </div>
       </div>
     </div>
   );

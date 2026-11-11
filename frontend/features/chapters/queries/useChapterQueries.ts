@@ -242,3 +242,47 @@ export function useUnlockChapter() {
     },
   });
 }
+
+export function usePurchasedChapters(storyId?: string, enabled = true) {
+  return useQuery({
+    queryKey: chapterKeys.purchased(storyId),
+    queryFn: async () => {
+      const res = await chapterService.getPurchasedChapters(storyId);
+      return res.data;
+    },
+    enabled,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useChapterPurchaseHistory(
+  params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    storyId?: string;
+  },
+  enabled = true
+) {
+  return useQuery({
+    queryKey: chapterKeys.purchaseHistory(params),
+    queryFn: async () => {
+      const res = await chapterService.getChapterPurchaseHistory(params);
+      return res.data;
+    },
+    enabled,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useChapterUnlockStatus(chapterId: string, enabled = true) {
+  return useQuery({
+    queryKey: chapterKeys.unlockStatus(chapterId),
+    queryFn: async () => {
+      const res = await chapterService.checkChapterUnlockStatus(chapterId);
+      return res.data;
+    },
+    enabled: Boolean(chapterId) && enabled,
+    staleTime: 30 * 1000,
+  });
+}

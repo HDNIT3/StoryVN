@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import type { UnlockChapterResponse } from "../../types";
 import type { ReaderThemeMode } from "./ReaderThemes";
 
@@ -46,11 +47,10 @@ export const ReaderUnlockModal: React.FC<ReaderUnlockModalProps> = ({
         <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/70">
           <div className="flex items-center gap-2.5">
             <span
-              className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                unlockResult
+              className={`w-8 h-8 rounded-xl flex items-center justify-center ${unlockResult
                   ? "bg-emerald-100 text-emerald-600"
                   : "bg-amber-100 text-amber-600"
-              }`}
+                }`}
             >
               {unlockResult ? (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -160,9 +160,8 @@ export const ReaderUnlockModal: React.FC<ReaderUnlockModalProps> = ({
               <div className="pt-2.5 border-t border-zinc-100 flex items-center justify-between">
                 <span className="font-semibold text-zinc-700">Số dư sau khi mua:</span>
                 <span
-                  className={`font-extrabold ${
-                    isInsufficient ? "text-rose-600" : "text-emerald-600"
-                  }`}
+                  className={`font-extrabold ${isInsufficient ? "text-rose-600" : "text-emerald-600"
+                    }`}
                 >
                   {isLoadingWallet
                     ? "..."
@@ -172,12 +171,28 @@ export const ReaderUnlockModal: React.FC<ReaderUnlockModalProps> = ({
             </div>
 
             {isInsufficient && (
-              <div className="rounded-xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-700 font-medium">
-                Số dư Xu trong ví của bạn không đủ để mở khóa chương này (cần thêm{" "}
-                <strong className="font-bold">
-                  {Math.abs(remainingBalance).toLocaleString("vi-VN")} Xu
-                </strong>
-                ).
+              <div className="rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs text-rose-700 font-medium space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div>
+                    Số dư Xu trong ví của bạn không đủ để mở khóa chương này (cần thêm{" "}
+                    <strong className="font-bold text-rose-800">
+                      {Math.abs(remainingBalance).toLocaleString("vi-VN")} Xu
+                    </strong>
+                    ).
+                  </div>
+                </div>
+                <div className="pt-1 flex items-center justify-end">
+                  <Link
+                    href="/nap-xu"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition shadow-2xs cursor-pointer"
+                  >
+                    <span>Nạp Xu ngay</span>
+                    <span>→</span>
+                  </Link>
+                </div>
               </div>
             )}
 
@@ -201,16 +216,28 @@ export const ReaderUnlockModal: React.FC<ReaderUnlockModalProps> = ({
               >
                 Hủy bỏ
               </button>
-              <button
-                type="button"
-                disabled={isPending || isLoadingWallet || isInsufficient}
-                onClick={onConfirm}
-                className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {isPending
-                  ? "Đang xử lý giao dịch..."
-                  : `Xác nhận mua (${coinPrice.toLocaleString("vi-VN")} Xu)`}
-              </button>
+              {isInsufficient ? (
+                <Link
+                  href="/nap-xu"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition shadow-xs cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span>Nạp thêm Xu</span>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isPending || isLoadingWallet}
+                  onClick={onConfirm}
+                  className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isPending
+                    ? "Đang xử lý giao dịch..."
+                    : `Xác nhận mua (${coinPrice.toLocaleString("vi-VN")} Xu)`}
+                </button>
+              )}
             </div>
           </div>
         )}

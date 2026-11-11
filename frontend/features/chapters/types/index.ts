@@ -84,8 +84,57 @@ export interface PublicChapterItem {
   title: string;
   viewCount?: number;
   wordCount?: number;
+  isFree?: boolean;
+  coinPrice?: number;
+  isUnlocked?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ChapterPurchaseHistoryItem {
+  _id: string;
+  coinPrice: number;
+  unlockedAt: string;
+  chapter: {
+    _id: string;
+    chapterNumber: number;
+    title: string;
+    coinPrice: number;
+    isFree: boolean;
+  } | null;
+  story: {
+    _id: string;
+    title: string;
+    slug: string;
+    coverUrl?: string | null;
+    authorName?: string;
+  } | null;
+}
+
+export interface ChapterPurchaseHistoryResponse {
+  items: ChapterPurchaseHistoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  summary: {
+    totalUnlocked: number;
+    totalCoinsSpent: number;
+  };
+}
+
+export interface ChapterUnlockStatusResponse {
+  chapterId: string;
+  isUnlocked: boolean;
+  isFree: boolean;
+  coinPrice: number;
+  requirePreviousChapter: boolean;
+  unlockedAt?: string | null;
+}
+
+export interface PurchasedChaptersResponse {
+  purchasedChapterIds: string[];
+  total: number;
 }
 
 export interface CreateChapterPayload {
