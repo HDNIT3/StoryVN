@@ -529,8 +529,30 @@ export class ChaptersService {
       };
     }
 
+    // Kiểm tra trạng thái mở khóa cho các chương trả phí
+    let unlockedChapterIdSet = new Set<string>();
+    if (this.chapterUnlockModel && userId && Types.ObjectId.isValid(userId)) {
+      const chapterIds = items.map((c: any) => c._id);
+      const unlocks = await this.chapterUnlockModel
+        .find({
+          userId: new Types.ObjectId(userId.toString()),
+          chapterId: { $in: chapterIds },
+        })
+        .select('chapterId')
+        .lean();
+      unlockedChapterIdSet = new Set(unlocks.map((u: any) => u.chapterId.toString()));
+    }
+
+    const mappedItems = items.map((item: any) => ({
+      ...item,
+      isUnlocked:
+        canManage ||
+        Boolean(item.isFree) ||
+        unlockedChapterIdSet.has(item._id.toString()),
+    }));
+
     return {
-      items,
+      items: mappedItems,
       total,
       page: query.page || 1,
       limit: query.limit || total,
@@ -1373,6 +1395,8 @@ export class ChaptersService {
   async getChaptersBySlug(
     slug: string,
     options?: { page?: number; limit?: number; order?: 'asc' | 'desc' },
+    userId?: string | Types.ObjectId,
+    userRole?: string,
   ) {
     const story = await this.storyModel.findOne({ slug }).lean();
     if (!story) {
@@ -1421,7 +1445,34 @@ export class ChaptersService {
       queryBuilder = queryBuilder.skip(skip).limit(options.limit);
     }
 
-    const items = await queryBuilder.lean();
+    const rawItems = await queryBuilder.lean();
+
+    const isOwner =
+      Boolean(userId && story.authorId && story.authorId.toString() === userId.toString());
+    const isAdminOrManager =
+      userRole === UserRole.ADMIN || userRole === UserRole.MANAGER;
+    const canManage = isOwner || isAdminOrManager;
+
+    let unlockedChapterIdSet = new Set<string>();
+    if (this.chapterUnlockModel && userId && Types.ObjectId.isValid(userId)) {
+      const chapterIds = rawItems.map((c: any) => c._id);
+      const unlocks = await this.chapterUnlockModel
+        .find({
+          userId: new Types.ObjectId(userId.toString()),
+          chapterId: { $in: chapterIds },
+        })
+        .select('chapterId')
+        .lean();
+      unlockedChapterIdSet = new Set(unlocks.map((u: any) => u.chapterId.toString()));
+    }
+
+    const items = rawItems.map((item: any) => ({
+      ...item,
+      isUnlocked:
+        canManage ||
+        Boolean(item.isFree) ||
+        unlockedChapterIdSet.has(item._id.toString()),
+    }));
 
     return {
       items,
@@ -1594,9 +1645,22 @@ export class ChaptersService {
       this.chapterModel
         .find(navFilter)
         .sort({ chapterNumber: 1 })
-        .select('chapterNumber title')
+        .select('_id chapterNumber title isFree coinPrice')
         .lean(),
     ]);
+
+    let unlockedNavSet = new Set<string>();
+    if (this.chapterUnlockModel && userId && Types.ObjectId.isValid(userId)) {
+      const navIds = allChaptersList.map((c) => c._id);
+      const unlockedNav = await this.chapterUnlockModel
+        .find({
+          userId: new Types.ObjectId(userId.toString()),
+          chapterId: { $in: navIds },
+        })
+        .select('chapterId')
+        .lean();
+      unlockedNavSet = new Set(unlockedNav.map((u: any) => u.chapterId.toString()));
+    }
 
     const wordCount =
       typeof chapter.wordCount === 'number'
@@ -1635,6 +1699,13 @@ export class ChaptersService {
       chaptersList: allChaptersList.map((c) => ({
         chapterNumber: c.chapterNumber,
         title: c.title,
+        isFree: c.isFree,
+        coinPrice: c.coinPrice,
+        isUnlocked:
+          isOwner ||
+          isAdminOrManager ||
+          Boolean(c.isFree) ||
+          unlockedNavSet.has(c._id.toString()),
       })),
     };
   }
@@ -1872,6 +1943,294 @@ export class ChaptersService {
     } finally {
       this.inFlightUnlocks.delete(lockKey);
     }
+  }
+
+  /**
+   * Lấy danh sách ID các chương mà người dùng đã mua / mở khóa
+   */
+  async getPurchasedChapterIds(
+    userId: string | Types.ObjectId,
+    storyId?: string,
+  ): Promise<{ purchasedChapterIds: string[]; total: number }> {
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
+    }
+
+    if (!this.chapterUnlockModel) {
+      return { purchasedChapterIds: [], total: 0 };
+    }
+
+    const userObjectId = new Types.ObjectId(userId.toString());
+    const filter: Record<string, any> = { userId: userObjectId };
+
+    if (storyId) {
+      if (!Types.ObjectId.isValid(storyId)) {
+        throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
+      }
+      const storyChapters = await this.chapterModel
+        .find({ storyId: new Types.ObjectId(storyId) })
+        .select('_id')
+        .lean();
+      const chapterIds = storyChapters.map((c) => c._id);
+      filter.chapterId = { $in: chapterIds };
+    }
+
+    const unlocks = await this.chapterUnlockModel
+      .find(filter)
+      .select('chapterId')
+      .lean();
+
+    const purchasedChapterIds = unlocks.map((u) => u.chapterId.toString());
+
+    return {
+      purchasedChapterIds,
+      total: purchasedChapterIds.length,
+    };
+  }
+
+  /**
+   * Kiểm tra trạng thái mở khóa của một chương truyện
+   */
+  async checkChapterUnlockStatus(
+    chapterId: string,
+    userId?: string | Types.ObjectId,
+    userRole?: string,
+  ): Promise<{
+    chapterId: string;
+    isUnlocked: boolean;
+    isFree: boolean;
+    coinPrice: number;
+    requirePreviousChapter: boolean;
+    unlockedAt?: Date | null;
+  }> {
+    if (!Types.ObjectId.isValid(chapterId)) {
+      throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
+    }
+
+    const chapter = await this.chapterModel.findById(chapterId).lean();
+    if (!chapter) {
+      throw new NotFoundException(ErrorCode.CHAPTER_NOT_FOUND);
+    }
+
+    if (chapter.isFree || chapter.coinPrice === 0) {
+      return {
+        chapterId: chapter._id.toString(),
+        isUnlocked: true,
+        isFree: true,
+        coinPrice: chapter.coinPrice || 0,
+        requirePreviousChapter: Boolean(chapter.requirePreviousChapter),
+        unlockedAt: null,
+      };
+    }
+
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      return {
+        chapterId: chapter._id.toString(),
+        isUnlocked: false,
+        isFree: false,
+        coinPrice: chapter.coinPrice,
+        requirePreviousChapter: Boolean(chapter.requirePreviousChapter),
+        unlockedAt: null,
+      };
+    }
+
+    const userObjectId = new Types.ObjectId(userId.toString());
+    const story = await this.storyModel.findById(chapter.storyId).lean();
+    const isOwner = story && story.authorId?.toString() === userObjectId.toString();
+    const isAdminOrManager =
+      userRole === UserRole.ADMIN || userRole === UserRole.MANAGER;
+
+    if (isOwner || isAdminOrManager) {
+      return {
+        chapterId: chapter._id.toString(),
+        isUnlocked: true,
+        isFree: false,
+        coinPrice: chapter.coinPrice,
+        requirePreviousChapter: Boolean(chapter.requirePreviousChapter),
+        unlockedAt: null,
+      };
+    }
+
+    if (!this.chapterUnlockModel) {
+      return {
+        chapterId: chapter._id.toString(),
+        isUnlocked: false,
+        isFree: false,
+        coinPrice: chapter.coinPrice,
+        requirePreviousChapter: Boolean(chapter.requirePreviousChapter),
+        unlockedAt: null,
+      };
+    }
+
+    const unlock = await this.chapterUnlockModel
+      .findOne({
+        userId: userObjectId,
+        chapterId: chapter._id,
+      })
+      .select('unlockedAt coinPrice')
+      .lean();
+
+    return {
+      chapterId: chapter._id.toString(),
+      isUnlocked: Boolean(unlock),
+      isFree: false,
+      coinPrice: chapter.coinPrice,
+      requirePreviousChapter: Boolean(chapter.requirePreviousChapter),
+      unlockedAt: unlock?.unlockedAt || null,
+    };
+  }
+
+  /**
+   * Lấy lịch sử mua / mở khóa chương truyện của người dùng (kèm phân trang, tìm kiếm)
+   */
+  async getChapterPurchaseHistory(
+    userId: string | Types.ObjectId,
+    options?: { page?: number; limit?: number; search?: string; storyId?: string },
+  ) {
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException(ErrorCode.INVALID_OBJECT_ID);
+    }
+
+    if (!this.chapterUnlockModel) {
+      return {
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0,
+        summary: { totalUnlocked: 0, totalCoinsSpent: 0 },
+      };
+    }
+
+    const userObjectId = new Types.ObjectId(userId.toString());
+    const page = Math.max(1, options?.page || 1);
+    const limit = Math.max(1, Math.min(100, options?.limit || 10));
+    const skip = (page - 1) * limit;
+
+    const filter: Record<string, any> = { userId: userObjectId };
+
+    if (options?.storyId && Types.ObjectId.isValid(options.storyId)) {
+      const storyChapters = await this.chapterModel
+        .find({ storyId: new Types.ObjectId(options.storyId) })
+        .select('_id')
+        .lean();
+      filter.chapterId = { $in: storyChapters.map((c) => c._id) };
+    }
+
+    if (options?.search && options.search.trim()) {
+      const keyword = options.search.trim();
+      const matchingStories = await this.storyModel
+        .find({ title: { $regex: keyword, $options: 'i' } })
+        .select('_id')
+        .lean();
+      const matchingStoryIds = matchingStories.map((s) => s._id);
+
+      const chapterFilter: Record<string, any>[] = [
+        { title: { $regex: keyword, $options: 'i' } },
+      ];
+      if (matchingStoryIds.length > 0) {
+        chapterFilter.push({ storyId: { $in: matchingStoryIds } });
+      }
+      if (!isNaN(Number(keyword))) {
+        chapterFilter.push({ chapterNumber: Number(keyword) });
+      }
+
+      const matchingChapters = await this.chapterModel
+        .find({ $or: chapterFilter })
+        .select('_id')
+        .lean();
+
+      const matchingChapterIds = matchingChapters.map((c) => c._id);
+      if (filter.chapterId?.$in) {
+        const existingSet = new Set(filter.chapterId.$in.map((id: any) => id.toString()));
+        filter.chapterId = {
+          $in: matchingChapterIds.filter((id) => existingSet.has(id.toString())),
+        };
+      } else {
+        filter.chapterId = { $in: matchingChapterIds };
+      }
+    }
+
+    const total = await this.chapterUnlockModel.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    const rawUnlocks = await this.chapterUnlockModel
+      .find(filter)
+      .sort({ unlockedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: 'chapterId',
+        select: 'chapterNumber title isFree coinPrice storyId status',
+        populate: {
+          path: 'storyId',
+          select: 'title slug coverUrl authorId',
+          populate: {
+            path: 'authorId',
+            select: 'displayName username',
+          },
+        },
+      })
+      .lean();
+
+    const items = rawUnlocks
+      .filter((u: any) => u.chapterId)
+      .map((u: any) => {
+        const chapter = u.chapterId;
+        const story = chapter?.storyId;
+        return {
+          _id: u._id,
+          coinPrice: u.coinPrice,
+          unlockedAt: u.unlockedAt,
+          chapter: chapter
+            ? {
+                _id: chapter._id,
+                chapterNumber: chapter.chapterNumber,
+                title: chapter.title,
+                coinPrice: chapter.coinPrice,
+                isFree: chapter.isFree,
+              }
+            : null,
+          story: story
+            ? {
+                _id: story._id,
+                title: story.title,
+                slug: story.slug,
+                coverUrl: story.coverUrl,
+                authorName:
+                  story.authorId?.displayName ||
+                  story.authorId?.username ||
+                  'Tác giả',
+              }
+            : null,
+        };
+      });
+
+    // Thống kê tổng số chương đã mua và tổng xu đã tiêu của user
+    const stats = await this.chapterUnlockModel.aggregate([
+      { $match: { userId: userObjectId } },
+      {
+        $group: {
+          _id: null,
+          totalCoinsSpent: { $sum: '$coinPrice' },
+          totalUnlocked: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const summary = {
+      totalUnlocked: stats[0]?.totalUnlocked || 0,
+      totalCoinsSpent: stats[0]?.totalCoinsSpent || 0,
+    };
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+      summary,
+    };
   }
 
   private buildRevisionHistoryItem(

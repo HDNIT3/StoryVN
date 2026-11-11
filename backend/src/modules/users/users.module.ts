@@ -4,6 +4,7 @@ import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { RefreshToken, RefreshTokenSchema } from '../auth/schemas/refresh-token.schema.js';
 import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema.js';
+import { ChapterUnlock, ChapterUnlockSchema } from '../chapters/schemas/chapter-unlock.schema.js';
 import { Comment, CommentSchema } from '../comments/schemas/comment.schema.js';
 import { Follow, FollowSchema } from '../follows/schemas/follow.schema.js';
 import { Genre, GenreSchema } from '../genres/schemas/genre.schema.js';
@@ -48,6 +49,7 @@ import { UsersService } from './services/users.service.js';
       { name: Follow.name, schema: FollowSchema },
       { name: StoryRating.name, schema: StoryRatingSchema },
       { name: Wallet.name, schema: WalletSchema },
+      { name: ChapterUnlock.name, schema: ChapterUnlockSchema },
     ]),
   ],
   controllers: [

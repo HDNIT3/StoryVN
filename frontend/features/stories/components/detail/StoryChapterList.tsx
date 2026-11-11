@@ -112,55 +112,83 @@ export const StoryChapterList: React.FC<StoryChapterListProps> = ({
       {/* Chapter list */}
       {!isLoading && !isError && chapters.length > 0 && (
         <div className="border border-zinc-200/90 rounded-2xl overflow-hidden divide-y divide-zinc-200/80 bg-white shadow-2xs">
-          {chapters.map((chapter) => (
-            <Link
-              key={chapter._id}
-              href={`/truyen/${slugParam}/chuong/${chapter.chapterNumber}`}
-              className="group flex items-center justify-between gap-4 px-4 sm:px-6 py-3.5 hover:bg-zinc-50/80 transition-colors"
-            >
-              <span className="min-w-0 flex-1 flex items-baseline gap-2">
-                <span className="shrink-0 text-base font-bold text-zinc-900 tabular-nums group-hover:text-emerald-700 transition-colors">
-                  Chương {chapter.chapterNumber}
-                </span>
-                {chapter.title && (
-                  <span className="min-w-0 truncate text-base text-zinc-500 group-hover:text-emerald-700 transition-colors">
-                    {chapter.title}
-                  </span>
-                )}
-              </span>
+          {chapters.map((chapter) => {
+            const isFree = chapter.isFree ?? (!chapter.coinPrice || chapter.coinPrice === 0);
+            const isUnlocked = isFree || Boolean(chapter.isUnlocked);
 
-              <div className="flex items-center gap-3.5 sm:gap-6 shrink-0">
-                <span
-                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-zinc-400 group-hover:text-emerald-700 transition-colors"
-                  title={`${(chapter.viewCount || 0).toLocaleString("vi-VN")} lượt đọc`}
-                >
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-zinc-400 group-hover:text-emerald-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <span className="tabular-nums">
-                    {formatNumber(chapter.viewCount || 0)}
+            return (
+              <Link
+                key={chapter._id}
+                href={`/truyen/${slugParam}/chuong/${chapter.chapterNumber}`}
+                className="group flex items-center justify-between gap-4 px-4 sm:px-6 py-3.5 hover:bg-zinc-50/80 transition-colors"
+              >
+                <div className="min-w-0 flex-1 flex flex-wrap items-center gap-2.5">
+                  <span className="shrink-0 text-base font-bold text-zinc-900 tabular-nums group-hover:text-emerald-700 transition-colors">
+                    Chương {chapter.chapterNumber}
                   </span>
-                </span>
-
-                <span
-                  className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-zinc-400 group-hover:text-emerald-700 transition-colors"
-                  title={`${(chapter.wordCount || 0).toLocaleString("vi-VN")} từ`}
-                >
-                  <svg className="w-4 h-4 shrink-0 text-zinc-400 group-hover:text-emerald-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h10M4 18h13" />
-                  </svg>
-                  <span className="tabular-nums">
-                    {formatNumber(chapter.wordCount || 0)}
+                  {chapter.title && (
+                    <span className="min-w-0 truncate text-base text-zinc-600 group-hover:text-emerald-700 transition-colors">
+                      {chapter.title}
+                    </span>
+                  )}
+                  {/* Badge trạng thái chương: Miễn phí / Đã mở khóa / Trả phí */}
+                  <span className="shrink-0">
+                    {isFree ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Miễn phí
+                      </span>
+                    ) : isUnlocked ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200/70">
+                        <svg className="w-3.5 h-3.5 text-sky-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                        </svg>
+                        Đã mở khóa
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/70">
+                        <svg className="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        {(chapter.coinPrice || 0).toLocaleString("vi-VN")} Xu
+                      </span>
+                    )}
                   </span>
-                </span>
+                </div>
 
-                <span className="text-xs sm:text-sm font-medium text-zinc-500 tabular-nums">
-                  {formatDate(chapter.createdAt)}
-                </span>
-              </div>
-            </Link>
-          ))}
+                <div className="flex items-center gap-3.5 sm:gap-6 shrink-0">
+                  <span
+                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-zinc-400 group-hover:text-emerald-700 transition-colors"
+                    title={`${(chapter.viewCount || 0).toLocaleString("vi-VN")} lượt đọc`}
+                  >
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-zinc-400 group-hover:text-emerald-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span className="tabular-nums">
+                      {formatNumber(chapter.viewCount || 0)}
+                    </span>
+                  </span>
+
+                  <span
+                    className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-zinc-400 group-hover:text-emerald-700 transition-colors"
+                    title={`${(chapter.wordCount || 0).toLocaleString("vi-VN")} từ`}
+                  >
+                    <svg className="w-4 h-4 shrink-0 text-zinc-400 group-hover:text-emerald-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h10M4 18h13" />
+                    </svg>
+                    <span className="tabular-nums">
+                      {formatNumber(chapter.wordCount || 0)}
+                    </span>
+                  </span>
+
+                  <span className="text-xs sm:text-sm font-medium text-zinc-500 tabular-nums">
+                    {formatDate(chapter.createdAt)}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

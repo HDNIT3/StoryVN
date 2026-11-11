@@ -9,6 +9,10 @@ import type {
   StoryChaptersResponse,
   UnlockChapterResponse,
   UpdateChapterPayload,
+  PublicChapterItem,
+  ChapterPurchaseHistoryResponse,
+  ChapterUnlockStatusResponse,
+  PurchasedChaptersResponse,
 } from "../types";
 
 export interface ApiResponse<T> {
@@ -175,7 +179,7 @@ export const chapterService = {
     slug: string,
     params?: { page?: number; limit?: number; order?: "asc" | "desc" }
   ): Promise<ApiResponse<{
-    items: { _id: string; chapterNumber: number; title: string; viewCount?: number; wordCount?: number; createdAt: string; updatedAt: string }[];
+    items: PublicChapterItem[];
     total: number;
     page: number;
     limit: number;
@@ -188,6 +192,45 @@ export const chapterService = {
 
     const qs = searchParams.toString();
     return api.get(`/chapters/story/${slug}${qs ? `?${qs}` : ""}`);
+  },
+
+  /**
+   * Lấy danh sách ID các chương mà người dùng đã mua / mở khóa
+   */
+  async getPurchasedChapters(
+    storyId?: string
+  ): Promise<ApiResponse<PurchasedChaptersResponse>> {
+    const qs = storyId ? `?storyId=${encodeURIComponent(storyId)}` : "";
+    return api.get<ApiResponse<PurchasedChaptersResponse>>(`/chapters/purchased${qs}`);
+  },
+
+  /**
+   * Lấy lịch sử mua / mở khóa chương truyện của người dùng (kèm phân trang, tìm kiếm)
+   */
+  async getChapterPurchaseHistory(
+    params?: { page?: number; limit?: number; search?: string; storyId?: string }
+  ): Promise<ApiResponse<ChapterPurchaseHistoryResponse>> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.search) searchParams.append("search", params.search);
+    if (params?.storyId) searchParams.append("storyId", params.storyId);
+
+    const qs = searchParams.toString();
+    return api.get<ApiResponse<ChapterPurchaseHistoryResponse>>(
+      `/chapters/purchase-history${qs ? `?${qs}` : ""}`
+    );
+  },
+
+  /**
+   * Kiểm tra trạng thái mở khóa của một chương truyện
+   */
+  async checkChapterUnlockStatus(
+    id: string
+  ): Promise<ApiResponse<ChapterUnlockStatusResponse>> {
+    return api.get<ApiResponse<ChapterUnlockStatusResponse>>(
+      `/chapters/${id}/unlock-status`
+    );
   },
 
   /**

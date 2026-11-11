@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 interface DashboardStatsProps {
   totalStories: number;
@@ -35,6 +36,7 @@ export function DashboardStats({
       label: "Tổng số tác phẩm",
       value: totalStories.toLocaleString("vi-VN"),
       growth: storiesGrowth,
+      href: "/tac-gia/tac-pham",
       iconBg: "bg-blue-50",
       iconColor: "text-blue-500",
       icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />,
@@ -43,6 +45,7 @@ export function DashboardStats({
       label: "Tổng số chương",
       value: totalChapters.toLocaleString("vi-VN"),
       growth: chaptersGrowth,
+      href: "/tac-gia/chuong-truyen",
       iconBg: "bg-amber-50",
       iconColor: "text-amber-500",
       icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
@@ -59,6 +62,8 @@ export function DashboardStats({
       label: "Tổng xu nhận được",
       value: formatNumber(totalCoins),
       growth: coinsGrowth,
+      href: "/tac-gia/doanh-thu",
+      badge: "Xem chi tiết →",
       iconBg: "bg-orange-50",
       iconColor: "text-orange-500",
       icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
@@ -69,13 +74,20 @@ export function DashboardStats({
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-7">
       {stats.map((s, i) => {
         const isPositive = s.growth.startsWith("+");
-        return (
-          <div key={i} className="flex items-center gap-3.5 bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 hover:shadow-sm transition min-w-0">
+        const cardContent = (
+          <div className="flex items-center gap-3.5 bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 hover:shadow-sm transition min-w-0 h-full relative group">
             <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${s.iconBg}`}>
               <svg className={`w-5 h-5 ${s.iconColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>{s.icon}</svg>
             </div>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-xs font-medium text-zinc-500 mb-0.5 truncate">{s.label}</span>
+              <div className="flex items-center justify-between gap-1 mb-0.5">
+                <span className="text-xs font-medium text-zinc-500 truncate">{s.label}</span>
+                {s.badge && (
+                  <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded opacity-80 group-hover:opacity-100 transition shrink-0">
+                    {s.badge}
+                  </span>
+                )}
+              </div>
               <span className="text-xl sm:text-2xl font-extrabold text-zinc-900 tracking-tight leading-tight truncate">{s.value}</span>
               <span className={`inline-flex items-center gap-1 text-[11px] font-semibold mt-0.5 truncate ${isPositive ? "text-emerald-600" : "text-zinc-500"}`}>
                 {isPositive && (
@@ -88,6 +100,16 @@ export function DashboardStats({
             </div>
           </div>
         );
+
+        if (s.href) {
+          return (
+            <Link key={i} href={s.href} className="block transition focus:outline-none">
+              {cardContent}
+            </Link>
+          );
+        }
+
+        return <div key={i}>{cardContent}</div>;
       })}
     </div>
   );

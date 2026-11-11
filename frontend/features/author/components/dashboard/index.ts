@@ -5,3 +5,6 @@ export { ReadStatsChart } from "./ReadStatsChart";
 export { RevenueChart } from "./RevenueChart";
 export { RecentActivity } from "./RecentActivity";
 export { AuthorOverviewView } from "./AuthorOverviewView";
+export { AuthorRevenueView } from "./AuthorRevenueView";
+export { AuthorRevenueBreakdownCard } from "./AuthorRevenueBreakdownCard";
+export { AuthorRevenueHistoryCard } from "./AuthorRevenueHistoryCard";
