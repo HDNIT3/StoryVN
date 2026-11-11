@@ -9,4 +9,10 @@ export const chapterKeys = {
   detail: (id: string) => ["chapters", "detail", id] as const,
   stats: (storyId: string) => ["chapters", "stats", storyId] as const,
   history: (chapterId: string) => ["chapters", "history", chapterId] as const,
+  purchased: (storyId?: string) =>
+    ["chapters", "purchased", ...(storyId ? [storyId] : [])] as const,
+  purchaseHistory: (params?: unknown) =>
+    ["chapters", "purchase-history", params] as const,
+  unlockStatus: (chapterId: string) =>
+    ["chapters", "unlock-status", chapterId] as const,
 } as const;

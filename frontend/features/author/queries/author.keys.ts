@@ -7,6 +7,8 @@ export const authorKeys = {
   profile: (username: string) => ["author", "profile", username] as const,
   stories: (username: string, params?: Record<string, unknown>) =>
     ["author", "stories", username, ...(params ? [params] : [])] as const,
+  revenueHistory: (params?: Record<string, unknown>) =>
+    ["author", "revenue-history", ...(params ? [params] : [])] as const,
 } as const;
 
 export const authorRequestKeys = {

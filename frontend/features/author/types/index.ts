@@ -365,3 +365,70 @@ export interface AuthorOverviewData {
   recentComments: AuthorRecentCommentItem[];
   recentNotifications: AuthorRecentNotificationItem[];
 }
+
+/** Phân bổ doanh thu theo tác phẩm của tác giả ("Xu đến từ đâu") */
+export interface AuthorStoryRevenueBreakdown {
+  storyId: string;
+  title: string;
+  slug: string;
+  coverImage?: string;
+  chapterCount: number;
+  unlockCount: number;
+  totalCoins: number;
+  percentage: number;
+}
+
+/** Tóm tắt doanh thu tác giả */
+export interface AuthorRevenueSummary {
+  totalCoinsEarned: number;
+  totalUnlocks: number;
+  storyCount: number;
+  storiesBreakdown: AuthorStoryRevenueBreakdown[];
+}
+
+/** Chi tiết một giao dịch độc giả mở khóa chương VIP của tác giả */
+export interface AuthorRevenueHistoryItem {
+  _id: string;
+  coinPrice: number;
+  unlockedAt: string;
+  reader: {
+    _id: string;
+    username: string;
+    displayName: string;
+    avatarUrl?: string | null;
+  } | null;
+  chapter: {
+    _id: string;
+    chapterNumber: number;
+    title?: string;
+  } | null;
+  story: {
+    _id: string;
+    title: string;
+    slug: string;
+    coverImage?: string;
+  } | null;
+}
+
+/** Phản hồi API lịch sử nhận xu của tác giả */
+export interface AuthorRevenueHistoryResponse {
+  items: AuthorRevenueHistoryItem[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+  summary: AuthorRevenueSummary;
+}
+
+/** Query params lọc lịch sử nhận xu */
+export interface QueryAuthorRevenueParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  storyId?: string;
+}
+

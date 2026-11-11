@@ -53,9 +53,12 @@ export function AuthorLayoutView({ children }: AuthorLayoutViewProps) {
   // Nếu chưa đăng nhập, đợi router.replace chuyển hướng
   if (!isAuthenticated || !user) return null;
 
-  // PHƯƠNG ÁN 1: Bất kỳ role nào không phải AUTHOR (kể cả ADMIN, MANAGER hay USER thường)
-  // khi cố tình truy cập vào các trang quản lý tác giả sẽ trả về 404 Not Found
-  if (user.role !== "AUTHOR") {
+  // Cho phép AUTHOR, ADMIN, MANAGER truy cập khu vực quản lý tác giả
+  if (
+    user.role !== "AUTHOR" &&
+    user.role !== "ADMIN" &&
+    user.role !== "MANAGER"
+  ) {
     notFound();
   }
 

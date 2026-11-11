@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { buildPaginationMeta, PaginatedResult } from '../../../common/dto/pagination.dto.js';
@@ -8,6 +8,10 @@ import {
   ChapterDocument,
   ChapterStatus,
 } from '../../chapters/schemas/chapter.schema.js';
+import {
+  ChapterUnlock,
+  ChapterUnlockDocument,
+} from '../../chapters/schemas/chapter-unlock.schema.js';
 import {
   Comment,
   CommentDocument,
@@ -85,6 +89,9 @@ export class AuthorsService {
     private readonly walletModel: Model<WalletDocument>,
     @InjectModel(StoryDailyView.name)
     private readonly storyDailyViewModel: Model<StoryDailyViewDocument>,
+    @Optional()
+    @InjectModel(ChapterUnlock.name)
+    private readonly chapterUnlockModel?: Model<ChapterUnlockDocument>,
   ) {}
 
   /**
@@ -1182,7 +1189,22 @@ export class AuthorsService {
     const coinsPrevMonth = sumCoins(prevMonthBuckets);
     const coinsGrowthPercent = calcGrowthPercent(coinsThisMonth, coinsPrevMonth);
 
-    const totalCoins = totalPaidChapterCoins;
+    let actualUnlocksRevenue = 0;
+    if (this.chapterUnlockModel && chapters.length > 0) {
+      try {
+        const unlockSummary = await this.chapterUnlockModel.aggregate([
+          { $match: { chapterId: { $in: chapters.map((c) => c._id) } } },
+          { $group: { _id: null, total: { $sum: '$coinPrice' } } },
+        ]);
+        if (unlockSummary.length > 0 && unlockSummary[0]?.total > 0) {
+          actualUnlocksRevenue = unlockSummary[0].total;
+        }
+      } catch {
+        // bỏ qua lỗi aggregate
+      }
+    }
+
+    const totalCoins = actualUnlocksRevenue > 0 ? actualUnlocksRevenue : totalPaidChapterCoins;
     const walletBalance = wallet?.balance ?? 0;
 
     // 3. Định dạng danh sách bình luận mới nhất
@@ -1404,6 +1426,242 @@ export class AuthorsService {
       },
       recentComments,
       recentNotifications,
+    };
+  }
+
+  /**
+   * Lấy lịch sử nhận xu và thống kê chi tiết doanh thu tác giả ("Xu đến từ đâu")
+   * Cung cấp danh sách mở khóa kèm thông tin độc giả, chương, truyện, thời gian mở khóa
+   * và bảng phân bổ doanh thu theo từng tác phẩm.
+   */
+  async getAuthorRevenueHistory(
+    userId: string,
+    options?: { page?: number; limit?: number; search?: string; storyId?: string },
+  ) {
+    const authorObjId = new Types.ObjectId(userId);
+    const page = Math.max(1, Number(options?.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(options?.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    // 1. Lấy danh sách truyện của tác giả
+    const authorStories = await this.storyModel
+      .find({ authorId: authorObjId })
+      .select('_id title slug coverImage stats')
+      .lean()
+      .exec();
+
+    const storyMap = new Map<string, any>();
+    authorStories.forEach((s) => storyMap.set(s._id.toString(), s));
+
+    let targetStoryIds = authorStories.map((s) => s._id);
+
+    // Lọc theo tác phẩm nếu có
+    if (options?.storyId && Types.ObjectId.isValid(options.storyId)) {
+      const filtered = targetStoryIds.filter(
+        (id) => id.toString() === options.storyId,
+      );
+      if (filtered.length > 0) {
+        targetStoryIds = filtered;
+      }
+    }
+
+    if (targetStoryIds.length === 0 || !this.chapterUnlockModel) {
+      return {
+        items: [],
+        meta: buildPaginationMeta(1, limit, 0),
+        summary: {
+          totalCoinsEarned: 0,
+          totalUnlocks: 0,
+          storyCount: authorStories.length,
+          storiesBreakdown: [],
+        },
+      };
+    }
+
+    // 2. Lấy danh sách chương của các tác phẩm này
+    const chapters = await this.chapterModel
+      .find({ storyId: { $in: targetStoryIds } })
+      .select('_id storyId chapterNumber title coinPrice isFree')
+      .lean()
+      .exec();
+
+    const chapterIds = chapters.map((c) => c._id);
+    const chapterMap = new Map<string, any>();
+    chapters.forEach((c) => chapterMap.set(c._id.toString(), c));
+
+    if (chapterIds.length === 0) {
+      return {
+        items: [],
+        meta: buildPaginationMeta(1, limit, 0),
+        summary: {
+          totalCoinsEarned: 0,
+          totalUnlocks: 0,
+          storyCount: authorStories.length,
+          storiesBreakdown: [],
+        },
+      };
+    }
+
+    // 3. Tính tổng kết doanh thu toàn bộ tác phẩm của tác giả (hoặc truyện đang lọc)
+    let breakdownAgg: any[] = [];
+    try {
+      breakdownAgg = await this.chapterUnlockModel.aggregate([
+        { $match: { chapterId: { $in: chapterIds } } },
+        {
+          $group: {
+            _id: '$chapterId',
+            unlockCount: { $sum: 1 },
+            totalCoins: { $sum: '$coinPrice' },
+          },
+        },
+      ]);
+    } catch {
+      breakdownAgg = [];
+    }
+
+    // Gom theo truyện để hiển thị "Xu đến từ đâu"
+    const storyStatsMap = new Map<
+      string,
+      {
+        storyId: string;
+        title: string;
+        slug: string;
+        coverImage?: string;
+        chapterCount: number;
+        unlockCount: number;
+        totalCoins: number;
+      }
+    >();
+
+    // Khởi tạo các truyện
+    targetStoryIds.forEach((sIdObj) => {
+      const sId = sIdObj.toString();
+      const st = storyMap.get(sId);
+      if (st) {
+        storyStatsMap.set(sId, {
+          storyId: sId,
+          title: st.title,
+          slug: st.slug,
+          coverImage: st.coverImage,
+          chapterCount: chapters.filter((c) => c.storyId.toString() === sId).length,
+          unlockCount: 0,
+          totalCoins: 0,
+        });
+      }
+    });
+
+    let totalCoinsEarned = 0;
+    let totalUnlocks = 0;
+
+    breakdownAgg.forEach((b: any) => {
+      const ch = chapterMap.get(b._id?.toString());
+      if (ch) {
+        const sId = ch.storyId?.toString();
+        const stat = storyStatsMap.get(sId);
+        if (stat) {
+          stat.unlockCount += b.unlockCount || 0;
+          stat.totalCoins += b.totalCoins || 0;
+        }
+      }
+      totalCoinsEarned += b.totalCoins || 0;
+      totalUnlocks += b.unlockCount || 0;
+    });
+
+    const storiesBreakdown = Array.from(storyStatsMap.values())
+      .map((item) => ({
+        ...item,
+        percentage:
+          totalCoinsEarned > 0
+            ? Math.round((item.totalCoins / totalCoinsEarned) * 100)
+            : 0,
+      }))
+      .sort((a, b) => b.totalCoins - a.totalCoins);
+
+    // 4. Lọc bản ghi lịch sử theo từ khóa tìm kiếm (tên chương, số chương, tên độc giả)
+    const filter: any = { chapterId: { $in: chapterIds } };
+
+    if (options?.search && options.search.trim()) {
+      const kw = options.search.trim();
+      const matchedChapterIds = chapters
+        .filter(
+          (c) =>
+            (c.title && c.title.toLowerCase().includes(kw.toLowerCase())) ||
+            String(c.chapterNumber) === kw,
+        )
+        .map((c) => c._id);
+
+      const matchedUsers = await this.userModel
+        .find({
+          $or: [
+            { username: { $regex: kw, $options: 'i' } },
+            { displayName: { $regex: kw, $options: 'i' } },
+          ],
+        })
+        .select('_id')
+        .lean()
+        .exec();
+
+      const matchedUserIds = matchedUsers.map((u) => u._id);
+
+      filter.$or = [
+        { chapterId: { $in: matchedChapterIds } },
+        { userId: { $in: matchedUserIds } },
+      ];
+    }
+
+    const total = await this.chapterUnlockModel.countDocuments(filter);
+    const rawUnlocks = await this.chapterUnlockModel
+      .find(filter)
+      .sort({ unlockedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('userId', 'username displayName avatarUrl')
+      .lean();
+
+    const items = rawUnlocks.map((u: any) => {
+      const ch = chapterMap.get(u.chapterId?.toString());
+      const st = ch ? storyMap.get(ch.storyId?.toString()) : null;
+      const reader = u.userId && typeof u.userId === 'object' ? u.userId : null;
+
+      return {
+        _id: u._id.toString(),
+        coinPrice: u.coinPrice ?? (ch?.coinPrice || 0),
+        unlockedAt: u.unlockedAt || new Date(),
+        reader: reader
+          ? {
+              _id: reader._id?.toString(),
+              username: reader.username,
+              displayName: reader.displayName || reader.username,
+              avatarUrl: reader.avatarUrl || null,
+            }
+          : null,
+        chapter: ch
+          ? {
+              _id: ch._id.toString(),
+              chapterNumber: ch.chapterNumber,
+              title: ch.title,
+            }
+          : null,
+        story: st
+          ? {
+              _id: st._id.toString(),
+              title: st.title,
+              slug: st.slug,
+              coverImage: st.coverImage,
+            }
+          : null,
+      };
+    });
+
+    return {
+      items,
+      meta: buildPaginationMeta(page, limit, total),
+      summary: {
+        totalCoinsEarned,
+        totalUnlocks,
+        storyCount: authorStories.length,
+        storiesBreakdown,
+      },
     };
   }
 }

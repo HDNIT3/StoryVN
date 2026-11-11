@@ -2,12 +2,20 @@ import React from "react";
 import Link from "next/link";
 import { READER_THEMES, CHAPTERS_PER_PAGE, type ReaderThemeMode } from "./ReaderThemes";
 
+export interface ChapterModalItem {
+  chapterNumber: number;
+  title: string;
+  isFree?: boolean;
+  coinPrice?: number;
+  isUnlocked?: boolean;
+}
+
 interface ReaderChapterModalProps {
   isOpen: boolean;
   onClose: () => void;
   slug: string;
   currentChapterNumber: number | string;
-  chapterList: { chapterNumber: number; title: string }[];
+  chapterList: ChapterModalItem[];
   chapterPage: number;
   onPageChange: (page: number) => void;
   theme: ReaderThemeMode;
@@ -72,6 +80,9 @@ export const ReaderChapterModal: React.FC<ReaderChapterModalProps> = ({
         <div className="flex-1 overflow-y-auto py-3 space-y-1.5 min-h-0">
           {pagedChapters.map((ch) => {
             const isCurrent = Number(ch.chapterNumber) === Number(currentChapterNumber);
+            const isFree = ch.isFree ?? (!ch.coinPrice || ch.coinPrice === 0);
+            const isUnlocked = isFree || Boolean(ch.isUnlocked);
+
             return (
               <Link
                 key={ch.chapterNumber}
@@ -81,14 +92,32 @@ export const ReaderChapterModal: React.FC<ReaderChapterModalProps> = ({
                   isCurrent ? t.menuItemActive : t.menuItemHover
                 }`}
               >
-                <span className="font-semibold truncate">
-                  Chương {ch.chapterNumber}: {ch.title}
-                </span>
-                {isCurrent && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-600 text-white shrink-0">
-                    Đang đọc
+                <div className="min-w-0 flex-1 truncate">
+                  <span className="font-semibold truncate">
+                    Chương {ch.chapterNumber}: {ch.title}
                   </span>
-                )}
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {isCurrent && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-600 text-white shrink-0">
+                      Đang đọc
+                    </span>
+                  )}
+                  {isFree ? (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                      Miễn phí
+                    </span>
+                  ) : isUnlocked ? (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-600 dark:text-sky-400">
+                      Đã mở
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                      🔒 {(ch.coinPrice || 0).toLocaleString("vi-VN")} Xu
+                    </span>
+                  )}
+                </div>
               </Link>
             );
           })}

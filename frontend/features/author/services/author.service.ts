@@ -7,6 +7,8 @@ import type {
   PaginatedAuthorsList,
   QueryAuthorsParams,
   AuthorOverviewData,
+  AuthorRevenueHistoryResponse,
+  QueryAuthorRevenueParams,
 } from "../types";
 
 export interface ApiResponse<T = unknown> {
@@ -77,6 +79,24 @@ export const authorService = {
       : `/authors/${encodeURIComponent(username)}/stories`;
 
     return api.get<ApiResponse<PaginatedAuthorStories>>(endpoint);
+  },
+
+  /**
+   * Lấy lịch sử nhận xu và báo cáo doanh thu studio của tác giả ("Xu đến từ đâu")
+   */
+  getAuthorRevenueHistory(params?: QueryAuthorRevenueParams) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.search) searchParams.append("search", params.search);
+    if (params?.storyId) searchParams.append("storyId", params.storyId);
+
+    const qs = searchParams.toString();
+    const endpoint = qs
+      ? `/authors/me/revenue-history?${qs}`
+      : "/authors/me/revenue-history";
+
+    return api.get<ApiResponse<AuthorRevenueHistoryResponse>>(endpoint);
   },
 };
 

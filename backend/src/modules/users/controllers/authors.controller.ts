@@ -44,6 +44,38 @@ export class AuthorsController {
   }
 
   @ApiOperation({
+    summary: 'Lấy lịch sử nhận xu và phân tích doanh thu tác giả',
+    description:
+      'Trả về lịch sử mở khóa chương của độc giả (độc giả nào mở, chương nào, truyện nào, số xu nhận được, thời gian), kèm theo tổng kết và phân tích doanh thu theo từng tác phẩm.',
+  })
+  @ApiBearerAuth('access-token')
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN, UserRole.MANAGER)
+  @Get('me/revenue-history')
+  @HttpCode(HttpStatus.OK)
+  async getMyAuthorRevenueHistory(
+    @CurrentUser() user: UserDocument,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('storyId') storyId?: string,
+  ) {
+    const data = await this.authorsService.getAuthorRevenueHistory(
+      user._id.toString(),
+      {
+        page: page ? parseInt(page, 10) : undefined,
+        limit: limit ? parseInt(limit, 10) : undefined,
+        search,
+        storyId,
+      },
+    );
+    return {
+      success: true,
+      message: 'Lấy lịch sử nhận xu thành công',
+      data,
+    };
+  }
+
+  @ApiOperation({
     summary: 'Lấy thống kê cộng đồng sáng tác StoryVN',
     description:
       'Trả về tổng số tác giả đã đăng truyện, tổng số tác phẩm đang lưu giữ và tổng số chương đã xuất bản.',
