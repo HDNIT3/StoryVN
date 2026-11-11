@@ -109,12 +109,12 @@ export function StoryDetailModal({
     : story.authorNote;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[88vh] flex flex-col border border-slate-300 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-slate-200/90 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header Modal */}
-        <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0 bg-slate-50">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-sky-100 flex items-center justify-center text-sky-600 shrink-0">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-3 shrink-0 bg-slate-50/80">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-sky-100/80 text-sky-700 flex items-center justify-center shrink-0 border border-sky-200/60 shadow-2xs">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
@@ -123,7 +123,7 @@ export function StoryDetailModal({
               <h3 className="text-sm sm:text-base font-bold text-slate-900">
                 Chi tiết tác phẩm
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 font-medium">
                 Xem nội dung trước khi phê duyệt hoặc xử lý tác phẩm
               </p>
             </div>
@@ -131,7 +131,7 @@ export function StoryDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-200 transition-colors cursor-pointer"
+            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-200/70 transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -371,16 +371,16 @@ export function StoryDetailModal({
         </div>
 
         {/* Footer Modal: Các nút hành động */}
-        <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-3.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-md transition-colors cursor-pointer"
+            className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 rounded-xl transition-all active:scale-95 cursor-pointer"
           >
             Đóng
           </button>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             {/* Phê duyệt / Từ chối (Nếu đang chờ duyệt) */}
             {(isPending || isPendingRevisionReview) && (
               <>
@@ -390,7 +390,7 @@ export function StoryDetailModal({
                     onClose();
                     onReject(story);
                   }}
-                  className="px-3.5 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-md shadow-xs transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer"
                 >
                   {isPendingRevisionReview ? "Từ chối bản sửa" : "Từ chối duyệt"}
                 </button>
@@ -400,7 +400,7 @@ export function StoryDetailModal({
                     onClose();
                     onApprove(story);
                   }}
-                  className="px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md shadow-xs transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer"
                 >
                   {isPendingRevisionReview ? "Phê duyệt bản sửa" : "Phê duyệt tác phẩm"}
                 </button>
@@ -415,7 +415,7 @@ export function StoryDetailModal({
                   onClose();
                   onUnpublish(story);
                 }}
-                className="px-3.5 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-md shadow-xs transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer"
               >
                 Gỡ duyệt tác phẩm
               </button>
@@ -429,7 +429,7 @@ export function StoryDetailModal({
                   onClose();
                   onUnhide(story);
                 }}
-                className="px-3.5 py-1.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-md shadow-xs transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer"
               >
                 Mở lại công khai
               </button>
@@ -440,7 +440,7 @@ export function StoryDetailModal({
                   onClose();
                   onHide(story);
                 }}
-                className="px-3.5 py-1.5 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-md transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/90 rounded-xl active:scale-95 transition-all cursor-pointer"
               >
                 Cấm / Ẩn công khai
               </button>

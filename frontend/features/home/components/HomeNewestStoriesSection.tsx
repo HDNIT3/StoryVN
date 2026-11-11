@@ -98,9 +98,9 @@ export function HomeNewestStoriesSection({ stories, isLoading }: HomeNewestStori
             <Link
               key={story._id}
               href={`/truyen/${story.slug}`}
-              className="group flex flex-col overflow-hidden rounded-lg border border-slate-200/70 bg-white p-1.5 shadow-[0_10px_30px_-26px_rgba(15,23,42,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_40px_-26px_rgba(14,165,233,0.35)]"
+              className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-2 sm:p-2.5 shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-md"
             >
-              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-md bg-slate-100">
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-slate-100 shadow-2xs">
                 {story.coverUrl ? (
                   <Image
                     src={story.coverUrl}
@@ -116,16 +116,16 @@ export function HomeNewestStoriesSection({ stories, isLoading }: HomeNewestStori
                   </div>
                 )}
 
-                <span className="absolute bottom-1.5 left-1.5 rounded-md bg-slate-900/70 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-white">
+                <span className="absolute bottom-1.5 left-1.5 rounded-lg bg-slate-900/80 backdrop-blur-xs px-2 py-0.5 text-[11px] font-bold tabular-nums text-white shadow-2xs">
                   {story.stats.chapterCount} chương
                 </span>
               </div>
 
-              <div className="px-0.5 pt-2 pb-0.5">
-                <h3 className="line-clamp-2 text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-600">
+              <div className="px-1 pt-2.5 pb-1">
+                <h3 className="line-clamp-2 text-xs sm:text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-600">
                   {story.title}
                 </h3>
-                <p className="mt-1 line-clamp-1 text-xs text-slate-500">
+                <p className="mt-1 line-clamp-1 text-[11px] sm:text-xs text-slate-500 font-medium">
                   {story.author?.name || "Ẩn danh"}
                 </p>
               </div>

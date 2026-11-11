@@ -125,6 +125,7 @@ function HeaderWallet({
       {/* Plus Recharge Button */}
       {showRechargeButton && (
         <span
+          onClick={handleRecharge}
           aria-label="Nạp thêm xu"
           title="Nạp thêm xu"
           className="ml-0.5 flex h-3 w-3 shrink-0 items-center justify-center rounded-full text-amber-500 transition-colors hover:bg-amber-200/70 hover:text-amber-700 sm:h-4 sm:w-4"

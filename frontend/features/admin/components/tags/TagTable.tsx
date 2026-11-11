@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import type { TagItem } from "@/features/tags";
@@ -154,7 +154,7 @@ export function TagTable({
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => onEdit(tag)}
-                          className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                          className="w-8 h-8 rounded-lg border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-600 hover:text-white hover:border-sky-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                           title="Chỉnh sửa thẻ tag"
                         >
                           <svg
@@ -174,7 +174,7 @@ export function TagTable({
 
                         <button
                           onClick={() => onDelete(tag)}
-                          className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                          className="w-8 h-8 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                           title="Xóa thẻ tag"
                         >
                           <svg
