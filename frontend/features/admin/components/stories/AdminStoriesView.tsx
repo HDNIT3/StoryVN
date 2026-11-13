@@ -19,6 +19,9 @@ import {
   StoryActionModal,
   type StoryActionType,
   StoryPagination,
+  useAdminDashboardOverview,
+  AdminBarChart,
+  AdminDonutChart,
 } from "@/features/admin";
 
 export const AdminStoriesView: React.FC = () => {
@@ -27,6 +30,7 @@ export const AdminStoriesView: React.FC = () => {
   const [genreId, setGenreId] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [page, setPage] = useState(1);
+  const [showCharts, setShowCharts] = useState(false);
 
   // Modal Chi tiết tác phẩm
   const [detailStory, setDetailStory] = useState<AdminStoryItem | null>(null);
@@ -44,6 +48,7 @@ export const AdminStoriesView: React.FC = () => {
 
   // Query thống kê đếm số lượng Tab badge
   const { data: counts, refetch: refetchCounts } = useAdminStoryCounts();
+  const { data: dashboardData } = useAdminDashboardOverview(14);
 
   // Xác định query filter theo tab
   const statusFilter: StoryStatus | undefined =
@@ -171,6 +176,17 @@ export const AdminStoriesView: React.FC = () => {
             Kiểm duyệt tác phẩm mới, theo dõi trạng thái xuất bản, gỡ duyệt và quản lý hiển thị công khai.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowCharts(!showCharts)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 transition-all cursor-pointer shadow-2xs self-start sm:self-auto"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <span>{showCharts ? "Ẩn biểu đồ" : "Biểu đồ phân tích"}</span>
+        </button>
       </div>
 
       {/* Tabs thống kê tương tác */}
@@ -179,6 +195,44 @@ export const AdminStoriesView: React.FC = () => {
         onFilterChange={handleTabChange}
         counts={counts}
       />
+
+      {/* Khối biểu đồ phân tích khi mở */}
+      {showCharts && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+            <AdminDonutChart
+              title="Phân Bổ Thể Loại Tác Phẩm"
+              subtitle="Cơ cấu truyện theo các danh mục thể loại"
+              data={(dashboardData?.charts.categories || []).map((c) => ({
+                id: c.id,
+                name: c.name,
+                value: c.count,
+                percentage: c.percentage,
+              }))}
+              size={170}
+              thickness={24}
+              centerLabel="Tổng truyện"
+              centerValue={counts?.all || 0}
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+            <AdminBarChart
+              title="Trạng Thái Kiểm Duyệt & Xuất Bản"
+              subtitle="Số lượng truyện theo từng trạng thái kiểm duyệt"
+              data={[
+                { label: "Xuất bản", value: counts?.published ?? 0, color: "#10b981" },
+                { label: "Chờ duyệt", value: counts?.pending ?? 0, color: "#f59e0b" },
+                { label: "Từ chối", value: counts?.rejected ?? 0, color: "#f43f5e" },
+                { label: "Bị ẩn", value: counts?.hidden ?? 0, color: "#8b5cf6" },
+                { label: "Bản nháp", value: counts?.draft ?? 0, color: "#94a3b8" },
+              ]}
+              height={200}
+              primaryLegend="Số lượng truyện"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Thanh tìm kiếm & Lọc thể loại & Sắp xếp */}
       <StoryFilterBar

@@ -16,6 +16,7 @@ import type {
   UpdateCoinPackagePayload,
 } from "@/features/coin-packages/types";
 import { AdminStatCard } from "@/features/admin/components/common/AdminStatCard";
+import { AdminBarChart } from "../charts";
 import { CoinPackageFilterBar } from "./CoinPackageFilterBar";
 import { CoinPackageTable } from "./CoinPackageTable";
 import { CoinPackageFormModal } from "./CoinPackageFormModal";
@@ -26,6 +27,7 @@ export function AdminCoinPackagesView() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
   const [featuredFilter, setFeaturedFilter] = useState<"ALL" | "FEATURED" | "NORMAL">("ALL");
+  const [showCharts, setShowCharts] = useState(false);
 
   // Modals state
   const [formModalOpen, setFormModalOpen] = useState(false);
@@ -161,6 +163,15 @@ export function AdminCoinPackagesView() {
           <Button
             type="button"
             variant="outline"
+            onClick={() => setShowCharts(!showCharts)}
+            className="text-xs px-3.5 py-2 font-semibold text-indigo-700 bg-indigo-50/60 hover:bg-indigo-100 border-indigo-200"
+          >
+            {showCharts ? "Ẩn biểu đồ" : "Biểu đồ so sánh"}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
             onClick={handleSeed}
             disabled={seedMutation.isPending}
             className="text-xs px-3.5 py-2 font-semibold text-slate-700 bg-white hover:bg-slate-50 border-slate-200"
@@ -229,6 +240,28 @@ export function AdminCoinPackagesView() {
           }
         />
       </div>
+
+      {/* Biểu đồ so sánh mệnh giá & Xu thưởng các gói */}
+      {showCharts && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs animate-in fade-in duration-300">
+          <AdminBarChart
+            title="So Sánh Lượng Xu Cơ Bản & Xu Khuyến Mãi Các Gói"
+            subtitle="Tỷ lệ khuyến mãi kích cầu theo từng mức giá gói nạp"
+            data={allItems.map((p) => ({
+              label: p.name,
+              value: p.coinAmount,
+              secondaryValue: p.bonusCoin,
+              tooltipTitle: `${p.name} - Giá: ${new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(p.price)}`,
+            }))}
+            height={220}
+            barColor="#6366f1"
+            secondaryBarColor="#f59e0b"
+            primaryLegend="Xu cơ bản"
+            secondaryLegend="Xu thưởng"
+            valueSuffix=" Xu"
+          />
+        </div>
+      )}
 
       {/* Filter Bar */}
       <CoinPackageFilterBar

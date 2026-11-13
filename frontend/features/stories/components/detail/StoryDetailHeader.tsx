@@ -20,14 +20,14 @@ function ProgressBadge({ state }: { state?: StoryProgressState }) {
   switch (state) {
     case "COMPLETED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/80">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
           Hoàn thành
         </span>
       );
     case "ON_HOLD":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
           Tạm ngưng
         </span>
@@ -35,8 +35,8 @@ function ProgressBadge({ state }: { state?: StoryProgressState }) {
     case "ONGOING":
     default:
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           Đang ra
         </span>
       );
@@ -47,26 +47,26 @@ function AgeRatingBadge({ rating }: { rating?: StoryAgeRating }) {
   switch (rating) {
     case "18+":
       return (
-        <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200/80 shadow-2xs">
           18+
         </span>
       );
     case "16+":
       return (
-        <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs">
           16+
         </span>
       );
     case "13+":
       return (
-        <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200/80 shadow-2xs">
           13+
         </span>
       );
     case "ALL":
     default:
       return (
-        <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-zinc-100 text-zinc-700 border border-zinc-200">
+        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs">
           Mọi lứa tuổi
         </span>
       );
@@ -170,13 +170,15 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
   onOpenRatings,
 }) => {
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/80 shadow-xs relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-50/50 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+    <div className="bg-white rounded-3xl p-6 sm:p-8 md:p-10 border border-slate-200/90 shadow-sm relative overflow-hidden">
+      {/* Background radial glow */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-emerald-100/40 via-sky-100/20 to-transparent rounded-full blur-3xl pointer-events-none -mr-24 -mt-24" />
+      <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-amber-50/30 rounded-full blur-3xl pointer-events-none -mb-20" />
 
-      <div className="relative flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
-        {/* Ảnh bìa */}
+      <div className="relative flex flex-col sm:flex-row gap-6 sm:gap-8 md:gap-10 items-start">
+        {/* Ảnh bìa dạng bìa sách 3D */}
         <div className="w-full sm:w-56 shrink-0 flex flex-col items-center">
-          <div className="relative w-44 sm:w-56 aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-100 border border-zinc-200/80 shadow-md">
+          <div className="relative w-44 sm:w-56 aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-xl shadow-slate-900/10 ring-1 ring-black/5 hover:-translate-y-1 transition-all duration-300">
             {story.coverUrl ? (
               <Image
                 src={story.coverUrl}
@@ -188,8 +190,8 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
                 fetchPriority="high"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 p-4 text-center">
-                <svg className="w-12 h-12 mb-2 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                <svg className="w-12 h-12 mb-2 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
                 <span className="text-xs">Chưa có ảnh bìa</span>
@@ -205,62 +207,67 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
 
         {/* Thông tin chi tiết */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight leading-snug">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-snug">
             {story.title}
           </h1>
 
-          <div className="mt-3 flex items-center gap-2 text-sm text-zinc-600">
-            <span className="text-zinc-500">Tác giả:</span>
+          <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+            <span className="text-slate-400 font-medium">Tác giả:</span>
             <AuthorLink author={story.author} />
           </div>
 
+          {/* Thể loại */}
           <div className="mt-4 flex flex-wrap gap-2">
             {story.genres && story.genres.length > 0 ? (
               story.genres.map((genre) => (
                 <Link
                   key={genre._id || genre.slug}
                   href={`/truyen?genre=${genre.slug}`}
-                  className="px-3 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/60 transition-colors"
+                  className="px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100/90 border border-emerald-200/70 shadow-2xs hover:-translate-y-0.5 transition-all"
                 >
                   {genre.name}
                 </Link>
               ))
             ) : (
-              <span className="text-xs text-zinc-400 italic">Chưa phân loại</span>
+              <span className="text-xs text-slate-400 italic">Chưa phân loại</span>
             )}
           </div>
 
-          {/* Thống kê */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3 p-3.5 sm:p-4 rounded-2xl bg-zinc-50/80 border border-zinc-200/60">
+          {/* Thống kê đa thông số */}
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3 p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 shadow-2xs">
             <div className="text-center">
-              <div className="text-xs text-zinc-500 font-medium">Lượt đọc</div>
-              <div className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5">
+              <div className="text-xs text-slate-500 font-medium">Lượt đọc</div>
+              <div className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums">
                 {formatNumber(story.stats?.viewCount)}
               </div>
             </div>
-            <div className="text-center border-l border-zinc-200/60">
-              <div className="text-xs text-zinc-500 font-medium">Theo dõi</div>
-              <div className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5">
+            <div className="text-center border-l border-slate-200/80">
+              <div className="text-xs text-slate-500 font-medium">Theo dõi</div>
+              <div className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums">
                 {formatNumber(story.stats?.followCount)}
               </div>
             </div>
-            <button type="button" onClick={onOpenRatings} className="text-center sm:border-l border-zinc-200/60 hover:bg-amber-50/50 rounded-lg p-1 transition-colors cursor-pointer">
-              <div className="text-xs text-zinc-500 font-medium">Đánh giá</div>
-              <div className="text-base sm:text-lg font-bold text-amber-600 mt-0.5 flex items-center justify-center gap-1">
+            <button
+              type="button"
+              onClick={onOpenRatings}
+              className="text-center sm:border-l border-slate-200/80 hover:bg-amber-50/70 rounded-xl p-1 transition-all cursor-pointer"
+            >
+              <div className="text-xs text-slate-500 font-medium">Đánh giá</div>
+              <div className="text-base sm:text-lg font-bold text-amber-600 mt-0.5 flex items-center justify-center gap-1 tabular-nums">
                 <span>★</span>
                 <span>{story.stats?.ratingAverage ? story.stats.ratingAverage.toFixed(1) : "0.0"}</span>
               </div>
             </button>
-            <div className="text-center border-l border-zinc-200/60">
-              <div className="text-xs text-zinc-500 font-medium">Số chương</div>
-              <div className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5">
+            <div className="text-center border-l border-slate-200/80">
+              <div className="text-xs text-slate-500 font-medium">Số chương</div>
+              <div className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums">
                 {publicChapterCount}
               </div>
             </div>
-            <div className="col-span-2 sm:col-span-1 pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l border-zinc-200/60 text-center">
-              <div className="text-xs text-zinc-500 font-medium">Số từ</div>
+            <div className="col-span-2 sm:col-span-1 pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l border-slate-200/80 text-center">
+              <div className="text-xs text-slate-500 font-medium">Số từ</div>
               <div
-                className="text-base sm:text-lg font-bold text-zinc-900 mt-0.5"
+                className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums"
                 title={`${(story.stats?.wordCount || 0).toLocaleString("vi-VN")} từ`}
               >
                 {formatNumber(story.stats?.wordCount)}
@@ -269,23 +276,23 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
           </div>
 
           {/* Meta ngày tháng */}
-          <div className="mt-5 text-xs text-zinc-500 space-y-1.5 border-t border-zinc-100 pt-4">
+          <div className="mt-5 text-xs text-slate-500 space-y-1.5 border-t border-slate-100 pt-4">
             <div className="flex items-center gap-2">
-              <span className="w-24 text-zinc-400">Ngày đăng:</span>
-              <span className="text-zinc-700 font-medium">{formatDate(story.publishedAt || story.createdAt)}</span>
+              <span className="w-24 text-slate-400">Ngày đăng:</span>
+              <span className="text-slate-700 font-semibold">{formatDate(story.publishedAt || story.createdAt)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-24 text-zinc-400">Cập nhật:</span>
-              <span className="text-zinc-700 font-medium">{formatRelativeTime(story.updatedAt)}</span>
+              <span className="w-24 text-slate-400">Cập nhật:</span>
+              <span className="text-slate-700 font-semibold">{formatRelativeTime(story.updatedAt)}</span>
             </div>
           </div>
 
-          {/* Nút thao tác */}
+          {/* Nút thao tác CTA */}
           <div className="mt-6 flex flex-wrap items-center gap-3">
             {firstChapter ? (
               <Link
                 href={`/truyen/${slugParam}/chuong/${firstChapter.chapterNumber}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-700 hover:bg-emerald-800 text-white transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-md shadow-emerald-700/20 active:scale-[0.98] transition-all"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -297,7 +304,7 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
                 type="button"
                 disabled
                 title="Truyện chưa có chương nào được xuất bản"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-zinc-100 text-zinc-400 border border-zinc-200/80 cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -310,10 +317,11 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
               type="button"
               onClick={onToggleFollow}
               disabled={isFollowPending}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all cursor-pointer ${isFollowing
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all cursor-pointer ${
+                isFollowing
                   ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 shadow-2xs"
-                  : "bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 border-zinc-200/80"
-                } disabled:opacity-60`}
+                  : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-2xs active:scale-[0.98]"
+              } disabled:opacity-60`}
             >
               {isFollowPending ? (
                 <div className="w-4 h-4 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
@@ -322,7 +330,7 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
               ) : (
-                <svg className="w-4 h-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
               )}
@@ -333,9 +341,9 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
               type="button"
               onClick={onShare}
               title="Chia sẻ truyện đến bạn bè, Zalo, Facebook, Telegram..."
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 border border-zinc-200/80 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs active:scale-[0.98] transition-all cursor-pointer"
             >
-              <svg className="w-4 h-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
               <span>Chia sẻ</span>

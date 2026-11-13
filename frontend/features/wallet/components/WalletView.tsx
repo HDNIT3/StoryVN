@@ -50,24 +50,24 @@ function WalletStatCard({
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl border p-5 shadow-2xs transition-all ${
-        onClick ? "cursor-pointer" : ""
+      className={`rounded-2xl border p-5 shadow-2xs transition-all duration-200 ${
+        onClick ? "cursor-pointer active:scale-[0.99]" : ""
       } ${
         isActive
-          ? "border-amber-400 bg-amber-50/40 ring-2 ring-amber-200/50"
-          : "border-zinc-200 bg-white hover:border-zinc-300"
+          ? "border-amber-400 bg-amber-50/50 ring-2 ring-amber-400/30 shadow-sm"
+          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs"
       }`}
     >
       <div className="flex items-center gap-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 border border-slate-200/60 shadow-2xs">
           {icon}
         </span>
-        <p className="text-xs font-semibold text-zinc-500">{label}</p>
+        <p className="text-xs font-bold text-slate-500">{label}</p>
       </div>
-      <p className="mt-3 text-lg font-bold tabular-nums text-zinc-900 sm:text-xl">
+      <p className="mt-3.5 text-xl font-black tabular-nums text-slate-900 sm:text-2xl">
         {value}
       </p>
-      <p className="mt-1 text-[11px] text-zinc-400">{hint}</p>
+      <p className="mt-1 text-xs text-slate-400">{hint}</p>
     </div>
   );
 }
@@ -198,40 +198,42 @@ export function WalletView() {
         </div>
       ) : (
         <>
-          <section className="relative overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-6 shadow-xs sm:p-8">
+          <section className="relative overflow-hidden rounded-3xl border border-amber-300/80 bg-gradient-to-br from-amber-100/50 via-white to-amber-50/30 p-6 shadow-sm sm:p-8">
             <div
               aria-hidden
-              className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-amber-200/50 blur-3xl"
+              className="pointer-events-none absolute -right-12 -top-16 h-60 w-60 rounded-full bg-gradient-to-br from-amber-300/40 to-yellow-200/20 blur-3xl"
             />
             <div
               aria-hidden
-              className="pointer-events-none absolute -bottom-20 right-24 h-40 w-40 rounded-full bg-sky-200/30 blur-3xl"
+              className="pointer-events-none absolute -bottom-20 right-28 h-48 w-48 rounded-full bg-sky-200/30 blur-3xl"
             />
 
             <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-300/70 shadow-2xs">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Ví hoạt động
                   </span>
                   {user?.displayName && (
-                    <span className="text-xs text-zinc-500">
-                      Xin chào, <strong className="font-semibold text-zinc-700">{user.displayName}</strong>
+                    <span className="text-xs text-slate-500">
+                      Xin chào, <strong className="font-bold text-slate-800">{user.displayName}</strong>
                     </span>
                   )}
                 </div>
 
-                <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-amber-700">
+                <p className="mt-4 text-xs font-extrabold uppercase tracking-widest text-amber-800">
                   Số dư hiện tại
                 </p>
-                <div className="mt-1 flex items-end gap-2">
-                  <span className="text-4xl font-black leading-none tabular-nums text-zinc-900 sm:text-5xl">
+                <div className="mt-1 flex items-baseline gap-2.5">
+                  <span className="text-4xl font-black leading-none tabular-nums text-slate-900 sm:text-5xl tracking-tight">
                     {formatCoins(wallet.balance)}
                   </span>
-                  <span className="mb-1 text-sm font-bold text-amber-600">Xu</span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-100 text-amber-900 text-sm font-black border border-amber-300/80">
+                    Xu
+                  </span>
                 </div>
-                <p className="mt-2 text-xs text-zinc-500">
+                <p className="mt-2.5 text-xs text-slate-500 font-medium">
                   Cập nhật {formatRelativeTime(wallet.updatedAt)}
                 </p>
               </div>
@@ -239,7 +241,7 @@ export function WalletView() {
               <div className="flex flex-wrap items-center gap-2.5">
                 <Link
                   href="/nap-xu"
-                  className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-amber-600 sm:text-sm"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 px-6 py-3 text-xs sm:text-sm font-black text-white shadow-md shadow-amber-500/25 active:scale-95 transition-all"
                 >
                   <Image
                     src="/icon/coin.svg"

@@ -3,7 +3,9 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useAdminTransactions } from "@/features/admin/queries/useAdminTransactionQueries";
+import { useAdminDashboardOverview } from "@/features/admin/queries/useAdminDashboardQueries";
 import { AdminStatCard } from "@/features/admin/components/common/AdminStatCard";
+import { AdminAreaChart, AdminDonutChart, type AreaChartDataPoint, type DonutSegment } from "../charts";
 import type { AdminTransactionItem, TransactionStatus } from "@/features/payments";
 import { TransactionFilterBar } from "./TransactionFilterBar";
 import { TransactionTable } from "./TransactionTable";
@@ -15,6 +17,7 @@ export function AdminTransactionsView() {
   const [status, setStatus] = useState<TransactionStatus | "">("");
   const [selectedTx, setSelectedTx] = useState<AdminTransactionItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showCharts, setShowCharts] = useState(true);
 
   const { data, isLoading, refetch } = useAdminTransactions({
     page,
@@ -24,6 +27,8 @@ export function AdminTransactionsView() {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
+
+  const { data: dashboardData } = useAdminDashboardOverview(14);
 
   const items = data?.items || [];
   const meta = data?.meta || { page: 1, limit: 10, total: 0, totalPages: 1 };
@@ -82,18 +87,75 @@ export function AdminTransactionsView() {
           </p>
         </div>
 
-        {/* Nút Làm mới dữ liệu */}
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer self-start sm:self-auto"
-        >
-          <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <span>Làm mới</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Nút Ẩn/Hiện Biểu Đồ */}
+          <button
+            type="button"
+            onClick={() => setShowCharts(!showCharts)}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>{showCharts ? "Ẩn biểu đồ" : "Xem biểu đồ"}</span>
+          </button>
+
+          {/* Nút Làm mới dữ liệu */}
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+          >
+            <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Làm mới</span>
+          </button>
+        </div>
       </div>
+
+      {/* ─── Khối Biểu Đồ Thống Kê Giao Dịch Thực Tế ──────────────── */}
+      {showCharts && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-in fade-in duration-300">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+            <AdminAreaChart
+              title="Biểu Đồ Doanh Thu Giao Dịch (14 ngày qua)"
+              subtitle="Số liệu thanh toán thực tế đã đối soát thành công qua VNPay"
+              data={(dashboardData?.charts.timeline || []).map((t) => ({
+                label: t.label,
+                value: t.revenue,
+                secondaryValue: t.transactions,
+                tooltipTitle: `Ngày ${t.date}`,
+              }))}
+              height={220}
+              valuePrefix="₫"
+              secondaryLabel="Số giao dịch"
+              colorScheme="emerald"
+              formatValue={(val) => {
+                if (val >= 1_000_000) return (val / 1_000_000).toFixed(1) + "M";
+                if (val >= 1_000) return (val / 1_000).toFixed(0) + "k";
+                return val.toLocaleString("vi-VN");
+              }}
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+            <AdminDonutChart
+              title="Tỷ Lệ Trạng Thái Giao Dịch"
+              subtitle="Cơ cấu các lệnh nạp xu theo trạng thái"
+              data={[
+                { id: "success", name: "Thành công", value: stats.successCount, color: "#10b981" },
+                { id: "pending", name: "Chờ xác nhận", value: stats.pendingCount, color: "#3b82f6" },
+                { id: "failed", name: "Thất bại / Hủy", value: stats.failedCount, color: "#f43f5e" },
+              ]}
+              size={170}
+              thickness={24}
+              centerLabel="Tổng lệnh"
+              centerValue={stats.totalTransactions}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ─── 4 Thẻ Thống Kê Nhanh (KPIs) ──────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
