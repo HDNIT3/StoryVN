@@ -141,7 +141,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                       <button
                         id={`btn-view-user-${u._id}`}
                         onClick={() => onViewUser(u)}
-                        className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                        className="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                         title="Xem chi tiết người dùng"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,7 +154,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                           id={`btn-unban-user-${u._id}`}
                           onClick={() => onUnbanUser(u)}
                           disabled={u.role === "ADMIN"}
-                          className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="w-8 h-8 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
                           title="Mở khóa tài khoản"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -166,7 +166,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                           id={`btn-ban-user-${u._id}`}
                           onClick={() => onBanUser(u)}
                           disabled={u.role === "ADMIN"}
-                          className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="w-8 h-8 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
                           title="Khóa tài khoản người dùng"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

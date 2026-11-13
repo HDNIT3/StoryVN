@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import type { AdminChapterItem, ChapterStatus } from "@/features/chapters";
@@ -323,12 +323,12 @@ export function ChapterTable({
 
                   {/* Cột Thao tác */}
                   <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-center gap-1.5">
                       {/* Nút Xem chi tiết nội dung chương */}
                       <button
                         type="button"
                         onClick={() => onViewDetail(ch)}
-                        className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                        className="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                         title="Xem nội dung chi tiết chương"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -342,7 +342,7 @@ export function ChapterTable({
                           <button
                             type="button"
                             onClick={() => onApprove(ch)}
-                            className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            className="w-8 h-8 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                             title={isPendingRevisionReview ? "Phê duyệt bản chỉnh sửa chương" : "Phê duyệt xuất bản chương"}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -352,7 +352,7 @@ export function ChapterTable({
                           <button
                             type="button"
                             onClick={() => onReject(ch)}
-                            className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            className="w-8 h-8 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                             title={isPendingRevisionReview ? "Từ chối bản chỉnh sửa chương (kèm lý do)" : "Từ chối chương (kèm lý do)"}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -369,7 +369,7 @@ export function ChapterTable({
                             <button
                               type="button"
                               onClick={() => onHide(ch)}
-                              className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                              className="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-700 hover:text-white hover:border-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                               title="Ẩn chương khỏi độc giả"
                             >
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -380,7 +380,7 @@ export function ChapterTable({
                           <button
                             type="button"
                             onClick={() => onUnpublish(ch)}
-                            className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            className="w-8 h-8 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white hover:border-amber-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                             title="Gỡ duyệt chương (về bản nháp)"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -395,7 +395,7 @@ export function ChapterTable({
                         <button
                           type="button"
                           onClick={() => onUnhide(ch)}
-                          className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                          className="w-8 h-8 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white hover:border-purple-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                           title="Bỏ ẩn - Mở lại hiển thị công khai cho độc giả"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -409,7 +409,7 @@ export function ChapterTable({
                         <button
                           type="button"
                           onClick={() => onResetPending(ch)}
-                          className="w-7 h-7 rounded-md border border-slate-700/80 bg-white text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                          className="w-8 h-8 rounded-lg border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-600 hover:text-white hover:border-sky-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                           title="Chuyển về chờ duyệt lại"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -27,7 +27,7 @@ export function StoryFilterBar({
   const { data: categories = [] } = useAllCategories();
 
   return (
-    <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-2xs mb-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+    <div className="bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-2xs mb-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
       {/* Ô tìm kiếm */}
       <div className="relative flex-1">
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -40,7 +40,7 @@ export function StoryFilterBar({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Tìm theo tên truyện, slug, bút danh hoặc email tác giả..."
-          className="w-full pl-10 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-100 transition-all text-slate-800 placeholder-slate-400"
+          className="w-full pl-10 pr-9 py-2.5 text-sm bg-slate-50/80 border border-slate-200 rounded-xl focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all text-slate-800 placeholder-slate-400 font-medium"
         />
         {search && (
           <button
@@ -62,7 +62,7 @@ export function StoryFilterBar({
         <select
           value={selectedGenreId}
           onChange={(e) => onGenreChange(e.target.value)}
-          className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-sky-500 focus:bg-white text-slate-700 cursor-pointer font-medium"
+          className="px-3.5 py-2.5 text-sm bg-slate-50/80 border border-slate-200 rounded-xl focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 text-slate-700 cursor-pointer font-medium transition-all"
         >
           <option value="">Tất cả thể loại</option>
           {categories.map((cat) => (
@@ -76,7 +76,7 @@ export function StoryFilterBar({
         <select
           value={sortBy}
           onChange={(e) => onSortChange(e.target.value)}
-          className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-sky-500 focus:bg-white text-slate-700 cursor-pointer font-medium"
+          className="px-3.5 py-2.5 text-sm bg-slate-50/80 border border-slate-200 rounded-xl focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 text-slate-700 cursor-pointer font-medium transition-all"
         >
           <option value="createdAt">Mới tạo nhất</option>
           <option value="updatedAt">Cập nhật mới nhất</option>
@@ -94,7 +94,7 @@ export function StoryFilterBar({
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="p-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+          className="p-2.5 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 active:scale-95 rounded-xl transition-all cursor-pointer disabled:opacity-50 shadow-2xs"
           title="Tải lại dữ liệu"
         >
           <svg

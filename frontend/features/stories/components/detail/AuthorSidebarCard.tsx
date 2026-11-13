@@ -26,15 +26,15 @@ export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({
   const initial = name[0]?.toUpperCase() || "T";
 
   return (
-    <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs relative overflow-hidden p-6 text-center">
+    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm relative overflow-hidden p-6 text-center">
       {/* Trang trí background nhẹ */}
-      <div className="absolute top-0 right-0 w-44 h-44 bg-amber-50/70 rounded-full blur-2xl pointer-events-none -mr-14 -mt-14" />
-      <div className="absolute bottom-0 left-0 w-36 h-36 bg-emerald-50/70 rounded-full blur-2xl pointer-events-none -ml-12 -mb-12" />
+      <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-100/30 rounded-full blur-2xl pointer-events-none -mr-16 -mt-16" />
+      <div className="absolute bottom-0 left-0 w-40 h-40 bg-teal-100/30 rounded-full blur-2xl pointer-events-none -ml-16 -mb-16" />
 
       <div className="relative flex flex-col items-center">
         {/* Avatar */}
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-300 via-emerald-200 to-amber-200 p-[3px] shadow-sm">
-          <div className="relative w-full h-full rounded-full overflow-hidden bg-emerald-50 border-2 border-white flex items-center justify-center text-emerald-800 text-2xl font-extrabold">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 via-teal-300 to-sky-300 p-[3px] shadow-md">
+          <div className="relative w-full h-full rounded-full overflow-hidden bg-emerald-50 border-2 border-white flex items-center justify-center text-emerald-800 text-2xl font-black">
             {avatar ? (
               <Image
                 src={avatar}
@@ -51,27 +51,27 @@ export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({
         </div>
 
         {/* Thông tin tác giả */}
-        <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-700">
+        <div className="mt-3.5 inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60 shadow-2xs">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
           </svg>
-          Tác giả truyện này
+          Tác giả truyện
         </div>
 
-        <h3 className="mt-1 text-lg font-extrabold text-zinc-900 tracking-tight leading-snug">
+        <h3 className="mt-2 text-lg font-black text-slate-900 tracking-tight leading-snug">
           {name}
         </h3>
         {author?.username && (
-          <p className="text-xs text-zinc-400">@{author.username}</p>
+          <p className="text-xs font-medium text-slate-400">@{author.username}</p>
         )}
 
-        <p className="mt-2 text-xs text-zinc-600 leading-relaxed line-clamp-3">
+        <p className="mt-2 text-xs text-slate-600 leading-relaxed line-clamp-3">
           {author?.bio?.trim() || "Chào mừng bạn đến với trang tác phẩm của tôi trên StoryVN."}
         </p>
 
         {typeof author?.storyCount === "number" && author.storyCount > 0 && (
-          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/70">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs">
+            <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
             {author.storyCount} tác phẩm đã đăng
@@ -79,16 +79,16 @@ export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({
         )}
 
         {/* Nút thao tác tác giả */}
-        <div className="mt-4 w-full flex flex-col gap-2">
+        <div className="mt-4 w-full flex flex-col gap-2.5">
           {author?.username && onToggleFollowAuthor && (
             <button
               type="button"
               onClick={onToggleFollowAuthor}
               disabled={isFollowAuthorPending}
-              className={`inline-flex w-full items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all cursor-pointer ${
+              className={`inline-flex w-full items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all cursor-pointer ${
                 isFollowingAuthor
-                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
-                  : "bg-white text-zinc-700 hover:bg-zinc-50 border-zinc-200"
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 shadow-2xs"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border-slate-200 shadow-2xs active:scale-[0.98]"
               }`}
             >
               {isFollowingAuthor ? (
@@ -100,7 +100,7 @@ export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   <span>Theo dõi tác giả</span>
@@ -112,7 +112,7 @@ export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({
           {author?.username ? (
             <Link
               href={`/tac-gia/${author.username}`}
-              className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-700 hover:bg-emerald-800 text-white transition-colors"
+              className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-md shadow-emerald-700/20 active:scale-[0.98] transition-all"
             >
               <span>Xem trang tác giả</span>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,7 +120,7 @@ export const AuthorSidebarCard: React.FC<AuthorSidebarCardProps> = ({
               </svg>
             </Link>
           ) : (
-            <span className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-zinc-100 text-zinc-500 border border-zinc-200 cursor-default">
+            <span className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-slate-100 text-slate-400 border border-slate-200 cursor-default">
               Trang tác giả sắp ra mắt
             </span>
           )}

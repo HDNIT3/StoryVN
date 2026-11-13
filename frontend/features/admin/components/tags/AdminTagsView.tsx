@@ -17,6 +17,8 @@ import {
   TagDeleteModal,
   TagPagination,
   AdminStatCard,
+  AdminDonutChart,
+  AdminBarChart,
 } from "@/features/admin";
 
 export const AdminTagsView: React.FC = () => {
@@ -25,6 +27,7 @@ export const AdminTagsView: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">(
     "ALL"
   );
+  const [showCharts, setShowCharts] = useState(false);
 
   // Modal State
   const [formModalOpen, setFormModalOpen] = useState(false);
@@ -149,6 +152,20 @@ export const AdminTagsView: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setShowCharts(!showCharts)}
+            className="border-indigo-200 text-indigo-700 bg-indigo-50/60 hover:bg-indigo-100"
+            leftIcon={
+              <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            }
+          >
+            {showCharts ? "Ẩn biểu đồ" : "Biểu đồ phân bổ"}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleSeed}
             disabled={seedMutation.isPending}
             className="border-slate-200 text-slate-700 hover:bg-slate-50"
@@ -248,6 +265,39 @@ export const AdminTagsView: React.FC = () => {
           }
         />
       </div>
+
+      {/* Biểu đồ phân bổ trạng thái thẻ tag */}
+      {showCharts && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+            <AdminDonutChart
+              title="Tỷ Lệ Trạng Thái Thẻ Tag"
+              subtitle="Cơ cấu thẻ tag đang hoạt động so với tạm khóa"
+              data={[
+                { id: "active", name: "Đang hoạt động", value: activeCount, color: "#10b981" },
+                { id: "inactive", name: "Tạm khóa", value: inactiveCount, color: "#f59e0b" },
+              ]}
+              size={170}
+              thickness={24}
+              centerLabel="Tổng thẻ"
+              centerValue={totalTags}
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+            <AdminBarChart
+              title="Số Lượng Thẻ Tag"
+              subtitle="Thống kê số lượng thẻ tag theo trạng thái"
+              data={[
+                { label: "Hoạt động", value: activeCount, color: "#10b981" },
+                { label: "Tạm khóa", value: inactiveCount, color: "#f59e0b" },
+              ]}
+              height={200}
+              primaryLegend="Số lượng tag"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Thanh tìm kiếm & Bộ lọc */}
       <TagFilterBar

@@ -17,6 +17,8 @@ import {
   CategoryDeleteModal,
   CategoryPagination,
   AdminStatCard,
+  useAdminDashboardOverview,
+  AdminDonutChart,
 } from "@/features/admin";
 
 export const AdminCategoriesView: React.FC = () => {
@@ -25,6 +27,7 @@ export const AdminCategoriesView: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">(
     "ALL"
   );
+  const [showCharts, setShowCharts] = useState(false);
 
   // Modal State
   const [formModalOpen, setFormModalOpen] = useState(false);
@@ -51,6 +54,8 @@ export const AdminCategoriesView: React.FC = () => {
     page: 1,
     limit: 100,
   });
+
+  const { data: dashboardData } = useAdminDashboardOverview(14);
 
   const createMutation = useCreateCategory();
   const updateMutation = useUpdateCategory();
@@ -147,6 +152,20 @@ export const AdminCategoriesView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCharts(!showCharts)}
+            className="border-indigo-200 text-indigo-700 bg-indigo-50/60 hover:bg-indigo-100"
+            leftIcon={
+              <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            }
+          >
+            {showCharts ? "Ẩn biểu đồ" : "Biểu đồ phân bổ"}
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -249,6 +268,26 @@ export const AdminCategoriesView: React.FC = () => {
           }
         />
       </div>
+
+      {/* Biểu đồ phân bổ truyện theo thể loại */}
+      {showCharts && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs animate-in fade-in duration-300">
+          <AdminDonutChart
+            title="Thị Phần & Tỷ Lệ Tác Phẩm Theo Thể Loại"
+            subtitle="Tỷ lệ phân bố số lượng truyện theo từng thể loại chính trong hệ thống"
+            data={(dashboardData?.charts.categories || []).map((c) => ({
+              id: c.id,
+              name: c.name,
+              value: c.count,
+              percentage: c.percentage,
+            }))}
+            size={180}
+            thickness={26}
+            centerLabel="Tác phẩm"
+            centerValue={dashboardData?.kpi.stories.total ?? 0}
+          />
+        </div>
+      )}
 
       {/* Thanh tìm kiếm & Bộ lọc */}
       <CategoryFilterBar

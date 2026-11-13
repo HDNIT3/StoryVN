@@ -22,6 +22,8 @@ import {
   ChapterActionModal,
   type ChapterActionType,
   StoryPagination,
+  AdminBarChart,
+  AdminDonutChart,
 } from "@/features/admin";
 
 export const AdminChaptersView: React.FC = () => {
@@ -37,6 +39,7 @@ export const AdminChaptersView: React.FC = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
+  const [showCharts, setShowCharts] = useState(false);
 
   // Modal Chi tiết chương
   const [detailChapter, setDetailChapter] = useState<AdminChapterItem | null>(null);
@@ -219,6 +222,17 @@ export const AdminChaptersView: React.FC = () => {
             Duyệt chương mới do tác giả đăng tải, kiểm tra nội dung và quản lý trạng thái xuất bản
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowCharts(!showCharts)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 transition-all cursor-pointer shadow-2xs self-start sm:self-auto"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <span>{showCharts ? "Ẩn biểu đồ" : "Biểu đồ phân tích"}</span>
+        </button>
       </div>
 
       {/* Thống kê theo Tab trạng thái */}
@@ -227,6 +241,43 @@ export const AdminChaptersView: React.FC = () => {
         onFilterChange={handleTabChange}
         counts={counts}
       />
+
+      {/* Khối biểu đồ phân tích chương */}
+      {showCharts && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+            <AdminBarChart
+              title="Phân Bổ Trạng Thái Chương"
+              subtitle="Số lượng chương theo tiến trình xuất bản & kiểm duyệt"
+              data={[
+                { label: "Xuất bản", value: counts?.published ?? 0, color: "#10b981" },
+                { label: "Chờ duyệt", value: counts?.pending ?? 0, color: "#f59e0b" },
+                { label: "Từ chối", value: counts?.rejected ?? 0, color: "#f43f5e" },
+                { label: "Bản nháp", value: counts?.draft ?? 0, color: "#94a3b8" },
+              ]}
+              height={200}
+              primaryLegend="Số lượng chương"
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+            <AdminDonutChart
+              title="Cơ Cấu Kiểm Duyệt Chương"
+              subtitle="Tỷ lệ phần trăm các chương trên hệ thống"
+              data={[
+                { id: "published", name: "Đã xuất bản", value: counts?.published ?? 0, color: "#10b981" },
+                { id: "pending", name: "Chờ duyệt", value: counts?.pending ?? 0, color: "#f59e0b" },
+                { id: "rejected", name: "Bị từ chối", value: counts?.rejected ?? 0, color: "#f43f5e" },
+                { id: "draft", name: "Bản nháp", value: counts?.draft ?? 0, color: "#94a3b8" },
+              ]}
+              size={170}
+              thickness={24}
+              centerLabel="Tổng chương"
+              centerValue={counts?.all || 0}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Thanh lọc, tìm kiếm, sắp xếp */}
       <ChapterFilterBar
