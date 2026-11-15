@@ -1446,7 +1446,7 @@ export class AuthorsService {
     // 1. Lấy danh sách truyện của tác giả
     const authorStories = await this.storyModel
       .find({ authorId: authorObjId })
-      .select('_id title slug coverImage stats')
+      .select('_id title slug coverUrl stats')
       .lean()
       .exec();
 
@@ -1542,7 +1542,7 @@ export class AuthorsService {
           storyId: sId,
           title: st.title,
           slug: st.slug,
-          coverImage: st.coverImage,
+          coverImage: st.coverUrl || null,
           chapterCount: chapters.filter((c) => c.storyId.toString() === sId).length,
           unlockCount: 0,
           totalCoins: 0,
@@ -1647,7 +1647,7 @@ export class AuthorsService {
               _id: st._id.toString(),
               title: st.title,
               slug: st.slug,
-              coverImage: st.coverImage,
+              coverImage: st.coverUrl || null,
             }
           : null,
       };

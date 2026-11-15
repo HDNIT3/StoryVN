@@ -36,21 +36,21 @@ export function AuthorRevenueHistoryCard({ item }: AuthorRevenueHistoryCardProps
     : "#";
 
   return (
-    <div className="group bg-white rounded-xl border border-slate-200/80 p-4 hover:border-slate-300 hover:shadow-xs transition flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+    <div className="bg-white rounded-md border border-zinc-200 p-3.5 hover:border-zinc-300 hover:bg-zinc-50/50 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       {/* Reader & Transaction detail */}
-      <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
+      <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
         {/* Reader Avatar */}
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 ring-2 ring-slate-200/70 shrink-0 relative">
+        <div className="w-9 h-9 rounded-full overflow-hidden bg-zinc-100 border border-zinc-200 shrink-0 relative">
           {item.reader?.avatarUrl ? (
             <Image
               src={item.reader.avatarUrl}
               alt={readerName}
               fill
               className="object-cover"
-              sizes="40px"
+              sizes="36px"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-indigo-500 to-sky-600 text-white font-bold text-sm">
+            <div className="w-full h-full flex items-center justify-center bg-sky-50 text-sky-700 font-bold text-xs">
               {readerInitial}
             </div>
           )}
@@ -59,23 +59,23 @@ export function AuthorRevenueHistoryCard({ item }: AuthorRevenueHistoryCardProps
         {/* Reader name, chapter & story */}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="font-bold text-slate-800 hover:text-slate-900 truncate">
+            <span className="font-semibold text-zinc-900 truncate">
               {readerName}
             </span>
             {item.reader?.username && (
-              <span className="text-slate-400 font-normal">
+              <span className="text-zinc-400 font-normal">
                 @{item.reader.username}
               </span>
             )}
-            <span className="text-slate-300">•</span>
-            <span className="text-slate-500">đã mở khóa</span>
+            <span className="text-zinc-300">•</span>
+            <span className="text-zinc-500">đã mở khóa</span>
           </div>
 
           <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
             <Link
               href={chapterLink}
               target="_blank"
-              className="text-sm font-bold text-sky-700 hover:text-sky-800 hover:underline line-clamp-1 inline-flex items-center gap-1"
+              className="text-xs sm:text-sm font-semibold text-sky-600 hover:text-sky-700 hover:underline line-clamp-1 inline-flex items-center gap-1"
             >
               <span>
                 Chương {item.chapter?.chapterNumber || "?"}
@@ -88,12 +88,12 @@ export function AuthorRevenueHistoryCard({ item }: AuthorRevenueHistoryCardProps
           </div>
 
           {item.story && (
-            <div className="mt-0.5 text-xs text-slate-500 flex items-center gap-1.5">
+            <div className="mt-0.5 text-xs text-zinc-500 flex items-center gap-1.5">
               <span>Thuộc truyện:</span>
               <Link
                 href={`/truyen/${item.story.slug || item.story._id}`}
                 target="_blank"
-                className="font-medium text-slate-700 hover:text-amber-700 truncate hover:underline"
+                className="font-medium text-zinc-700 hover:text-sky-700 truncate hover:underline"
               >
                 {item.story.title}
               </Link>
@@ -103,19 +103,16 @@ export function AuthorRevenueHistoryCard({ item }: AuthorRevenueHistoryCardProps
       </div>
 
       {/* Amount and Timestamp */}
-      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0 shrink-0">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-700">
-          <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
-          </svg>
-          <span className="text-sm font-extrabold tracking-tight">
+      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-zinc-100 pt-2 sm:pt-0 shrink-0">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700">
+          <span className="text-xs sm:text-sm font-bold tracking-tight">
             +{item.coinPrice.toLocaleString("vi-VN")}
           </span>
-          <span className="text-[11px] font-bold uppercase">Xu</span>
-        </div>
+          <span className="text-[10px] font-semibold uppercase">xu</span>
+        </span>
 
-        <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-1 sm:mt-1.5">
-          <svg className="w-3.5 h-3.5 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="flex items-center gap-1 text-[11px] text-zinc-400 mt-1 sm:mt-1.5">
+          <svg className="w-3.5 h-3.5 shrink-0 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span>{formatDate(item.unlockedAt)}</span>
@@ -124,4 +121,3 @@ export function AuthorRevenueHistoryCard({ item }: AuthorRevenueHistoryCardProps
     </div>
   );
 }
-

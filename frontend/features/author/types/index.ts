@@ -406,7 +406,7 @@ export interface AuthorRevenueHistoryItem {
     _id: string;
     title: string;
     slug: string;
-    coverImage?: string;
+  coverImage?: string | null;
   } | null;
 }
 
