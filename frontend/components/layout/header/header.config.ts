@@ -92,6 +92,7 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: "home", label: "Trang Chủ", href: "/" },
   { id: "truyen", label: "Truyện", href: "/truyen" },
   { id: "tac-gia", label: "Tác Giả", href: "/tac-gia" },
+  { id: "dien-dan", label: "Diễn Đàn", href: "/dien-dan" },
   { id: "nap-xu", label: "Nạp Xu", href: "/nap-xu" },
 ];
 
@@ -147,6 +148,13 @@ export interface AccountMenuItem {
 }
 
 export const ACCOUNT_MENU_ITEMS: AccountMenuItem[] = [
+  {
+    id: "bai-viet",
+    label: "Bài viết của tôi",
+    href: "/tai-khoan/bai-viet",
+    iconPath: "M9 12h6m-6 4h6M5 3h14v18H5z",
+    visibleFor: () => true,
+  },
   {
     id: "ho-so",
     label: "Hồ sơ cá nhân",

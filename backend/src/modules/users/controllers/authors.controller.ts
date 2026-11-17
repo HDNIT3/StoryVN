@@ -7,13 +7,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import { Public } from '../../../common/decorators/public.decorator.js';
 import { Roles } from '../../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../../common/guards/roles.guard.js';
 import { QueryAuthorStoriesDto } from '../dto/query-author-stories.dto.js';
+import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { QueryAuthorsDto } from '../dto/query-authors.dto.js';
 import type { UserDocument } from '../schemas/user.schema.js';
 import { UserRole } from '../schemas/user.schema.js';
@@ -34,8 +35,11 @@ export class AuthorsController {
   @Roles(UserRole.AUTHOR, UserRole.ADMIN, UserRole.MANAGER)
   @Get('me/overview')
   @HttpCode(HttpStatus.OK)
-  async getMyAuthorOverview(@CurrentUser() user: UserDocument) {
-    const data = await this.authorsService.getAuthorOverview(user._id.toString());
+  @ApiQuery({ name: 'startDate', required: false, example: '2026-01-01' })
+  @ApiQuery({ name: 'endDate', required: false, example: '2026-01-31' })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  async getMyAuthorOverview(@CurrentUser() user: UserDocument, @Query() query: DateRangeQueryDto) {
+    const data = await this.authorsService.getAuthorOverview(user._id.toString(), query);
     return {
       success: true,
       message: 'Lấy thống kê tổng quan tác giả thành công',

@@ -1,4 +1,6 @@
 import api from "@/lib/api";
+import type { DateRange } from "@/components/statistics";
+import { dateRangeParams } from "@/components/statistics/date-range";
 import type {
   CreateStoryPayload,
   FilterStoriesParams,
@@ -6,6 +8,7 @@ import type {
   PaginatedRecentStories,
   PaginatedStories,
   QueryMyStoriesParams,
+  MyStoryCounts,
   QueryRecentStoriesParams,
   SameGenreStoryItem,
   StoryAction,
@@ -21,6 +24,9 @@ import type {
 } from "../types";
 
 export const storyService = {
+  getMyCounts(range?: DateRange) {
+    return api.get<StoryApiResponse<MyStoryCounts>>(`/stories/my/counts?${dateRangeParams(range)}`);
+  },
   /**
    * Lấy danh sách truyện có bộ lọc (Công khai): thể loại, trạng thái, sắp xếp, khung thời gian view, tìm kiếm, phân trang
    */
@@ -103,6 +109,9 @@ export const storyService = {
     params?: QueryMyStoriesParams
   ): Promise<StoryApiResponse<PaginatedStories>> {
     const searchParams = new URLSearchParams();
+    if (params?.startDate) searchParams.set("startDate", params.startDate);
+    if (params?.endDate) searchParams.set("endDate", params.endDate);
+    if (params?.visibility) searchParams.set("visibility", params.visibility);
     if (params?.status) searchParams.append("status", params.status);
     if (params?.search) searchParams.append("search", params.search);
     if (params?.page) searchParams.append("page", params.page.toString());
@@ -120,10 +129,10 @@ export const storyService = {
    */
   async getMyStoryDailyViews(
     slugOrId: string,
-    days = 30
+    days: number | DateRange = {}
   ): Promise<StoryApiResponse<StoryDailyViewsData>> {
     return api.get<StoryApiResponse<StoryDailyViewsData>>(
-      `/stories/my/${slugOrId}/daily-views?days=${days}`
+      `/stories/my/${slugOrId}/daily-views?${typeof days === "number" ? `days=${days}` : dateRangeParams(days)}`
     );
   },
 

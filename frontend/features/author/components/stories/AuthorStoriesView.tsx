@@ -1,10 +1,15 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useRef } from "react";
+import { DateRangeToolbar, useDateRange, exportStatisticsExcel } from "@/components/statistics";
+import { toast } from "@/lib/toast";
+import { StoryPagination } from "@/features/admin/components/stories/StoryPagination";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useMyStories,
+  useMyStoryCounts,
+  storyService,
   useUpdateStory,
   MyStorySortOption,
   StoryItem,
@@ -20,6 +25,10 @@ import {
 
 export function AuthorStoriesView() {
   const router = useRouter();
+  const dateRange = useDateRange();
+  const [exporting, setExporting] = useState(false);
+  const exportLock = useRef(false);
+  const [paginationState, setPaginationState] = useState({ key: "", page: 1 });
 
   // Filters & Search
   const [search, setSearch] = useState("");
@@ -27,49 +36,52 @@ export function AuthorStoriesView() {
   const [visibilityFilter, setVisibilityFilter] = useState<"ALL" | StoryVisibility>("ALL");
   const [sortBy, setSortBy] = useState<MyStorySortOption>("updatedAt");
   const [analyticsStory, setAnalyticsStory] = useState<StoryItem | null>(null);
+  const filterKey = JSON.stringify([dateRange.range, search, statusFilter, visibilityFilter, sortBy]);
+  if (paginationState.key !== filterKey) {
+    setPaginationState({ key: filterKey, page: 1 });
+  }
+  const page = paginationState.key === filterKey ? paginationState.page : 1;
+  const params = { ...dateRange.range, page, limit: 10, status: statusFilter === "ALL" ? undefined : statusFilter, visibility: visibilityFilter === "ALL" ? undefined : visibilityFilter, search: search.trim() || undefined, sortBy };
 
   // Fetch stories using TanStack Query Hook
   const {
     data: storiesData,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch,
-  } = useMyStories({
-    status: statusFilter === "ALL" ? undefined : statusFilter,
-    search: search.trim() || undefined,
-    sortBy,
-  });
+  } = useMyStories(params);
 
   // Fetch all stories for status counts overview
-  const { data: allStoriesData } = useMyStories({ limit: 100 });
+  const countsQuery = useMyStoryCounts(dateRange.range);
 
   const stories = storiesData?.items || [];
-  const allStories = allStoriesData?.items || [];
+  const counts = countsQuery.data;
 
   // Filter visibility client-side if needed
-  const filteredStories = useMemo(() => {
-    if (visibilityFilter === "ALL") return stories;
-    return stories.filter((s) => s.visibility === visibilityFilter);
-  }, [stories, visibilityFilter]);
+  const filteredStories = stories;
 
   // Compute status counts from all stories (khớp filter phía API:
   // truyện đã xuất bản vẫn có thể có bản chỉnh sửa chờ duyệt / bị từ chối)
-  const statusCounts = useMemo(() => {
-    const isPending = (s: StoryItem) =>
-      s.status === "PENDING_REVIEW" ||
-      s.pendingRevision?.status === "PENDING_REVIEW";
-    const isRejected = (s: StoryItem) =>
-      s.status === "REJECTED" ||
-      s.pendingRevision?.status === "REJECTED";
-    return {
-      ALL: allStories.length,
-      PUBLISHED: allStories.filter((s) => s.status === "PUBLISHED").length,
-      PENDING_REVIEW: allStories.filter(isPending).length,
-      DRAFT: allStories.filter((s) => s.status === "DRAFT").length,
-      REJECTED: allStories.filter(isRejected).length,
-    };
-  }, [allStories]);
+  const statusCounts = { ALL: counts?.all ?? 0, PUBLISHED: counts?.published ?? 0, PENDING_REVIEW: counts?.pending ?? 0, DRAFT: counts?.draft ?? 0, REJECTED: counts?.rejected ?? 0 };
+  async function exportAll() {
+    if (exportLock.current || isFetching || countsQuery.isFetching || !counts || !dateRange.isValid) return;
+    exportLock.current = true; setExporting(true);
+    try {
+      const items: StoryItem[] = [];
+      for (let next = 1; ; next++) {
+        const response = await storyService.getMyStories({ ...params, page: next, limit: 100 });
+        items.push(...response.data.items);
+        if (next >= response.data.pagination.totalPages) break;
+      }
+      await exportStatisticsExcel({ filename: "author-stories", range: dateRange.range, notes: ["Story cohort: createdAt in selected Vietnam dates; statuses and chapter/view totals are current snapshots. Selected-period views apply to this cohort.", `Filters: ${JSON.stringify(params)}`], sheets: [
+        { name: "Summary", columns: ["Metric", "Value"], rows: [["Matching records", items.length], ...Object.entries(counts).map(([key, value]) => [key, value])] },
+        { name: "Stories", columns: ["ID", "Title", "Status", "Visibility", "Created at", "Current views", "Current chapters"], rows: items.map(s => [s._id, s.title, s.status, s.visibility, s.createdAt, s.stats?.viewCount ?? 0, s.stats?.chapterCount ?? 0]) },
+      ] });
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Không thể xuất Excel"); }
+    finally { exportLock.current = false; setExporting(false); }
+  }
 
   // Mutation for submitting review from list
   const updateStoryMutation = useUpdateStory();
@@ -143,7 +155,10 @@ export function AuthorStoriesView() {
       </div>
 
       {/* Overview Statistics Cards */}
-      <StoryStatsCards stories={allStories} />
+      <DateRangeToolbar dateRange={dateRange} onExport={() => void exportAll()} exporting={exporting} exportDisabled={isFetching || countsQuery.isFetching || isError || countsQuery.isError || !counts} />
+      <fieldset disabled={exporting} className="min-w-0">
+      <p className="my-3 text-xs text-zinc-500">Lọc theo ngày tạo truyện. Trạng thái và số chương là số liệu hiện tại của nhóm truyện trong kỳ.</p>
+      {countsQuery.isPending ? <p role="status">Đang tải thống kê...</p> : countsQuery.isError ? <p role="alert">Không thể tải thống kê.</p> : <StoryStatsCards counts={counts} />}
 
       {/* Filter and Search Bar */}
       <StoryFilterBar
@@ -160,7 +175,7 @@ export function AuthorStoriesView() {
       />
 
       {/* Story List / States */}
-      {isLoading ? (
+      {isLoading || isFetching ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div
@@ -180,7 +195,7 @@ export function AuthorStoriesView() {
       ) : isError ? (
         <div className="bg-white rounded-xl border border-red-200 p-8 text-center">
           <p className="text-sm font-semibold text-red-600">
-            {(error as any)?.message || "Không thể tải danh sách tác phẩm"}
+             {error?.message || "Không thể tải danh sách tác phẩm"}
           </p>
           <button
             type="button"
@@ -215,12 +230,12 @@ export function AuthorStoriesView() {
             Không tìm thấy tác phẩm phù hợp
           </h3>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1 max-w-sm">
-            {allStories.length === 0
+            {statusCounts.ALL === 0
               ? "Bạn chưa có tác phẩm nào. Hãy bắt đầu sáng tác tác phẩm đầu tiên của bạn!"
               : "Không có truyện nào thỏa mãn từ khóa tìm kiếm hoặc bộ lọc hiện tại của bạn."}
           </p>
           <div className="mt-4 flex items-center gap-2.5">
-            {allStories.length > 0 && (
+            {statusCounts.ALL > 0 && (
               <button
                 type="button"
                 onClick={handleResetFilters}
@@ -240,9 +255,12 @@ export function AuthorStoriesView() {
         </div>
       )}
 
+      <StoryPagination page={page} totalPages={storiesData?.pagination.totalPages ?? 1} onPageChange={(next) => setPaginationState({ key: filterKey, page: next })} />
+      </fieldset>
       {/* Modal thống kê lượt đọc theo ngày của từng tác phẩm */}
       <StoryViewsAnalyticsModal
         story={analyticsStory}
+        range={dateRange.range}
         isOpen={Boolean(analyticsStory)}
         onClose={() => setAnalyticsStory(null)}
       />

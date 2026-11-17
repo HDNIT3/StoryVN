@@ -1,25 +1,19 @@
 "use client";
 
 import React from "react";
-import { StoryItem } from "@/features/stories";
+import type { MyStoryCounts } from "@/features/stories";
 
 interface StoryStatsCardsProps {
-  stories: StoryItem[];
+  counts?: MyStoryCounts;
 }
 
-export function StoryStatsCards({ stories }: StoryStatsCardsProps) {
-  const totalStories = stories.length;
-  const publishedCount = stories.filter((s) => s.status === "PUBLISHED").length;
-  const isPendingReview = (s: StoryItem) =>
-    s.status === "PENDING_REVIEW" || s.pendingRevision?.status === "PENDING_REVIEW";
-  const pendingCount = stories.filter(isPendingReview).length;
-  const draftCount = stories.filter((s) => s.status === "DRAFT").length;
-
-  const totalViews = stories.reduce((sum, s) => sum + (s.stats?.viewCount || 0), 0);
-  const viewsToday = stories.reduce((sum, s) => sum + (s.stats?.viewsToday || 0), 0);
-  const viewsWeek = stories.reduce((sum, s) => sum + (s.stats?.viewsWeek || 0), 0);
-  const viewsMonth = stories.reduce((sum, s) => sum + (s.stats?.viewsMonth || 0), 0);
-  const totalChapters = stories.reduce((sum, s) => sum + (s.stats?.chapterCount || 0), 0);
+export function StoryStatsCards({ counts }: StoryStatsCardsProps) {
+  const totalStories = counts?.all ?? 0;
+  const publishedCount = counts?.published ?? 0;
+  const pendingCount = counts?.pending ?? 0;
+  const draftCount = counts?.draft ?? 0;
+  const totalViews = counts?.selectedPeriodViews ?? 0;
+  const totalChapters = counts?.totalChapters ?? 0;
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
@@ -32,7 +26,7 @@ export function StoryStatsCards({ stories }: StoryStatsCardsProps) {
       {/* Card 1 */}
       <div className="bg-white rounded-lg p-4 border border-zinc-200 shadow-2xs">
         <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-          Tổng tác phẩm
+          Tác phẩm tạo trong kỳ
         </span>
         <div className="mt-2 flex items-baseline gap-1.5">
           <span className="text-2xl font-bold text-zinc-900 tracking-tight">
@@ -41,7 +35,7 @@ export function StoryStatsCards({ stories }: StoryStatsCardsProps) {
           <span className="text-xs text-zinc-500">truyện</span>
         </div>
         <div className="mt-1 text-xs text-zinc-500">
-          Tổng {totalChapters} chương đã tạo
+          Hiện có {totalChapters} chương của nhóm truyện này
         </div>
       </div>
 
@@ -86,7 +80,7 @@ export function StoryStatsCards({ stories }: StoryStatsCardsProps) {
       {/* Card 4 */}
       <div className="bg-white rounded-lg p-4 border border-zinc-200 shadow-2xs">
         <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-          Tổng lượt đọc
+          Lượt đọc trong kỳ
         </span>
         <div className="mt-2 flex items-baseline gap-1.5">
           <span className="text-2xl font-bold text-sky-600 tracking-tight">
@@ -95,13 +89,7 @@ export function StoryStatsCards({ stories }: StoryStatsCardsProps) {
           <span className="text-xs text-zinc-500">lượt</span>
         </div>
         <div className="mt-1 text-[11px] text-zinc-500 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          <span className="text-emerald-600 font-semibold">
-            Hôm nay: +{formatNumber(viewsToday)}
-          </span>
-          <span>•</span>
-          <span>7 ngày: +{formatNumber(viewsWeek)}</span>
-          <span>•</span>
-          <span>30 ngày: +{formatNumber(viewsMonth)}</span>
+          <span>Lũy kế hiện tại: {formatNumber(counts?.totalViews ?? 0)}</span>
         </div>
       </div>
     </div>

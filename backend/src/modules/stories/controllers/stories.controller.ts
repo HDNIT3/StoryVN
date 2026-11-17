@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import { Public } from '../../../common/decorators/public.decorator.js';
 import { Roles } from '../../../common/decorators/roles.decorator.js';
@@ -166,8 +167,8 @@ export class StoriesController {
   @Roles(UserRole.AUTHOR, UserRole.ADMIN)
   @Get('my/counts')
   @HttpCode(HttpStatus.OK)
-  async getMyCounts(@CurrentUser() user: any) {
-    const data = await this.storiesService.getMyCounts(user._id);
+  async getMyCounts(@CurrentUser() user: any, @Query() query: DateRangeQueryDto) {
+    const data = await this.storiesService.getMyCounts(user._id, query);
 
     return {
       success: true,
@@ -186,13 +187,13 @@ export class StoriesController {
   async getMyStoryDailyViews(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Query('days') daysQuery?: string,
+    @Query() query: DateRangeQueryDto,
   ) {
-    const days = daysQuery ? parseInt(daysQuery, 10) : 30;
     const data = await this.storiesService.getMyStoryDailyViews(
       user._id,
       id,
-      days,
+      query.days,
+      query,
     );
 
     return {

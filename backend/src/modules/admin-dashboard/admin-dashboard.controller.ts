@@ -11,6 +11,7 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../users/schemas/user.schema.js';
+import { DateRangeQueryDto } from '../../common/dto/date-range.dto.js';
 import { AdminDashboardService } from './admin-dashboard.service.js';
 
 @ApiTags('Admin Dashboard')
@@ -27,13 +28,15 @@ export class AdminDashboardController {
   @ApiQuery({
     name: 'days',
     required: false,
-    description: 'Số ngày thống kê cho biểu đồ (mặc định 14 ngày, min 7, max 60)',
+    description: 'Explicit trailing days (1-366). Omit days and date endpoints for all time.',
     type: Number,
   })
   @Get('overview')
   @HttpCode(HttpStatus.OK)
-  async getOverview(@Query('days') days?: number) {
-    const data = await this.adminDashboardService.getOverview(days);
+  @ApiQuery({ name: 'startDate', required: false, example: '2026-01-01' })
+  @ApiQuery({ name: 'endDate', required: false, example: '2026-01-31' })
+  async getOverview(@Query() query: DateRangeQueryDto) {
+    const data = await this.adminDashboardService.getOverview(query);
     return {
       success: true,
       message: 'Lấy dữ liệu thống kê quản trị thành công',

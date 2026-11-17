@@ -1,9 +1,12 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
+import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { IsEnum, IsIn, IsOptional, IsString } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { StoryStatus, StoryVisibility } from '../schemas/story.schema.js';
 
-export class AdminQueryStoriesDto extends PaginationQueryDto {
+export class AdminQueryStoriesDto extends IntersectionType(PaginationQueryDto, DateRangeQueryDto) {
+  get skip(): number { return (this.page - 1) * this.limit; }
+
   @ApiPropertyOptional({
     enum: StoryStatus,
     description: 'Lọc theo trạng thái truyện (DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED). Bỏ trống để lấy tất cả',

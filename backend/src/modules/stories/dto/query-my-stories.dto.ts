@@ -1,9 +1,12 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
+import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { IsEnum, IsIn, IsOptional, IsString } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
-import { StoryStatus } from '../schemas/story.schema.js';
+import { StoryStatus, StoryVisibility } from '../schemas/story.schema.js';
 
-export class QueryMyStoriesDto extends PaginationQueryDto {
+export class QueryMyStoriesDto extends IntersectionType(PaginationQueryDto, DateRangeQueryDto) {
+  get skip(): number { return (this.page - 1) * this.limit; }
+
   @ApiPropertyOptional({
     enum: StoryStatus,
     description: 'Lọc theo trạng thái truyện (DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED)',
@@ -11,6 +14,11 @@ export class QueryMyStoriesDto extends PaginationQueryDto {
   @IsOptional()
   @IsEnum(StoryStatus, { message: 'Trạng thái truyện không hợp lệ' })
   status?: StoryStatus;
+
+  @ApiPropertyOptional({ enum: StoryVisibility })
+  @IsOptional()
+  @IsEnum(StoryVisibility)
+  visibility?: StoryVisibility;
 
   @ApiPropertyOptional({
     example: 'Vũ Động Càn Khôn',
