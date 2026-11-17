@@ -9,6 +9,7 @@ import {
 import { storyService } from "../services/story.service";
 import { storyKeys } from "./story.keys";
 import { toast } from "@/lib/toast";
+import type { DateRange } from "@/components/statistics";
 import type {
   CreateStoryPayload,
   FilterStoriesParams,
@@ -39,9 +40,9 @@ export function useTopViews(limit = 10, timeFrame: "all" | "today" | "week" | "m
   });
 }
 
-export function useMyStoryDailyViews(slugOrId: string, days = 30, enabled = true) {
+export function useMyStoryDailyViews(slugOrId: string, days: number | DateRange = {}, enabled = true) {
   return useQuery({
-    queryKey: storyKeys.myStoryDailyViews(slugOrId, days),
+    queryKey: [...storyKeys.all, "daily-views", slugOrId, days],
     queryFn: async () => {
       const res = await storyService.getMyStoryDailyViews(slugOrId, days);
       return res.data;
@@ -101,6 +102,13 @@ export function useMyStories(params?: QueryMyStoriesParams) {
       return res.data;
     },
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useMyStoryCounts(range: DateRange) {
+  return useQuery({
+    queryKey: [...storyKeys.all, "my-counts", range],
+    queryFn: async () => (await storyService.getMyCounts(range)).data,
   });
 }
 

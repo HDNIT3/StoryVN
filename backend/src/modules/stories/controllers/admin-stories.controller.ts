@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../../common/guards/auth.guard.js';
@@ -50,8 +51,8 @@ export class AdminStoriesController {
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Get('counts')
   @HttpCode(HttpStatus.OK)
-  async getCounts() {
-    const data = await this.adminStoriesService.getCounts();
+  async getCounts(@Query() query: DateRangeQueryDto) {
+    const data = await this.adminStoriesService.getCounts(query);
     return {
       success: true,
       message: 'Lấy số lượng thống kê tác phẩm thành công',

@@ -21,8 +21,12 @@ export const authorService = {
   /**
    * Lấy thống kê tổng quan studio của tác giả đang đăng nhập
    */
-  getAuthorOverview() {
-    return api.get<ApiResponse<AuthorOverviewData>>("/authors/me/overview");
+  getAuthorOverview(range?: { startDate?: string; endDate?: string }) {
+    const params = new URLSearchParams();
+    if (range?.startDate !== undefined) params.set("startDate", range.startDate);
+    if (range?.endDate !== undefined) params.set("endDate", range.endDate);
+    const query = params.size ? `?${params}` : "";
+    return api.get<ApiResponse<AuthorOverviewData>>(`/authors/me/overview${query}`);
   },
 
   /**

@@ -22,11 +22,11 @@ export function useAdminStories(params: QueryAdminStoriesParams) {
   });
 }
 
-export function useAdminStoryCounts() {
+export function useAdminStoryCounts(params?: QueryAdminStoriesParams) {
   return useQuery({
-    queryKey: adminKeys.storyCounts,
+    queryKey: [...adminKeys.storyCounts, params],
     queryFn: async () => {
-      const res = await adminStoryService.getCounts();
+      const res = await adminStoryService.getCounts(params);
       return res.data;
     },
     refetchInterval: 1000 * 30,

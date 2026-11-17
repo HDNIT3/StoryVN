@@ -49,7 +49,7 @@ export function AdminBarChart({
 
   // Tính max value
   const allValues = data.flatMap((d) => [d.value, d.secondaryValue || 0]);
-  const rawMax = Math.max(...allValues, 0);
+  const rawMax = allValues.reduce((max, value) => Math.max(max, value), 0);
   const maxVal = rawMax === 0 ? 10 : Math.ceil(rawMax * 1.15);
 
   const svgWidth = 800;

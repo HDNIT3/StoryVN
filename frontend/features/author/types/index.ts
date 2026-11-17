@@ -318,6 +318,7 @@ export interface AuthorRecentNotificationItem {
 
 /** Dữ liệu tổng quan Studio của tác giả */
 export interface AuthorOverviewData {
+  range: { mode?: "all" | "range"; startDate: string | null; endDate: string | null; dayCount: number | null; timeZone: string };
   stats: {
     totalStories: number;
     publishedStories: number;
@@ -352,11 +353,13 @@ export interface AuthorOverviewData {
   };
   charts: {
     reads: {
+      selectedRange: AuthorChartSeries;
       "7days": AuthorChartSeries;
       "30days": AuthorChartSeries;
       "90days": AuthorChartSeries;
     };
     revenue: {
+      selectedRange: AuthorChartSeries;
       "7days": AuthorChartSeries;
       "30days": AuthorChartSeries;
       "90days": AuthorChartSeries;

@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
+import { dateRangeKeys, dateRangeMatch, recordedDateRange, resolveDateRange } from '../../../common/utils/date-range.util.js';
 import { buildPaginationMeta, PaginatedResult } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
 import { RevisionStatus } from '../../../common/enums/revision-status.enum.js';
@@ -40,7 +42,6 @@ import {
   formatDateKeyLabel,
   getStandardPeriodStartKeys,
   getTimeFrameStartDateKey,
-  getVnDateKeyDaysAgo,
 } from '../../../common/utils/date-key.util.js';
 import {
   Chapter,
@@ -236,6 +237,9 @@ export class StoriesService {
   ): Promise<PaginatedResult<any>> {
     const filter: any = {
       authorId: new Types.ObjectId(authorId),
+      ...(query.visibility ? { visibility: query.visibility } : {}),
+      ...(query.startDate !== undefined || query.endDate !== undefined
+        ? dateRangeMatch('createdAt', resolveDateRange(query)) : {}),
     };
 
     if (query.status) {
@@ -310,7 +314,7 @@ export class StoriesService {
       enriched.sort((a, b) => {
         const diff = ((a.stats?.[sortKey] || 0) - (b.stats?.[sortKey] || 0)) * sortOrder;
         if (diff !== 0) return diff;
-        return ((b.stats?.viewCount || 0) - (a.stats?.viewCount || 0));
+        return ((b.stats?.viewCount || 0) - (a.stats?.viewCount || 0)) || a._id.toString().localeCompare(b._id.toString());
       });
 
       const items = enriched.slice(query.skip, query.skip + query.limit);
@@ -330,7 +334,7 @@ export class StoriesService {
     };
 
     const sortField = sortMap[query.sortBy || 'updatedAt'] || 'updatedAt';
-    const sort: any = { [sortField]: sortOrder };
+    const sort: any = { [sortField]: sortOrder, _id: sortOrder };
 
     const [rawItems, totalItems] = await Promise.all([
       this.storyModel
@@ -385,11 +389,11 @@ export class StoriesService {
   async getMyStoryDailyViews(
     authorId: Types.ObjectId,
     identifier: string,
-    days = 30,
+    days?: number,
+    query: DateRangeQueryDto = {},
   ): Promise<any> {
+    const range = resolveDateRange({ startDate: query.startDate, endDate: query.endDate, days });
     const story = await this.findOwnedStory(authorId, identifier, false);
-    const safeDays = [7, 30, 90].includes(Number(days)) ? Number(days) : 30;
-    const startDateKey = getVnDateKeyDaysAgo(safeDays - 1);
 
     const [periodMap, dailyDocs] = await Promise.all([
       this.computePeriodViewsMap([story._id]),
@@ -397,7 +401,7 @@ export class StoriesService {
         ? this.storyDailyViewModel
             .find({
               storyId: story._id,
-              date: { $gte: startDateKey },
+              ...(range.allTime ? {} : { date: { $gte: range.startDate, $lte: range.endDate } }),
             })
             .select('date views')
             .lean()
@@ -410,9 +414,9 @@ export class StoriesService {
       viewsByDate.set(doc.date, (viewsByDate.get(doc.date) || 0) + (Number(doc.views) || 0));
     }
 
+    const chartRange = range.allTime ? recordedDateRange(dailyDocs.map((doc) => doc.date)) : range;
     const series: { date: string; label: string; views: number }[] = [];
-    for (let i = safeDays - 1; i >= 0; i--) {
-      const dKey = getVnDateKeyDaysAgo(i);
+    for (const dKey of dateRangeKeys(chartRange)) {
       series.push({
         date: dKey,
         label: formatDateKeyLabel(dKey),
@@ -439,7 +443,11 @@ export class StoriesService {
         viewsMonth: pViews.viewsMonth,
         viewsYear: pViews.viewsYear,
       },
-      days: safeDays,
+      mode: range.allTime ? 'all' : 'range',
+      days: range.allTime ? null : range.dayCount,
+      startDate: range.allTime ? null : range.startDate,
+      endDate: range.allTime ? null : range.endDate,
+      selectedPeriodViews: series.reduce((sum, item) => sum + item.views, 0),
       series,
     };
   }
@@ -912,16 +920,28 @@ export class StoriesService {
     return this.buildStoryResponse(story._id);
   }
 
-  async getMyCounts(authorId: Types.ObjectId): Promise<{
+  async getMyCounts(authorId: Types.ObjectId, query: DateRangeQueryDto = {}): Promise<{
     all: number;
     pending: number;
     published: number;
     rejected: number;
     draft: number;
+    totalViews: number;
+    totalChapters: number;
+    selectedPeriodViews: number | null;
+    viewsToday: number;
+    viewsWeek: number;
+    viewsMonth: number;
+    viewsYear: number;
   }> {
-    const authorFilter = { authorId: new Types.ObjectId(authorId) };
+    const range = query.startDate !== undefined || query.endDate !== undefined
+      ? resolveDateRange(query) : undefined;
+    const authorFilter = {
+      authorId: new Types.ObjectId(authorId),
+      ...(range ? dateRangeMatch('createdAt', range) : {}),
+    };
 
-    const [all, pending, published, rejected, draft] = await Promise.all([
+    const [all, pending, published, rejected, draft, stories] = await Promise.all([
       this.storyModel.countDocuments(authorFilter),
       // Truyện đang chờ duyệt: gồm truyện mới gửi duyệt và truyện đã xuất bản
       // có bản chỉnh sửa đang chờ duyệt (khớp filter của danh sách).
@@ -947,9 +967,30 @@ export class StoriesService {
         ...authorFilter,
         status: StoryStatus.DRAFT,
       }),
+      this.storyModel.find(authorFilter).select('_id stats.viewCount stats.chapterCount').lean().exec(),
     ]);
 
-    return { all, pending, published, rejected, draft };
+    const ids = stories.map((story) => story._id);
+    const [periodMap, selectedViews] = await Promise.all([
+      this.computePeriodViewsMap(ids),
+      range && this.storyDailyViewModel && ids.length
+        ? this.storyDailyViewModel.aggregate<{ views: number }>([
+            { $match: { storyId: { $in: ids }, date: { $gte: range.startDate, $lte: range.endDate } } },
+            { $group: { _id: null, views: { $sum: '$views' } } },
+          ]).exec()
+        : Promise.resolve([]),
+    ]);
+    const totals = { totalViews: 0, totalChapters: 0, viewsToday: 0, viewsWeek: 0, viewsMonth: 0, viewsYear: 0 };
+    for (const story of stories) {
+      totals.totalViews += story.stats?.viewCount ?? 0;
+      totals.totalChapters += story.stats?.chapterCount ?? 0;
+      const period = periodMap.get(story._id.toString());
+      totals.viewsToday += period?.viewsToday ?? 0;
+      totals.viewsWeek += period?.viewsWeek ?? 0;
+      totals.viewsMonth += period?.viewsMonth ?? 0;
+      totals.viewsYear += period?.viewsYear ?? 0;
+    }
+    return { all, pending, published, rejected, draft, ...totals, selectedPeriodViews: range ? selectedViews[0]?.views ?? 0 : null };
   }
 
   /**

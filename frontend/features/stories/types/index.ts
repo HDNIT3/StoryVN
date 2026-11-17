@@ -96,6 +96,9 @@ export type MyStorySortOption =
   | "chapterCount";
 
 export interface QueryMyStoriesParams {
+  startDate?: string;
+  endDate?: string;
+  visibility?: StoryVisibility;
   status?: StoryStatus;
   search?: string;
   page?: number;
@@ -116,7 +119,10 @@ export interface StoryDailyViewsData {
     viewsMonth: number;
     viewsYear: number;
   };
-  days: number;
+  mode?: "all" | "range";
+  days: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
   series: Array<{
     date: string;
     label: string;
@@ -198,7 +204,19 @@ export interface AdminStoryCounts {
   hidden: number;
 }
 
+export interface MyStoryCounts extends Omit<AdminStoryCounts, "hidden"> {
+  totalViews: number;
+  totalChapters: number;
+  selectedPeriodViews: number | null;
+  viewsToday: number;
+  viewsWeek: number;
+  viewsMonth: number;
+  viewsYear: number;
+}
+
 export interface QueryAdminStoriesParams {
+  startDate?: string;
+  endDate?: string;
   status?: StoryStatus;
   visibility?: StoryVisibility;
   genreId?: string;

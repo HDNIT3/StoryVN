@@ -34,6 +34,18 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 
   // Nhóm 1: Nội dung & Kiểm duyệt
   {
+    id: "dien-dan",
+    label: "Quản lý diễn đàn",
+    href: "/quan-ly/dien-dan",
+    roles: ["ADMIN", "MANAGER"],
+    section: "content",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6M5 3h14v18H5z" />
+      </svg>
+    ),
+  },
+  {
     id: "duyet-tac-gia",
     label: "Duyệt tác giả",
     href: "/quan-ly/duyet-tac-gia",

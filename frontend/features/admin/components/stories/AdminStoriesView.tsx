@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { DateRangeToolbar, useDateRange, exportStatisticsExcel } from "@/components/statistics";
+import { adminStoryService } from "../../services/admin-story.service";
+import { toast } from "@/lib/toast";
 import type { StoryStatus, StoryVisibility } from "@/features/stories";
 import {
   type AdminStoryItem,
@@ -29,7 +32,15 @@ export const AdminStoriesView: React.FC = () => {
   const [search, setSearch] = useState("");
   const [genreId, setGenreId] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
-  const [page, setPage] = useState(1);
+  const [paginationState, setPaginationState] = useState({ key: "", page: 1 });
+  const dateRange = useDateRange();
+  const filterKey = JSON.stringify([dateRange.range, tab, search, genreId, sortBy]);
+  if (paginationState.key !== filterKey) {
+    setPaginationState({ key: filterKey, page: 1 });
+  }
+  const currentPage = paginationState.key === filterKey ? paginationState.page : 1;
+  const [exporting, setExporting] = useState(false);
+  const exportLock = useRef(false);
   const [showCharts, setShowCharts] = useState(false);
 
   // Modal Chi tiết tác phẩm
@@ -47,8 +58,10 @@ export const AdminStoriesView: React.FC = () => {
   });
 
   // Query thống kê đếm số lượng Tab badge
-  const { data: counts, refetch: refetchCounts } = useAdminStoryCounts();
-  const { data: dashboardData } = useAdminDashboardOverview(14);
+  const countsQuery = useAdminStoryCounts(dateRange.range);
+  const { data: counts, refetch: refetchCounts } = countsQuery;
+  const dashboardQuery = useAdminDashboardOverview(dateRange.range);
+  const { data: dashboardData } = dashboardQuery;
 
   // Xác định query filter theo tab
   const statusFilter: StoryStatus | undefined =
@@ -60,10 +73,13 @@ export const AdminStoriesView: React.FC = () => {
   const {
     data: storiesData,
     isLoading,
+    isFetching,
+    isError,
     isRefetching,
     refetch: refetchStories,
   } = useAdminStories({
-    page,
+    ...dateRange.range,
+    page: currentPage,
     limit: 10,
     status: statusFilter,
     visibility: visibilityFilter,
@@ -83,23 +99,42 @@ export const AdminStoriesView: React.FC = () => {
   const stories = storiesData?.items ?? [];
   const pagination = storiesData?.pagination;
   const totalPages = pagination?.totalPages ?? 1;
+  async function exportAll() {
+    if (exportLock.current || isFetching || countsQuery.isFetching || dashboardQuery.isFetching || !counts || !dateRange.isValid) return;
+    exportLock.current = true; setExporting(true);
+    try {
+      const items: AdminStoryItem[] = [];
+      const filters = { ...dateRange.range, status: statusFilter, visibility: visibilityFilter, genreId: genreId || undefined, search: search.trim() || undefined, sortBy, sortOrder: "desc" as const };
+      for (let next = 1; ; next++) {
+        const response = await adminStoryService.findAll({ ...filters, page: next, limit: 100 });
+        items.push(...response.data.items);
+        if (next >= response.data.pagination.totalPages) break;
+      }
+      await exportStatisticsExcel({ filename: "admin-stories", range: dateRange.range, notes: ["Cohort: story createdAt in selected dates; status is current. Counts/categories cover all stories in the date cohort, independent of list filters. View/chapter columns are current cumulative snapshots.", `Filters: ${JSON.stringify(filters)}`], sheets: [
+        { name: "Summary", columns: ["Metric", "Value"], rows: [["Matching records", items.length], ...Object.entries(counts).map(([key, value]) => [key, value])] },
+        { name: "Stories", columns: ["ID", "Title", "Status", "Visibility", "Created at", "Current views", "Current chapters"], rows: items.map(s => [s._id, s.title, s.status, s.visibility, s.createdAt, s.stats?.viewCount ?? 0, s.stats?.chapterCount ?? 0]) },
+        { name: "Categories", columns: ["Category", "Count", "Percentage"], rows: (dashboardData?.charts.categories ?? []).map(c => [c.name, c.count, c.percentage]) },
+      ] });
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Không thể xuất Excel"); }
+    finally { exportLock.current = false; setExporting(false); }
+  }
 
   // Đổi tab
   const handleTabChange = (newTab: StoryFilterTab) => {
     setTab(newTab);
-    setPage(1);
+    setPaginationState({ key: filterKey, page: 1 });
   };
 
   // Đổi tìm kiếm
   const handleSearchChange = (newSearch: string) => {
     setSearch(newSearch);
-    setPage(1);
+    setPaginationState({ key: filterKey, page: 1 });
   };
 
   // Đổi thể loại
   const handleGenreChange = (newGenreId: string) => {
     setGenreId(newGenreId);
-    setPage(1);
+    setPaginationState({ key: filterKey, page: 1 });
   };
 
   // Làm mới dữ liệu
@@ -189,12 +224,17 @@ export const AdminStoriesView: React.FC = () => {
         </button>
       </div>
 
+      <DateRangeToolbar dateRange={dateRange} onExport={() => void exportAll()} exporting={exporting} exportDisabled={isFetching || countsQuery.isFetching || dashboardQuery.isFetching || isError || countsQuery.isError || dashboardQuery.isError || !counts} />
+      <fieldset disabled={exporting} className="min-w-0 space-y-6">
+      <p className="text-xs text-slate-500">Theo ngày tạo truyện; thống kê và biểu đồ thể hiện trạng thái hiện tại của toàn bộ nhóm truyện trong kỳ.</p>
       {/* Tabs thống kê tương tác */}
-      <StoryStats
+      {countsQuery.isPending && <p role="status">Đang tải thống kê...</p>}
+      {countsQuery.isError && <p role="alert">Không thể tải thống kê.</p>}
+      {!countsQuery.isPending && !countsQuery.isError && <StoryStats
         currentFilter={tab}
         onFilterChange={handleTabChange}
         counts={counts}
-      />
+      />}
 
       {/* Khối biểu đồ phân tích khi mở */}
       {showCharts && (
@@ -241,7 +281,7 @@ export const AdminStoriesView: React.FC = () => {
         selectedGenreId={genreId}
         onGenreChange={handleGenreChange}
         sortBy={sortBy}
-        onSortChange={setSortBy}
+        onSortChange={(value) => { setSortBy(value); setPaginationState({ key: filterKey, page: 1 }); }}
         onRefresh={handleRefresh}
         isRefreshing={isRefetching}
       />
@@ -249,7 +289,7 @@ export const AdminStoriesView: React.FC = () => {
       {/* Bảng danh sách truyện */}
       <StoryTable
         stories={stories}
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         onViewDetail={setDetailStory}
         onApprove={handleApprove}
         onReject={(story) => handleOpenActionModal("REJECT", story)}
@@ -260,9 +300,9 @@ export const AdminStoriesView: React.FC = () => {
 
       {/* Phân trang */}
       <StoryPagination
-        page={page}
+        page={currentPage}
         totalPages={totalPages}
-        onPageChange={setPage}
+        onPageChange={(next) => setPaginationState({ key: filterKey, page: next })}
       />
 
       {/* Modal chi tiết tác phẩm */}
@@ -287,7 +327,8 @@ export const AdminStoriesView: React.FC = () => {
         }
         onSubmit={handleSubmitAction}
         isSubmitting={isActionSubmitting}
-      />
+       />
+      </fieldset>
     </div>
   );
 };

@@ -15,6 +15,8 @@ export const adminStoryService = {
     params?: QueryAdminStoriesParams
   ): Promise<StoryApiResponse<PaginatedAdminStories>> {
     const searchParams = new URLSearchParams();
+    if (params?.startDate) searchParams.set("startDate", params.startDate);
+    if (params?.endDate) searchParams.set("endDate", params.endDate);
     if (params?.status) searchParams.append("status", params.status);
     if (params?.visibility) searchParams.append("visibility", params.visibility);
     if (params?.genreId) searchParams.append("genreId", params.genreId);
@@ -32,8 +34,13 @@ export const adminStoryService = {
   /**
    * Lấy thống kê số lượng truyện theo từng tab (all, pending, published, rejected, draft, hidden)
    */
-  async getCounts(): Promise<StoryApiResponse<AdminStoryCounts>> {
-    return api.get<StoryApiResponse<AdminStoryCounts>>("/admin/stories/counts");
+  async getCounts(params?: QueryAdminStoriesParams): Promise<StoryApiResponse<AdminStoryCounts>> {
+    const query = new URLSearchParams();
+    if (params?.startDate) query.set("startDate", params.startDate);
+    if (params?.endDate) query.set("endDate", params.endDate);
+    if (params?.search) query.set("search", params.search);
+    if (params?.genreId) query.set("genreId", params.genreId);
+    return api.get<StoryApiResponse<AdminStoryCounts>>(`/admin/stories/counts?${query}`);
   },
 
   /**
