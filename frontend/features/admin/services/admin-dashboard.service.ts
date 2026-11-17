@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import { dateRangeParams } from "@/components/statistics/date-range";
 import type { AdminDashboardOverviewData } from "../types/dashboard.types";
 
 export interface AdminDashboardApiResponse<T = unknown> {
@@ -10,11 +11,14 @@ export interface AdminDashboardApiResponse<T = unknown> {
 export const adminDashboardService = {
   /**
    * Lấy dữ liệu tổng quan thống kê và chuỗi thời gian cho Dashboard Quản Trị
-   * @param days Số ngày hiển thị biểu đồ (mặc định 14)
+   * Omitted dates request all-time data.
    */
-  getOverview(days = 14) {
+  getOverview(daysOrRange: number | { startDate?: string; endDate?: string } = {}) {
+    const query = typeof daysOrRange === "number"
+      ? `days=${daysOrRange}`
+      : dateRangeParams(daysOrRange).toString();
     return api.get<AdminDashboardApiResponse<AdminDashboardOverviewData>>(
-      `/admin/dashboard/overview?days=${days}`
+      `/admin/dashboard/overview${query ? `?${query}` : ""}`
     );
   },
 };

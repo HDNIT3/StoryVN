@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { DateRangeToolbar, exportStatisticsExcel, useDateRange } from "@/components/statistics";
+import { toast } from "@/lib/toast";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useAdminDashboardOverview } from "../../queries/useAdminDashboardQueries";
 import {
@@ -18,10 +19,27 @@ import {
 
 export function AdminDashboardView() {
   const { user } = useAuth();
-  const [days, setDays] = useState<number>(14);
+  const dateRange = useDateRange();
+  const [exporting, setExporting] = useState(false);
   const [revenueTab, setRevenueTab] = useState<"revenue" | "transactions" | "coins">("revenue");
 
-  const { data, isLoading, isRefetching, refetch } = useAdminDashboardOverview(days);
+  const { data, isLoading, isFetching, isError, isRefetching, refetch } = useAdminDashboardOverview(dateRange.range, dateRange.isValid);
+  const canExport = !!data && dateRange.isValid && !isFetching && !isError && (dateRange.mode === "all" ? data.range.mode === "all" : data.range.startDate === dateRange.range.startDate && data.range.endDate === dateRange.range.endDate);
+  const exportOverview = async () => {
+    if (!data || !canExport || exporting) return;
+    setExporting(true);
+    try {
+      await exportStatisticsExcel({ filename: "admin-overview", range: dateRange.range, notes: ["Số lượng nội dung/tài khoản theo ngày tạo trong kỳ, trạng thái hiện tại.", "Doanh thu là tổng tiền giao dịch được tạo trong kỳ và hiện có trạng thái thành công; không tính theo thời điểm thanh toán.", dateRange.mode === "all" ? "Toàn bộ thời gian; các trường kỳ trước và tăng trưởng không áp dụng (0). totalFollows là hiện tại." : "Các trường today, thisMonth, newToday, new7Days là kỳ đã chọn; lastMonth, newYesterday là kỳ trước cùng độ dài. totalFollows là hiện tại.", "Top truyện, hàng đợi và giao dịch gần nhất chỉ gồm các dòng đã tải; không phải toàn bộ danh sách."], sheets: [
+        { name: "Tổng quan", columns: ["Nhóm", "Chỉ số", "Giá trị"], rows: Object.entries(data.kpi).flatMap(([group, values]) => Object.entries(values).flatMap(([key, value]) => typeof value === "number" ? [[group, key, value]] : Object.entries(value).map(([subkey, number]) => [group, `${key}.${subkey}`, number as number]))) },
+        { name: "Biểu đồ", columns: ["Ngày", "Doanh thu VND", "Xu", "Giao dịch", "Người dùng mới", "Lượt đọc"], rows: data.charts.timeline.map((item) => [item.date, item.revenue, item.coins, item.transactions, item.newUsers, item.views]) },
+        { name: "Thể loại", columns: ["Thể loại", "Số lượng", "Tỷ lệ"], rows: data.charts.categories.map((item) => [item.name, item.count, item.percentage]) },
+        { name: "Đánh giá", columns: ["Số sao", "Số lượng"], rows: Object.entries(data.charts.ratings).map(([rating, count]) => [Number(rating), count]) },
+        { name: "Hàng đợi đã tải", columns: ["Loại", "Tiêu đề", "Ngày tạo"], rows: [...data.urgentQueue.stories.map((item) => ["Truyện", item.title, item.createdAt]), ...data.urgentQueue.chapters.map((item) => ["Chương", item.title, item.createdAt]), ...data.urgentQueue.authorRequests.map((item) => ["Tác giả", item.penName, item.createdAt])] },
+        { name: "Top truyện đã tải", columns: ["Truyện", "Lượt đọc", "Theo dõi hiện tại", "Chương hiện tại", "Điểm hiện tại"], rows: data.topStories.map((item) => [item.title, item.views, item.likes, item.chapterCount, item.ratingAverage]) },
+        { name: "Giao dịch gần nhất", columns: ["Mã", "Ngày", "Số tiền VND", "Xu", "Trạng thái"], rows: data.recentTransactions.map((item) => [item.orderCode, item.createdAt, item.amount, item.totalCoin, item.status]) },
+      ] });
+    } catch { toast.error("Không thể xuất Excel. Vui lòng thử lại."); } finally { setExporting(false); }
+  };
 
   const kpi = data?.kpi;
   const charts = data?.charts;
@@ -128,43 +146,6 @@ export function AdminDashboardView() {
         </div>
 
         <div className="flex items-center gap-3 relative z-10 self-start md:self-auto">
-          {/* Chọn số ngày */}
-          <div className="inline-flex p-1 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setDays(7)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                days === 7
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              7 ngày
-            </button>
-            <button
-              type="button"
-              onClick={() => setDays(14)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                days === 14
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              14 ngày
-            </button>
-            <button
-              type="button"
-              onClick={() => setDays(30)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                days === 30
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              30 ngày
-            </button>
-          </div>
-
           {/* Nút Làm mới */}
           <button
             type="button"
@@ -185,6 +166,9 @@ export function AdminDashboardView() {
         </div>
       </div>
 
+      <DateRangeToolbar dateRange={dateRange} exportDisabled={!canExport} exporting={exporting} onExport={exportOverview} />
+      <p className="text-xs text-slate-500">Số liệu trong khoảng đã chọn; nội dung và tài khoản theo ngày tạo, trạng thái hiện tại. Doanh thu tính theo ngày tạo giao dịch hiện đã thành công. Top truyện và danh sách gần nhất có giới hạn.</p>
+      {isError && <p role="alert" className="text-sm text-red-600">Không thể tải thống kê. Vui lòng đồng bộ lại.</p>}
       {/* ─── 2. HÀNG ĐỢI KIỂM DUYỆT KHẨN CẤP (ACTION CENTER) ────────── */}
       <AdminUrgentQueueCard
         stories={urgentQueue?.stories || []}
@@ -199,12 +183,12 @@ export function AdminDashboardView() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Doanh thu VNPay */}
         <AdminMetricCard
-          label="Tổng Doanh Thu Thực Tế"
+          label="Doanh Thu Giao Dịch"
           value={formatCurrency(kpi?.revenue.total || 0)}
-          subValue={`Hôm nay: ${formatCurrency(kpi?.revenue.today || 0)} • Tháng này: ${formatCurrency(kpi?.revenue.thisMonth || 0)}`}
-          trend={{
+          subValue="Giao dịch tạo trong kỳ, hiện đã thành công"
+          trend={dateRange.mode === "all" ? undefined : {
             value: kpi?.revenue.growthRate || 0,
-            label: "so với tháng trước",
+            label: "so với kỳ trước cùng độ dài",
             isPositive: (kpi?.revenue.growthRate || 0) >= 0,
           }}
           colorScheme="indigo"
@@ -220,10 +204,10 @@ export function AdminDashboardView() {
         <AdminMetricCard
           label="Tổng Người Dùng"
           value={kpi?.users.total || 0}
-          subValue={`Hôm nay: +${kpi?.users.newToday || 0} • 7 ngày qua: +${kpi?.users.new7Days || 0}`}
-          trend={{
+          subValue="Tài khoản được tạo trong khoảng đã chọn"
+          trend={dateRange.mode === "all" ? undefined : {
             value: kpi?.users.growthToday || 0,
-            label: "tăng trưởng hôm nay",
+            label: "so với kỳ trước cùng độ dài",
             isPositive: (kpi?.users.growthToday || 0) >= 0,
           }}
           colorScheme="emerald"
@@ -271,7 +255,7 @@ export function AdminDashboardView() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                Xu Hướng Doanh Thu & Dòng Tiền ({days} ngày qua)
+                Xu Hướng Doanh Thu & Dòng Tiền ({dateRange.mode === "all" ? "toàn bộ thời gian" : "kỳ đã chọn"})
               </h2>
               <p className="text-xs text-slate-500">
                 Thống kê các giao dịch nạp tiền thành công qua cổng thanh toán VNPay
@@ -356,8 +340,8 @@ export function AdminDashboardView() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Hôm nay: <b className="text-emerald-600">+{kpi?.users.newToday || 0}</b></span>
-            <span>Tổng tài khoản: <b className="text-slate-800">{kpi?.users.total.toLocaleString("vi-VN") || 0}</b></span>
+            <span>Trong kỳ: <b className="text-emerald-600">+{kpi?.users.total || 0}</b></span>
+            <span>Tài khoản mới: <b className="text-slate-800">{kpi?.users.total.toLocaleString("vi-VN") || 0}</b></span>
           </div>
         </div>
       </div>
@@ -404,7 +388,7 @@ export function AdminDashboardView() {
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
             <div>
               <h2 className="text-base font-bold text-slate-900">Top Tác Phẩm Nổi Bật Nhất</h2>
-              <p className="text-xs text-slate-500">Theo lượt đọc thực tế và số lượng theo dõi</p>
+              <p className="text-xs text-slate-500">Top {topStories.length} đã tải; lượt đọc trong kỳ, điểm/chương hiện tại</p>
             </div>
             <Link
               href="/quan-ly/truyen"
@@ -465,7 +449,7 @@ export function AdminDashboardView() {
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
             <div>
               <h2 className="text-base font-bold text-slate-900">Giao Dịch Nạp Xu Gần Nhất</h2>
-              <p className="text-xs text-slate-500">Đối soát các lệnh nạp tiền mới nhất qua cổng VNPay</p>
+              <p className="text-xs text-slate-500">{recentTransactions.length} giao dịch gần nhất trong kỳ đã tải</p>
             </div>
             <Link
               href="/quan-ly/giao-dich"

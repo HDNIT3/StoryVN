@@ -175,6 +175,8 @@ export function SmartHeader() {
     activeNavId = "tac-gia";
   } else if (pathname.startsWith("/nap-xu")) {
     activeNavId = "nap-xu";
+  } else if (pathname === "/dien-dan" || pathname === "/tai-khoan/bai-viet") {
+    activeNavId = "dien-dan";
   }
 
   const handleLogout = async () => {

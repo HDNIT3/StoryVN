@@ -1,29 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import type { AuthorOverviewData } from "../../types";
 
-type TimeRange = "7days" | "30days" | "90days";
 
 interface ReadStatsChartProps {
+  allTime?: boolean;
   readsChartData?: AuthorOverviewData["charts"]["reads"];
   stats?: AuthorOverviewData["stats"];
 }
 
-function buildEmptySeries(range: TimeRange) {
-  const days = range === "7days" ? 7 : range === "30days" ? 30 : 90;
-  const items: { date: string; value: number }[] = [];
-  const now = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    items.push({
-      date: `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`,
-      value: 0,
-    });
-  }
-  return items;
-}
 
 function fmtK(n: number): string {
   if (!n || isNaN(n)) return "0";
@@ -37,11 +23,10 @@ function fmtGrowth(pct?: number): string {
   return pct > 0 ? `↑ ${pct}%` : `↓ ${Math.abs(pct)}%`;
 }
 
-export function ReadStatsChart({ readsChartData, stats }: ReadStatsChartProps) {
-  const [range, setRange] = useState<TimeRange>("7days");
+export function ReadStatsChart({ readsChartData, stats, allTime = false }: ReadStatsChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const series = readsChartData?.[range];
+  const series = readsChartData?.selectedRange;
 
   const data = useMemo(() => {
     if (series?.items && series.items.length > 0) {
@@ -50,8 +35,8 @@ export function ReadStatsChart({ readsChartData, stats }: ReadStatsChartProps) {
         value: item.value || 0,
       }));
     }
-    return buildEmptySeries(range);
-  }, [series, range]);
+    return [];
+  }, [series]);
 
   const drawChart = useCallback(() => {
     const canvas = canvasRef.current;
@@ -74,8 +59,9 @@ export function ReadStatsChart({ readsChartData, stats }: ReadStatsChartProps) {
     const cW = Math.max(w - pL - pR, 10);
     const cH = Math.max(h - pT - pB, 10);
     ctx.clearRect(0, 0, w, h);
+    if (!data.length) return;
 
-    const rawMax = Math.max(...data.map((d) => d.value), 0);
+    const rawMax = data.reduce((max, d) => Math.max(max, d.value), 0);
     const maxVal = rawMax > 0 ? rawMax : 5;
 
     // Y grid
@@ -164,8 +150,8 @@ export function ReadStatsChart({ readsChartData, stats }: ReadStatsChartProps) {
   const summaryItems = [
     {
       icon: "👁",
-      val: fmtK(periodReads > 0 ? periodReads : stats?.totalViews ?? 0),
-      label: periodReads > 0 ? "Lượt đọc kỳ này" : "Tổng lượt đọc",
+       val: fmtK(periodReads),
+       label: "Lượt đọc kỳ này",
       g: fmtGrowth(readsGrowth),
       positive: readsGrowth >= 0,
       color: "text-blue-500",
@@ -176,22 +162,16 @@ export function ReadStatsChart({ readsChartData, stats }: ReadStatsChartProps) {
         stats?.ratingAverage && stats.ratingAverage > 0
           ? `${stats.ratingAverage.toFixed(1)} (${fmtK(stats.totalRatings)})`
           : fmtK(stats?.totalRatings ?? 0),
-      label: "Đánh giá",
-      g:
-        (stats?.ratingsThisMonth ?? 0) > 0
-          ? `+${stats?.ratingsThisMonth}`
-          : fmtGrowth(stats?.ratingsGrowthPercent ?? 0),
+      label: "Điểm hiện tại / đánh giá kỳ này",
+      g: fmtGrowth(stats?.ratingsGrowthPercent ?? 0),
       positive: (stats?.ratingsGrowthPercent ?? 0) >= 0,
       color: "text-amber-500",
     },
     {
       icon: "🔖",
       val: fmtK(stats?.totalFollowers ?? 0),
-      label: "Lượt theo dõi",
-      g:
-        (stats?.followersThisMonth ?? 0) > 0
-          ? `+${stats?.followersThisMonth}`
-          : fmtGrowth(stats?.followersGrowthPercent ?? 0),
+      label: "Theo dõi hiện tại",
+      g: "hiện tại",
       positive: (stats?.followersGrowthPercent ?? 0) >= 0,
       color: "text-emerald-500",
     },
@@ -199,10 +179,7 @@ export function ReadStatsChart({ readsChartData, stats }: ReadStatsChartProps) {
       icon: "💬",
       val: fmtK(stats?.totalComments ?? 0),
       label: "Bình luận",
-      g:
-        (stats?.commentsThisMonth ?? 0) > 0
-          ? `+${stats?.commentsThisMonth}`
-          : fmtGrowth(stats?.commentsGrowthPercent ?? 0),
+      g: fmtGrowth(stats?.commentsGrowthPercent ?? 0),
       positive: (stats?.commentsGrowthPercent ?? 0) >= 0,
       color: "text-sky-500",
     },
@@ -220,100 +197,79 @@ export function ReadStatsChart({ readsChartData, stats }: ReadStatsChartProps) {
             Dữ liệu thực tế từ lượt đọc hàng ngày của toàn bộ tác phẩm
           </p>
         </div>
-        <div className="inline-flex items-center rounded-lg bg-zinc-100 p-0.5 border border-zinc-200/80">
-          {(
-            [
-              { key: "7days", label: "7 ngày" },
-              { key: "30days", label: "30 ngày" },
-              { key: "90days", label: "90 ngày" },
-            ] as { key: TimeRange; label: string }[]
-          ).map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setRange(tab.key)}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
-                range === tab.key
-                  ? "bg-white text-blue-600 shadow-2xs"
-                  : "text-zinc-600 hover:text-zinc-900"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <span className="text-xs text-zinc-500">Theo khoảng thời gian đã chọn</span>
       </div>
 
       {/* Period View Breakdown Pills */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
         <div className="rounded-lg bg-sky-50/70 border border-sky-100 px-3 py-2">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-600 block">
-            Hôm nay
+            {allTime ? "Lượt đọc toàn bộ thời gian" : "Lượt đọc trong kỳ"}
           </span>
           <div className="flex items-baseline justify-between gap-1 mt-0.5">
             <span className="text-sm font-extrabold text-zinc-900">
-              +{(stats?.viewsToday ?? 0).toLocaleString("vi-VN")}
+              {periodReads.toLocaleString("vi-VN")}
             </span>
-            {stats?.viewsTodayGrowthPercent !== undefined && (
+            {!allTime && series?.growthPercent !== undefined && (
               <span
                 className={`text-[10px] font-bold ${
-                  stats.viewsTodayGrowthPercent >= 0
+                  series.growthPercent >= 0
                     ? "text-emerald-600"
                     : "text-rose-500"
                 }`}
               >
-                {fmtGrowth(stats.viewsTodayGrowthPercent)}
+                {fmtGrowth(series.growthPercent)}
               </span>
             )}
           </div>
         </div>
         <div className="rounded-lg bg-indigo-50/70 border border-indigo-100 px-3 py-2">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 block">
-            7 ngày qua
+            Bình quân mỗi ngày
           </span>
           <div className="flex items-baseline justify-between gap-1 mt-0.5">
             <span className="text-sm font-extrabold text-zinc-900">
-              +{(stats?.viewsWeek ?? readsChartData?.["7days"]?.total ?? 0).toLocaleString("vi-VN")}
+              {Math.round(periodReads / Math.max(data.length, 1)).toLocaleString("vi-VN")}
             </span>
             <span
               className={`text-[10px] font-bold ${
-                (readsChartData?.["7days"]?.growthPercent ?? 0) >= 0
+                (series?.growthPercent ?? 0) >= 0
                   ? "text-emerald-600"
                   : "text-rose-500"
               }`}
             >
-              {fmtGrowth(readsChartData?.["7days"]?.growthPercent ?? 0)}
+              trong kỳ
             </span>
           </div>
         </div>
         <div className="rounded-lg bg-emerald-50/70 border border-emerald-100 px-3 py-2">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 block">
-            30 ngày qua
+            Ngày cao nhất
           </span>
           <div className="flex items-baseline justify-between gap-1 mt-0.5">
             <span className="text-sm font-extrabold text-zinc-900">
-              +{(stats?.views30Days ?? readsChartData?.["30days"]?.total ?? 0).toLocaleString("vi-VN")}
+              {Math.max(0, ...data.map((item) => item.value)).toLocaleString("vi-VN")}
             </span>
             <span
               className={`text-[10px] font-bold ${
-                (readsChartData?.["30days"]?.growthPercent ?? 0) >= 0
+                (series?.growthPercent ?? 0) >= 0
                   ? "text-emerald-600"
                   : "text-rose-500"
               }`}
             >
-              {fmtGrowth(readsChartData?.["30days"]?.growthPercent ?? 0)}
+              trong kỳ
             </span>
           </div>
         </div>
         <div className="rounded-lg bg-amber-50/70 border border-amber-100 px-3 py-2">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 block">
-            Toàn thời gian
+            Số ngày trong kỳ
           </span>
           <div className="flex items-baseline justify-between gap-1 mt-0.5">
             <span className="text-sm font-extrabold text-zinc-900">
-              {(stats?.totalViews ?? 0).toLocaleString("vi-VN")}
+              {data.length}
             </span>
-            <span className="text-[10px] font-medium text-amber-700">tổng</span>
+            <span className="text-[10px] font-medium text-amber-700">ngày</span>
           </div>
         </div>
       </div>

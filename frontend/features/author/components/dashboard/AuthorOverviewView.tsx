@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMyStories, type StoryItem } from "@/features/stories";
 import { useAuthorOverview } from "../../queries/useAuthorQueries";
+import { DateRangeToolbar, exportStatisticsExcel, useDateRange } from "@/components/statistics";
+import { toast } from "@/lib/toast";
 import {
   DashboardStats,
   MyStoriesPreview,
@@ -15,15 +17,20 @@ import {
 
 export function AuthorOverviewView() {
   const router = useRouter();
+  const dateRange = useDateRange();
+  const [exporting, setExporting] = useState(false);
 
   // Fetch author stories
   const {
     data: storiesData,
     isLoading: isLoadingStories,
+    isFetching: isFetchingStories,
+    isPlaceholderData: isPlaceholderStories,
     isError: isErrorStories,
     error: storiesError,
     refetch: refetchStories,
   } = useMyStories({
+    ...dateRange.range,
     limit: 50,
     sortBy: "updatedAt",
   });
@@ -32,52 +39,38 @@ export function AuthorOverviewView() {
   const {
     data: overviewData,
     isLoading: isLoadingOverview,
+    isFetching: isFetchingOverview,
+    isError: isErrorOverview,
     refetch: refetchOverview,
-  } = useAuthorOverview();
+  } = useAuthorOverview(dateRange.range, dateRange.isValid);
 
   const stories = storiesData?.items || [];
-  const isLoading = isLoadingStories && isLoadingOverview;
+  const isLoading = isLoadingStories || isLoadingOverview;
 
-  // Compute real statistics from backend overview (with fallback to stories list while loading)
-  const dashboardStats = useMemo(() => {
+  // All period metrics come from the same overview response.
+  const dashboardStats = (() => {
     const ovStats = overviewData?.stats;
 
-    const fallbackStories = stories.length;
-    const fallbackChapters = stories.reduce(
-      (sum, s) => sum + (s.stats?.chapterCount || (s as any).chapterCount || 0),
-      0
-    );
-    const fallbackViews = stories.reduce(
-      (sum, s) => sum + (s.stats?.viewCount || (s as any).viewCount || 0),
-      0
-    );
-
-    const totalStories = ovStats?.totalStories ?? fallbackStories;
-    const totalChapters = ovStats?.totalChapters ?? fallbackChapters;
-    const totalViews = ovStats?.totalViews ?? fallbackViews;
+    const totalStories = ovStats?.totalStories ?? 0;
+    const totalChapters = ovStats?.totalChapters ?? 0;
+    const totalViews = ovStats?.totalViews ?? 0;
     const totalCoins = ovStats?.totalCoins ?? 0;
 
     const storiesGrowth = ovStats
-      ? ovStats.storiesThisMonth > 0
-        ? `+${ovStats.storiesThisMonth} tháng này`
-        : `${ovStats.publishedStories}/${ovStats.totalStories} đã xuất bản`
-      : `${fallbackStories} tác phẩm`;
+      ? `${ovStats.publishedStories}/${ovStats.totalStories} hiện đã xuất bản`
+      : "Đang tải";
 
     const chaptersGrowth = ovStats
-      ? ovStats.chaptersThisMonth > 0
-        ? `+${ovStats.chaptersThisMonth} chương tháng này`
-        : `${ovStats.publishedChapters} chương xuất bản`
-      : `${fallbackChapters} chương`;
+      ? `${ovStats.publishedChapters} chương hiện đã xuất bản`
+      : "Đang tải";
 
     const viewsGrowth = ovStats
-      ? `Hôm nay: +${(ovStats.viewsToday || 0).toLocaleString("vi-VN")} • 7 ngày: +${(ovStats.viewsWeek || 0).toLocaleString("vi-VN")} • Tháng: +${(ovStats.viewsThisMonth || 0).toLocaleString("vi-VN")}`
-      : `${fallbackViews.toLocaleString("vi-VN")} lượt đọc`;
+      ? "Lượt đọc trong khoảng thời gian đã chọn"
+      : "Đang tải";
 
     const coinsGrowth = ovStats
-      ? ovStats.coinsThisMonth > 0
-        ? `+${ovStats.coinsThisMonth.toLocaleString("vi-VN")} xu tháng này`
-        : `Số dư ví: ${(ovStats.walletBalance || 0).toLocaleString("vi-VN")} xu`
-      : "0 xu tháng này";
+      ? `Số dư ví hiện tại: ${(ovStats.walletBalance || 0).toLocaleString("vi-VN")} xu`
+      : "Đang tải";
 
     return {
       totalStories,
@@ -89,7 +82,24 @@ export function AuthorOverviewView() {
       viewsGrowth,
       coinsGrowth,
     };
-  }, [overviewData, stories]);
+  })();
+
+  const canExport = dateRange.isValid && !!overviewData && !!storiesData && !isFetchingOverview && !isErrorOverview && !isFetchingStories && !isPlaceholderStories && !isErrorStories
+    && (dateRange.mode === "all" ? overviewData.range.mode === "all" : overviewData.range.startDate === dateRange.range.startDate && overviewData.range.endDate === dateRange.range.endDate);
+  const exportOverview = async () => {
+    if (!canExport || !overviewData || exporting) return;
+    setExporting(true);
+    try {
+      await exportStatisticsExcel({ filename: "author-overview", range: dateRange.range, notes: ["Tổng quan và biểu đồ theo kỳ đã chọn. Ví, theo dõi và điểm đánh giá là số liệu hiện tại.", "Bình luận và thông báo chỉ gồm các dòng gần nhất đã tải trong kỳ."], sheets: [
+        { name: "Tổng quan", columns: ["Chỉ số", "Giá trị"], rows: [["Tác phẩm tạo trong kỳ", overviewData.stats.totalStories], ["Đã xuất bản (trạng thái hiện tại)", overviewData.stats.publishedStories], ["Chương tạo trong kỳ", overviewData.stats.totalChapters], ["Chương xuất bản (trạng thái hiện tại)", overviewData.stats.publishedChapters], ["Lượt đọc trong kỳ", overviewData.stats.totalViews], ["Xu trong kỳ", overviewData.stats.totalCoins], ["Bình luận trong kỳ", overviewData.stats.totalComments], ["Đánh giá trong kỳ", overviewData.stats.totalRatings], ["Điểm đánh giá hiện tại", overviewData.stats.ratingAverage], ["Theo dõi hiện tại", overviewData.stats.totalFollowers], ["Ví hiện tại", overviewData.stats.walletBalance]] },
+        { name: "Lượt đọc", columns: ["Ngày", "Lượt đọc"], rows: overviewData.charts.reads.selectedRange.items.map((item) => [item.date, item.value]) },
+        { name: "Doanh thu", columns: ["Ngày", "Xu"], rows: overviewData.charts.revenue.selectedRange.items.map((item) => [item.date, item.value]) },
+        { name: "Bình luận gần nhất", columns: ["Ngày", "Truyện", "Nội dung"], rows: overviewData.recentComments.map((item) => [item.createdAt, item.story?.title ?? "", item.content]) },
+        { name: "Thông báo gần nhất", columns: ["Ngày", "Tiêu đề", "Nội dung"], rows: overviewData.recentNotifications.map((item) => [item.createdAt, item.title, item.message]) },
+        { name: "Tác phẩm đã tải", columns: ["Truyện", "Chương hiện tại", "Lượt đọc toàn thời gian"], rows: stories.map((item) => [item.title, item.stats?.chapterCount ?? 0, item.stats?.viewCount ?? 0]) },
+      ] });
+    } catch { toast.error("Không thể xuất Excel. Vui lòng thử lại."); } finally { setExporting(false); }
+  };
 
   const handleManageChapters = (story: StoryItem) => {
     const slug = story.slug || story._id || story.id;
@@ -140,6 +150,8 @@ export function AuthorOverviewView() {
         </div>
       </div>
 
+      <DateRangeToolbar dateRange={dateRange} exportDisabled={!canExport} exporting={exporting} onExport={exportOverview} />
+      <p className="text-xs text-slate-500">Tác phẩm và chương được tạo trong kỳ; lượt đọc và xu phát sinh trong kỳ. Xem nhanh tối đa 50 tác phẩm được tạo trong kỳ, số chương và lượt đọc trên thẻ là hiện tại/toàn thời gian.</p>
       {/* Loading Skeleton or Stats */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -156,10 +168,10 @@ export function AuthorOverviewView() {
             </div>
           ))}
         </div>
-      ) : isErrorStories ? (
+      ) : isErrorStories || isErrorOverview ? (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
           <p className="text-sm text-red-600 font-medium">
-            {(storiesError as any)?.message || "Không thể tải thống kê tác giả"}
+            {storiesError instanceof Error ? storiesError.message : "Không thể tải thống kê tác giả"}
           </p>
           <button
             type="button"
@@ -198,10 +210,12 @@ export function AuthorOverviewView() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ReadStatsChart
+          allTime={dateRange.mode === "all"}
           readsChartData={overviewData?.charts?.reads}
           stats={overviewData?.stats}
         />
         <RevenueChart
+          allTime={dateRange.mode === "all"}
           revenueChartData={overviewData?.charts?.revenue}
           totalCoins={overviewData?.stats?.totalCoins ?? 0}
           walletBalance={overviewData?.stats?.walletBalance ?? 0}
@@ -209,6 +223,7 @@ export function AuthorOverviewView() {
       </div>
 
       {/* Recent Activity */}
+      <p className="text-xs text-slate-500">Hoạt động trong kỳ: {overviewData?.recentComments.length ?? 0} bình luận và {overviewData?.recentNotifications.length ?? 0} thông báo gần nhất đã tải (danh sách giới hạn).</p>
       <RecentActivity
         comments={overviewData?.recentComments}
         notifications={overviewData?.recentNotifications}

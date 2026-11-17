@@ -11,6 +11,8 @@ import { Chapter, ChapterDocument, ChapterStatus } from '../chapters/schemas/cha
 import { Comment, CommentDocument, CommentStatus } from '../comments/schemas/comment.schema.js';
 import { StoryRating, StoryRatingDocument, StoryRatingStatus } from '../story-ratings/schemas/story-rating.schema.js';
 import { Genre, GenreDocument } from '../genres/schemas/genre.schema.js';
+import { DateRangeQueryDto } from '../../common/dto/date-range.dto.js';
+import { calculateGrowthPercent, dateRangeKeys, dateRangeMatch, previousDateRange, resolveDateRange } from '../../common/utils/date-range.util.js';
 
 @Injectable()
 export class AdminDashboardService {
@@ -37,20 +39,21 @@ export class AdminDashboardService {
 
   /**
    * Tổng quan thống kê toàn diện cho Admin Dashboard
-   * @param days Số ngày thống kê cho biểu đồ (mặc định 14 ngày, tùy chọn 7 hoặc 30)
+   * Omitted dates return all time; explicit dates/days select a bounded period.
    */
-  async getOverview(days = 14) {
-    const validDays = Math.min(Math.max(Number(days) || 14, 7), 60);
-
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
-    const startOf7DaysAgo = new Date(startOfToday.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const startOfDaysAgo = new Date(startOfToday.getTime() - (validDays - 1) * 24 * 60 * 60 * 1000);
+  async getOverview(query?: DateRangeQueryDto | number) {
+    const rangeQuery = typeof query === 'number' ? { days: query } : query;
+    const allTime = rangeQuery?.days === undefined && rangeQuery?.startDate === undefined && rangeQuery?.endDate === undefined;
+    // Keep a finite comparison window for today/yesterday fields while all-time
+    // cohorts and totals deliberately omit date predicates.
+    const range = resolveDateRange(allTime ? { days: 1 } : rangeQuery);
+    const startOfToday = range.start;
     
     // Đầu tháng này và đầu tháng trước để tính tăng trưởng
-    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const startOfThisMonth = range.start;
+    const previousRange = previousDateRange(range);
+    const startOfLastMonth = previousRange.start;
+    const withinRange = (field: string) => allTime ? {} : dateRangeMatch(field, range);
 
     // 1. DOANH THU & GIAO DỊCH
     const [
@@ -63,7 +66,7 @@ export class AdminDashboardService {
     ] = await Promise.all([
       // Tổng doanh thu giao dịch thành công
       this.transactionModel.aggregate([
-        { $match: { status: TransactionStatus.SUCCESS } },
+        { $match: { status: TransactionStatus.SUCCESS, ...withinRange('createdAt') } },
         {
           $group: {
             _id: null,
@@ -77,8 +80,7 @@ export class AdminDashboardService {
       this.transactionModel.aggregate([
         {
           $match: {
-            status: TransactionStatus.SUCCESS,
-            createdAt: { $gte: startOfToday },
+            status: TransactionStatus.SUCCESS, ...withinRange('createdAt'),
           },
         },
         {
@@ -94,8 +96,7 @@ export class AdminDashboardService {
       this.transactionModel.aggregate([
         {
           $match: {
-            status: TransactionStatus.SUCCESS,
-            createdAt: { $gte: startOfThisMonth },
+            status: TransactionStatus.SUCCESS, ...withinRange('createdAt'),
           },
         },
         {
@@ -107,7 +108,7 @@ export class AdminDashboardService {
         },
       ]),
       // Doanh thu tháng trước
-      this.transactionModel.aggregate([
+      allTime ? Promise.resolve([]) : this.transactionModel.aggregate([
         {
           $match: {
             status: TransactionStatus.SUCCESS,
@@ -124,6 +125,7 @@ export class AdminDashboardService {
       ]),
       // Đếm số lượng theo từng trạng thái giao dịch
       this.transactionModel.aggregate([
+        { $match: withinRange('createdAt') },
         {
           $group: {
             _id: '$status',
@@ -134,7 +136,7 @@ export class AdminDashboardService {
       ]),
       // Thống kê coin nạp
       this.transactionModel.aggregate([
-        { $match: { status: TransactionStatus.SUCCESS } },
+        { $match: { status: TransactionStatus.SUCCESS, ...withinRange('createdAt') } },
         {
           $group: {
             _id: null,
@@ -185,22 +187,22 @@ export class AdminDashboardService {
       newUsers7Days,
       pendingAuthorRequests,
     ] = await Promise.all([
-      this.userModel.countDocuments(),
-      this.userModel.countDocuments({ status: UserStatus.ACTIVE }),
-      this.userModel.countDocuments({ status: UserStatus.BANNED }),
-      this.userModel.countDocuments({ role: UserRole.USER }),
-      this.userModel.countDocuments({ role: UserRole.AUTHOR }),
-      this.userModel.countDocuments({ role: UserRole.MANAGER }),
-      this.userModel.countDocuments({ role: UserRole.ADMIN }),
-      this.userModel.countDocuments({ createdAt: { $gte: startOfToday } }),
-      this.userModel.countDocuments({ createdAt: { $gte: startOfYesterday, $lt: startOfToday } }),
-      this.userModel.countDocuments({ createdAt: { $gte: startOf7DaysAgo } }),
-      this.authorRequestModel.countDocuments({ status: AuthorRequestStatus.PENDING }),
+      this.userModel.countDocuments(withinRange('createdAt')),
+      this.userModel.countDocuments({ status: UserStatus.ACTIVE, ...withinRange('createdAt') }),
+      this.userModel.countDocuments({ status: UserStatus.BANNED, ...withinRange('createdAt') }),
+      this.userModel.countDocuments({ role: UserRole.USER, ...withinRange('createdAt') }),
+      this.userModel.countDocuments({ role: UserRole.AUTHOR, ...withinRange('createdAt') }),
+      this.userModel.countDocuments({ role: UserRole.MANAGER, ...withinRange('createdAt') }),
+      this.userModel.countDocuments({ role: UserRole.ADMIN, ...withinRange('createdAt') }),
+      this.userModel.countDocuments(withinRange('createdAt')),
+      allTime ? Promise.resolve(0) : this.userModel.countDocuments({ createdAt: { $gte: previousRange.start, $lt: previousRange.endExclusive } }),
+      this.userModel.countDocuments(withinRange('createdAt')),
+      this.authorRequestModel.countDocuments({ status: AuthorRequestStatus.PENDING, ...withinRange('createdAt') }),
     ]);
 
     let userGrowthToday = 0;
     if (newUsersYesterday > 0) {
-      userGrowthToday = Math.round(((newUsersToday - newUsersYesterday) / newUsersYesterday) * 100);
+      userGrowthToday = calculateGrowthPercent(newUsersToday, newUsersYesterday);
     } else if (newUsersToday > 0) {
       userGrowthToday = 100;
     }
@@ -219,11 +221,11 @@ export class AdminDashboardService {
       rejectedChapters,
       draftChapters,
     ] = await Promise.all([
-      this.storyModel.countDocuments(),
-      this.storyModel.countDocuments({ status: StoryStatus.PUBLISHED }),
-      this.storyModel.countDocuments({ status: StoryStatus.PENDING_REVIEW }),
-      this.storyModel.countDocuments({ status: StoryStatus.REJECTED }),
-      this.storyModel.countDocuments({ status: StoryStatus.DRAFT }),
+      this.storyModel.countDocuments(withinRange('createdAt')),
+      this.storyModel.countDocuments({ status: StoryStatus.PUBLISHED, ...withinRange('createdAt') }),
+      this.storyModel.countDocuments({ status: StoryStatus.PENDING_REVIEW, ...withinRange('createdAt') }),
+      this.storyModel.countDocuments({ status: StoryStatus.REJECTED, ...withinRange('createdAt') }),
+      this.storyModel.countDocuments({ status: StoryStatus.DRAFT, ...withinRange('createdAt') }),
       this.storyModel.aggregate([
         {
           $group: {
@@ -235,14 +237,13 @@ export class AdminDashboardService {
           },
         },
       ]),
-      this.chapterModel.countDocuments(),
-      this.chapterModel.countDocuments({ status: ChapterStatus.PUBLISHED }),
-      this.chapterModel.countDocuments({ status: ChapterStatus.PENDING_REVIEW }),
-      this.chapterModel.countDocuments({ status: ChapterStatus.REJECTED }),
-      this.chapterModel.countDocuments({ status: ChapterStatus.DRAFT }),
+      this.chapterModel.countDocuments(withinRange('createdAt')),
+      this.chapterModel.countDocuments({ status: ChapterStatus.PUBLISHED, ...withinRange('createdAt') }),
+      this.chapterModel.countDocuments({ status: ChapterStatus.PENDING_REVIEW, ...withinRange('createdAt') }),
+      this.chapterModel.countDocuments({ status: ChapterStatus.REJECTED, ...withinRange('createdAt') }),
+      this.chapterModel.countDocuments({ status: ChapterStatus.DRAFT, ...withinRange('createdAt') }),
     ]);
 
-    const totalViews = storyStatsAgg[0]?.totalViews || 0;
     const totalFollows = storyStatsAgg[0]?.totalFollows || 0;
 
     // 4. BÌNH LUẬN & ĐÁNH GIÁ
@@ -254,14 +255,16 @@ export class AdminDashboardService {
       totalRatings,
       ratingStarsAgg,
     ] = await Promise.all([
-      this.commentModel.countDocuments(),
-      this.commentModel.countDocuments({ status: CommentStatus.VISIBLE }),
-      this.commentModel.countDocuments({ status: CommentStatus.HIDDEN }),
-      this.commentModel.countDocuments({ status: CommentStatus.DELETED }),
-      this.ratingModel.countDocuments(),
+      this.commentModel.countDocuments(withinRange('createdAt')),
+      this.commentModel.countDocuments({ status: CommentStatus.VISIBLE, ...withinRange('createdAt') }),
+      this.commentModel.countDocuments({ status: CommentStatus.HIDDEN, ...withinRange('createdAt') }),
+      this.commentModel.countDocuments({ status: CommentStatus.DELETED, ...withinRange('createdAt') }),
+      this.ratingModel.countDocuments(withinRange('createdAt')),
       this.ratingModel.aggregate([
         {
-          $group: {
+          $match: { ...withinRange('createdAt') },
+        },
+        { $group: {
             _id: '$rating',
             count: { $sum: 1 },
           },
@@ -287,7 +290,7 @@ export class AdminDashboardService {
       {
         $match: {
           status: TransactionStatus.SUCCESS,
-          createdAt: { $gte: startOfDaysAgo },
+            ...withinRange('createdAt'),
         },
       },
       {
@@ -306,7 +309,7 @@ export class AdminDashboardService {
     const userGrowthByDayAgg = await this.userModel.aggregate([
       {
         $match: {
-          createdAt: { $gte: startOfDaysAgo },
+          ...withinRange('createdAt'),
         },
       },
       {
@@ -323,9 +326,7 @@ export class AdminDashboardService {
     const viewsByDayAgg = await this.storyDailyViewModel.aggregate([
       {
         $match: {
-          date: {
-            $gte: startOfDaysAgo.toISOString().slice(0, 10),
-          },
+          ...(allTime ? {} : { date: { $in: dateRangeKeys(range) } }),
         },
       },
       {
@@ -351,6 +352,26 @@ export class AdminDashboardService {
       viewsByDayMap.set(v._id, v.views);
     });
 
+    if (allTime) { revenueGrowth = 0; userGrowthToday = 0; }
+    const todayKey = range.endDate;
+    const firstActivity = allTime ? await Promise.all([
+      this.storyModel, this.chapterModel, this.commentModel, this.ratingModel, this.authorRequestModel,
+    ].map((model) => model.aggregate([
+      { $group: { _id: null, first: { $min: '$createdAt' } } },
+    ]))) : [];
+    const recordedDates = [
+      ...firstActivity.flatMap((rows) => rows[0]?.first ? [new Date(new Date(rows[0].first).getTime() + 7 * 3600000).toISOString().slice(0, 10)] : []),
+      ...revenueByDayMap.keys(),
+      ...userByDayMap.keys(),
+      ...viewsByDayMap.keys(),
+    ].filter((key) => typeof key === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(key) && key <= todayKey).sort();
+    const timelineStart = allTime ? (recordedDates[0] || todayKey) : range.startDate;
+    const timelineEnd = allTime ? todayKey : range.endDate;
+    const timelineKeys: string[] = [];
+    for (let cursor = new Date(`${timelineStart}T00:00:00Z`), end = new Date(`${timelineEnd}T00:00:00Z`); cursor <= end; cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000)) {
+      timelineKeys.push(cursor.toISOString().slice(0, 10));
+    }
+
     // Tạo danh sách liên tục các ngày
     const chartTimeline: Array<{
       date: string;
@@ -362,13 +383,9 @@ export class AdminDashboardService {
       views: number;
     }> = [];
 
-    for (let i = validDays - 1; i >= 0; i--) {
-      const d = new Date(startOfToday.getTime() - i * 24 * 60 * 60 * 1000);
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      const dateStr = `${yyyy}-${mm}-${dd}`;
-      const label = `${dd}/${mm}`;
+    for (const dateStr of timelineKeys) {
+      const [, mm, dd] = dateStr.split('-');
+      const label = allTime ? dateStr : `${dd}/${mm}`;
 
       const revData = revenueByDayMap.get(dateStr) || { revenue: 0, coins: 0, txCount: 0 };
       const newUsers = userByDayMap.get(dateStr) || 0;
@@ -387,15 +404,15 @@ export class AdminDashboardService {
 
     // 6. PHÂN BỐ THỂ LOẠI (Category / Genre Distribution)
     const genreDistributionAgg = await this.storyModel.aggregate([
-      { $unwind: '$genres' },
+      { $match: withinRange('createdAt') },
+      { $unwind: '$genreIds' },
       {
         $group: {
-          _id: '$genres',
+          _id: '$genreIds',
           count: { $sum: 1 },
         },
       },
       { $sort: { count: -1 } },
-      { $limit: 8 },
     ]);
 
     // Populate tên thể loại
@@ -417,21 +434,25 @@ export class AdminDashboardService {
     });
 
     // 7. TOP TRUYỆN XEM NHIỀU & NỔI BẬT NHẤT
+    const topViews = await this.storyDailyViewModel.aggregate([
+      { $match: allTime ? {} : { date: { $gte: range.startDate, $lte: range.endDate } } },
+      { $group: { _id: '$storyId', views: { $sum: '$views' } } },
+      { $sort: { views: -1, _id: 1 } },
+    ]);
+    const topViewsMap = new Map(topViews.map((v) => [v._id.toString(), v.views]));
     const topStoriesRaw = await this.storyModel
-      .find({ status: StoryStatus.PUBLISHED })
+      .find({ status: StoryStatus.PUBLISHED, _id: { $in: topViews.map((v) => v._id) } })
       .populate('authorId', 'displayName username avatarUrl')
-      .sort({ 'stats.viewCount': -1 })
-      .limit(6)
       .lean();
 
-    const topStories = topStoriesRaw.map((s: any) => ({
+    const topStories = topStoriesRaw.sort((a, b) => Number(topViewsMap.get(b._id.toString()) || 0) - Number(topViewsMap.get(a._id.toString()) || 0)).slice(0, 6).map((s: any) => ({
       _id: s._id.toString(),
       title: s.title,
       slug: s.slug,
       coverImage: s.coverImage || null,
       authorName: s.authorId?.displayName || s.authorId?.username || 'Tác giả',
       authorAvatar: s.authorId?.avatarUrl || null,
-      views: s.stats?.viewCount || 0,
+      views: topViewsMap.get(s._id.toString()) || 0,
       likes: s.stats?.followCount || 0,
       chapterCount: s.stats?.chapterCount || 0,
       ratingAverage: s.stats?.ratingAverage || 5,
@@ -440,7 +461,7 @@ export class AdminDashboardService {
 
     // 8. 6 GIAO DỊCH NẠP GẦN NHẤT
     const recentTransactionsRaw = await this.transactionModel
-      .find()
+      .find(withinRange('createdAt'))
       .populate('userId', 'displayName username email avatarUrl')
       .populate('packageId', 'name')
       .sort({ createdAt: -1 })
@@ -471,19 +492,19 @@ export class AdminDashboardService {
     // 9. DANH SÁCH VIỆC CẦN XỬ LÝ GẤP (URGENT PENDING QUEUE)
     const [urgentPendingStories, urgentPendingChapters, urgentAuthorRequests] = await Promise.all([
       this.storyModel
-        .find({ status: StoryStatus.PENDING_REVIEW })
+        .find({ status: StoryStatus.PENDING_REVIEW, ...withinRange('createdAt') })
         .populate('authorId', 'displayName username')
         .sort({ createdAt: 1 })
         .limit(5)
         .lean(),
       this.chapterModel
-        .find({ status: ChapterStatus.PENDING_REVIEW })
+        .find({ status: ChapterStatus.PENDING_REVIEW, ...withinRange('createdAt') })
         .populate('storyId', 'title')
         .sort({ createdAt: 1 })
         .limit(5)
         .lean(),
       this.authorRequestModel
-        .find({ status: AuthorRequestStatus.PENDING })
+        .find({ status: AuthorRequestStatus.PENDING, ...withinRange('createdAt') })
         .populate('userId', 'displayName username email avatarUrl')
         .sort({ createdAt: 1 })
         .limit(5)
@@ -491,6 +512,8 @@ export class AdminDashboardService {
     ]);
 
     return {
+      range: { mode: allTime ? 'all' : 'range', startDate: allTime ? null : range.startDate, endDate: allTime ? null : range.endDate, dayCount: allTime ? null : range.dayCount, timeZone: 'Asia/Ho_Chi_Minh' },
+      metadata: { cohort: 'createdAt', status: 'current', snapshotFields: ['kpi.stories.totalFollows', 'topStories.likes', 'topStories.chapterCount', 'topStories.ratingAverage', 'topStories.ratingCount'], legacyPeriodFields: allTime ? 'allTime; previous period and growth are not applicable (0)' : 'selectedRange; lastMonth and newYesterday compare previous equal-length range' },
       kpi: {
         revenue: {
           total: totalRevenue,
@@ -527,7 +550,7 @@ export class AdminDashboardService {
           pending: pendingStories,
           rejected: rejectedStories,
           draft: draftStories,
-          totalViews,
+          totalViews: chartTimeline.reduce((sum, day) => sum + day.views, 0),
           totalFollows,
         },
         chapters: {

@@ -19,8 +19,8 @@ export function AdminMiniSparkline({
     return null;
   }
 
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+  const min = data.reduce((value, item) => Math.min(value, item), Infinity);
+  const max = data.reduce((value, item) => Math.max(value, item), -Infinity);
   const range = max - min || 1;
 
   const padX = 2;

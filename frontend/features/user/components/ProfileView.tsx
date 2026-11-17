@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useUserAuthorStatus } from "../queries/useUserQueries";
 import { ProfileUserCard } from "./ProfileUserCard";
 import { ProfileRolePanels } from "./ProfileRolePanels";
+import { ProfileForumPostsSection } from "./ProfileForumPostsSection";
 
 export function ProfileView() {
   const { user, logout, refreshUser } = useAuth();
@@ -48,6 +49,9 @@ export function ProfileView() {
           />
         </div>
       </div>
+
+      {/* Section: Bài viết diễn đàn của tôi */}
+      <ProfileForumPostsSection />
     </div>
   );
 }

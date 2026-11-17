@@ -144,6 +144,7 @@ export interface AdminDashboardUrgentAuthorRequest {
 }
 
 export interface AdminDashboardOverviewData {
+  range: { mode?: "all" | "range"; startDate: string | null; endDate: string | null; dayCount: number | null; timeZone: string };
   kpi: {
     revenue: AdminDashboardRevenueKPI;
     users: AdminDashboardUsersKPI;

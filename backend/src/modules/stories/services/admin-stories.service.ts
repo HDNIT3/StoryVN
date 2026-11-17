@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
+import { dateRangeMatch, resolveDateRange } from '../../../common/utils/date-range.util.js';
 import {
   buildPaginationMeta,
   PaginatedResult,
@@ -122,7 +124,8 @@ export class AdminStoriesService {
    * Lấy danh sách truyện trong admin (lọc theo trạng thái, hiển thị công khai/riêng tư, thể loại, từ khóa, sắp xếp, phân trang)
    */
   async findAll(query: AdminQueryStoriesDto): Promise<PaginatedResult<any>> {
-    const filter: Record<string, any> = {};
+    const filter: Record<string, any> = query.startDate !== undefined || query.endDate !== undefined
+      ? dateRangeMatch('createdAt', resolveDateRange(query)) : {};
     const andConditions: any[] = [];
 
     if (query.visibility) {
@@ -232,7 +235,7 @@ export class AdminStoriesService {
       enriched.sort((a, b) => {
         const diff = ((a.stats?.[sortKey] || 0) - (b.stats?.[sortKey] || 0)) * sortOrder;
         if (diff !== 0) return diff;
-        return (b.stats?.viewCount || 0) - (a.stats?.viewCount || 0);
+        return ((b.stats?.viewCount || 0) - (a.stats?.viewCount || 0)) || a._id.toString().localeCompare(b._id.toString());
       });
 
       const items = enriched.slice(query.skip, query.skip + query.limit);
@@ -251,7 +254,7 @@ export class AdminStoriesService {
     };
 
     const sortField = sortMap[query.sortBy || 'createdAt'] || 'createdAt';
-    const sort: any = { [sortField]: sortOrder };
+    const sort: any = { [sortField]: sortOrder, _id: sortOrder };
 
     const [rawItems, totalItems] = await Promise.all([
       this.storyModel
@@ -306,7 +309,7 @@ export class AdminStoriesService {
   /**
    * Lấy số lượng thống kê truyện theo từng tab (Tất cả, Chờ duyệt, Đã duyệt, Từ chối, Bản nháp, Bị ẩn/riêng tư)
    */
-  async getCounts(): Promise<{
+  async getCounts(query: DateRangeQueryDto = {}): Promise<{
     all: number;
     pending: number;
     published: number;
@@ -314,6 +317,8 @@ export class AdminStoriesService {
     draft: number;
     hidden: number;
   }> {
+    const cohort = query.startDate !== undefined || query.endDate !== undefined
+      ? dateRangeMatch('createdAt', resolveDateRange(query)) : {};
     const [
       all,
       pending,
@@ -322,22 +327,24 @@ export class AdminStoriesService {
       draft,
       hidden,
     ] = await Promise.all([
-      this.storyModel.countDocuments({}),
+      this.storyModel.countDocuments(cohort),
       this.storyModel.countDocuments({
+        ...cohort,
         $or: [
           { status: StoryStatus.PENDING_REVIEW },
           { 'revisions.status': RevisionStatus.PENDING_REVIEW },
         ],
       }),
-      this.storyModel.countDocuments({ status: StoryStatus.PUBLISHED }),
+      this.storyModel.countDocuments({ ...cohort, status: StoryStatus.PUBLISHED }),
       this.storyModel.countDocuments({
+        ...cohort,
         $or: [
           { status: StoryStatus.REJECTED },
           { 'revisions.status': RevisionStatus.REJECTED },
         ],
       }),
-      this.storyModel.countDocuments({ status: StoryStatus.DRAFT }),
-      this.storyModel.countDocuments({ visibility: StoryVisibility.PRIVATE }),
+      this.storyModel.countDocuments({ ...cohort, status: StoryStatus.DRAFT }),
+      this.storyModel.countDocuments({ ...cohort, visibility: StoryVisibility.PRIVATE }),
     ]);
 
     return { all, pending, published, rejected, draft, hidden };

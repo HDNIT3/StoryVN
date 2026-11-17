@@ -1,31 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
 import type { AuthorOverviewData } from "../../types";
 
-type TimeRange = "7days" | "30days" | "90days";
 
 interface RevenueChartProps {
+  allTime?: boolean;
   revenueChartData?: AuthorOverviewData["charts"]["revenue"];
   totalCoins?: number;
   walletBalance?: number;
 }
 
-function buildEmptyRevenue(range: TimeRange) {
-  const days = range === "7days" ? 7 : range === "30days" ? 30 : 90;
-  const items: { date: string; value: number }[] = [];
-  const now = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    items.push({
-      date: `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`,
-      value: 0,
-    });
-  }
-  return items;
-}
 
 function fmtK(n: number): string {
   if (!n || isNaN(n)) return "0";
@@ -36,13 +22,12 @@ function fmtK(n: number): string {
 
 export function RevenueChart({
   revenueChartData,
-  totalCoins = 0,
   walletBalance = 0,
+  allTime = false,
 }: RevenueChartProps) {
-  const [range, setRange] = useState<TimeRange>("7days");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const series = revenueChartData?.[range];
+  const series = revenueChartData?.selectedRange;
 
   const data = useMemo(() => {
     if (series?.items && series.items.length > 0) {
@@ -51,8 +36,8 @@ export function RevenueChart({
         value: item.value || 0,
       }));
     }
-    return buildEmptyRevenue(range);
-  }, [series, range]);
+    return [];
+  }, [series]);
 
   const drawChart = useCallback(() => {
     const canvas = canvasRef.current;
@@ -76,7 +61,7 @@ export function RevenueChart({
     const cH = Math.max(h - pT - pB, 10);
     ctx.clearRect(0, 0, w, h);
 
-    const rawMax = Math.max(...data.map((d) => d.value), 0);
+    const rawMax = data.reduce((max, d) => Math.max(max, d.value), 0);
     const maxVal = rawMax > 0 ? rawMax : 100;
 
     // Y grid
@@ -145,7 +130,7 @@ export function RevenueChart({
   }, [drawChart]);
 
   const periodTotal = series?.total ?? data.reduce((s, d) => s + d.value, 0);
-  const displayCoins = periodTotal > 0 ? periodTotal : totalCoins;
+  const displayCoins = periodTotal;
   const growthPct = series?.growthPercent ?? 0;
 
   return (
@@ -153,15 +138,7 @@ export function RevenueChart({
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-[15px] font-bold text-zinc-900 truncate">Doanh thu xu</h3>
-        <select
-          value={range}
-          onChange={(e) => setRange(e.target.value as TimeRange)}
-          className="text-xs font-medium text-zinc-600 bg-zinc-100 border border-zinc-200 rounded-md px-2.5 py-1 cursor-pointer focus:outline-none focus:border-blue-500 shrink-0"
-        >
-          <option value="7days">7 ngày qua</option>
-          <option value="30days">30 ngày qua</option>
-          <option value="90days">90 ngày qua</option>
-        </select>
+        <span className="text-xs text-zinc-500">Theo khoảng thời gian đã chọn</span>
       </div>
 
       {/* Canvas */}
@@ -187,7 +164,7 @@ export function RevenueChart({
           </svg>
           <div className="flex flex-col min-w-0">
             <span className="text-[11px] text-zinc-400">
-              {periodTotal > 0 ? "Doanh thu kỳ này" : "Tổng xu chương VIP"}
+              {allTime ? "Doanh thu toàn bộ thời gian" : "Doanh thu kỳ này"}
             </span>
             <span className="text-lg sm:text-xl font-extrabold text-zinc-900 tracking-tight">
               {displayCoins.toLocaleString("vi-VN")} xu
@@ -198,12 +175,12 @@ export function RevenueChart({
               growthPct >= 0 ? "text-emerald-600" : "text-rose-500"
             }`}
           >
-            {growthPct > 0
+            {allTime ? `Ví hiện tại: ${walletBalance.toLocaleString("vi-VN")} xu` : growthPct > 0
               ? `↑ ${growthPct}% so với kỳ trước`
               : growthPct < 0
               ? `↓ ${Math.abs(growthPct)}% so với kỳ trước`
               : walletBalance > 0
-              ? `Ví: ${walletBalance.toLocaleString("vi-VN")} xu`
+               ? `Ví hiện tại: ${walletBalance.toLocaleString("vi-VN")} xu`
               : "0% so với kỳ trước"}
           </span>
         </div>

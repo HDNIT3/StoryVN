@@ -87,7 +87,7 @@ export function AdminAreaChart({
 
   // Tìm min và max value
   const values = data.map((d) => d.value);
-  const rawMax = Math.max(...values, 0);
+  const rawMax = values.reduce((max, value) => Math.max(max, value), 0);
   const rawMin = Math.min(...values, 0);
 
   // Thêm padding cho min max

@@ -12,11 +12,11 @@ import type {
   QueryAuthorRevenueParams,
 } from "../types";
 
-export function useAuthorOverview(enabled = true) {
+export function useAuthorOverview(range: { startDate?: string; endDate?: string } = {}, enabled = true) {
   return useQuery({
-    queryKey: authorKeys.overview,
+    queryKey: authorKeys.overview(range),
     queryFn: async () => {
-      const res = await authorService.getAuthorOverview();
+      const res = await authorService.getAuthorOverview(range);
       return res.data;
     },
     enabled,

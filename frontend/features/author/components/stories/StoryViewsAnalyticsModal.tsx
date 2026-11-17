@@ -1,25 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
+import type { DateRange } from "@/components/statistics";
 import { StoryItem, useMyStoryDailyViews } from "@/features/stories";
 
 interface StoryViewsAnalyticsModalProps {
   story: StoryItem | null;
   isOpen: boolean;
   onClose: () => void;
+  range: DateRange;
 }
 
 export function StoryViewsAnalyticsModal({
   story,
   isOpen,
   onClose,
+  range,
 }: StoryViewsAnalyticsModalProps) {
-  const [days, setDays] = useState<7 | 30 | 90>(30);
 
   const storyId = story?._id || story?.id || story?.slug || "";
-  const { data, isLoading } = useMyStoryDailyViews(
+  const { data, isLoading, isError } = useMyStoryDailyViews(
     storyId,
-    days,
+    range,
     isOpen && Boolean(storyId)
   );
 
@@ -47,7 +49,7 @@ export function StoryViewsAnalyticsModal({
               </h3>
             </div>
             <p className="text-xs text-zinc-500 mt-0.5 truncate">
-              Theo dõi lượt đọc chi tiết theo từng ngày, tuần, tháng và năm của tác phẩm
+              {range.startDate ? `${range.startDate} - ${range.endDate}` : "Toàn bộ thời gian"} (Asia/Ho_Chi_Minh). Các thẻ bên dưới là số liệu hiện tại.
             </p>
           </div>
           <button
@@ -111,7 +113,7 @@ export function StoryViewsAnalyticsModal({
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div>
                 <h4 className="text-sm font-bold text-zinc-900">
-                  Biểu đồ lượt đọc {days} ngày gần nhất
+                  Biểu đồ lượt đọc trong kỳ đã chọn
                 </h4>
                 <p className="text-xs text-zinc-500">
                   Tổng trong kỳ:{" "}
@@ -121,25 +123,9 @@ export function StoryViewsAnalyticsModal({
                 </p>
               </div>
 
-              <div className="inline-flex items-center rounded-lg bg-zinc-100 p-0.5 border border-zinc-200">
-                {([7, 30, 90] as const).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setDays(d)}
-                    className={`px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
-                      days === d
-                        ? "bg-white text-sky-600 shadow-2xs"
-                        : "text-zinc-600 hover:text-zinc-900"
-                    }`}
-                  >
-                    {d} ngày
-                  </button>
-                ))}
-              </div>
             </div>
 
-            {isLoading ? (
+            {isError ? <p role="alert" className="text-sm text-red-600">Không thể tải lượt đọc trong kỳ.</p> : isLoading ? (
               <div className="h-44 flex items-center justify-center text-xs text-zinc-400">
                 Đang tải dữ liệu biểu đồ...
               </div>
