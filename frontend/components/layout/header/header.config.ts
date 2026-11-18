@@ -94,6 +94,7 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: "tac-gia", label: "Tác Giả", href: "/tac-gia" },
   { id: "dien-dan", label: "Diễn Đàn", href: "/dien-dan" },
   { id: "nap-xu", label: "Nạp Xu", href: "/nap-xu" },
+  { id: "ho-tro", label: "Hỗ Trợ", href: "/ho-tro" },
 ];
 
 export const DEFAULT_SEARCH: HeaderSearchProps = {

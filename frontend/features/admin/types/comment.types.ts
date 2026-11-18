@@ -16,6 +16,12 @@ export interface AdminCommentStory {
   coverUrl?: string;
 }
 
+export interface AdminCommentForumPost {
+  _id: string;
+  slug?: string;
+  title: string;
+}
+
 export interface AdminCommentChapter {
   _id: string;
   chapterNumber: number;
@@ -27,6 +33,7 @@ export interface AdminCommentItem {
   userId: AdminCommentUser;
   replyToUserId?: AdminCommentUser | null;
   storyId?: AdminCommentStory | null;
+  forumPostId?: AdminCommentForumPost | null;
   chapterId?: AdminCommentChapter | null;
   parentId?: string | null;
   content: string;

@@ -72,6 +72,7 @@ export function CommentTable({
               const commenter = comment.userId;
               const replyTo = comment.replyToUserId;
               const story = comment.storyId;
+              const forumPost = comment.forumPostId;
               const chapter = comment.chapterId;
               const isHidden = comment.status === "HIDDEN";
               const isDeleted = comment.status === "DELETED";
@@ -113,26 +114,41 @@ export function CommentTable({
                   {/* Tác phẩm / Vị trí */}
                   <td className="py-3.5 px-4 align-top max-w-[160px]">
                     {story ? (
-                      <Link
-                        href={`/truyen/${story.slug}`}
-                        target="_blank"
-                        className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1 block text-xs"
-                        title={story.title}
-                      >
-                        {story.title}
-                      </Link>
+                      <>
+                        <Link
+                          href={`/truyen/${story.slug}`}
+                          target="_blank"
+                          className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1 block text-xs"
+                          title={story.title}
+                        >
+                          {story.title}
+                        </Link>
+                        {chapter ? (
+                          <span className="inline-block mt-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                            Chương {chapter.chapterNumber}
+                          </span>
+                        ) : (
+                          <span className="inline-block mt-1 text-[10px] text-slate-400">
+                            Trang truyện
+                          </span>
+                        )}
+                      </>
+                    ) : forumPost ? (
+                      <>
+                        <Link
+                          href={`/dien-dan/${forumPost.slug || forumPost._id}`}
+                          target="_blank"
+                          className="font-semibold text-slate-900 hover:text-sky-600 transition-colors line-clamp-1 block text-xs"
+                          title={forumPost.title}
+                        >
+                          {forumPost.title}
+                        </Link>
+                        <span className="inline-block mt-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                          Bài viết diễn đàn
+                        </span>
+                      </>
                     ) : (
                       <span className="text-slate-400 italic text-xs">Không rõ</span>
-                    )}
-
-                    {chapter ? (
-                      <span className="inline-block mt-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                        Chương {chapter.chapterNumber}
-                      </span>
-                    ) : (
-                      <span className="inline-block mt-1 text-[10px] text-slate-400">
-                        Trang truyện
-                      </span>
                     )}
                   </td>
 

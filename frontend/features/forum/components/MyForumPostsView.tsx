@@ -283,7 +283,7 @@ export function MyForumPostsView() {
                       )}
                     </div>
                     <Link
-                      href={`/dien-dan/${post._id}`}
+                      href={`/dien-dan/${post.slug || post._id}`}
                       className="mt-2 block hover:text-sky-600 transition"
                     >
                       <h2 className="break-words text-lg font-bold text-slate-900 group-hover:text-sky-600 transition">
@@ -295,7 +295,7 @@ export function MyForumPostsView() {
                   {/* Actions dropdown/buttons */}
                   <div className="flex items-center gap-2">
                     <Link
-                      href={`/tai-khoan/bai-viet/${post._id}/chinh-sua`}
+                      href={`/tai-khoan/bai-viet/${post.slug || post._id}/chinh-sua`}
                       className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-sky-600 transition"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -373,10 +373,18 @@ export function MyForumPostsView() {
                       </svg>
                       <span>{(post.shareCount ?? 0).toLocaleString("vi-VN")} chia sẻ</span>
                     </span>
+
+                    {/* Comments */}
+                    <span className="inline-flex items-center gap-1.5" title="Lượt bình luận">
+                      <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span>{(post.commentCount ?? 0).toLocaleString("vi-VN")} bình luận</span>
+                    </span>
                   </div>
 
                   <Link
-                    href={`/dien-dan/${post._id}`}
+                    href={`/dien-dan/${post.slug || post._id}`}
                     className="inline-flex items-center gap-1 font-semibold text-sky-600 hover:text-sky-700 transition"
                   >
                     Xem chi tiết bài viết

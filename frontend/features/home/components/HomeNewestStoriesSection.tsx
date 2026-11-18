@@ -122,7 +122,7 @@ export function HomeNewestStoriesSection({ stories, isLoading }: HomeNewestStori
               </div>
 
               <div className="px-1 pt-2.5 pb-1">
-                <h3 className="line-clamp-2 text-xs sm:text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-sky-600">
+                <h3 className="line-clamp-2 py-0.5 text-xs sm:text-sm font-bold leading-normal text-slate-900 transition-colors group-hover:text-sky-600">
                   {story.title}
                 </h3>
                 <p className="mt-1 line-clamp-1 text-[11px] sm:text-xs text-slate-500 font-medium">

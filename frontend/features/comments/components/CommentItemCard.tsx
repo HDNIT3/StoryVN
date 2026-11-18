@@ -10,13 +10,15 @@ import {
   useToggleCommentVisibility,
   useUpdateComment,
 } from "../queries/useCommentQueries";
+import { ReportContentModal } from "@/features/reports";
 import { CommentInputBox } from "./CommentInputBox";
 import { CommentRepliesList } from "./CommentRepliesList";
 import type { CommentItem, CommentUser } from "../types";
 
 interface CommentItemCardProps {
   comment: CommentItem;
-  storyId: string;
+  storyId?: string;
+  forumPostId?: string;
   storyAuthorId?: string | null;
   storySlug?: string;
   targetCommentId?: string | null;
@@ -47,6 +49,7 @@ function formatRelativeTime(dateStr?: string): string {
 export const CommentItemCard: React.FC<CommentItemCardProps> = ({
   comment,
   storyId,
+  forumPostId,
   storyAuthorId,
   storySlug,
   targetCommentId,
@@ -55,6 +58,7 @@ export const CommentItemCard: React.FC<CommentItemCardProps> = ({
   const { user } = useAuth();
   const isParentOfTarget = Boolean(targetParentId && comment._id === targetParentId);
   const [showReplies, setShowReplies] = useState(isParentOfTarget);
+  const [isReporting, setIsReporting] = useState(false);
 
   useEffect(() => {
     if (isParentOfTarget) {
@@ -101,7 +105,8 @@ export const CommentItemCard: React.FC<CommentItemCardProps> = ({
   const handleReplySubmit = async (text: string) => {
     createReply(
       {
-        storyId,
+        storyId: storyId || comment.storyId || null,
+        forumPostId: forumPostId || comment.forumPostId || null,
         chapterId: comment.chapterId?._id || null,
         parentId: replyTarget?.commentId || comment._id,
         replyToUserId: replyTarget?.isReplyToReply ? replyTarget.user._id : null,
@@ -256,7 +261,7 @@ export const CommentItemCard: React.FC<CommentItemCardProps> = ({
       </div>
 
       {/* Nội dung bình luận */}
-      <div className="mt-3 pl-13">
+      <div className="mt-3 sm:pl-13">
         {isEditing ? (
           <div className="space-y-2">
             <textarea
@@ -285,7 +290,7 @@ export const CommentItemCard: React.FC<CommentItemCardProps> = ({
           </div>
         ) : (
           <p
-            className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line ${
+            className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words ${
               isDeleted ? "text-zinc-400 italic" : "text-zinc-800"
             }`}
           >
@@ -348,6 +353,17 @@ export const CommentItemCard: React.FC<CommentItemCardProps> = ({
               </button>
             )}
 
+            {!isOwner && (
+              <button
+                type="button"
+                onClick={() => setIsReporting(true)}
+                className="font-medium text-zinc-400 hover:text-rose-600 transition-colors cursor-pointer"
+                title="Báo cáo bình luận vi phạm"
+              >
+                Báo cáo
+              </button>
+            )}
+
             {comment.replyCount > 0 && (
               <button
                 type="button"
@@ -398,6 +414,14 @@ export const CommentItemCard: React.FC<CommentItemCardProps> = ({
           />
         )}
       </div>
+
+      <ReportContentModal
+        isOpen={isReporting}
+        onClose={() => setIsReporting(false)}
+        targetType="COMMENT"
+        targetId={comment._id}
+        targetTitle={`Bình luận của @${displayName}`}
+      />
     </div>
   );
 };

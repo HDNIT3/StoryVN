@@ -25,6 +25,9 @@ export class ForumPost {
   @Prop({ required: true, trim: true, minlength: 1, maxlength: 200 })
   title: string;
 
+  @Prop({ trim: true, lowercase: true })
+  slug?: string;
+
   @Prop({ required: true, trim: true, minlength: 1, maxlength: 20000 })
   content: string;
 
@@ -46,10 +49,14 @@ export class ForumPost {
   @Prop({ default: 0, min: 0 })
   shareCount: number;
 
+  @Prop({ default: 0, min: 0 })
+  commentCount: number;
+
   createdAt: Date;
   updatedAt: Date;
 }
 
 export const ForumPostSchema = SchemaFactory.createForClass(ForumPost);
+ForumPostSchema.index({ slug: 1 }, { unique: true, sparse: true });
 ForumPostSchema.index({ status: 1, createdAt: -1, _id: -1 });
 ForumPostSchema.index({ userId: 1, status: 1, createdAt: -1, _id: -1 });

@@ -153,4 +153,29 @@ describe('ForumService', () => {
     await service.list(Object.assign(new QueryForumPostsDto(), { startDate: '2026-11-01', endDate: '2026-11-01' }), owner);
     expect(posts.find.mock.lastCall[0]).toMatchObject({ userId: new Types.ObjectId(owner), createdAt: { $gte: new Date('2026-10-31T17:00:00Z'), $lt: new Date('2026-11-01T17:00:00Z') } });
   });
+
+  it('generates clean slug on create and supports resolving posts by slug without exposing MongoDB ID in URL', async () => {
+    posts.exists.mockResolvedValue(null);
+    posts.create.mockResolvedValue({ _id: new Types.ObjectId(postId) });
+    posts.findOne.mockReturnValue(query({
+      _id: new Types.ObjectId(postId),
+      slug: 'goc-chia-se-truyen-hay',
+      title: 'Góc chia sẻ truyện hay',
+      content: 'Nội dung',
+      status: ForumPostStatus.VISIBLE,
+    }));
+
+    const created = await service.create(owner, { title: 'Góc chia sẻ truyện hay', content: 'Nội dung' });
+    expect(posts.create).toHaveBeenCalledWith(expect.objectContaining({
+      slug: 'goc-chia-se-truyen-hay',
+      title: 'Góc chia sẻ truyện hay',
+    }));
+    expect(created.slug).toBe('goc-chia-se-truyen-hay');
+
+    const bySlug = await service.get('goc-chia-se-truyen-hay');
+    expect(posts.findOne).toHaveBeenLastCalledWith(expect.objectContaining({
+      slug: 'goc-chia-se-truyen-hay',
+    }));
+    expect(bySlug.title).toBe('Góc chia sẻ truyện hay');
+  });
 });

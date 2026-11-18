@@ -80,6 +80,28 @@ export class CommentsController {
   }
 
   @ApiOperation({
+    summary: 'Lấy danh sách bình luận gốc của bài viết diễn đàn',
+  })
+  @UseGuards(AuthGuard)
+  @Public()
+  @Get('forum/posts/:forumPostId/comments')
+  async getForumPostComments(
+    @Param('forumPostId') forumPostId: string,
+    @Query() query: QueryCommentsDto,
+    @CurrentUser() user?: User & { _id: any },
+  ) {
+    const data = await this.commentsService.getForumPostComments(
+      forumPostId,
+      query,
+      user,
+    );
+    return {
+      success: true,
+      data,
+    };
+  }
+
+  @ApiOperation({
     summary: 'Lấy danh sách câu trả lời con của một bình luận',
   })
   @UseGuards(AuthGuard)

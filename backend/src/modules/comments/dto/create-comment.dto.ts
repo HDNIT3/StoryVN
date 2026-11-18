@@ -2,10 +2,18 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsMongoId, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateCommentDto {
-  @ApiProperty({ description: 'ID tác phẩm cần bình luận', example: '651a2b3c4d5e6f7a8b9c0d1e' })
+  @ApiPropertyOptional({ description: 'ID tác phẩm cần bình luận', example: '651a2b3c4d5e6f7a8b9c0d1e' })
+  @IsOptional()
   @IsMongoId({ message: 'ID tác phẩm không hợp lệ' })
-  @IsNotEmpty({ message: 'ID tác phẩm là bắt buộc' })
-  storyId: string;
+  storyId?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'ID bài viết diễn đàn cần bình luận',
+    example: '651a2b3c4d5e6f7a8b9c0d1e',
+  })
+  @IsOptional()
+  @IsMongoId({ message: 'ID bài viết không hợp lệ' })
+  forumPostId?: string | null;
 
   @ApiPropertyOptional({
     description: 'ID chương (để trống hoặc null nếu bình luận ở trang truyện)',

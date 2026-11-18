@@ -155,7 +155,7 @@ export function HomeFeaturedAuthorsSection({
       {/* ─── Danh sách Avatar tròn + Tên + Lượt đọc (theo ảnh mẫu) ─────── */}
       {!isLoading && authors.length > 0 && (
         <div className="relative">
-          <div className="flex items-start justify-between gap-3 overflow-x-auto pb-3 pt-2 sm:gap-6 scrollbar-none">
+          <div className="flex items-start justify-between gap-3 overflow-x-auto px-2 pb-3 pt-3 sm:gap-6 scrollbar-none">
             {authors.map((author, index) => {
               const name = author.penName || author.displayName || author.username;
               const badgeBg = VERIFIED_BADGE_COLORS[index % VERIFIED_BADGE_COLORS.length];
@@ -195,7 +195,7 @@ export function HomeFeaturedAuthorsSection({
                   </div>
 
                   {/* Tên tác giả */}
-                  <span className="line-clamp-1 w-full text-sm font-bold text-slate-800 transition-colors group-hover:text-sky-600 sm:text-base">
+                  <span className="line-clamp-1 w-full py-0.5 text-sm font-bold leading-normal text-slate-800 transition-colors group-hover:text-sky-600 sm:text-base">
                     {name}
                   </span>
 

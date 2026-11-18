@@ -86,7 +86,7 @@ export function HeaderMobileMenu({
   const accountItems = ACCOUNT_MENU_ITEMS.filter((item) => item.visibleFor(roleKey));
 
   return (
-    <div className="flex shrink-0 items-center lg:hidden">
+    <div className="flex shrink-0 items-center xl:hidden">
       {/* Mobile / Tablet Toggle Button */}
       <button
         type="button"
@@ -109,7 +109,7 @@ export function HeaderMobileMenu({
       {mounted &&
         isOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[80] overflow-hidden lg:hidden">
+          <div className="fixed inset-0 z-[80] overflow-hidden xl:hidden">
             {/* Backdrop */}
             <div
               className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-200"

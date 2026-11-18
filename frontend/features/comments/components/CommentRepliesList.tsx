@@ -9,6 +9,7 @@ import {
   useToggleCommentVisibility,
   useUpdateComment,
 } from "../queries/useCommentQueries";
+import { ReportContentModal } from "@/features/reports";
 import type { CommentItem, CommentUser } from "../types";
 
 interface CommentRepliesListProps {
@@ -48,6 +49,7 @@ export const CommentRepliesList: React.FC<CommentRepliesListProps> = ({
   const { user } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>("");
+  const [reportingReply, setReportingReply] = useState<CommentItem | null>(null);
 
   const { data: repliesRes, isLoading } = useCommentReplies(parentId, {
     limit: 50,
@@ -111,7 +113,7 @@ export const CommentRepliesList: React.FC<CommentRepliesListProps> = ({
   };
 
   return (
-    <div className="pl-6 sm:pl-10 pt-3 space-y-3 border-l-2 border-zinc-100 ml-4 sm:ml-5">
+    <div className="pl-3 sm:pl-8 pt-3 space-y-3 border-l-2 border-zinc-100 ml-2 sm:ml-4">
       {replies.map((reply) => {
         const commenter = reply.userId;
         const displayName =
@@ -229,14 +231,14 @@ export const CommentRepliesList: React.FC<CommentRepliesListProps> = ({
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-zinc-800 mt-1.5 whitespace-pre-line leading-relaxed pl-9">
+              <p className="text-xs text-zinc-800 mt-1.5 whitespace-pre-line break-words leading-relaxed sm:pl-9">
                 {reply.content}
               </p>
             )}
 
             {/* Actions */}
             {editingId !== reply._id && (
-              <div className="flex items-center gap-3 mt-2 pl-9 text-[11px]">
+              <div className="flex flex-wrap items-center gap-3 mt-2 sm:pl-9 text-[11px]">
                 <button
                   type="button"
                   onClick={() => onReplyTo(commenter, reply._id)}
@@ -287,11 +289,34 @@ export const CommentRepliesList: React.FC<CommentRepliesListProps> = ({
                     {isHidden ? "Cho hiện lại" : "Ẩn phản hồi"}
                   </button>
                 )}
+
+                {!isOwner && (
+                  <button
+                    type="button"
+                    onClick={() => setReportingReply(reply)}
+                    className="text-zinc-400 hover:text-rose-600 transition-colors cursor-pointer"
+                    title="Báo cáo phản hồi vi phạm"
+                  >
+                    Báo cáo
+                  </button>
+                )}
               </div>
             )}
           </div>
         );
       })}
+
+      <ReportContentModal
+        isOpen={Boolean(reportingReply)}
+        onClose={() => setReportingReply(null)}
+        targetType="COMMENT"
+        targetId={reportingReply?._id || ""}
+        targetTitle={
+          reportingReply
+            ? `Phản hồi của @${reportingReply.userId?.displayName || reportingReply.userId?.username || "Độc giả"}`
+            : undefined
+        }
+      />
     </div>
   );
 };
