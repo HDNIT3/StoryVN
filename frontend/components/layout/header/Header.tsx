@@ -34,11 +34,11 @@ function HeaderLogo({
   return (
     <Link
       href={href}
-      className={`inline-flex items-center gap-1.5 sm:gap-2.5 shrink-0 ${className}`}
+      className={`inline-flex items-center gap-1.5 sm:gap-2 shrink-0 ${className}`}
       aria-label={`${title}${suffix} - ${subtitle}`}
     >
       {/* Brand Icon Box */}
-      <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl border border-white/80 shadow-[0_6px_18px_-8px_rgba(14,165,233,0.75)] ring-1 ring-slate-100 sm:h-11 sm:w-11 md:h-12 md:w-12">
+      <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl border border-white/80 shadow-[0_6px_18px_-8px_rgba(14,165,233,0.75)] ring-1 ring-slate-100 sm:h-10 sm:w-10 xl:h-11 xl:w-11">
         <Image
           src={iconSrc}
           alt={`${title}${suffix} Icon`}
@@ -50,7 +50,7 @@ function HeaderLogo({
       </div>
 
       {/* Brand Typography */}
-      <span className="select-none text-xl font-extrabold leading-none tracking-tight text-slate-900 sm:text-3xl md:text-[32px]">
+      <span className="select-none text-xl font-extrabold leading-none tracking-tight text-slate-900 sm:text-2xl xl:text-[28px]">
         {title}
         <span className="bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">
           {suffix}
@@ -78,9 +78,8 @@ export function Header({
 }: HeaderProps = {}) {
   return (
     <header
-      className={`w-full border-b border-slate-200/80 bg-white/95 transition-all ${
-        sticky ? "sticky top-0 z-50 shadow-xs" : "relative"
-      } ${className}`}
+      className={`w-full border-b border-slate-200/80 bg-white/95 transition-all ${sticky ? "sticky top-0 z-50 shadow-xs" : "relative"
+        } ${className}`}
     >
       {sticky && (
         <div
@@ -88,13 +87,13 @@ export function Header({
           className="pointer-events-none absolute inset-0 bg-white/95 backdrop-blur-xl supports-[backdrop-filter]:bg-white/90"
         />
       )}
-      <div className="relative mx-auto flex h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-2 px-3.5 sm:h-20 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+      <div className="relative mx-auto flex h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-2 px-3.5 sm:h-20 sm:gap-2.5 sm:px-5 lg:gap-3 lg:px-6 xl:px-8">
         {/* Left Side: Logo & Desktop Navigation */}
-        <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 lg:gap-4">
+        <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5 lg:gap-3">
           <HeaderLogo {...logo} />
 
-          {/* Desktop Navigation (visible on lg screens and up) */}
-          <div className="hidden items-center lg:flex">
+          {/* Desktop Navigation (visible on xl screens and up to prevent overflowing header) */}
+          <div className="hidden items-center xl:flex">
             <HeaderNav
               items={navItems}
               activeNavId={activeNavId}
@@ -103,8 +102,8 @@ export function Header({
           </div>
         </div>
 
-        {/* Center: Search Bar (visible on md, lg and xl screens with fluid responsiveness) */}
-        <div className="mx-2 hidden min-w-[180px] max-w-xs flex-1 items-center justify-center sm:mx-3 sm:min-w-[220px] md:flex md:max-w-sm lg:max-w-md xl:max-w-lg">
+        {/* Center: Search Bar (fluidly shrinks without forcing overflow) */}
+        <div className="mx-1.5 hidden min-w-[160px] max-w-xs flex-1 items-center justify-center md:flex md:max-w-sm lg:max-w-md xl:mx-2 xl:min-w-[190px] xl:max-w-[270px] 2xl:max-w-md">
           <HeaderSearch className="w-full" {...search} />
         </div>
 
@@ -175,7 +174,9 @@ export function SmartHeader() {
     activeNavId = "tac-gia";
   } else if (pathname.startsWith("/nap-xu")) {
     activeNavId = "nap-xu";
-  } else if (pathname === "/dien-dan" || pathname === "/tai-khoan/bai-viet") {
+  } else if (pathname.startsWith("/ho-tro")) {
+    activeNavId = "ho-tro";
+  } else if (pathname.startsWith("/dien-dan") || pathname.startsWith("/tai-khoan/bai-viet")) {
     activeNavId = "dien-dan";
   }
 
@@ -186,11 +187,11 @@ export function SmartHeader() {
 
   const userProfileForHeader = user
     ? {
-        name: user.displayName,
-        avatarUrl: user.avatarUrl ?? undefined,
-        email: user.email,
-        role: user.role,
-      }
+      name: user.displayName,
+      avatarUrl: user.avatarUrl ?? undefined,
+      email: user.email,
+      role: user.role,
+    }
     : undefined;
 
   const wallet = {

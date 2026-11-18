@@ -9,6 +9,7 @@ export interface ForumUser {
 
 export interface ForumPost {
   _id: string;
+  slug?: string;
   title: string;
   content: string;
   contentFormat?: "plain" | "html";

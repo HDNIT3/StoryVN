@@ -127,6 +127,24 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm font-medium">
               <li>
                 <Link
+                  href="/ho-tro"
+                  className="transition-colors hover:text-sky-600 flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                  Trung tâm hỗ trợ &amp; FAQ
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/ho-tro?tab=report"
+                  className="transition-colors hover:text-rose-600 flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                  Tố cáo nội dung vi phạm
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/dieu-khoan-dich-vu"
                   className="transition-colors hover:text-sky-600 flex items-center gap-1.5"
                 >

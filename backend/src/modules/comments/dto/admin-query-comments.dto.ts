@@ -31,6 +31,11 @@ export class AdminQueryCommentsDto extends PaginationQueryDto {
   @IsMongoId({ message: 'ID truyện không hợp lệ' })
   storyId?: string;
 
+  @ApiPropertyOptional({ description: 'Lọc theo ID bài viết diễn đàn' })
+  @IsOptional()
+  @IsMongoId({ message: 'ID bài viết không hợp lệ' })
+  forumPostId?: string;
+
   @ApiPropertyOptional({
     description: 'Thứ tự sắp xếp',
     enum: CommentSortOrder,

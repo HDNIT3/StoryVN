@@ -204,9 +204,9 @@ export function HeroStoryBanner({
               </span>
             </div>
 
-            {/* Tiêu đề: tối đa 2 hàng; nếu chỉ 1 hàng thì canh giữa khung để không trống dòng dưới */}
-            <div className="flex min-h-[2.3em] items-center text-3xl sm:text-4xl md:text-5xl">
-              <h2 className="line-clamp-2 w-full font-extrabold leading-[1.15] tracking-tight text-slate-900 transition-colors">
+            {/* Tiêu đề: tối đa 2 hàng */}
+            <div className="flex min-h-[2.3em] items-center text-2xl sm:text-4xl md:text-5xl">
+              <h2 className="line-clamp-2 w-full py-1 font-extrabold leading-[1.25] tracking-tight text-slate-900 transition-colors">
                 <Link href={`/truyen/${current.slug}`} className="hover:underline underline-offset-4">
                   {current.title}
                 </Link>
@@ -262,9 +262,9 @@ export function HeroStoryBanner({
               ) : null}
             </div>
 
-            {/* Tóm tắt: giới hạn 2 hàng, canh giữa khi chỉ có 1 hàng */}
+            {/* Tóm tắt: giới hạn 2 hàng */}
             <div className="flex min-h-[3.25em] items-center text-base sm:text-lg">
-              <p className="line-clamp-2 w-full max-w-[65ch] leading-relaxed text-slate-600">
+              <p className="line-clamp-2 w-full max-w-[65ch] py-0.5 leading-relaxed text-slate-600">
                 {current.description?.replace(/<[^>]*>?/gm, "") ||
                   "Một tác phẩm mới vừa được cập nhật tại StoryVN, mang đến những tình tiết hấp dẫn, mở ra thế giới câu chuyện kỳ thú cho độc giả yêu thích tiểu thuyết trực tuyến."}
               </p>

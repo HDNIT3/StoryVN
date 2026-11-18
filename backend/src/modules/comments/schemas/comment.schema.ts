@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema, Types } from 'mongoose';
 import { Chapter } from '../../chapters/schemas/chapter.schema.js';
+import { ForumPost } from '../../forum/schemas/forum-post.schema.js';
 import { Story } from '../../stories/schemas/story.schema.js';
 import { User } from '../../users/schemas/user.schema.js';
 
@@ -27,10 +28,18 @@ export class Comment {
   @Prop({
     type: MongooseSchema.Types.ObjectId,
     ref: Story.name,
-    required: true,
+    default: null,
     index: true,
   })
-  storyId: Types.ObjectId;
+  storyId?: Types.ObjectId | null;
+
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: ForumPost.name,
+    default: null,
+    index: true,
+  })
+  forumPostId?: Types.ObjectId | null;
 
   @Prop({
     type: MongooseSchema.Types.ObjectId,
@@ -86,6 +95,7 @@ export class Comment {
 export const CommentSchema = SchemaFactory.createForClass(Comment);
 
 CommentSchema.index({ storyId: 1, chapterId: 1, parentId: 1, createdAt: -1 });
+CommentSchema.index({ forumPostId: 1, parentId: 1, createdAt: -1 });
 CommentSchema.index({ parentId: 1, createdAt: 1 });
 CommentSchema.index({ userId: 1, createdAt: -1 });
 

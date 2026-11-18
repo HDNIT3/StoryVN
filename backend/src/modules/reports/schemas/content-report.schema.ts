@@ -5,6 +5,8 @@ import { User } from '../../users/schemas/user.schema.js';
 export enum ContentReportTargetType {
   FORUM_POST = 'FORUM_POST',
   STORY = 'STORY',
+  CHAPTER = 'CHAPTER',
+  COMMENT = 'COMMENT',
 }
 
 export type ContentReportDocument = HydratedDocument<ContentReport>;

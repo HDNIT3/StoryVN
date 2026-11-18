@@ -1,9 +1,10 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { buildPaginationMeta, PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { dateRangeMatch, resolveDateRange } from '../../../common/utils/date-range.util.js';
+import { toSlug } from '../../../common/utils/slug.util.js';
 import { QueryReportsDto } from '../../reports/dto/reports.dto.js';
 import { AdminQueryForumPostsDto, CreateForumPostDto, UpdateForumPostDto } from '../dto/forum.dto.js';
 import { ContentReportTargetType } from '../../reports/schemas/content-report.schema.js';
@@ -12,19 +13,66 @@ import { ForumContentFormat, ForumPost, ForumPostDocument, ForumPostStatus } fro
 import { prepareForumContent } from './forum-content.js';
 
 const authorFields = '_id username displayName avatarUrl';
-const postFields = '_id title content contentFormat status userId likedBy sharedBy viewCount shareCount createdAt updatedAt';
+const postFields = '_id slug title content contentFormat status userId likedBy sharedBy viewCount shareCount commentCount createdAt updatedAt';
 export const editableStatuses = [ForumPostStatus.VISIBLE, ForumPostStatus.HIDDEN, ForumPostStatus.PENDING, ForumPostStatus.REJECTED];
 
 @Injectable()
-export class ForumService {
+export class ForumService implements OnModuleInit {
   constructor(
     @InjectModel(ForumPost.name) private readonly posts: Model<ForumPostDocument>,
     private readonly contentReports: ReportsService,
-  ) {}
+  ) { }
+
+  async onModuleInit() {
+    if (typeof this.posts.find !== 'function' || typeof this.posts.updateOne !== 'function') return;
+    try {
+      const missingSlugPosts = await this.posts
+        .find({ $or: [{ slug: { $exists: false } }, { slug: null }, { slug: '' }] })
+        .select('_id title')
+        .lean();
+      for (const item of missingSlugPosts) {
+        const slug = await this.generatePostSlug(item.title || 'bai-viet', item._id);
+        await this.posts.updateOne({ _id: item._id }, { $set: { slug } });
+      }
+    } catch {
+      // Non-fatal on startup
+    }
+  }
+
+  private isMongoId(id: string) {
+    return /^[a-f\d]{24}$/i.test(id) && Types.ObjectId.isValid(id);
+  }
 
   private objectId(id: string) {
     if (!Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid forum ID');
     return new Types.ObjectId(id);
+  }
+
+  private identifierFilter(idOrSlug: string): Record<string, unknown> {
+    const trimmed = typeof idOrSlug === 'string' ? idOrSlug.trim() : '';
+    if (!trimmed) throw new BadRequestException('Invalid forum identifier');
+    if (this.isMongoId(trimmed)) {
+      return { _id: new Types.ObjectId(trimmed) };
+    }
+    return { slug: trimmed.toLowerCase() };
+  }
+
+  private async generatePostSlug(title: string, excludeId?: Types.ObjectId): Promise<string> {
+    let base = toSlug(title).slice(0, 90).replace(/-+$/g, '') || 'bai-viet';
+    if (this.isMongoId(base)) {
+      base = `bai-viet-${base}`;
+    }
+    let candidate = base;
+    let counter = 1;
+    while (counter <= 50) {
+      const filter: Record<string, unknown> = { slug: candidate };
+      if (excludeId) filter._id = { $ne: excludeId };
+      const taken = typeof this.posts.exists === 'function' ? await this.posts.exists(filter) : null;
+      if (!taken) return candidate;
+      candidate = `${base}-${counter}`;
+      counter++;
+    }
+    return `${base}-${Date.now().toString(36)}`;
   }
 
   private pagination(total: number, query: PaginationQueryDto) {
@@ -32,8 +80,17 @@ export class ForumService {
     return { page, limit, total, totalPages };
   }
 
-  private async withCounts<T extends { _id: Types.ObjectId; contentFormat?: ForumContentFormat; likedBy?: Types.ObjectId[]; sharedBy?: Types.ObjectId[]; viewCount?: number; shareCount?: number }>(items: T[], admin = false, query: DateRangeQueryDto = {}, viewerId?: string) {
+  private async withCounts<T extends { _id: Types.ObjectId; slug?: string; title?: string; contentFormat?: ForumContentFormat; likedBy?: Types.ObjectId[]; sharedBy?: Types.ObjectId[]; viewCount?: number; shareCount?: number; commentCount?: number }>(items: T[], admin = false, query: DateRangeQueryDto = {}, viewerId?: string) {
     if (!items.length) return [];
+    if (typeof this.posts.updateOne === 'function') {
+      for (const item of items) {
+        if (!item.slug && item.title) {
+          const generated = await this.generatePostSlug(item.title, item._id);
+          item.slug = generated;
+          await this.posts.updateOne({ _id: item._id }, { $set: { slug: generated } }).catch(() => undefined);
+        }
+      }
+    }
     const totals = admin
       ? await this.contentReports.reportCounts(ContentReportTargetType.FORUM_POST, items.map((item) => item._id), query)
       : new Map<string, number>();
@@ -47,7 +104,7 @@ export class ForumService {
         viewCount: item.viewCount ?? 0,
         shareCount,
         sharedByMe: viewerId && sharedBy ? sharedBy.some((id) => id.toString() === viewerId) : false,
-        commentCount: 0,
+        commentCount: item.commentCount ?? 0,
         ...(admin ? { reportCount: totals.get(item._id.toString()) ?? 0 } : {}),
       };
     });
@@ -78,7 +135,7 @@ export class ForumService {
   async get(id: string, userId?: string) {
     const isValidUser = Boolean(userId && Types.ObjectId.isValid(userId));
     const post = await this.posts.findOne({
-      _id: this.objectId(id),
+      ...this.identifierFilter(id),
       $or: [
         { status: ForumPostStatus.VISIBLE },
         ...(isValidUser ? [{ status: { $in: [ForumPostStatus.HIDDEN, ForumPostStatus.PENDING, ForumPostStatus.REJECTED] }, userId: this.objectId(userId!) }] : []),
@@ -90,12 +147,14 @@ export class ForumService {
 
   async create(userId: string, dto: CreateForumPostDto) {
     const contentFormat = dto.contentFormat ?? ForumContentFormat.PLAIN;
-    const post = await this.posts.create({ userId: this.objectId(userId), title: dto.title.trim(), content: prepareForumContent(dto.content, contentFormat), contentFormat, status: ForumPostStatus.PENDING });
+    const cleanTitle = dto.title.trim();
+    const slug = await this.generatePostSlug(cleanTitle);
+    const post = await this.posts.create({ userId: this.objectId(userId), slug, title: cleanTitle, content: prepareForumContent(dto.content, contentFormat), contentFormat, status: ForumPostStatus.PENDING });
     return this.get(post._id.toString(), userId);
   }
 
   private async requireOwner(id: string, userId: string) {
-    const post = await this.posts.findOne({ _id: this.objectId(id), status: { $in: editableStatuses } }).lean();
+    const post = await this.posts.findOne({ ...this.identifierFilter(id), status: { $in: editableStatuses } }).lean();
     if (!post) throw new NotFoundException('Forum post not found');
     if (post.userId.toString() !== userId) throw new ForbiddenException('Only the owner can change this post');
     return { post, filter: { _id: post._id, userId: this.objectId(userId), status: { $in: editableStatuses } } };
@@ -134,7 +193,7 @@ export class ForumService {
       throw new BadRequestException('Status must be VISIBLE, HIDDEN, or REJECTED');
     }
     const post = await this.posts.findOneAndUpdate(
-      { _id: this.objectId(id), status: { $in: editableStatuses } },
+      { ...this.identifierFilter(id), status: { $in: editableStatuses } },
       { $set: { status } }, { new: true, runValidators: true },
     ).select(postFields).populate('userId', authorFields).lean();
     if (!post) throw new NotFoundException('Forum post not found');
@@ -144,7 +203,7 @@ export class ForumService {
   async like(id: string, userId: string, liked: boolean) {
     const actor = this.objectId(userId);
     const post = await this.posts.findOneAndUpdate(
-      { _id: this.objectId(id), status: ForumPostStatus.VISIBLE },
+      { ...this.identifierFilter(id), status: ForumPostStatus.VISIBLE },
       liked ? { $addToSet: { likedBy: actor } } : { $pull: { likedBy: actor } },
       { new: true, runValidators: true },
     ).select('likedBy').lean();
@@ -153,13 +212,19 @@ export class ForumService {
   }
 
   async report(id: string, userId: string, reason: string) {
-    return this.contentReports.submit(userId, { targetType: ContentReportTargetType.FORUM_POST, targetId: id, reason });
+    let resolvedId = id;
+    if (!this.isMongoId(id)) {
+      const post = await this.posts.findOne(this.identifierFilter(id)).select('_id').lean();
+      if (!post) throw new NotFoundException('Forum post not found');
+      resolvedId = post._id.toString();
+    }
+    return this.contentReports.submit(userId, { targetType: ContentReportTargetType.FORUM_POST, targetId: resolvedId, reason });
   }
 
   async share(id: string, userId: string) {
     const actor = this.objectId(userId);
     const post = await this.posts.findOneAndUpdate(
-      { _id: this.objectId(id), status: ForumPostStatus.VISIBLE },
+      { ...this.identifierFilter(id), status: ForumPostStatus.VISIBLE },
       { $addToSet: { sharedBy: actor } },
       { new: true, runValidators: true, timestamps: false },
     ).select('sharedBy shareCount').lean();
@@ -177,7 +242,7 @@ export class ForumService {
       ],
     };
     const post = await this.posts.findOneAndUpdate(
-      { _id: this.objectId(id), ...visibility }, { $inc: { [counter]: 1 } },
+      { ...this.identifierFilter(id), ...visibility }, { $inc: { [counter]: 1 } },
       { new: true, timestamps: false },
     ).select('viewCount shareCount').lean();
     if (!post) throw new NotFoundException('Forum post not found');

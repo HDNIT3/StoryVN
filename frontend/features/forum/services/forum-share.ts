@@ -2,12 +2,14 @@ import { toast } from "@/lib/toast";
 
 export async function triggerForumShare({
   id,
+  slug,
   title,
   isAuthenticated,
   shareMutation,
   onSuccess,
 }: {
   id: string;
+  slug?: string;
   title: string;
   isAuthenticated: boolean;
   shareMutation: { mutate: (id: string, options?: { onSuccess?: (data: any) => void }) => void };
@@ -19,7 +21,7 @@ export async function triggerForumShare({
   }
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const postUrl = `${origin}/dien-dan/${id}`;
+  const postUrl = `${origin}/dien-dan/${slug || id}`;
 
   // Kiểm tra hỗ trợ Web Share API (Hộp thoại chia sẻ gốc của Microsoft / Windows / Trình duyệt)
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {

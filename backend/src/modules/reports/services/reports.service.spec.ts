@@ -21,6 +21,8 @@ describe('ReportsService', () => {
   const reports = { updateOne: vi.fn(), aggregate: vi.fn(), find: vi.fn(), countDocuments: vi.fn() };
   const posts = { exists: vi.fn() };
   const stories = { exists: vi.fn() };
+  const chapters = { exists: vi.fn() };
+  const comments = { exists: vi.fn() };
   let service: ReportsService;
 
   beforeEach(() => {
@@ -32,10 +34,14 @@ describe('ReportsService', () => {
     chain.lean.mockResolvedValue([]);
     posts.exists.mockResolvedValue({ _id: targetId });
     stories.exists.mockResolvedValue({ _id: targetId });
+    chapters.exists.mockResolvedValue({ _id: targetId });
+    comments.exists.mockResolvedValue({ _id: targetId });
     service = new ReportsService(
       reports as unknown as Model<ContentReportDocument>,
       posts as unknown as Model<ForumPostDocument>,
       stories as unknown as Model<StoryDocument>,
+      chapters as any,
+      comments as any,
     );
   });
 
@@ -69,6 +75,8 @@ describe('ReportsService', () => {
   it.each(Object.values(ContentReportTargetType))('rejects unavailable %s targets without writing', async (targetType) => {
     posts.exists.mockResolvedValue(null);
     stories.exists.mockResolvedValue(null);
+    chapters.exists.mockResolvedValue(null);
+    comments.exists.mockResolvedValue(null);
     await expect(service.submit(userId, { ...dto, targetType })).rejects.toBeInstanceOf(NotFoundException);
     expect(reports.updateOne).not.toHaveBeenCalled();
   });

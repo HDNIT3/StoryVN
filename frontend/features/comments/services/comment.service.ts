@@ -43,6 +43,26 @@ export const commentService = {
   },
 
   /**
+   * Lấy danh sách bình luận gốc của bài viết diễn đàn
+   */
+  async getForumPostComments(
+    forumPostId: string,
+    params?: QueryCommentsParams
+  ): Promise<ApiResponse<PaginatedCommentsResponse>> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.sort) searchParams.append("sort", params.sort);
+
+    const qs = searchParams.toString();
+    const endpoint = qs
+      ? `/forum/posts/${forumPostId}/comments?${qs}`
+      : `/forum/posts/${forumPostId}/comments`;
+
+    return api.get<ApiResponse<PaginatedCommentsResponse>>(endpoint);
+  },
+
+  /**
    * Lấy danh sách các câu trả lời con của một bình luận
    */
   async getCommentReplies(

@@ -282,7 +282,7 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <h4 className="line-clamp-1 text-sm font-semibold leading-tight text-slate-900 transition-colors group-hover:text-sky-600 sm:text-base">
+                        <h4 className="line-clamp-1 py-0.5 text-sm font-semibold leading-normal text-slate-900 transition-colors group-hover:text-sky-600 sm:text-base">
                           {story.title}
                         </h4>
                         <p className="mt-1 line-clamp-1 text-sm text-slate-500">

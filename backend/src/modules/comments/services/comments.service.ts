@@ -14,6 +14,11 @@ import {
   ChapterDocument,
   ChapterStatus,
 } from '../../chapters/schemas/chapter.schema.js';
+import {
+  ForumPost,
+  ForumPostDocument,
+  ForumPostStatus,
+} from '../../forum/schemas/forum-post.schema.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { NotificationType } from '../../notifications/schemas/notification.schema.js';
 import { Story, StoryDocument, StoryStatus } from '../../stories/schemas/story.schema.js';
@@ -42,32 +47,58 @@ export class CommentsService {
     private readonly chapterModel: Model<ChapterDocument>,
     private readonly notificationsService: NotificationsService,
     @InjectModel(User.name)
-    private readonly userModel: Model<UserDocument>,
+    private readonly userModel?: Model<UserDocument>,
+    @InjectModel(ForumPost.name)
+    private readonly forumPostModel?: Model<ForumPostDocument>,
   ) {}
 
   /**
-   * Tạo bình luận mới (hỗ trợ bình luận truyện, bình luận chương, hoặc reply)
+   * Tạo bình luận mới (hỗ trợ bình luận truyện, bình luận chương, bài viết diễn đàn, hoặc reply)
    * Mặc định bình luận hiện ra luôn (status: VISIBLE)
    */
   async createComment(
     userId: string,
     dto: CreateCommentDto,
   ): Promise<CommentDocument> {
-    if (!Types.ObjectId.isValid(dto.storyId)) {
-      throw new BadRequestException('ID tác phẩm không hợp lệ');
+    if (!dto.storyId && !dto.forumPostId) {
+      throw new BadRequestException('Phải cung cấp ID tác phẩm hoặc ID bài viết');
     }
 
-    const story = await this.storyModel.findById(dto.storyId).lean();
-    if (!story) {
-      throw new NotFoundException('Không tìm thấy tác phẩm');
-    }
+    let story: any = null;
+    let forumPost: any = null;
+    let storyObjectId: Types.ObjectId | null = null;
+    let forumPostObjectId: Types.ObjectId | null = null;
 
-    if (story.status !== StoryStatus.PUBLISHED) {
-      throw new BadRequestException(ErrorCode.STORY_NOT_PUBLISHED);
+    if (dto.storyId) {
+      if (!Types.ObjectId.isValid(dto.storyId)) {
+        throw new BadRequestException('ID tác phẩm không hợp lệ');
+      }
+      story = await this.storyModel.findById(dto.storyId).lean();
+      if (!story) {
+        throw new NotFoundException('Không tìm thấy tác phẩm');
+      }
+      if (story.status !== StoryStatus.PUBLISHED) {
+        throw new BadRequestException(ErrorCode.STORY_NOT_PUBLISHED);
+      }
+      storyObjectId = new Types.ObjectId(dto.storyId);
+    } else if (dto.forumPostId) {
+      if (!Types.ObjectId.isValid(dto.forumPostId)) {
+        throw new BadRequestException('ID bài viết không hợp lệ');
+      }
+      if (this.forumPostModel) {
+        forumPost = await this.forumPostModel.findById(dto.forumPostId).lean();
+        if (!forumPost || forumPost.status !== ForumPostStatus.VISIBLE) {
+          throw new NotFoundException('Không tìm thấy bài viết hoặc bài viết chưa được duyệt');
+        }
+      }
+      forumPostObjectId = new Types.ObjectId(dto.forumPostId);
     }
 
     let chapterObjectId: Types.ObjectId | null = null;
     if (dto.chapterId) {
+      if (!dto.storyId) {
+        throw new BadRequestException('Bình luận chương phải thuộc một tác phẩm');
+      }
       if (!Types.ObjectId.isValid(dto.chapterId)) {
         throw new BadRequestException('ID chương không hợp lệ');
       }
@@ -103,7 +134,10 @@ export class CommentsService {
       if (!parentComment || parentComment.status === CommentStatus.DELETED) {
         throw new NotFoundException(ErrorCode.PARENT_COMMENT_NOT_FOUND);
       }
-      if (parentComment.storyId.toString() !== dto.storyId) {
+      if (dto.storyId && parentComment.storyId?.toString() !== dto.storyId) {
+        throw new BadRequestException(ErrorCode.INVALID_COMMENT_PARENT);
+      }
+      if (dto.forumPostId && parentComment.forumPostId?.toString() !== dto.forumPostId) {
         throw new BadRequestException(ErrorCode.INVALID_COMMENT_PARENT);
       }
 
@@ -120,7 +154,8 @@ export class CommentsService {
 
     const newComment = await this.commentModel.create({
       userId: new Types.ObjectId(userId),
-      storyId: new Types.ObjectId(dto.storyId),
+      storyId: storyObjectId,
+      forumPostId: forumPostObjectId,
       chapterId: chapterObjectId,
       parentId: effectiveParentId,
       replyToUserId: effectiveReplyToUserId,
@@ -129,10 +164,16 @@ export class CommentsService {
       replyCount: 0,
     });
 
-    // Tăng số lượng bình luận của Story
-    await this.storyModel.findByIdAndUpdate(dto.storyId, {
-      $inc: { 'stats.commentCount': 1 },
-    });
+    // Tăng số lượng bình luận của Story hoặc ForumPost
+    if (dto.storyId) {
+      await this.storyModel.findByIdAndUpdate(dto.storyId, {
+        $inc: { 'stats.commentCount': 1 },
+      });
+    } else if (dto.forumPostId && this.forumPostModel) {
+      await this.forumPostModel.findByIdAndUpdate(dto.forumPostId, {
+        $inc: { commentCount: 1 },
+      });
+    }
 
     // Nếu là reply -> tăng replyCount của comment cha
     if (effectiveParentId) {
@@ -142,15 +183,26 @@ export class CommentsService {
     }
 
     // Gửi thông báo bất đồng bộ
-    this.sendCommentNotification(
-      userId,
-      story,
-      newComment,
-      parentComment,
-      dto.chapterId,
-    ).catch((err) => {
-      this.logger.error(`Lỗi gửi thông báo bình luận: ${err.message}`, err.stack);
-    });
+    if (story) {
+      this.sendCommentNotification(
+        userId,
+        story,
+        newComment,
+        parentComment,
+        dto.chapterId,
+      ).catch((err) => {
+        this.logger.error(`Lỗi gửi thông báo bình luận: ${err.message}`, err.stack);
+      });
+    } else if (forumPost) {
+      this.sendForumCommentNotification(
+        userId,
+        forumPost,
+        newComment,
+        parentComment,
+      ).catch((err) => {
+        this.logger.error(`Lỗi gửi thông báo bình luận bài viết: ${err.message}`, err.stack);
+      });
+    }
 
     const createdDoc: any = await this.commentModel
       .findById(newComment._id)
@@ -159,9 +211,13 @@ export class CommentsService {
       .populate('chapterId', 'chapterNumber title')
       .lean();
 
+    const targetOwnerId = story
+      ? story.authorId?.toString()
+      : forumPost?.userId?.toString();
+
     return {
       ...createdDoc,
-      isStoryAuthor: story.authorId.toString() === userId,
+      isStoryAuthor: Boolean(targetOwnerId && targetOwnerId === userId),
     };
   }
 
@@ -259,6 +315,87 @@ export class CommentsService {
   }
 
   /**
+   * Lấy danh sách bình luận gốc của bài viết diễn đàn
+   */
+  async getForumPostComments(
+    forumPostId: string,
+    query: QueryCommentsDto,
+    currentUser?: { _id: any; role?: UserRole },
+  ): Promise<PaginatedResult<any>> {
+    if (!Types.ObjectId.isValid(forumPostId)) {
+      throw new BadRequestException('ID bài viết không hợp lệ');
+    }
+
+    const forumPost = this.forumPostModel
+      ? await this.forumPostModel.findById(forumPostId).lean()
+      : null;
+    if (this.forumPostModel && !forumPost) {
+      throw new NotFoundException('Không tìm thấy bài viết');
+    }
+
+    const currentUserIdStr = currentUser?._id ? currentUser._id.toString() : null;
+    const postOwnerIdStr = forumPost?.userId?.toString();
+    const canModerate =
+      currentUser &&
+      (currentUser.role === UserRole.ADMIN ||
+        currentUser.role === UserRole.MANAGER ||
+        (postOwnerIdStr && postOwnerIdStr === currentUserIdStr));
+
+    const filter: any = {
+      forumPostId: new Types.ObjectId(forumPostId),
+      parentId: null,
+    };
+
+    if (canModerate) {
+      filter.status = { $in: [CommentStatus.VISIBLE, CommentStatus.HIDDEN, CommentStatus.DELETED] };
+    } else {
+      filter.$or = [
+        { status: CommentStatus.VISIBLE },
+        { status: CommentStatus.DELETED, replyCount: { $gt: 0 } },
+      ];
+    }
+
+    const sort =
+      query.sort === CommentSortOrder.OLDEST
+        ? { createdAt: 1 }
+        : { createdAt: -1 };
+
+    const [items, totalItems] = await Promise.all([
+      this.commentModel
+        .find(filter)
+        .sort(sort as any)
+        .skip(query.skip)
+        .limit(query.limit)
+        .populate('userId', 'displayName username avatarUrl role')
+        .populate('replyToUserId', 'displayName username avatarUrl role')
+        .lean(),
+      this.commentModel.countDocuments(filter),
+    ]);
+
+    const formattedItems = items.map((item) => {
+      const commenterId = (item.userId as any)?._id
+        ? (item.userId as any)._id.toString()
+        : item.userId?.toString();
+      const isStoryAuthor = Boolean(
+        postOwnerIdStr && commenterId === postOwnerIdStr,
+      );
+      return {
+        ...item,
+        isStoryAuthor,
+        content:
+          item.status === CommentStatus.DELETED
+            ? 'Bình luận này đã bị xóa'
+            : item.content,
+      };
+    });
+
+    return {
+      items: formattedItems,
+      pagination: buildPaginationMeta(totalItems, query.page, query.limit),
+    };
+  }
+
+  /**
    * Lấy danh sách câu trả lời (replies) của một bình luận cha
    */
   async getCommentReplies(
@@ -275,14 +412,24 @@ export class CommentsService {
       throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
     }
 
-    const story = await this.storyModel.findById(parentComment.storyId).lean();
+    const story = parentComment.storyId
+      ? await this.storyModel.findById(parentComment.storyId).lean()
+      : null;
+    const forumPost =
+      parentComment.forumPostId && this.forumPostModel
+        ? await this.forumPostModel.findById(parentComment.forumPostId).lean()
+        : null;
+
     const currentUserIdStr = currentUser?._id ? currentUser._id.toString() : null;
+    const targetOwnerIdStr = story
+      ? story.authorId?.toString()
+      : forumPost?.userId?.toString();
+
     const canModerate =
       currentUser &&
-      story &&
       (currentUser.role === UserRole.ADMIN ||
         currentUser.role === UserRole.MANAGER ||
-        story.authorId.toString() === currentUserIdStr);
+        Boolean(targetOwnerIdStr && targetOwnerIdStr === currentUserIdStr));
 
     const filter: any = {
       parentId: new Types.ObjectId(parentId),
@@ -306,13 +453,12 @@ export class CommentsService {
       this.commentModel.countDocuments(filter),
     ]);
 
-    const storyAuthorIdStr = story?.authorId?.toString();
     const formattedItems = items.map((item) => {
       const commenterId = (item.userId as any)?._id
         ? (item.userId as any)._id.toString()
         : item.userId?.toString();
       const isStoryAuthor = Boolean(
-        storyAuthorIdStr && commenterId === storyAuthorIdStr,
+        targetOwnerIdStr && commenterId === targetOwnerIdStr,
       );
       return {
         ...item,
@@ -398,16 +544,22 @@ export class CommentsService {
       });
     }
 
-    // Giảm commentCount của Story
-    await this.storyModel.findByIdAndUpdate(comment.storyId, {
-      $inc: { 'stats.commentCount': -1 },
-    });
+    // Giảm commentCount của Story hoặc ForumPost
+    if (comment.storyId) {
+      await this.storyModel.findByIdAndUpdate(comment.storyId, {
+        $inc: { 'stats.commentCount': -1 },
+      });
+    } else if (comment.forumPostId && this.forumPostModel) {
+      await this.forumPostModel.findByIdAndUpdate(comment.forumPostId, {
+        $inc: { commentCount: -1 },
+      });
+    }
 
     return true;
   }
 
   /**
-   * Admin, Quản lý hoặc Tác giả của truyện ẩn hoặc cho hiện lại bình luận
+   * Admin, Quản lý hoặc Tác giả của truyện/bài viết ẩn hoặc cho hiện lại bình luận
    */
   async toggleCommentVisibility(
     userId: string,
@@ -428,19 +580,28 @@ export class CommentsService {
       throw new NotFoundException(ErrorCode.COMMENT_NOT_FOUND);
     }
 
-    const story = await this.storyModel.findById(comment.storyId).lean();
-    if (!story) {
-      throw new NotFoundException('Không tìm thấy tác phẩm chứa bình luận');
+    let isTargetOwner = false;
+    if (comment.storyId) {
+      const story = await this.storyModel.findById(comment.storyId).lean();
+      if (!story) {
+        throw new NotFoundException('Không tìm thấy tác phẩm chứa bình luận');
+      }
+      isTargetOwner = story.authorId.toString() === userId;
+    } else if (comment.forumPostId && this.forumPostModel) {
+      const post = await this.forumPostModel.findById(comment.forumPostId).lean();
+      if (!post) {
+        throw new NotFoundException('Không tìm thấy bài viết chứa bình luận');
+      }
+      isTargetOwner = post.userId.toString() === userId;
     }
 
-    const isStoryAuthor = story.authorId.toString() === userId;
     const isAdminOrManager =
       userRole === UserRole.ADMIN || userRole === UserRole.MANAGER;
 
-    // Chỉ Admin, Quản lý, hoặc chính Tác giả của truyện mới có quyền ẩn/hiện
-    if (!isStoryAuthor && !isAdminOrManager) {
+    // Chỉ Admin, Quản lý, hoặc chính Tác giả của truyện/bài viết mới có quyền ẩn/hiện
+    if (!isTargetOwner && !isAdminOrManager) {
       throw new ForbiddenException(
-        'Chỉ Tác giả của truyện hoặc Quản trị viên mới có quyền ẩn hoặc hiện lại bình luận này',
+        'Chỉ Tác giả hoặc Quản trị viên mới có quyền ẩn hoặc hiện lại bình luận này',
       );
     }
 
@@ -453,6 +614,45 @@ export class CommentsService {
       .populate('replyToUserId', 'displayName username avatarUrl role')
       .populate('chapterId', 'chapterNumber title')
       .lean()) as any;
+  }
+
+  /**
+   * Helper gửi thông báo khi có bình luận hoặc phản hồi mới trên bài viết diễn đàn
+   */
+  private async sendForumCommentNotification(
+    actorId: string,
+    forumPost: any,
+    comment: CommentDocument,
+    parentComment: CommentDocument | null,
+  ): Promise<void> {
+    const postSlugOrId = forumPost.slug || forumPost._id.toString();
+    if (parentComment || comment.replyToUserId) {
+      const targetUserId = comment.replyToUserId
+        ? comment.replyToUserId.toString()
+        : parentComment?.userId.toString();
+      if (targetUserId && targetUserId !== actorId) {
+        await this.notificationsService.create({
+          userId: targetUserId,
+          type: NotificationType.FORUM,
+          title: 'Phản hồi bình luận bài viết',
+          message: `Có người vừa trả lời bình luận của bạn trong bài viết "${forumPost.title}".`,
+          actorId,
+          referenceId: `${postSlugOrId}:${comment._id.toString()}`,
+        });
+      }
+    } else {
+      const postAuthorId = forumPost.userId?.toString();
+      if (postAuthorId && postAuthorId !== actorId) {
+        await this.notificationsService.create({
+          userId: postAuthorId,
+          type: NotificationType.FORUM,
+          title: 'Bình luận mới trong bài viết',
+          message: `Bài viết "${forumPost.title}" vừa nhận được một bình luận mới.`,
+          actorId,
+          referenceId: `${postSlugOrId}:${comment._id.toString()}`,
+        });
+      }
+    }
   }
 
   /**
@@ -513,6 +713,7 @@ export class CommentsService {
       .populate('userId', 'displayName username avatarUrl role email')
       .populate('replyToUserId', 'displayName username avatarUrl role')
       .populate('storyId', 'title slug coverUrl authorId')
+      .populate('forumPostId', 'title slug userId')
       .populate('chapterId', 'chapterNumber title')
       .lean();
 
@@ -527,7 +728,7 @@ export class CommentsService {
    * [Admin/Manager] Lấy danh sách tất cả bình luận với bộ lọc và phân trang
    */
   async adminGetComments(query: AdminQueryCommentsDto): Promise<PaginatedResult<any>> {
-    const { page = 1, limit = 20, status, search, storyId, sort } = query;
+    const { page = 1, limit = 20, status, search, storyId, forumPostId, sort } = query;
     const filter: Record<string, any> = {};
 
     if (status && status !== AdminCommentStatusFilter.ALL) {
@@ -541,12 +742,21 @@ export class CommentsService {
       filter.storyId = new Types.ObjectId(storyId);
     }
 
+    if (forumPostId) {
+      if (!Types.ObjectId.isValid(forumPostId)) {
+        throw new BadRequestException('ID bài viết không hợp lệ');
+      }
+      filter.forumPostId = new Types.ObjectId(forumPostId);
+    }
+
     if (search && search.trim()) {
       const regex = new RegExp(search.trim(), 'i');
-      const matchingUsers = await this.userModel
-        .find({ $or: [{ displayName: regex }, { username: regex }, { email: regex }] })
-        .select('_id')
-        .lean();
+      const matchingUsers = this.userModel
+        ? await this.userModel
+            .find({ $or: [{ displayName: regex }, { username: regex }, { email: regex }] })
+            .select('_id')
+            .lean()
+        : [];
       const userIds = matchingUsers.map((u) => u._id);
 
       filter.$or = [
@@ -567,6 +777,7 @@ export class CommentsService {
         .populate('userId', 'displayName username avatarUrl role email')
         .populate('replyToUserId', 'displayName username avatarUrl role')
         .populate('storyId', 'title slug coverUrl')
+        .populate('forumPostId', 'title slug')
         .populate('chapterId', 'chapterNumber title')
         .lean(),
       this.commentModel.countDocuments(filter),
@@ -617,15 +828,27 @@ export class CommentsService {
     comment.status = status;
     await comment.save();
 
-    // Điều chỉnh stats.commentCount của Story nếu chuyển trạng thái liên quan đến DELETED
+    // Điều chỉnh commentCount của Story hoặc ForumPost nếu chuyển trạng thái liên quan đến DELETED
     if (oldStatus !== CommentStatus.DELETED && status === CommentStatus.DELETED) {
-      await this.storyModel.findByIdAndUpdate(comment.storyId, {
-        $inc: { 'stats.commentCount': -1 },
-      });
+      if (comment.storyId) {
+        await this.storyModel.findByIdAndUpdate(comment.storyId, {
+          $inc: { 'stats.commentCount': -1 },
+        });
+      } else if (comment.forumPostId && this.forumPostModel) {
+        await this.forumPostModel.findByIdAndUpdate(comment.forumPostId, {
+          $inc: { commentCount: -1 },
+        });
+      }
     } else if (oldStatus === CommentStatus.DELETED && status !== CommentStatus.DELETED) {
-      await this.storyModel.findByIdAndUpdate(comment.storyId, {
-        $inc: { 'stats.commentCount': 1 },
-      });
+      if (comment.storyId) {
+        await this.storyModel.findByIdAndUpdate(comment.storyId, {
+          $inc: { 'stats.commentCount': 1 },
+        });
+      } else if (comment.forumPostId && this.forumPostModel) {
+        await this.forumPostModel.findByIdAndUpdate(comment.forumPostId, {
+          $inc: { commentCount: 1 },
+        });
+      }
     }
 
     return this.commentModel
@@ -633,6 +856,7 @@ export class CommentsService {
       .populate('userId', 'displayName username avatarUrl role email')
       .populate('replyToUserId', 'displayName username avatarUrl role')
       .populate('storyId', 'title slug coverUrl')
+      .populate('forumPostId', 'title slug')
       .populate('chapterId', 'chapterNumber title')
       .lean();
   }
@@ -657,9 +881,15 @@ export class CommentsService {
     }
 
     if (comment.status !== CommentStatus.DELETED) {
-      await this.storyModel.findByIdAndUpdate(comment.storyId, {
-        $inc: { 'stats.commentCount': -1 },
-      });
+      if (comment.storyId) {
+        await this.storyModel.findByIdAndUpdate(comment.storyId, {
+          $inc: { 'stats.commentCount': -1 },
+        });
+      } else if (comment.forumPostId && this.forumPostModel) {
+        await this.forumPostModel.findByIdAndUpdate(comment.forumPostId, {
+          $inc: { commentCount: -1 },
+        });
+      }
     }
 
     await this.commentModel.deleteMany({ parentId: comment._id });

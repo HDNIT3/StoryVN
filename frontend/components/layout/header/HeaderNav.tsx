@@ -52,7 +52,7 @@ function getNavItemClasses(isActive: boolean, className = "") {
     ? "bg-sky-50 text-sky-600 font-semibold shadow-[inset_0_0_0_1px_rgba(14,165,233,0.14),0_8px_24px_-18px_rgba(14,165,233,0.9)]"
     : "text-slate-600 font-medium hover:text-sky-600 hover:bg-sky-50/70";
 
-  return `inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2.5 text-base transition-colors select-none ${activeClasses} ${className}`;
+  return `inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-lg px-2.5 xl:px-3.5 py-2 text-sm xl:text-[15px] transition-colors select-none ${activeClasses} ${className}`;
 }
 
 // ─── Single nav item ──────────────────────────────────────────────
@@ -142,7 +142,7 @@ function HeaderGenreNavItem({
 
       {isOpen && (
         <div className="absolute left-0 top-full z-50 pt-3">
-          <div className="w-[min(680px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-100 bg-white/95 shadow-[0_28px_70px_-30px_rgba(14,165,233,0.45)] backdrop-blur-xl">
+          <div className="w-[min(640px,calc(100vw-3rem))] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-slate-100 bg-white/95 shadow-[0_28px_70px_-30px_rgba(14,165,233,0.45)] backdrop-blur-xl">
             {/* Dropdown header */}
             <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
               <div>
@@ -224,7 +224,7 @@ export function HeaderNav({
 }: HeaderNavProps) {
   return (
     <nav
-      className={`flex items-center gap-1 sm:gap-1.5 ${className}`}
+      className={`flex items-center gap-0.5 xl:gap-1 ${className}`}
       aria-label="Main Navigation"
     >
       {items.map((item) => {
