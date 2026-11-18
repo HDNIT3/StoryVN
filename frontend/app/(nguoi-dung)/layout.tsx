@@ -15,15 +15,18 @@ export default function NguoiDungLayout({
   const router = useRouter();
   const pathname = usePathname();
 
+  const isPublicGuestAllowed =
+    pathname === "/dien-dan" || pathname?.startsWith("/dien-dan/");
+
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !isPublicGuestAllowed) {
       router.replace(
         `/dang-nhap?returnUrl=${encodeURIComponent(window.location.pathname)}`
       );
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, isPublicGuestAllowed, router]);
 
-  if (isLoading) {
+  if (isLoading && !isPublicGuestAllowed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50">
         <div className="flex flex-col items-center gap-4">
@@ -34,7 +37,7 @@ export default function NguoiDungLayout({
     );
   }
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated && !isPublicGuestAllowed) return null;
 
   // Khu vực dashboard sáng tác tác giả có sidebar riêng, các trang tài khoản người dùng (hồ sơ, lịch sử đọc, đăng ký tác giả...) hiển thị Footer
   const isAuthorDashboard =

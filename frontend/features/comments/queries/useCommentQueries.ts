@@ -13,6 +13,8 @@ export const commentKeys = {
   lists: () => [...commentKeys.all, "list"] as const,
   list: (storyId: string, params?: QueryCommentsParams) =>
     [...commentKeys.lists(), storyId, params] as const,
+  forumList: (forumPostId: string, params?: QueryCommentsParams) =>
+    [...commentKeys.lists(), "forum", forumPostId, params] as const,
   replies: (parentId: string, params?: QueryRepliesParams) =>
     [...commentKeys.all, "replies", parentId, params] as const,
   detail: (commentId: string) => [...commentKeys.all, "detail", commentId] as const,
@@ -23,6 +25,14 @@ export function useStoryComments(storyId: string, params?: QueryCommentsParams) 
     queryKey: commentKeys.list(storyId, params),
     queryFn: () => commentService.getStoryComments(storyId, params),
     enabled: !!storyId,
+  });
+}
+
+export function useForumPostComments(forumPostId: string, params?: QueryCommentsParams) {
+  return useQuery({
+    queryKey: commentKeys.forumList(forumPostId, params),
+    queryFn: () => commentService.getForumPostComments(forumPostId, params),
+    enabled: !!forumPostId,
   });
 }
 
@@ -42,7 +52,7 @@ export function useCommentDetail(commentId?: string | null) {
   });
 }
 
-export function useCreateComment(storyId: string) {
+export function useCreateComment(storyId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -52,6 +62,7 @@ export function useCreateComment(storyId: string) {
       toast.success("Đăng bình luận thành công");
       queryClient.invalidateQueries({ queryKey: commentKeys.all });
       queryClient.invalidateQueries({ queryKey: ["stories"] });
+      queryClient.invalidateQueries({ queryKey: ["forum"] });
     },
     onError: (err: { message?: string }) => {
       toast.error(err?.message || "Đăng bình luận thất bại");
@@ -89,6 +100,7 @@ export function useDeleteComment() {
       toast.success("Xóa bình luận thành công");
       queryClient.invalidateQueries({ queryKey: commentKeys.all });
       queryClient.invalidateQueries({ queryKey: ["stories"] });
+      queryClient.invalidateQueries({ queryKey: ["forum"] });
     },
     onError: (err: { message?: string }) => {
       toast.error(err?.message || "Xóa bình luận thất bại");

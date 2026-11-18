@@ -17,7 +17,8 @@ export interface CommentChapter {
 export interface CommentItem {
   _id: string;
   userId: CommentUser;
-  storyId: string;
+  storyId?: string | null;
+  forumPostId?: string | null;
   chapterId?: CommentChapter | null;
   parentId?: string | null;
   replyToUserId?: CommentUser | null;
@@ -30,7 +31,8 @@ export interface CommentItem {
 }
 
 export interface CreateCommentInput {
-  storyId: string;
+  storyId?: string | null;
+  forumPostId?: string | null;
   chapterId?: string | null;
   parentId?: string | null;
   replyToUserId?: string | null;

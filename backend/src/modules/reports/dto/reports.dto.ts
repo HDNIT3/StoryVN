@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
 import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { Transform } from 'class-transformer';
-import { IsEnum, IsMongoId, IsOptional, IsString, Length } from 'class-validator';
+import { IsEnum, IsMongoId, IsOptional, IsString, Length, MaxLength, ValidateIf } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { ContentReportTargetType } from '../schemas/content-report.schema.js';
 
@@ -10,9 +10,17 @@ export class SubmitReportDto {
   @IsEnum(ContentReportTargetType)
   targetType: ContentReportTargetType;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @ValidateIf((o: SubmitReportDto) => !o.targetUrl || Boolean(o.targetId))
   @IsMongoId()
-  targetId: string;
+  targetId?: string;
+
+  @ApiPropertyOptional({ description: 'Đường dẫn URL công khai của nội dung cần tố cáo (thay thế cho targetId)' })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => typeof value === 'string' ? value.trim() : value)
+  @IsString()
+  @MaxLength(500)
+  targetUrl?: string;
 
   @ApiProperty({ minLength: 1, maxLength: 1000 })
   @Transform(({ value }: { value: unknown }) => typeof value === 'string' ? value.trim() : value)

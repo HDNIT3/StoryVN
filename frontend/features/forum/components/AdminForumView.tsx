@@ -61,7 +61,15 @@ function PostDetailAndReportsModal({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">Chi tiết bài viết & Kiểm duyệt</h3>
-              <p className="text-[11px] text-slate-400 font-mono">ID: {post._id}</p>
+              {post.slug && (
+                <Link
+                  href={`/dien-dan/${post.slug}`}
+                  target="_blank"
+                  className="text-[11px] text-sky-600 hover:underline"
+                >
+                  /dien-dan/{post.slug} ↗
+                </Link>
+              )}
             </div>
           </div>
 
@@ -85,22 +93,20 @@ function PostDetailAndReportsModal({
           <button
             type="button"
             onClick={() => setActiveTab("CONTENT")}
-            className={`py-3 border-b-2 transition ${
-              activeTab === "CONTENT"
+            className={`py-3 border-b-2 transition ${activeTab === "CONTENT"
                 ? "border-indigo-600 text-indigo-600 font-bold"
                 : "border-transparent text-slate-500 hover:text-slate-900"
-            }`}
+              }`}
           >
             Nội dung bài viết
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("REPORTS")}
-            className={`py-3 border-b-2 transition flex items-center gap-2 ${
-              activeTab === "REPORTS"
+            className={`py-3 border-b-2 transition flex items-center gap-2 ${activeTab === "REPORTS"
                 ? "border-rose-600 text-rose-600 font-bold"
                 : "border-transparent text-slate-500 hover:text-slate-900"
-            }`}
+              }`}
           >
             <span>Báo cáo vi phạm</span>
             {(post.reportCount ?? 0) > 0 && (
@@ -462,17 +468,15 @@ export function AdminForumView() {
                     setTab(item.key);
                     setPageState((prev) => ({ ...prev, page: 1 }));
                   }}
-                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
-                    active
+                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${active
                       ? "bg-slate-900 text-white shadow-xs"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   <span>{item.label}</span>
                   <span
-                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                      active ? "bg-white/20 text-white" : item.color || "bg-white text-slate-700"
-                    }`}
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-white/20 text-white" : item.color || "bg-white text-slate-700"
+                      }`}
                   >
                     {item.count}
                   </span>
@@ -614,6 +618,12 @@ export function AdminForumView() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                             </svg>
                             {post.shareCount ?? 0}
+                          </span>
+                          <span className="flex items-center gap-1" title="Lượt bình luận">
+                            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            {post.commentCount ?? 0}
                           </span>
                         </div>
                       </td>

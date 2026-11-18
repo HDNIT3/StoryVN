@@ -17,8 +17,10 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { PaymentsModule } from './modules/payments/payments.module.js';
 import { ReadingHistoryModule } from './modules/reading-history/reading-history.module.js';
 import { RedisModule } from './modules/redis/redis.module.js';
+import { ReportsModule } from './modules/reports/reports.module.js';
 import { StoriesModule } from './modules/stories/stories.module.js';
 import { StoryRatingsModule } from './modules/story-ratings/story-ratings.module.js';
+import { SupportModule } from './modules/support/support.module.js';
 import { TagsModule } from './modules/tags/tags.module.js';
 import { UploadModule } from './modules/upload/upload.module.js';
 import { UsersModule } from './modules/users/users.module.js';
@@ -43,6 +45,8 @@ import { AdminDashboardModule } from './modules/admin-dashboard/admin-dashboard.
     ChaptersModule,
     ReadingHistoryModule,
     FollowsModule,
+    ReportsModule,
+    SupportModule,
     ForumModule,
     StoryRatingsModule,
     CommentsModule,

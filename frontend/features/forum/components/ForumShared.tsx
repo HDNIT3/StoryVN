@@ -1,3 +1,6 @@
+"use client";
+
+import React from "react";
 import { Button } from "@/components/ui/Button";
 import type { ForumPost, ForumPostStatus } from "../types";
 
@@ -13,24 +16,22 @@ export function ForumBanner({ eyebrow, title, description }: { eyebrow: string; 
 export function ForumAuthor({ post }: { post: ForumPost }) {
   const name = post.userId?.displayName || post.userId?.username || "Người dùng";
   const avatarUrl = post.userId?.avatarUrl;
+  const [imgError, setImgError] = React.useState(false);
+
   return (
-    <div className="flex items-center gap-3">
-      {avatarUrl ? (
+    <div className="flex items-center gap-3 min-w-0">
+      {avatarUrl && !imgError ? (
         <img
           src={avatarUrl}
           alt={name}
           className="h-10 w-10 shrink-0 rounded-full object-cover border border-slate-200 shadow-2xs"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
+          onError={() => setImgError(true)}
         />
-      ) : null}
-      <span
-        style={{ display: avatarUrl ? "none" : "flex" }}
-        className="h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-700"
-      >
-        {name.slice(0, 2).toUpperCase()}
-      </span>
+      ) : (
+        <span className="h-10 w-10 shrink-0 flex items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-700">
+          {name.slice(0, 2).toUpperCase()}
+        </span>
+      )}
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-slate-800">{name}</p>
         <p className="mt-0.5 text-xs text-slate-400">{new Date(post.createdAt).toLocaleDateString("vi-VN")}</p>

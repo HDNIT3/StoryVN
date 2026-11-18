@@ -2,32 +2,27 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import { toast } from "@/lib/toast";
-import { Button } from "@/components/ui/Button";
 import {
   useForumPost,
   useLikePost,
-  useReportPost,
-  useSharePost,
   useViewPost,
 } from "../queries/useForumQueries";
 import { ForumAuthor, ForumError, ForumStatus } from "./ForumShared";
 import { ForumContent } from "./ForumContent";
-import { triggerForumShare } from "../services/forum-share";
+import { ForumShareModal } from "./ForumShareModal";
+import { ForumCommentsSection } from "@/features/comments";
+import { ReportContentModal } from "@/features/reports";
 
 export function ForumDetailView({ id }: { id: string }) {
-  const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const postQuery = useForumPost(id);
   const likeMutation = useLikePost();
-  const shareMutation = useSharePost();
   const viewMutation = useViewPost();
-  const reportMutation = useReportPost();
 
   const [reporting, setReporting] = useState(false);
-  const [reportReason, setReportReason] = useState("");
+  const [sharing, setSharing] = useState(false);
   const [localLike, setLocalLike] = useState<{ liked: boolean; count: number } | null>(null);
   const [localShare, setLocalShare] = useState<number | null>(null);
 
@@ -47,8 +42,13 @@ export function ForumDetailView({ id }: { id: string }) {
         count: post.likeCount ?? 0,
       });
       setLocalShare(post.shareCount ?? 0);
+
+      if (typeof window !== "undefined" && post.slug && id !== post.slug) {
+        const cleanUrl = `/dien-dan/${post.slug}${window.location.search}${window.location.hash}`;
+        window.history.replaceState(null, "", cleanUrl);
+      }
     }
-  }, [post]);
+  }, [post, id]);
 
   const handleLike = () => {
     if (!isAuthenticated) {
@@ -62,35 +62,11 @@ export function ForumDetailView({ id }: { id: string }) {
     likeMutation.mutate({ id: post._id, isLiked: localLike.liked });
   };
 
-  const handleShare = () => {
-    if (!post) return;
-    triggerForumShare({
-      id: post._id,
-      title: post.title,
-      isAuthenticated,
-      shareMutation,
-      onSuccess: (newCount) => {
-        if (typeof newCount === "number") {
-          setLocalShare(newCount);
-        } else {
-          setLocalShare((prev) => (prev ?? 0) + 1);
-        }
-      },
-    });
-  };
-
-  const handleReportSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reportReason.trim() || !post) return;
-    reportMutation.mutate(
-      { id: post._id, reason: reportReason.trim() },
-      {
-        onSuccess: () => {
-          setReporting(false);
-          setReportReason("");
-        },
-      }
-    );
+  const scrollToComments = () => {
+    const el = document.getElementById("forum-comments");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   if (postQuery.isPending) {
@@ -119,7 +95,7 @@ export function ForumDetailView({ id }: { id: string }) {
     );
   }
 
-  const isOwner = user?._id && post.userId?._id === user._id;
+  const isOwner = Boolean(user?._id && post.userId?._id === user._id);
 
   return (
     <div className="mx-auto max-w-4xl space-y-7 px-4 py-8 sm:px-6">
@@ -137,7 +113,7 @@ export function ForumDetailView({ id }: { id: string }) {
 
         {isOwner && (
           <Link
-            href={`/tai-khoan/bai-viet/${post._id}/chinh-sua`}
+            href={`/tai-khoan/bai-viet/${post.slug || post._id}/chinh-sua`}
             className="rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50"
           >
             Chỉnh sửa bài viết
@@ -180,18 +156,18 @@ export function ForumDetailView({ id }: { id: string }) {
         </h1>
 
         {/* Full Content */}
-        <div className="min-h-48 text-base leading-8 text-slate-800">
+        <div className="min-h-36 text-base leading-8 text-slate-800">
           <ForumContent post={post} />
         </div>
 
         {/* Interaction bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
             {/* Like (Thumbs Up) */}
             <button
               type="button"
               onClick={handleLike}
-              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition cursor-pointer ${
                 localLike?.liked
                   ? "border-sky-300 bg-sky-50 text-sky-700 shadow-2xs"
                   : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -213,11 +189,28 @@ export function ForumDetailView({ id }: { id: string }) {
               <span>{localLike ? localLike.count.toLocaleString("vi-VN") : 0} Thích</span>
             </button>
 
+            {/* Comment button */}
+            <button
+              type="button"
+              onClick={scrollToComments}
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 cursor-pointer"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.8}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <span>{(post.commentCount ?? 0).toLocaleString("vi-VN")} Bình luận</span>
+            </button>
+
             {/* Share */}
             <button
               type="button"
-              onClick={handleShare}
-              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50"
+              onClick={() => setSharing(true)}
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 cursor-pointer"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -229,22 +222,6 @@ export function ForumDetailView({ id }: { id: string }) {
               </svg>
               <span>{localShare !== null ? localShare.toLocaleString("vi-VN") : 0} Chia sẻ</span>
             </button>
-
-            {/* Comment icon button */}
-            <div
-              className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2 text-sm font-medium text-slate-500"
-              title="Tính năng bình luận đang được phát triển"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.8}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              <span>{post.commentCount ?? 0} Bình luận</span>
-            </div>
           </div>
 
           {/* Report */}
@@ -252,54 +229,47 @@ export function ForumDetailView({ id }: { id: string }) {
             <button
               type="button"
               onClick={() => setReporting(true)}
-              className="text-xs font-medium text-slate-400 hover:text-rose-600 transition"
+              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition cursor-pointer"
             >
-              Báo cáo bài viết
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+              </svg>
+              <span>Báo cáo bài viết</span>
             </button>
           )}
         </div>
       </article>
 
-      {/* Report Modal */}
-      {reporting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl space-y-4">
-            <h3 className="text-lg font-bold text-slate-900">Báo cáo bài viết vi phạm</h3>
-            <p className="text-xs text-slate-500">
-              Vui lòng cho ban quản trị biết lý do bài viết này vi phạm quy tắc cộng đồng:
-            </p>
-            <form onSubmit={handleReportSubmit} className="space-y-4">
-              <textarea
-                required
-                rows={4}
-                maxLength={500}
-                placeholder="Nhập lý do báo cáo (ví dụ: ngôn từ xúc phạm, spam, nội dung đồi trụy...)"
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-sky-500 focus:outline-none"
-              />
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setReporting(false)}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  isLoading={reportMutation.isPending}
-                  disabled={reportMutation.isPending || !reportReason.trim()}
-                >
-                  Gửi báo cáo
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Bình luận bài viết diễn đàn */}
+      {post.status === "VISIBLE" && (
+        <ForumCommentsSection
+          forumPostId={post._id}
+          postAuthorId={post.userId?._id}
+        />
       )}
+
+      {/* Share Modal */}
+      <ForumShareModal
+        isOpen={sharing}
+        onClose={() => setSharing(false)}
+        post={{ _id: post._id, slug: post.slug, title: post.title }}
+        onShareSuccess={(newCount) => {
+          if (typeof newCount === "number") {
+            setLocalShare(newCount);
+          } else {
+            setLocalShare((prev) => (prev ?? 0) + 1);
+          }
+        }}
+      />
+
+      {/* Report Modal */}
+      <ReportContentModal
+        isOpen={reporting}
+        onClose={() => setReporting(false)}
+        targetType="FORUM_POST"
+        targetId={post._id}
+        targetTitle={post.title}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ interface ForumShareModalProps {
   onClose: () => void;
   post: {
     _id: string;
+    slug?: string;
     title: string;
   };
   onShareSuccess?: (newCount?: number) => void;
@@ -26,7 +27,7 @@ export function ForumShareModal({
   if (!isOpen) return null;
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const postUrl = `${origin}/dien-dan/${post._id}`;
+  const postUrl = `${origin}/dien-dan/${post.slug || post._id}`;
 
   const trackShare = () => {
     shareMutation.mutate(post._id, {

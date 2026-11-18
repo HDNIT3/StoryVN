@@ -75,7 +75,7 @@ export function HeaderSearch({
         className="w-full min-w-0 bg-transparent text-sm sm:text-base text-slate-900 placeholder:text-slate-400 focus:outline-hidden"
       />
 
-      {/* Clear Button or Keyboard Shortcut */}
+      {/* Clear Button */}
       {query ? (
         <button
           type="button"
@@ -85,11 +85,7 @@ export function HeaderSearch({
         >
           ✕
         </button>
-      ) : (
-        <kbd className="hidden xl:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-mono font-semibold text-slate-400 bg-slate-100 rounded-md border border-slate-200 select-none">
-          Ctrl K
-        </kbd>
-      )}
+      ) : null}
     </form>
   );
 }

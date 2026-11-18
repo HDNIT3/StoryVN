@@ -136,6 +136,19 @@ export function NotificationBell({
   const handleNavigate = useCallback(
     async (notification: Notification) => {
       setIsOpen(false);
+      if (notification.type === "SYSTEM") {
+        const ref = notification.referenceId ? String(notification.referenceId) : "";
+        if (ref.startsWith("support-admin:")) {
+          router.push("/quan-ly/ho-tro");
+          return;
+        }
+        if (ref.startsWith("support-user:")) {
+          const code = ref.replace("support-user:", "");
+          router.push(`/ho-tro?tab=inbox&code=${encodeURIComponent(code)}`);
+          return;
+        }
+      }
+
       if (notification.type === "MODERATION") {
         if (user?.role === "ADMIN" || user?.role === "MANAGER") {
           router.push("/quan-ly/duyet-tac-gia");
@@ -161,6 +174,19 @@ export function NotificationBell({
           } else {
             router.push(`/truyen/${storySlug}`);
           }
+        }
+        return;
+      }
+
+      if (notification.type === "FORUM") {
+        const ref = notification.referenceId ? String(notification.referenceId) : "";
+        if (ref.includes(":")) {
+          const [forumPostId, commentId] = ref.split(":");
+          router.push(`/dien-dan/${forumPostId}?commentId=${commentId}#comment-${commentId}`);
+        } else if (ref) {
+          router.push(`/dien-dan/${ref}`);
+        } else {
+          router.push("/dien-dan");
         }
         return;
       }

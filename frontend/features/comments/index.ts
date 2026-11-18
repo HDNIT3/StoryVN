@@ -6,4 +6,6 @@ export * from "./components/CommentItemCard";
 export * from "./components/CommentRepliesList";
 export * from "./components/StoryCommentsSection";
 export * from "./components/ChapterCommentSection";
+export * from "./components/ForumCommentsSection";
+
 

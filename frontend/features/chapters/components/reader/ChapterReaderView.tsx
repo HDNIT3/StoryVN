@@ -21,7 +21,8 @@ import { ReaderNavigation } from "./ReaderNavigation";
 import { ReaderSideToolbar } from "./ReaderSideToolbar";
 import { ReaderUnlockModal } from "./ReaderUnlockModal";
 import { useSpeechReader } from "../../hooks/useSpeechReader";
-import { useStoryComments } from "@/features/comments";
+import { useStoryComments, ChapterCommentSection } from "@/features/comments";
+import { ReportContentModal } from "@/features/reports";
 
 const ReaderSettingsModal = dynamic(() =>
   import("./ReaderSettingsModal").then((mod) => mod.ReaderSettingsModal)
@@ -62,6 +63,7 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
   const [chapterPage, setChapterPage] = useState(1);
   const [showTts, setShowTts] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showReportChapterModal, setShowReportChapterModal] = useState(false);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [unlockResult, setUnlockResult] = useState<UnlockChapterResponse | null>(null);
@@ -448,32 +450,71 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
           }}
         />
 
-        {/* Nút mở khung bình luận ở cuối chương */}
+        {/* Nút mở khung bình luận cạnh phải + Khung bình luận trực tiếp cuối chương + Báo cáo chương */}
         {story?._id && chapter?._id && (
-          <div className="mt-8 mb-16">
-            <button
-              type="button"
-              onClick={() => setShowComments(true)}
-              className={`w-full p-4 sm:p-5 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${
-                theme === "dark"
-                  ? "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 text-zinc-100 hover:bg-zinc-900"
-                  : theme === "vintage"
-                  ? "bg-[#f5f0e6]/60 border-[#ede7de] hover:border-[#ded5c7] text-[#2c2725] hover:bg-[#f5f0e6]"
-                  : "bg-zinc-50 border-zinc-200 hover:border-zinc-300 text-zinc-800 hover:bg-zinc-100/80"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
-                    theme === "dark"
-                      ? "bg-zinc-800 text-amber-400"
-                      : theme === "vintage"
-                      ? "bg-[#faedd9] text-[#8b1e17]"
-                      : "bg-sky-50 text-sky-600"
-                  }`}
-                >
+          <div className="mt-8 mb-16 space-y-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setShowComments(true)}
+                className={`flex-1 p-4 sm:p-5 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${
+                  theme === "dark"
+                    ? "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 text-zinc-100 hover:bg-zinc-900"
+                    : theme === "vintage"
+                    ? "bg-[#f5f0e6]/60 border-[#ede7de] hover:border-[#ded5c7] text-[#2c2725] hover:bg-[#f5f0e6]"
+                    : "bg-zinc-50 border-zinc-200 hover:border-zinc-300 text-zinc-800 hover:bg-zinc-100/80"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${
+                      theme === "dark"
+                        ? "bg-zinc-800 text-amber-400"
+                        : theme === "vintage"
+                        ? "bg-[#faedd9] text-[#8b1e17]"
+                        : "bg-sky-50 text-sky-600"
+                    }`}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold">Mở ngăn bình luận cạnh trang</span>
+                      {commentCount > 0 && (
+                        <span
+                          className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                            theme === "dark"
+                              ? "bg-amber-500/20 text-amber-300"
+                              : theme === "vintage"
+                              ? "bg-[#8b1e17]/10 text-[#8b1e17]"
+                              : "bg-sky-100 text-sky-700"
+                          }`}
+                        >
+                          {commentCount}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                      Vừa đọc truyện vừa theo dõi bình luận song song ở cột phải
+                    </p>
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-current opacity-80 group-hover:opacity-100">
+                  <span>Mở ngăn bên</span>
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 transition-transform group-hover:translate-x-0.5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -481,55 +522,53 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={1.8}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
                     />
                   </svg>
                 </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold">Bình luận chương</span>
-                    {commentCount > 0 && (
-                      <span
-                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                          theme === "dark"
-                            ? "bg-amber-500/20 text-amber-300"
-                            : theme === "vintage"
-                            ? "bg-[#8b1e17]/10 text-[#8b1e17]"
-                            : "bg-sky-100 text-sky-700"
-                        }`}
-                      >
-                        {commentCount}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    {commentCount > 0
-                      ? "Xem thảo luận và chia sẻ cảm nghĩ của bạn"
-                      : "Chưa có bình luận nào. Hãy là người đầu tiên để lại cảm nghĩ!"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-current opacity-80 group-hover:opacity-100">
-                <span>Mở khung bình luận</span>
-                <svg
-                  className="w-4 h-4 transition-transform group-hover:translate-x-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowReportChapterModal(true)}
+                className={`px-4 py-3.5 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 ${
+                  theme === "dark"
+                    ? "bg-zinc-900/60 border-zinc-800 text-rose-400 hover:bg-zinc-900 hover:border-rose-900/50"
+                    : theme === "vintage"
+                    ? "bg-[#f5f0e6]/60 border-[#ede7de] text-[#8b1e17] hover:bg-[#f5f0e6]"
+                    : "bg-white border-zinc-200 text-rose-600 hover:bg-rose-50 hover:border-rose-200"
+                }`}
+                title="Báo cáo chương bị lỗi nội dung hoặc vi phạm"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-              </div>
-            </button>
+                <span>Báo lỗi / Vi phạm chương</span>
+              </button>
+            </div>
+
+            <ChapterCommentSection
+              storyId={story._id}
+              chapterId={chapter._id}
+              chapterNumber={chapter.chapterNumber}
+              storyAuthorId={(story as any)?.authorId || (story as any)?.author?._id}
+              storySlug={slug}
+              theme={theme}
+            />
           </div>
         )}
       </main>
+
+      {chapter?._id && (
+        <ReportContentModal
+          isOpen={showReportChapterModal}
+          onClose={() => setShowReportChapterModal(false)}
+          targetType="CHAPTER"
+          targetId={chapter._id}
+          targetTitle={`Chương ${chapter.chapterNumber}: ${chapter.title || ""}`}
+        />
+      )}
 
       {/* Khung bình luận cạnh phải (Kiểu YouTube Shorts) */}
       {story?._id && chapter?._id && (

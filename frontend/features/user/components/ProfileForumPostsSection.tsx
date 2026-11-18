@@ -83,7 +83,7 @@ export function ProfileForumPostsSection() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link
-                    href={`/dien-dan/${post._id}`}
+                    href={`/dien-dan/${post.slug || post._id}`}
                     className="font-bold text-sm text-slate-900 hover:text-sky-600 transition truncate"
                   >
                     {post.title}
@@ -103,13 +103,13 @@ export function ProfileForumPostsSection() {
 
               <div className="flex items-center gap-2 shrink-0">
                 <Link
-                  href={`/dien-dan/${post._id}`}
+                  href={`/dien-dan/${post.slug || post._id}`}
                   className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
                 >
                   Xem bài
                 </Link>
                 <Link
-                  href={`/tai-khoan/bai-viet/${post._id}/chinh-sua`}
+                  href={`/tai-khoan/bai-viet/${post.slug || post._id}/chinh-sua`}
                   className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
                 >
                   Sửa

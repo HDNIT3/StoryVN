@@ -60,7 +60,7 @@ export function HomeView({
   const heroStories = newestStories.slice(0, 5);
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-white">
+    <div className="relative min-h-screen w-full overflow-x-clip bg-white">
       {/* Thanh điều hướng nhanh theo section nổi bên phải */}
       <HomeSideNav />
 

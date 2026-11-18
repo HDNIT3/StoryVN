@@ -1,7 +1,10 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { StoryDetailData, StoryProgressState, StoryAgeRating } from "@/features/stories";
+import { ReportContentModal } from "@/features/reports";
 
 interface StoryDetailHeaderProps {
   story: StoryDetailData;
@@ -169,6 +172,8 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
   onToggleFollow,
   onOpenRatings,
 }) => {
+  const [isReporting, setIsReporting] = useState(false);
+
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-8 md:p-10 border border-slate-200/90 shadow-sm relative overflow-hidden">
       {/* Background radial glow */}
@@ -207,7 +212,7 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
 
         {/* Thông tin chi tiết */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-snug">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-[1.3] py-0.5 break-words">
             {story.title}
           </h1>
 
@@ -348,9 +353,29 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
               </svg>
               <span>Chia sẻ</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setIsReporting(true)}
+              title="Báo cáo tác phẩm vi phạm"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 hover:border-rose-200 shadow-2xs active:scale-[0.98] transition-all cursor-pointer sm:ml-auto"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+              </svg>
+              <span>Báo cáo</span>
+            </button>
           </div>
         </div>
       </div>
+
+      <ReportContentModal
+        isOpen={isReporting}
+        onClose={() => setIsReporting(false)}
+        targetType="STORY"
+        targetId={story._id}
+        targetTitle={story.title}
+      />
     </div>
   );
 };

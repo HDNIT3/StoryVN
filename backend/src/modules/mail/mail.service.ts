@@ -118,4 +118,92 @@ export class MailService {
 
     return this.sendMail(to, subject, html);
   }
+
+  private escapeHtml(str: string): string {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  async sendSupportTicketCreated(params: {
+    to: string;
+    senderName: string;
+    ticketCode: string;
+    topicLabel: string;
+    subjectTitle: string;
+    message: string;
+    trackingUrl: string;
+  }) {
+    const subject = `[StoryVN #${params.ticketCode}] Đã tiếp nhận yêu cầu hỗ trợ của bạn`;
+    const safeName = this.escapeHtml(params.senderName || 'Bạn');
+    const safeTopic = this.escapeHtml(params.topicLabel);
+    const safeSubject = this.escapeHtml(params.subjectTitle);
+    const safeMessage = this.escapeHtml(params.message).replace(/\n/g, '<br/>');
+
+    const html = `<div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; color: #1e293b; line-height: 1.6; border: 1px solid #e2e8f0; border-radius: 16px;">
+      <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px;">
+        <span style="display: inline-block; background: #e0f2fe; color: #0369a1; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 999px;">Mã phiếu: #${this.escapeHtml(params.ticketCode)}</span>
+        <h2 style="color: #0f172a; margin: 12px 0 4px 0; font-size: 20px;">StoryVN đã tiếp nhận yêu cầu hỗ trợ</h2>
+      </div>
+      <p>Xin chào <strong>${safeName}</strong>,</p>
+      <p>Cảm ơn bạn đã liên hệ Trung tâm Hỗ trợ StoryVN. Yêu cầu của bạn đã được chuyển tới Ban quản trị và sẽ được phản hồi trong thời gian sớm nhất.</p>
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 18px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; color: #64748b;"><strong>Phân loại:</strong> ${safeTopic}</p>
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #0f172a;"><strong>Tiêu đề:</strong> ${safeSubject}</p>
+        <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 13px; color: #334155;">${safeMessage}</div>
+      </div>
+      <p style="margin: 20px 0;">
+        <a href="${params.trackingUrl}" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px; padding: 12px 22px; border-radius: 10px;">Theo dõi trạng thái & Nhận phản hồi</a>
+      </p>
+      <p style="font-size: 12px; color: #64748b; margin-top: 24px;">Khi Ban quản trị phản hồi, nội dung giải đáp sẽ được gửi trực tiếp qua email này và cập nhật đồng thời trên trang Hỗ trợ StoryVN.</p>
+    </div>`;
+
+    return this.sendMail(params.to, subject, html);
+  }
+
+  async sendSupportTicketReply(params: {
+    to: string;
+    senderName: string;
+    ticketCode: string;
+    subjectTitle: string;
+    originalMessage: string;
+    replyContent: string;
+    adminName: string;
+    statusLabel: string;
+    trackingUrl: string;
+  }) {
+    const subject = `[StoryVN #${params.ticketCode}] Phản hồi yêu cầu hỗ trợ: ${params.subjectTitle}`;
+    const safeName = this.escapeHtml(params.senderName || 'Bạn');
+    const safeAdmin = this.escapeHtml(params.adminName || 'Ban quản trị StoryVN');
+    const safeStatus = this.escapeHtml(params.statusLabel);
+    const safeSubject = this.escapeHtml(params.subjectTitle);
+    const safeReply = this.escapeHtml(params.replyContent).replace(/\n/g, '<br/>');
+    const safeOriginal = this.escapeHtml(params.originalMessage).replace(/\n/g, '<br/>');
+
+    const html = `<div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; color: #1e293b; line-height: 1.6; border: 1px solid #e2e8f0; border-radius: 16px;">
+      <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px;">
+        <span style="display: inline-block; background: #dcfce7; color: #15803d; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 999px;">#${this.escapeHtml(params.ticketCode)} · ${safeStatus}</span>
+        <h2 style="color: #0f172a; margin: 12px 0 4px 0; font-size: 20px;">Phản hồi từ Ban quản trị StoryVN</h2>
+        <p style="margin: 0; font-size: 13px; color: #64748b;">Chủ đề: <strong>${safeSubject}</strong></p>
+      </div>
+      <p>Xin chào <strong>${safeName}</strong>,</p>
+      <p><strong>${safeAdmin}</strong> đã gửi phản hồi cho phiếu yêu cầu hỗ trợ của bạn:</p>
+      <div style="background-color: #f0f9ff; border-left: 4px solid #0284c7; border-radius: 8px; padding: 16px; margin: 18px 0; color: #0f172a; font-size: 14px;">
+        ${safeReply}
+      </div>
+      <div style="margin: 22px 0;">
+        <a href="${params.trackingUrl}" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px; padding: 12px 22px; border-radius: 10px;">Xem chi tiết & Phản hồi tiếp trên StoryVN</a>
+      </div>
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-top: 20px;">
+        <p style="margin: 0 0 6px 0; font-size: 12px; color: #64748b;"><strong>Nội dung yêu cầu ban đầu của bạn:</strong></p>
+        <div style="font-size: 12px; color: #475569;">${safeOriginal}</div>
+      </div>
+      <p style="font-size: 12px; color: #94a3b8; margin-top: 20px;">Trân trọng,<br/>Đội ngũ Hỗ trợ & Vận hành StoryVN</p>
+    </div>`;
+
+    return this.sendMail(params.to, subject, html);
+  }
 }

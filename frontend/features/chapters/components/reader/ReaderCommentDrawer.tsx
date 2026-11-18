@@ -115,7 +115,7 @@ export const ReaderCommentDrawer: React.FC<ReaderCommentDrawerProps> = ({
       ref={containerRef}
       aria-label="Khung bình luận chương"
       aria-hidden={!isOpen}
-      className={`fixed top-0 right-0 bottom-0 z-40 w-full sm:w-[380px] md:w-[420px] lg:w-[420px] xl:w-[460px] h-full flex flex-col shadow-[-8px_0_30px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-out select-none ${
+      className={`fixed top-0 right-0 bottom-0 z-[55] w-full sm:w-[380px] md:w-[420px] lg:w-[420px] xl:w-[460px] h-full flex flex-col shadow-[-8px_0_30px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-out select-none ${
         isOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"
       } ${themeClasses.panelBg}`}
     >
