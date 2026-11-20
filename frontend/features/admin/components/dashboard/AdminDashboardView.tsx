@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { DateRangeToolbar, exportStatisticsExcel, useDateRange } from "@/components/statistics";
+import { DateRangeToolbar, exportStatisticsData, useDateRange } from "@/components/statistics";
 import { toast } from "@/lib/toast";
-import { useAuth } from "@/lib/context/AuthContext";
 import { useAdminDashboardOverview } from "../../queries/useAdminDashboardQueries";
 import {
   AdminMetricCard,
@@ -18,18 +17,17 @@ import {
 } from "../charts";
 
 export function AdminDashboardView() {
-  const { user } = useAuth();
   const dateRange = useDateRange();
   const [exporting, setExporting] = useState(false);
   const [revenueTab, setRevenueTab] = useState<"revenue" | "transactions" | "coins">("revenue");
 
   const { data, isLoading, isFetching, isError, isRefetching, refetch } = useAdminDashboardOverview(dateRange.range, dateRange.isValid);
   const canExport = !!data && dateRange.isValid && !isFetching && !isError && (dateRange.mode === "all" ? data.range.mode === "all" : data.range.startDate === dateRange.range.startDate && data.range.endDate === dateRange.range.endDate);
-  const exportOverview = async () => {
+  const exportOverview = async (format: "xlsx" | "csv" = "xlsx") => {
     if (!data || !canExport || exporting) return;
     setExporting(true);
     try {
-      await exportStatisticsExcel({ filename: "admin-overview", range: dateRange.range, notes: ["Số lượng nội dung/tài khoản theo ngày tạo trong kỳ, trạng thái hiện tại.", "Doanh thu là tổng tiền giao dịch được tạo trong kỳ và hiện có trạng thái thành công; không tính theo thời điểm thanh toán.", dateRange.mode === "all" ? "Toàn bộ thời gian; các trường kỳ trước và tăng trưởng không áp dụng (0). totalFollows là hiện tại." : "Các trường today, thisMonth, newToday, new7Days là kỳ đã chọn; lastMonth, newYesterday là kỳ trước cùng độ dài. totalFollows là hiện tại.", "Top truyện, hàng đợi và giao dịch gần nhất chỉ gồm các dòng đã tải; không phải toàn bộ danh sách."], sheets: [
+      await exportStatisticsData({ filename: "admin-overview", range: dateRange.range, notes: ["Số lượng nội dung/tài khoản theo ngày tạo trong kỳ, trạng thái hiện tại.", "Doanh thu là tổng tiền giao dịch được tạo trong kỳ và hiện có trạng thái thành công; không tính theo thời điểm thanh toán.", dateRange.mode === "all" ? "Toàn bộ thời gian; các trường kỳ trước và tăng trưởng không áp dụng (0). totalFollows là hiện tại." : "Các trường today, thisMonth, newToday, new7Days là kỳ đã chọn; lastMonth, newYesterday là kỳ trước cùng độ dài. totalFollows là hiện tại.", "Top truyện, hàng đợi và giao dịch gần nhất chỉ gồm các dòng đã tải; không phải toàn bộ danh sách."], sheets: [
         { name: "Tổng quan", columns: ["Nhóm", "Chỉ số", "Giá trị"], rows: Object.entries(data.kpi).flatMap(([group, values]) => Object.entries(values).flatMap(([key, value]) => typeof value === "number" ? [[group, key, value]] : Object.entries(value).map(([subkey, number]) => [group, `${key}.${subkey}`, number as number]))) },
         { name: "Biểu đồ", columns: ["Ngày", "Doanh thu VND", "Xu", "Giao dịch", "Người dùng mới", "Lượt đọc"], rows: data.charts.timeline.map((item) => [item.date, item.revenue, item.coins, item.transactions, item.newUsers, item.views]) },
         { name: "Thể loại", columns: ["Thể loại", "Số lượng", "Tỷ lệ"], rows: data.charts.categories.map((item) => [item.name, item.count, item.percentage]) },
@@ -37,7 +35,7 @@ export function AdminDashboardView() {
         { name: "Hàng đợi đã tải", columns: ["Loại", "Tiêu đề", "Ngày tạo"], rows: [...data.urgentQueue.stories.map((item) => ["Truyện", item.title, item.createdAt]), ...data.urgentQueue.chapters.map((item) => ["Chương", item.title, item.createdAt]), ...data.urgentQueue.authorRequests.map((item) => ["Tác giả", item.penName, item.createdAt])] },
         { name: "Top truyện đã tải", columns: ["Truyện", "Lượt đọc", "Theo dõi hiện tại", "Chương hiện tại", "Điểm hiện tại"], rows: data.topStories.map((item) => [item.title, item.views, item.likes, item.chapterCount, item.ratingAverage]) },
         { name: "Giao dịch gần nhất", columns: ["Mã", "Ngày", "Số tiền VND", "Xu", "Trạng thái"], rows: data.recentTransactions.map((item) => [item.orderCode, item.createdAt, item.amount, item.totalCoin, item.status]) },
-      ] });
+      ] }, format);
     } catch { toast.error("Không thể xuất Excel. Vui lòng thử lại."); } finally { setExporting(false); }
   };
 
@@ -126,46 +124,6 @@ export function AdminDashboardView() {
   return (
     <div className="space-y-6">
       {/* ─── 1. TOP HEADER & GREETING ──────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-5 sm:p-6 rounded-2xl text-white shadow-md relative overflow-hidden">
-        {/* Glow decoration */}
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-              Chào mừng, {user?.displayName || user?.username || "Quản trị viên"}! 👋
-            </h1>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-              {user?.role === "ADMIN" ? "QUẢN TRỊ VIÊN CẤP CAO" : "QUẢN LÝ NỘI DUNG"}
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1.5 max-w-2xl">
-            Bảng điều khiển tổng hợp số liệu thực tế về doanh thu VNPay, tương tác độc giả, tiến độ kiểm duyệt và tăng trưởng cộng đồng StoryVN.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 relative z-10 self-start md:self-auto">
-          {/* Nút Làm mới */}
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isLoading || isRefetching}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-xs disabled:opacity-50 cursor-pointer"
-          >
-            <svg
-              className={`w-3.5 h-3.5 ${isRefetching ? "animate-spin" : ""}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span>{isRefetching ? "Đang đồng bộ..." : "Đồng bộ"}</span>
-          </button>
-        </div>
-      </div>
-
       <DateRangeToolbar dateRange={dateRange} exportDisabled={!canExport} exporting={exporting} onExport={exportOverview} />
       <p className="text-xs text-slate-500">Số liệu trong khoảng đã chọn; nội dung và tài khoản theo ngày tạo, trạng thái hiện tại. Doanh thu tính theo ngày tạo giao dịch hiện đã thành công. Top truyện và danh sách gần nhất có giới hạn.</p>
       {isError && <p role="alert" className="text-sm text-red-600">Không thể tải thống kê. Vui lòng đồng bộ lại.</p>}

@@ -13,6 +13,13 @@ export interface AdminUserItem {
   updatedAt?: string;
 }
 
+export interface AdminUserDetail {
+  user: AdminUserItem & Record<string, unknown>;
+  authorProfile: Record<string, unknown> | null;
+  authorRequest: Record<string, unknown> | null;
+  managerProfile: Record<string, unknown> | null;
+}
+
 export interface AdminUserStats {
   totalUsers: number;
   status?: {
@@ -97,7 +104,7 @@ export const adminUserService = {
    * Xem chi tiết thông tin một người dùng theo ID (Admin/Manager)
    */
   findById(id: string) {
-    return api.get<AdminUserApiResponse<{ user: AdminUserItem }>>(
+    return api.get<AdminUserApiResponse<AdminUserDetail>>(
       `/admin/users/${id}`
     );
   },

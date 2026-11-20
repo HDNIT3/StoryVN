@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { DateRangeToolbar, useDateRange, exportStatisticsExcel } from "@/components/statistics";
+import { DateRangeToolbar, useDateRange, exportStatisticsData } from "@/components/statistics";
 import { adminStoryService } from "../../services/admin-story.service";
 import { toast } from "@/lib/toast";
 import type { StoryStatus, StoryVisibility } from "@/features/stories";
@@ -99,7 +99,7 @@ export const AdminStoriesView: React.FC = () => {
   const stories = storiesData?.items ?? [];
   const pagination = storiesData?.pagination;
   const totalPages = pagination?.totalPages ?? 1;
-  async function exportAll() {
+  async function exportAll(format: "xlsx" | "csv" = "xlsx") {
     if (exportLock.current || isFetching || countsQuery.isFetching || dashboardQuery.isFetching || !counts || !dateRange.isValid) return;
     exportLock.current = true; setExporting(true);
     try {
@@ -110,11 +110,11 @@ export const AdminStoriesView: React.FC = () => {
         items.push(...response.data.items);
         if (next >= response.data.pagination.totalPages) break;
       }
-      await exportStatisticsExcel({ filename: "admin-stories", range: dateRange.range, notes: ["Cohort: story createdAt in selected dates; status is current. Counts/categories cover all stories in the date cohort, independent of list filters. View/chapter columns are current cumulative snapshots.", `Filters: ${JSON.stringify(filters)}`], sheets: [
+      await exportStatisticsData({ filename: "admin-stories", range: dateRange.range, notes: ["Cohort: story createdAt in selected dates; status is current. Counts/categories cover all stories in the date cohort, independent of list filters. View/chapter columns are current cumulative snapshots.", `Filters: ${JSON.stringify(filters)}`], sheets: [
         { name: "Summary", columns: ["Metric", "Value"], rows: [["Matching records", items.length], ...Object.entries(counts).map(([key, value]) => [key, value])] },
         { name: "Stories", columns: ["ID", "Title", "Status", "Visibility", "Created at", "Current views", "Current chapters"], rows: items.map(s => [s._id, s.title, s.status, s.visibility, s.createdAt, s.stats?.viewCount ?? 0, s.stats?.chapterCount ?? 0]) },
         { name: "Categories", columns: ["Category", "Count", "Percentage"], rows: (dashboardData?.charts.categories ?? []).map(c => [c.name, c.count, c.percentage]) },
-      ] });
+      ] }, format);
     } catch (error) { toast.error(error instanceof Error ? error.message : "Không thể xuất Excel"); }
     finally { exportLock.current = false; setExporting(false); }
   }
@@ -224,7 +224,7 @@ export const AdminStoriesView: React.FC = () => {
         </button>
       </div>
 
-      <DateRangeToolbar dateRange={dateRange} onExport={() => void exportAll()} exporting={exporting} exportDisabled={isFetching || countsQuery.isFetching || dashboardQuery.isFetching || isError || countsQuery.isError || dashboardQuery.isError || !counts} />
+      <DateRangeToolbar dateRange={dateRange} onExport={(format) => void exportAll(format)} exporting={exporting} exportDisabled={isFetching || countsQuery.isFetching || dashboardQuery.isFetching || isError || countsQuery.isError || dashboardQuery.isError || !counts} />
       <fieldset disabled={exporting} className="min-w-0 space-y-6">
       <p className="text-xs text-slate-500">Theo ngày tạo truyện; thống kê và biểu đồ thể hiện trạng thái hiện tại của toàn bộ nhóm truyện trong kỳ.</p>
       {/* Tabs thống kê tương tác */}

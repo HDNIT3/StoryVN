@@ -8,8 +8,9 @@ import { Chapter, ChapterDocument, ChapterStatus } from '../../chapters/schemas/
 import { Comment, CommentDocument, CommentStatus } from '../../comments/schemas/comment.schema.js';
 import { ForumPost, ForumPostDocument, ForumPostStatus } from '../../forum/schemas/forum-post.schema.js';
 import { Story, StoryDocument, StoryStatus, StoryVisibility } from '../../stories/schemas/story.schema.js';
-import { AdminQueryReportsDto, QueryReportsDto, SubmitReportDto } from '../dto/reports.dto.js';
-import { ContentReport, ContentReportDocument, ContentReportTargetType } from '../schemas/content-report.schema.js';
+import { AdminQueryReportsDto, QueryReportsDto, SubmitReportDto, UpdateReportStatusDto } from '../dto/reports.dto.js';
+import { ContentReport, ContentReportDocument, ContentReportStatus, ContentReportTargetType } from '../schemas/content-report.schema.js';
+import { UserDocument } from '../../users/schemas/user.schema.js';
 
 @Injectable()
 export class ReportsService {
@@ -171,18 +172,43 @@ export class ReportsService {
     return this.list(Object.assign(new AdminQueryReportsDto(), query, { targetType, targetId: id }));
   }
 
+  async updateStatus(id: string, dto: UpdateReportStatusDto, actor: UserDocument & { _id: any }) {
+    const reportId = this.objectId(id);
+    if ([ContentReportStatus.ACTION_TAKEN, ContentReportStatus.REJECTED].includes(dto.status) && !dto.resolutionNote?.trim()) {
+      throw new BadRequestException('Vui l?ng ghi r? k?t qu? x? l? tr??c khi ??ng b?o c?o');
+    }
+    const report = await this.reports.findById(reportId);
+    if (!report) throw new NotFoundException('Kh?ng t?m th?y b?o c?o vi ph?m');
+    const reviewedAt = new Date();
+    report.status = dto.status;
+    report.resolutionNote = dto.resolutionNote?.trim() || null;
+    report.reviewedBy = actor._id;
+    report.reviewedAt = reviewedAt;
+    report.history = [...(report.history ?? []), {
+      status: dto.status,
+      note: dto.resolutionNote?.trim() || null,
+      actorId: actor._id,
+      createdAt: reviewedAt,
+    }];
+    await report.save();
+    return report.toObject();
+  }
+
   async list(query: AdminQueryReportsDto) {
     const filter: Record<string, unknown> = query.startDate !== undefined || query.endDate !== undefined
       ? dateRangeMatch('createdAt', resolveDateRange(query)) : {};
+    if (query.status !== undefined) filter.status = query.status;
     if (query.targetType !== undefined) {
       this.validateTargetType(query.targetType);
       filter.targetType = query.targetType;
     }
     if (query.targetId !== undefined) filter.targetId = this.objectId(query.targetId);
     const [items, total] = await Promise.all([
-      this.reports.find(filter).select('_id targetType targetId userId reason createdAt updatedAt')
+      this.reports.find(filter).select('_id targetType targetId userId reason status resolutionNote reviewedBy reviewedAt history createdAt updatedAt')
         .sort({ createdAt: -1, _id: -1 }).skip(query.skip).limit(query.limit)
-        .populate('userId', '_id username displayName avatarUrl').lean(),
+        .populate('userId', '_id username displayName avatarUrl')
+        .populate('reviewedBy', '_id username displayName')
+        .populate('history.actorId', '_id username displayName').lean(),
       this.reports.countDocuments(filter),
     ]);
     const enrichedItems = await this.enrichReportItems(items);

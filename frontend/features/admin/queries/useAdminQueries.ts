@@ -27,6 +27,18 @@ export function useAdminUsers(params: QueryAdminUsersParams) {
   });
 }
 
+export function useAdminUserDetail(id?: string) {
+  return useQuery({
+    queryKey: adminKeys.userDetail(id ?? ""),
+    queryFn: async () => {
+      if (!id) throw new Error("Missing user ID");
+      const res = await adminUserService.findById(id);
+      return res.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
 export function useAdminUserStats() {
   return useQuery({
     queryKey: adminKeys.userStats,

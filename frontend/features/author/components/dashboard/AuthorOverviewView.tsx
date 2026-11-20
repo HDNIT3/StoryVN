@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMyStories, type StoryItem } from "@/features/stories";
 import { useAuthorOverview } from "../../queries/useAuthorQueries";
-import { DateRangeToolbar, exportStatisticsExcel, useDateRange } from "@/components/statistics";
+import { DateRangeToolbar, exportStatisticsData, useDateRange } from "@/components/statistics";
 import { toast } from "@/lib/toast";
 import {
   DashboardStats,
@@ -86,18 +86,18 @@ export function AuthorOverviewView() {
 
   const canExport = dateRange.isValid && !!overviewData && !!storiesData && !isFetchingOverview && !isErrorOverview && !isFetchingStories && !isPlaceholderStories && !isErrorStories
     && (dateRange.mode === "all" ? overviewData.range.mode === "all" : overviewData.range.startDate === dateRange.range.startDate && overviewData.range.endDate === dateRange.range.endDate);
-  const exportOverview = async () => {
+  const exportOverview = async (format: "xlsx" | "csv" = "xlsx") => {
     if (!canExport || !overviewData || exporting) return;
     setExporting(true);
     try {
-      await exportStatisticsExcel({ filename: "author-overview", range: dateRange.range, notes: ["Tổng quan và biểu đồ theo kỳ đã chọn. Ví, theo dõi và điểm đánh giá là số liệu hiện tại.", "Bình luận và thông báo chỉ gồm các dòng gần nhất đã tải trong kỳ."], sheets: [
+      await exportStatisticsData({ filename: "author-overview", range: dateRange.range, notes: ["Tổng quan và biểu đồ theo kỳ đã chọn. Ví, theo dõi và điểm đánh giá là số liệu hiện tại.", "Bình luận và thông báo chỉ gồm các dòng gần nhất đã tải trong kỳ."], sheets: [
         { name: "Tổng quan", columns: ["Chỉ số", "Giá trị"], rows: [["Tác phẩm tạo trong kỳ", overviewData.stats.totalStories], ["Đã xuất bản (trạng thái hiện tại)", overviewData.stats.publishedStories], ["Chương tạo trong kỳ", overviewData.stats.totalChapters], ["Chương xuất bản (trạng thái hiện tại)", overviewData.stats.publishedChapters], ["Lượt đọc trong kỳ", overviewData.stats.totalViews], ["Xu trong kỳ", overviewData.stats.totalCoins], ["Bình luận trong kỳ", overviewData.stats.totalComments], ["Đánh giá trong kỳ", overviewData.stats.totalRatings], ["Điểm đánh giá hiện tại", overviewData.stats.ratingAverage], ["Theo dõi hiện tại", overviewData.stats.totalFollowers], ["Ví hiện tại", overviewData.stats.walletBalance]] },
         { name: "Lượt đọc", columns: ["Ngày", "Lượt đọc"], rows: overviewData.charts.reads.selectedRange.items.map((item) => [item.date, item.value]) },
         { name: "Doanh thu", columns: ["Ngày", "Xu"], rows: overviewData.charts.revenue.selectedRange.items.map((item) => [item.date, item.value]) },
         { name: "Bình luận gần nhất", columns: ["Ngày", "Truyện", "Nội dung"], rows: overviewData.recentComments.map((item) => [item.createdAt, item.story?.title ?? "", item.content]) },
         { name: "Thông báo gần nhất", columns: ["Ngày", "Tiêu đề", "Nội dung"], rows: overviewData.recentNotifications.map((item) => [item.createdAt, item.title, item.message]) },
         { name: "Tác phẩm đã tải", columns: ["Truyện", "Chương hiện tại", "Lượt đọc toàn thời gian"], rows: stories.map((item) => [item.title, item.stats?.chapterCount ?? 0, item.stats?.viewCount ?? 0]) },
-      ] });
+      ] }, format);
     } catch { toast.error("Không thể xuất Excel. Vui lòng thử lại."); } finally { setExporting(false); }
   };
 

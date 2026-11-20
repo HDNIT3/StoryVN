@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { DateRangeToolbar, useDateRange, exportStatisticsExcel } from "@/components/statistics";
+import { DateRangeToolbar, useDateRange, exportStatisticsData } from "@/components/statistics";
 import { toast } from "@/lib/toast";
 import { StoryPagination } from "@/features/admin/components/stories/StoryPagination";
 import Link from "next/link";
@@ -65,7 +65,7 @@ export function AuthorStoriesView() {
   // Compute status counts from all stories (khớp filter phía API:
   // truyện đã xuất bản vẫn có thể có bản chỉnh sửa chờ duyệt / bị từ chối)
   const statusCounts = { ALL: counts?.all ?? 0, PUBLISHED: counts?.published ?? 0, PENDING_REVIEW: counts?.pending ?? 0, DRAFT: counts?.draft ?? 0, REJECTED: counts?.rejected ?? 0 };
-  async function exportAll() {
+  async function exportAll(format: "xlsx" | "csv" = "xlsx") {
     if (exportLock.current || isFetching || countsQuery.isFetching || !counts || !dateRange.isValid) return;
     exportLock.current = true; setExporting(true);
     try {
@@ -75,10 +75,10 @@ export function AuthorStoriesView() {
         items.push(...response.data.items);
         if (next >= response.data.pagination.totalPages) break;
       }
-      await exportStatisticsExcel({ filename: "author-stories", range: dateRange.range, notes: ["Story cohort: createdAt in selected Vietnam dates; statuses and chapter/view totals are current snapshots. Selected-period views apply to this cohort.", `Filters: ${JSON.stringify(params)}`], sheets: [
+      await exportStatisticsData({ filename: "author-stories", range: dateRange.range, notes: ["Story cohort: createdAt in selected Vietnam dates; statuses and chapter/view totals are current snapshots. Selected-period views apply to this cohort.", `Filters: ${JSON.stringify(params)}`], sheets: [
         { name: "Summary", columns: ["Metric", "Value"], rows: [["Matching records", items.length], ...Object.entries(counts).map(([key, value]) => [key, value])] },
         { name: "Stories", columns: ["ID", "Title", "Status", "Visibility", "Created at", "Current views", "Current chapters"], rows: items.map(s => [s._id, s.title, s.status, s.visibility, s.createdAt, s.stats?.viewCount ?? 0, s.stats?.chapterCount ?? 0]) },
-      ] });
+      ] }, format);
     } catch (error) { toast.error(error instanceof Error ? error.message : "Không thể xuất Excel"); }
     finally { exportLock.current = false; setExporting(false); }
   }
@@ -155,7 +155,7 @@ export function AuthorStoriesView() {
       </div>
 
       {/* Overview Statistics Cards */}
-      <DateRangeToolbar dateRange={dateRange} onExport={() => void exportAll()} exporting={exporting} exportDisabled={isFetching || countsQuery.isFetching || isError || countsQuery.isError || !counts} />
+      <DateRangeToolbar dateRange={dateRange} onExport={(format) => void exportAll(format)} exporting={exporting} exportDisabled={isFetching || countsQuery.isFetching || isError || countsQuery.isError || !counts} />
       <fieldset disabled={exporting} className="min-w-0">
       <p className="my-3 text-xs text-zinc-500">Lọc theo ngày tạo truyện. Trạng thái và số chương là số liệu hiện tại của nhóm truyện trong kỳ.</p>
       {countsQuery.isPending ? <p role="status">Đang tải thống kê...</p> : countsQuery.isError ? <p role="alert">Không thể tải thống kê.</p> : <StoryStatsCards counts={counts} />}
