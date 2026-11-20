@@ -10,7 +10,6 @@ import {
   AdminAreaChart,
   AdminBarChart,
   AdminDonutChart,
-  AdminUrgentQueueCard,
   type AreaChartDataPoint,
   type BarChartItem,
   type DonutSegment,
@@ -21,18 +20,17 @@ export function AdminDashboardView() {
   const [exporting, setExporting] = useState(false);
   const [revenueTab, setRevenueTab] = useState<"revenue" | "transactions" | "coins">("revenue");
 
-  const { data, isLoading, isFetching, isError, isRefetching, refetch } = useAdminDashboardOverview(dateRange.range, dateRange.isValid);
+  const { data, isLoading, isFetching, isError, refetch } = useAdminDashboardOverview(dateRange.range, dateRange.isValid);
   const canExport = !!data && dateRange.isValid && !isFetching && !isError && (dateRange.mode === "all" ? data.range.mode === "all" : data.range.startDate === dateRange.range.startDate && data.range.endDate === dateRange.range.endDate);
   const exportOverview = async (format: "xlsx" | "csv" = "xlsx") => {
     if (!data || !canExport || exporting) return;
     setExporting(true);
     try {
-      await exportStatisticsData({ filename: "admin-overview", range: dateRange.range, notes: ["Số lượng nội dung/tài khoản theo ngày tạo trong kỳ, trạng thái hiện tại.", "Doanh thu là tổng tiền giao dịch được tạo trong kỳ và hiện có trạng thái thành công; không tính theo thời điểm thanh toán.", dateRange.mode === "all" ? "Toàn bộ thời gian; các trường kỳ trước và tăng trưởng không áp dụng (0). totalFollows là hiện tại." : "Các trường today, thisMonth, newToday, new7Days là kỳ đã chọn; lastMonth, newYesterday là kỳ trước cùng độ dài. totalFollows là hiện tại.", "Top truyện, hàng đợi và giao dịch gần nhất chỉ gồm các dòng đã tải; không phải toàn bộ danh sách."], sheets: [
+      await exportStatisticsData({ filename: "admin-overview", range: dateRange.range, notes: ["Số lượng nội dung/tài khoản theo ngày tạo trong kỳ, trạng thái hiện tại.", "Doanh thu là tổng tiền giao dịch được tạo trong kỳ và hiện có trạng thái thành công; không tính theo thời điểm thanh toán.", dateRange.mode === "all" ? "Toàn bộ thời gian; các trường kỳ trước và tăng trưởng không áp dụng (0). totalFollows là hiện tại." : "Các trường today, thisMonth, newToday, new7Days là kỳ đã chọn; lastMonth, newYesterday là kỳ trước cùng độ dài. totalFollows là hiện tại.", "Top truyện và giao dịch gần nhất chỉ gồm các dòng đã tải."], sheets: [
         { name: "Tổng quan", columns: ["Nhóm", "Chỉ số", "Giá trị"], rows: Object.entries(data.kpi).flatMap(([group, values]) => Object.entries(values).flatMap(([key, value]) => typeof value === "number" ? [[group, key, value]] : Object.entries(value).map(([subkey, number]) => [group, `${key}.${subkey}`, number as number]))) },
         { name: "Biểu đồ", columns: ["Ngày", "Doanh thu VND", "Xu", "Giao dịch", "Người dùng mới", "Lượt đọc"], rows: data.charts.timeline.map((item) => [item.date, item.revenue, item.coins, item.transactions, item.newUsers, item.views]) },
         { name: "Thể loại", columns: ["Thể loại", "Số lượng", "Tỷ lệ"], rows: data.charts.categories.map((item) => [item.name, item.count, item.percentage]) },
         { name: "Đánh giá", columns: ["Số sao", "Số lượng"], rows: Object.entries(data.charts.ratings).map(([rating, count]) => [Number(rating), count]) },
-        { name: "Hàng đợi đã tải", columns: ["Loại", "Tiêu đề", "Ngày tạo"], rows: [...data.urgentQueue.stories.map((item) => ["Truyện", item.title, item.createdAt]), ...data.urgentQueue.chapters.map((item) => ["Chương", item.title, item.createdAt]), ...data.urgentQueue.authorRequests.map((item) => ["Tác giả", item.penName, item.createdAt])] },
         { name: "Top truyện đã tải", columns: ["Truyện", "Lượt đọc", "Theo dõi hiện tại", "Chương hiện tại", "Điểm hiện tại"], rows: data.topStories.map((item) => [item.title, item.views, item.likes, item.chapterCount, item.ratingAverage]) },
         { name: "Giao dịch gần nhất", columns: ["Mã", "Ngày", "Số tiền VND", "Xu", "Trạng thái"], rows: data.recentTransactions.map((item) => [item.orderCode, item.createdAt, item.amount, item.totalCoin, item.status]) },
       ] }, format);
@@ -43,7 +41,6 @@ export function AdminDashboardView() {
   const charts = data?.charts;
   const topStories = data?.topStories || [];
   const recentTransactions = data?.recentTransactions || [];
-  const urgentQueue = data?.urgentQueue;
 
   // Dữ liệu cho biểu đồ Doanh thu (Area Chart)
   const revenueChartData: AreaChartDataPoint[] = (charts?.timeline || []).map((t) => {
@@ -123,20 +120,10 @@ export function AdminDashboardView() {
 
   return (
     <div className="space-y-6">
-      {/* ─── 1. TOP HEADER & GREETING ──────────────────────────── */}
-      <DateRangeToolbar dateRange={dateRange} exportDisabled={!canExport} exporting={exporting} onExport={exportOverview} />
-      <p className="text-xs text-slate-500">Số liệu trong khoảng đã chọn; nội dung và tài khoản theo ngày tạo, trạng thái hiện tại. Doanh thu tính theo ngày tạo giao dịch hiện đã thành công. Top truyện và danh sách gần nhất có giới hạn.</p>
-      {isError && <p role="alert" className="text-sm text-red-600">Không thể tải thống kê. Vui lòng đồng bộ lại.</p>}
-      {/* ─── 2. HÀNG ĐỢI KIỂM DUYỆT KHẨN CẤP (ACTION CENTER) ────────── */}
-      <AdminUrgentQueueCard
-        stories={urgentQueue?.stories || []}
-        chapters={urgentQueue?.chapters || []}
-        authorRequests={urgentQueue?.authorRequests || []}
-        totalPendingStories={kpi?.stories.pending || 0}
-        totalPendingChapters={kpi?.chapters.pending || 0}
-        totalPendingAuthorRequests={kpi?.pendingSummary.authorRequests || 0}
-      />
-
+      <div>
+        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Tổng quan</h1>
+        <p className="mt-1 text-sm text-slate-500">Theo dõi số liệu, doanh thu và hoạt động của hệ thống.</p>
+      </div>
       {/* ─── 3. 4 THẺ METRICS KPI MASTER ─────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Doanh thu VNPay */}
@@ -205,6 +192,10 @@ export function AdminDashboardView() {
           }
         />
       </div>
+
+      <DateRangeToolbar dateRange={dateRange} exportDisabled={!canExport} exporting={exporting} onExport={exportOverview} />
+      {isError && <p role="alert" className="text-sm text-red-600">Không thể tải thống kê. <button type="button" onClick={() => refetch()} className="underline">Thử lại</button></p>}
+      {isLoading && <p role="status" className="text-sm text-slate-500">Đang tải thống kê...</p>}
 
       {/* ─── 4. BIỂU ĐỒ DIỆN TÍCH DOANH THU & BIỂU ĐỒ CỘT NGƯỜI DÙNG ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

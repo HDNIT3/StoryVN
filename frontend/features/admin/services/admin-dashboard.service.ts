@@ -1,6 +1,6 @@
 import api from "@/lib/api";
 import { dateRangeParams } from "@/components/statistics/date-range";
-import type { AdminDashboardOverviewData } from "../types/dashboard.types";
+import type { AdminDashboardOverviewData, AdminContentStatistics } from "../types/dashboard.types";
 
 export interface AdminDashboardApiResponse<T = unknown> {
   success: boolean;
@@ -9,6 +9,11 @@ export interface AdminDashboardApiResponse<T = unknown> {
 }
 
 export const adminDashboardService = {
+  getContentStatistics(range: { startDate?: string; endDate?: string; authorId?: string } = {}) {
+    const query = dateRangeParams(range);
+    if (range.authorId) query.set("authorId", range.authorId);
+    return api.get<AdminDashboardApiResponse<AdminContentStatistics>>(`/admin/dashboard/content${query.size ? `?${query}` : ""}`);
+  },
   /**
    * Lấy dữ liệu tổng quan thống kê và chuỗi thời gian cho Dashboard Quản Trị
    * Omitted dates request all-time data.

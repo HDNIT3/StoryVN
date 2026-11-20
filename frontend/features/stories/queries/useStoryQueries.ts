@@ -157,6 +157,7 @@ export function useRestoreStoryRevision() {
     onSuccess: () => {
       toast.success("Đã khôi phục bản sửa thành bản nháp mới!");
       queryClient.invalidateQueries({ queryKey: storyKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["author"] });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Không thể khôi phục bản sửa";
@@ -186,6 +187,7 @@ export function useCreateStory() {  const queryClient = useQueryClient();
           : "Đã lưu bản nháp tác phẩm thành công!"
       );
       queryClient.invalidateQueries({ queryKey: storyKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["author"] });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Không thể tạo tác phẩm";
@@ -218,6 +220,7 @@ export function useUpdateStory() {
           : "Đã cập nhật tác phẩm thành công!"
       );
       queryClient.invalidateQueries({ queryKey: storyKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["author"] });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Không thể cập nhật tác phẩm";

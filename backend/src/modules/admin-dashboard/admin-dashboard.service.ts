@@ -12,6 +12,8 @@ import { Comment, CommentDocument, CommentStatus } from '../comments/schemas/com
 import { StoryRating, StoryRatingDocument, StoryRatingStatus } from '../story-ratings/schemas/story-rating.schema.js';
 import { Genre, GenreDocument } from '../genres/schemas/genre.schema.js';
 import { DateRangeQueryDto } from '../../common/dto/date-range.dto.js';
+import { ContentStatisticsQueryDto } from './content-statistics-query.dto.js';
+import { AuthorProfile, AuthorProfileDocument } from '../users/schemas/author-profile.schema.js';
 import { calculateGrowthPercent, dateRangeKeys, dateRangeMatch, previousDateRange, resolveDateRange } from '../../common/utils/date-range.util.js';
 
 @Injectable()
@@ -35,7 +37,119 @@ export class AdminDashboardService {
     private readonly ratingModel: Model<StoryRatingDocument>,
     @InjectModel(Genre.name)
     private readonly genreModel: Model<GenreDocument>,
+    @InjectModel(AuthorProfile.name)
+    private readonly authorProfileModel: Model<AuthorProfileDocument>,
   ) {}
+
+  async getContentStatistics(query: ContentStatisticsQueryDto = {}) {
+    const allTime = query.days === undefined && query.startDate === undefined && query.endDate === undefined;
+    const range = resolveDateRange(allTime ? { days: 1 } : query);
+    const withinRange = (field: string) => allTime ? {} : dateRangeMatch(field, range);
+    const authorId = query.authorId ? new Types.ObjectId(query.authorId) : undefined;
+    // Scope chapters by their parent story, including stories created before the selected period.
+    const [stories, pendingAuthorIds, storyAuthorIds] = await Promise.all([
+      this.storyModel.find(authorId ? { authorId } : {})
+        .select('_id title slug authorId genreIds status createdAt').lean(),
+      this.authorRequestModel.distinct('userId', { status: AuthorRequestStatus.PENDING }),
+      this.storyModel.distinct('authorId'),
+    ]);
+    const storyIds = stories.map((story) => story._id);
+    const chapterFilter = { storyId: { $in: storyIds }, ...withinRange('createdAt') };
+    const requestFilter = { status: AuthorRequestStatus.PENDING, ...(authorId ? { userId: authorId } : {}), ...withinRange('createdAt') };
+    const [chapterGroups, viewGroups, authors, genres, pendingStories, pendingChapters, pendingRequests, requestCount, authorProfiles, authorApplications] = await Promise.all([
+      this.chapterModel.aggregate([
+        { $match: chapterFilter },
+        { $group: { _id: { storyId: '$storyId', status: '$status', date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+07:00' } } }, count: { $sum: 1 } } },
+      ]),
+      this.storyDailyViewModel.aggregate([
+        { $match: { storyId: { $in: storyIds }, ...(allTime ? {} : { date: { $gte: range.startDate, $lte: range.endDate } }) } },
+        { $group: { _id: { storyId: '$storyId', date: '$date' }, views: { $sum: '$views' } } },
+      ]),
+      // Keep options independent of the active filters, including pending applicants.
+      this.userModel.find({ $or: [ { role: UserRole.AUTHOR }, { _id: { $in: pendingAuthorIds } }, { _id: { $in: storyAuthorIds } } ] })
+        .select('_id displayName username').sort({ displayName: 1, username: 1 }).lean(),
+      this.genreModel.find().select('_id name').lean(),
+      this.storyModel.find({ ...(authorId ? { authorId } : {}), status: StoryStatus.PENDING_REVIEW, ...withinRange('createdAt') })
+        .sort({ createdAt: 1 }).limit(5).lean(),
+      this.chapterModel.find({ ...chapterFilter, status: ChapterStatus.PENDING_REVIEW }).sort({ createdAt: 1 }).limit(5).lean(),
+      this.authorRequestModel.find(requestFilter).sort({ createdAt: 1 }).limit(5).lean(),
+      this.authorRequestModel.countDocuments(requestFilter),
+      this.authorProfileModel.find().select('userId penName').lean(),
+      this.authorRequestModel.find({ status: AuthorRequestStatus.PENDING })
+        .select('userId penName').sort({ createdAt: 1 }).lean(),
+    ]);
+    const penNames = new Map(authorApplications.map((request) => [request.userId.toString(), request.penName]));
+    // Approved profiles hold the current pen name; applicants use the submitted pen name.
+    for (const profile of authorProfiles) penNames.set(profile.userId.toString(), profile.penName);
+    const authorNames = new Map(authors.map((author) => [author._id.toString(), author.displayName || author.username]));
+    const genreNames = new Map(genres.map((genre) => [genre._id.toString(), genre.name]));
+    const storyNames = new Map(stories.map((story) => [story._id.toString(), story.title]));
+    const timeline = new Map<string, { date: string; label: string; stories: number; chapters: number; views: number }>();
+    const day = (date: string) => {
+      if (!timeline.has(date)) timeline.set(date, { date, label: allTime ? date : `${date.slice(8)}/${date.slice(5, 7)}`, stories: 0, chapters: 0, views: 0 });
+      return timeline.get(date)!;
+    };
+    if (!allTime) dateRangeKeys(range).forEach(day);
+    const counts = { stories: 0, chapters: 0, authors: 0, views: 0 };
+    const storyStatuses: Record<string, number> = {};
+    const chapterStatuses: Record<string, number> = {};
+    const categories = new Map<string, number>();
+    const rows = new Map(stories.map((story) => {
+      const createdAt = story.createdAt;
+      const inPeriod = allTime || (!!createdAt && createdAt >= range.start && createdAt < range.endExclusive);
+      if (inPeriod) {
+        counts.stories++;
+        storyStatuses[story.status] = (storyStatuses[story.status] || 0) + 1;
+        for (const genreId of story.genreIds || []) {
+          const id = genreId.toString();
+          categories.set(id, (categories.get(id) || 0) + 1);
+        }
+        if (createdAt) day(new Date(createdAt.getTime() + 7 * 3600000).toISOString().slice(0, 10)).stories++;
+      }
+      return [story._id.toString(), {
+        _id: story._id.toString(), title: story.title, slug: story.slug,
+        authorId: story.authorId?.toString() || '', authorName: authorNames.get(story.authorId?.toString()) || 'Tác giả',
+        status: story.status, newStory: inPeriod, chapters: 0, publishedChapters: 0, pendingChapters: 0, views: 0,
+      }];
+    }));
+    for (const group of chapterGroups) {
+      const row = rows.get(group._id.storyId.toString());
+      if (!row) continue;
+      row.chapters += group.count;
+      if (group._id.status === ChapterStatus.PUBLISHED) row.publishedChapters += group.count;
+      if (group._id.status === ChapterStatus.PENDING_REVIEW) row.pendingChapters += group.count;
+      counts.chapters += group.count;
+      chapterStatuses[group._id.status] = (chapterStatuses[group._id.status] || 0) + group.count;
+      day(group._id.date).chapters += group.count;
+    }
+    for (const group of viewGroups) {
+      const row = rows.get(group._id.storyId.toString());
+      if (!row) continue;
+      row.views += group.views;
+      counts.views += group.views;
+      day(group._id.date).views += group.views;
+    }
+    const activeRows = [...rows.values()].filter((row) => row.newStory || row.chapters > 0 || row.views > 0)
+      .sort((a, b) => b.views - a.views || b.chapters - a.chapters || a._id.localeCompare(b._id));
+    counts.authors = new Set(activeRows.map((row) => row.authorId).filter(Boolean)).size;
+    const categoryTotal = [...categories.values()].reduce((sum, count) => sum + count, 0);
+    return {
+      counts, storyStatuses, chapterStatuses,
+      authors: authors.map((author) => {
+        const penName = penNames.get(author._id.toString()) || null;
+        return { _id: author._id.toString(), username: author.username, penName, name: `${author.displayName || author.username} - ${penName || 'Chưa có bút danh'}` };
+      }),
+      timeline: [...timeline.values()].sort((a, b) => a.date.localeCompare(b.date)),
+      categories: [...categories].map(([id, count]) => ({ id, name: genreNames.get(id) || 'Khác', count, percentage: categoryTotal ? Math.round(count / categoryTotal * 100) : 0 })),
+      stories: activeRows,
+      pending: { stories: storyStatuses[StoryStatus.PENDING_REVIEW] || 0, chapters: chapterStatuses[ChapterStatus.PENDING_REVIEW] || 0, authorRequests: requestCount },
+      urgentQueue: {
+        stories: pendingStories.map((story) => ({ _id: story._id.toString(), title: story.title, slug: story.slug, authorName: authorNames.get(story.authorId.toString()) || 'Tác giả', createdAt: story.createdAt })),
+        chapters: pendingChapters.map((chapter) => ({ _id: chapter._id.toString(), title: chapter.title, chapterNumber: chapter.chapterNumber, storyTitle: storyNames.get(chapter.storyId.toString()) || 'Truyện', createdAt: chapter.createdAt })),
+        authorRequests: pendingRequests.map((request) => ({ _id: request._id.toString(), penName: request.penName, userName: authorNames.get(request.userId.toString()) || 'Người dùng', userEmail: '', createdAt: request.createdAt })),
+      },
+    };
+  }
 
   /**
    * Tổng quan thống kê toàn diện cho Admin Dashboard

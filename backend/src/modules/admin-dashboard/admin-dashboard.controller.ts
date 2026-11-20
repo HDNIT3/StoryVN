@@ -13,6 +13,7 @@ import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../users/schemas/user.schema.js';
 import { DateRangeQueryDto } from '../../common/dto/date-range.dto.js';
 import { AdminDashboardService } from './admin-dashboard.service.js';
+import { ContentStatisticsQueryDto } from './content-statistics-query.dto.js';
 
 @ApiTags('Admin Dashboard')
 @ApiBearerAuth()
@@ -21,6 +22,16 @@ import { AdminDashboardService } from './admin-dashboard.service.js';
 @Controller('admin/dashboard')
 export class AdminDashboardController {
   constructor(private readonly adminDashboardService: AdminDashboardService) {}
+
+  @Get('content')
+  @ApiOperation({ summary: 'Thống kê truyện, chương, tác giả và hàng đợi kiểm duyệt' })
+  async getContentStatistics(@Query() query: ContentStatisticsQueryDto) {
+    return {
+      success: true,
+      message: 'Lấy thống kê truyện và tác giả thành công',
+      data: await this.adminDashboardService.getContentStatistics(query),
+    };
+  }
 
   @ApiOperation({
     summary: 'Lấy dữ liệu tổng quan, biểu đồ thời gian thực và hàng đợi kiểm duyệt cho Admin Dashboard',

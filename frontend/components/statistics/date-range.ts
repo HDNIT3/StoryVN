@@ -54,11 +54,11 @@ export function validateDateRange(range: DateRange) {
   return null;
 }
 
-export function useDateRange() {
-  const [mode, setMode] = useState<DateRangeMode>("all");
+export function useDateRange(initialRange?: DateRange) {
+  const [mode, setMode] = useState<DateRangeMode>(initialRange?.startDate ? "custom" : "all");
   const initial = useMemo(() => preset("custom"), []);
-  const [value, setValue] = useState(initial.startDate);
-  const [endValue, setEndValue] = useState(initial.endDate);
+  const [value, setValue] = useState(initialRange?.startDate || initial.startDate);
+  const [endValue, setEndValue] = useState(initialRange?.endDate || initial.endDate);
   let range: DateRange = mode === "all" ? {} : { startDate: value, endDate: endValue };
   if (mode === "day") range = { startDate: value, endDate: value };
   if (mode === "month" && /^\d{4}-\d{2}$/.test(value)) {

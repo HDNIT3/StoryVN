@@ -19,12 +19,29 @@ import { QueryAuthorsDto } from '../dto/query-authors.dto.js';
 import type { UserDocument } from '../schemas/user.schema.js';
 import { UserRole } from '../schemas/user.schema.js';
 import { AuthorsService } from '../services/authors.service.js';
+import { AuthorAnalyticsService } from '../services/author-analytics.service.js';
 
 @ApiTags('Authors')
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('authors')
 export class AuthorsController {
-  constructor(private readonly authorsService: AuthorsService) {}
+  constructor(private readonly authorsService: AuthorsService, private readonly analyticsService: AuthorAnalyticsService) {}
+
+  @Get('me/analytics')
+  @ApiBearerAuth('access-token')
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Thống kê sáng tác và tương tác của các tác phẩm thuộc tác giả' })
+  async getMyAnalytics(@CurrentUser() user: UserDocument, @Query() query: DateRangeQueryDto) {
+    return { success: true, message: 'Lấy thống kê tác giả thành công', data: await this.analyticsService.getAnalytics(user._id.toString(), query) };
+  }
+
+  @Get('me/stories/:identifier/analytics')
+  @ApiBearerAuth('access-token')
+  @Roles(UserRole.AUTHOR, UserRole.ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Thống kê chi tiết một tác phẩm thuộc tác giả hiện tại' })
+  async getMyStoryAnalytics(@CurrentUser() user: UserDocument, @Param('identifier') identifier: string, @Query() query: DateRangeQueryDto) {
+    return { success: true, message: 'Lấy thống kê tác phẩm thành công', data: await this.analyticsService.getAnalytics(user._id.toString(), query, identifier) };
+  }
 
   @ApiOperation({
     summary: 'Lấy thống kê tổng quan studio của tác giả hiện tại',
