@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useAdminReports } from "@/features/reports";
-import type { ReportTargetType } from "@/features/reports";
+import { useAdminReports, useUpdateReportStatus } from "@/features/reports";
+import type { ReportStatus, ReportTargetType } from "@/features/reports";
 
 type FilterTargetTab = "ALL" | ReportTargetType;
 
@@ -38,11 +38,16 @@ export function AdminReportsView() {
   const [tab, setTab] = useState<FilterTargetTab>("ALL");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<ReportStatus | "ALL">("ALL");
+  const [resolutionNotes, setResolutionNotes] = useState<Record<string, string>>({});
+  const [statuses, setStatuses] = useState<Record<string, ReportStatus>>({});
+  const updateReport = useUpdateReportStatus();
 
   const reportsQuery = useAdminReports({
     page,
     limit: 15,
     targetType: tab === "ALL" ? undefined : tab,
+    status: statusFilter === "ALL" ? undefined : statusFilter,
   });
 
   const items = reportsQuery.data?.items ?? [];
@@ -145,6 +150,12 @@ export function AdminReportsView() {
             })}
           </div>
 
+          <label className="text-xs font-semibold text-slate-600">Trạng thái
+            <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value as ReportStatus | "ALL"); setPage(1); }} className="mt-1 block rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+              <option value="ALL">Tất cả trạng thái</option><option value="PENDING">Chưa xử lý</option><option value="IN_REVIEW">Đang xem xét</option><option value="ACTION_TAKEN">Đã xử lý vi phạm</option><option value="REJECTED">Từ chối báo cáo</option>
+            </select>
+          </label>
+
           <div className="relative min-w-[240px] max-w-sm">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
@@ -208,7 +219,8 @@ export function AdminReportsView() {
                   <th className="py-3.5 px-4">Loại nội dung</th>
                   <th className="py-3.5 px-4 min-w-[220px]">Nội dung bị báo cáo</th>
                   <th className="py-3.5 px-4 min-w-[260px]">Lý do & Chi tiết tố cáo</th>
-                  <th className="py-3.5 px-4">Thời gian</th>
+                  <th className="py-3.5 px-4">{"Trạng thái xử lý"}</th>
+                  <th className="py-3.5 px-4">{"Thời gian"}</th>
                   <th className="py-3.5 px-4 text-right">Đi tới xử lý</th>
                 </tr>
               </thead>
@@ -290,6 +302,18 @@ export function AdminReportsView() {
                         <p className="text-xs text-slate-800 whitespace-pre-wrap break-words leading-relaxed">
                           {report.reason}
                         </p>
+                      </td>
+
+                      <td className="py-3.5 px-4 align-top min-w-[280px]">
+                        <div className="space-y-2">
+                          <select value={statuses[report._id] ?? report.status ?? "PENDING"} onChange={(e) => setStatuses((current) => ({ ...current, [report._id]: e.target.value as ReportStatus }))} className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs">
+                            <option value="PENDING">{"Chưa xử lý"}</option><option value="IN_REVIEW">{"Đang xem xét"}</option><option value="ACTION_TAKEN">{"Đã xử lý vi phạm"}</option><option value="REJECTED">{"Từ chối báo cáo"}</option>
+                          </select>
+                          <textarea rows={2} value={resolutionNotes[report._id] ?? report.resolutionNote ?? ""} onChange={(e) => setResolutionNotes((current) => ({ ...current, [report._id]: e.target.value }))} placeholder="Ghi kết quả xem xét; bắt buộc khi đóng hồ sơ" className="w-full resize-y rounded-lg border border-slate-200 px-2 py-1.5 text-xs" />
+                          <button type="button" disabled={updateReport.isPending || (((statuses[report._id] ?? report.status) === "ACTION_TAKEN" || (statuses[report._id] ?? report.status) === "REJECTED") && !(resolutionNotes[report._id] ?? report.resolutionNote)?.trim())} onClick={() => updateReport.mutate({ id: report._id, status: statuses[report._id] ?? report.status ?? "PENDING", resolutionNote: resolutionNotes[report._id] ?? report.resolutionNote ?? "" })} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">{"Lưu cập nhật"}</button>
+                          {report.history?.length ? <details className="text-[10px] text-slate-500"><summary className="cursor-pointer">Review history ({report.history.length})</summary><ol className="mt-1 space-y-1">{report.history.map((entry, index) => <li key={`${entry.createdAt}-${index}`} className="border-l-2 border-slate-200 pl-2">{new Date(entry.createdAt).toLocaleString("vi-VN")} - {entry.actorId?.displayName || entry.actorId?.username || "Manager"} - {entry.status}{entry.note ? `: ${entry.note}` : ""}</li>)}</ol></details> : null}
+                          {report.reviewedBy && <p className="text-[10px] text-slate-400">{"Đã cập nhật bởi "}{report.reviewedBy.displayName || report.reviewedBy.username}{report.reviewedAt ? ` ? ${new Date(report.reviewedAt).toLocaleString("vi-VN")}` : ""}</p>}
+                        </div>
                       </td>
 
                       <td className="py-3.5 px-4 align-top whitespace-nowrap text-xs text-slate-500">

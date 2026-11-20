@@ -6,6 +6,7 @@ import {
   type AdminUserItem,
   type QueryAdminUsersParams,
   useAdminUsers,
+  useAdminUserDetail,
   useAdminUserStats,
   useUpdateUserStatus,
   useUpdateUserRole,
@@ -67,6 +68,7 @@ export const AdminUsersView: React.FC = () => {
 
   const { data: dashboardData } = useAdminDashboardOverview(14);
 
+  const userDetailQuery = useAdminUserDetail(selectedUser?._id);
   const items = usersData?.items ?? [];
   const totalItems = usersData?.pagination?.totalItems ?? 0;
   const totalPages = usersData?.pagination?.totalPages ?? 1;
@@ -124,6 +126,7 @@ export const AdminUsersView: React.FC = () => {
   };
 
   const openChangeRole = (u: AdminUserItem, role: UserRole) => {
+    if (currentUser?.role !== "ADMIN") return;
     setSelectedUser(null);
     setConfirmModal({
       open: true,
@@ -145,6 +148,10 @@ export const AdminUsersView: React.FC = () => {
           status: confirmModal.newStatus!,
         });
       } else if (confirmModal.action === "role") {
+        if (currentUser?.role !== "ADMIN") {
+          setConfirmModal({ open: false, userId: "", username: "", action: "ban", isLoading: false });
+          return;
+        }
         await updateRoleMutation.mutateAsync({
           userId: confirmModal.userId,
           role: confirmModal.newRole!,
@@ -355,7 +362,9 @@ export const AdminUsersView: React.FC = () => {
       {/* Detail Modal */}
       {selectedUser && (
         <UserDetailModal
-          user={selectedUser}
+          user={userDetailQuery.data?.user ?? selectedUser}
+          detail={userDetailQuery.data}
+          isLoadingDetail={userDetailQuery.isLoading}
           currentUserRole={currentUser?.role as UserRole}
           onClose={() => setSelectedUser(null)}
           onBan={openBan}

@@ -136,7 +136,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     id: "the-loai",
     label: "Quản lý thể loại",
     href: "/quan-ly/the-loai",
-    roles: ["ADMIN", "MANAGER"],
+    roles: ["ADMIN"],
     section: "taxonomy",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -148,7 +148,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     id: "the-tag",
     label: "Quản lý thẻ tag",
     href: "/quan-ly/the-tag",
-    roles: ["ADMIN", "MANAGER"],
+    roles: ["ADMIN"],
     section: "taxonomy",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -160,7 +160,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     id: "media",
     label: "Thư viện ảnh",
     href: "/quan-ly/media",
-    roles: ["ADMIN", "MANAGER"],
+    roles: ["ADMIN"],
     section: "taxonomy",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,7 +186,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     id: "goi-nap",
     label: "Quản lý gói nạp",
     href: "/quan-ly/goi-nap",
-    roles: ["ADMIN", "MANAGER"],
+    roles: ["ADMIN"],
     section: "finance",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

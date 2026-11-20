@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
@@ -13,6 +13,7 @@ interface AdminLayoutViewProps {
 export function AdminLayoutView({ children }: AdminLayoutViewProps) {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
@@ -27,9 +28,12 @@ export function AdminLayoutView({ children }: AdminLayoutViewProps) {
       } else if (user && user.role !== "ADMIN" && user.role !== "MANAGER") {
         setRedirecting(true);
         router.replace("/ho-so");
+      } else if (user?.role === "MANAGER" && ["/quan-ly/the-loai", "/quan-ly/the-tag", "/quan-ly/media", "/quan-ly/goi-nap"].some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+        setRedirecting(true);
+        router.replace("/quan-ly");
       }
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, pathname, router]);
 
   if (isLoading || redirecting) {
     return (
