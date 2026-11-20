@@ -1,6 +1,7 @@
 import api, { type ApiResponse } from "@/lib/api";
 
 export type ReportTargetType = "FORUM_POST" | "STORY" | "CHAPTER" | "COMMENT";
+export type ReportStatus = "PENDING" | "IN_REVIEW" | "ACTION_TAKEN" | "REJECTED";
 
 export interface SubmitReportPayload {
   targetType: ReportTargetType;
@@ -25,6 +26,11 @@ export interface ContentReportItem {
     avatarUrl?: string;
   } | null;
   reason: string;
+  status: ReportStatus;
+  resolutionNote?: string | null;
+  reviewedAt?: string | null;
+  reviewedBy?: { _id: string; username: string; displayName?: string } | null;
+  history?: Array<{ status: ReportStatus; note?: string | null; actorId: { _id: string; username: string; displayName?: string }; createdAt: string }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,10 +50,15 @@ export const reportService = {
     return api.post<ApiResponse<{ reported: boolean }>>("/reports", payload);
   },
 
+  updateStatus(id: string, payload: { status: ReportStatus; resolutionNote?: string }) {
+    return api.patch<ApiResponse<ContentReportItem>>(`/admin/reports/${id}/status`, payload);
+  },
+
   adminList(params?: {
     page?: number;
     limit?: number;
     targetType?: ReportTargetType;
+    status?: ReportStatus;
     targetId?: string;
     startDate?: string;
     endDate?: string;
@@ -56,6 +67,7 @@ export const reportService = {
     if (params?.page) sp.set("page", String(params.page));
     if (params?.limit) sp.set("limit", String(params.limit));
     if (params?.targetType) sp.set("targetType", params.targetType);
+    if (params?.status) sp.set("status", params.status);
     if (params?.targetId) sp.set("targetId", params.targetId);
     if (params?.startDate) sp.set("startDate", params.startDate);
     if (params?.endDate) sp.set("endDate", params.endDate);

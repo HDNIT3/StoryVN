@@ -3,7 +3,7 @@ import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsMongoId, IsOptional, IsString, Length, MaxLength, ValidateIf } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
-import { ContentReportTargetType } from '../schemas/content-report.schema.js';
+import { ContentReportStatus, ContentReportTargetType } from '../schemas/content-report.schema.js';
 
 export class SubmitReportDto {
   @ApiProperty({ enum: ContentReportTargetType })
@@ -34,6 +34,11 @@ export class QueryReportsDto extends IntersectionType(PaginationQueryDto, DateRa
 }
 
 export class AdminQueryReportsDto extends QueryReportsDto {
+  @ApiPropertyOptional({ enum: ContentReportStatus })
+  @IsOptional()
+  @IsEnum(ContentReportStatus)
+  status?: ContentReportStatus;
+
   @ApiPropertyOptional({ enum: ContentReportTargetType })
   @IsOptional()
   @IsEnum(ContentReportTargetType)
@@ -43,4 +48,18 @@ export class AdminQueryReportsDto extends QueryReportsDto {
   @IsOptional()
   @IsMongoId()
   targetId?: string;
+}
+
+
+export class UpdateReportStatusDto {
+  @ApiProperty({ enum: ContentReportStatus })
+  @IsEnum(ContentReportStatus)
+  status: ContentReportStatus;
+
+  @ApiPropertyOptional({ maxLength: 2000, description: 'K?t qu? xem x?t v? h?nh ??ng ?? th?c hi?n' })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => typeof value === 'string' ? value.trim() : value)
+  @IsString()
+  @MaxLength(2000)
+  resolutionNote?: string;
 }

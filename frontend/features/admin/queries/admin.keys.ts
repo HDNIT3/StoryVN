@@ -3,6 +3,7 @@ export const adminKeys = {
   users: (params?: Record<string, unknown>) =>
     ["admin", "users", ...(params ? [params] : [])] as const,
   userStats: ["admin", "users", "stats"] as const,
+  userDetail: (id: string) => ["admin", "users", "detail", id] as const,
   authorRequests: (params?: Record<string, unknown>) =>
     ["admin", "author-requests", ...(params ? [params] : [])] as const,
   authorRequestStats: ["admin", "author-requests", "stats"] as const,

@@ -1,10 +1,12 @@
 import React from "react";
-import type { AdminUserItem } from "@/features/admin";
+import type { AdminUserItem, AdminUserDetail } from "@/features/admin";
 import type { UserRole } from "@/features/user";
 import { ROLE_COLOR, ROLE_LABEL, STATUS_COLOR, STATUS_LABEL, formatDate } from "./UserTypes";
 
 interface UserDetailModalProps {
   user: AdminUserItem | null;
+  detail?: AdminUserDetail;
+  isLoadingDetail?: boolean;
   currentUserRole: UserRole;
   onClose: () => void;
   onBan: (u: AdminUserItem) => void;
@@ -15,6 +17,8 @@ interface UserDetailModalProps {
 export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   user,
   currentUserRole,
+  detail,
+  isLoadingDetail = false,
   onClose,
   onBan,
   onUnban,
@@ -91,6 +95,17 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             <p className="font-semibold text-slate-800">{formatDate(user.updatedAt)}</p>
           </div>
         </div>
+
+        {isLoadingDetail ? <p className="mb-5 text-sm text-slate-500">Đang tải hồ sơ đầy đủ...</p> : detail && <section className="mb-4 rounded-xl border border-slate-200 p-3.5">
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Full account details</h3>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2">{Object.entries(detail.user).filter(([key]) => !["_id", "__v", "passwordHash", "displayName", "username", "email", "role", "status", "avatarUrl", "createdAt", "updatedAt"].includes(key)).map(([key, value]) => <div key={key} className="min-w-0"><dt className="text-[10px] text-slate-400">{key}</dt><dd className="break-words text-xs font-medium text-slate-700">{typeof value === "object" && value !== null ? JSON.stringify(value) : String(value ?? "Not provided")}</dd></div>)}</dl>
+        </section>}
+        {isLoadingDetail ? null : (detail?.authorProfile || detail?.authorRequest || detail?.managerProfile) && <div className="space-y-3 mb-6">
+          {([["Hồ sơ tác giả", detail?.authorProfile], ["Yêu cầu tác giả", detail?.authorRequest], ["Hồ sơ quản lý", detail?.managerProfile]] as const).map(([title, profile]) => profile && <section key={title} className="rounded-xl border border-slate-200 p-3.5">
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">{title}</h3>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2">{Object.entries(profile).filter(([key]) => key !== "_id" && key !== "__v" && key !== "userId").map(([key, value]) => <div key={key} className="min-w-0"><dt className="text-[10px] text-slate-400">{key}</dt><dd className="break-words text-xs font-medium text-slate-700">{typeof value === "object" && value !== null ? JSON.stringify(value) : String(value ?? "Not provided")}</dd></div>)}</dl>
+          </section>)}
+        </div>}
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
