@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import type { AuthorAnalyticsData } from '../types/analytics.types';
 import type {
   PublicAuthorProfile,
   PaginatedAuthorStories,
@@ -18,6 +19,13 @@ export interface ApiResponse<T = unknown> {
 }
 
 export const authorService = {
+  getAnalytics(range: { startDate?: string; endDate?: string } = {}, storyId?: string) {
+    const params = new URLSearchParams();
+    if (range.startDate) params.set('startDate', range.startDate);
+    if (range.endDate) params.set('endDate', range.endDate);
+    const path = storyId ? `/authors/me/stories/${encodeURIComponent(storyId)}/analytics` : '/authors/me/analytics';
+    return api.get<ApiResponse<AuthorAnalyticsData>>(`${path}${params.size ? `?${params}` : ''}`);
+  },
   /**
    * Lấy thống kê tổng quan studio của tác giả đang đăng nhập
    */

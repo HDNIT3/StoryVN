@@ -1,3 +1,4 @@
+import { SearchEmbeddingService } from '../../search/services/search-embedding.service.js';
 import {
   BadRequestException,
   ConflictException,
@@ -77,6 +78,7 @@ export class StoriesService {
     @Optional()
     @InjectModel(StoryDailyView.name)
     private readonly storyDailyViewModel?: Model<StoryDailyViewDocument>,
+    @Optional() private readonly searchEmbedding?: SearchEmbeddingService,
   ) { }
 
   /**
@@ -668,6 +670,7 @@ export class StoriesService {
       story.visibility === StoryVisibility.PUBLIC;
 
     if (!wasPublishedPublic && isNowPublishedPublic) {
+      this.searchEmbedding?.storyChanged(String(story._id));
       try {
         await this.chapterReleaseService?.releaseAndNotifyStoryChapters(
           story._id,

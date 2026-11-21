@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { AdminChartTooltip } from "./AdminChartTooltip";
+import { useChartAxis } from "./useChartAxis";
 
 export interface AreaChartDataPoint {
   label: string; // e.g. "12/11"
@@ -19,6 +21,7 @@ interface AdminAreaChartProps {
   secondaryLabel?: string;
   colorScheme?: "indigo" | "emerald" | "violet" | "sky" | "amber";
   formatValue?: (val: number) => string;
+  showXAxisLabels?: boolean;
 }
 
 const COLOR_MAP = {
@@ -69,8 +72,10 @@ export function AdminAreaChart({
   secondaryLabel = "Lượt",
   colorScheme = "indigo",
   formatValue,
+  showXAxisLabels = true,
 }: AdminAreaChartProps) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const { ref: chartRef, width: chartWidthPx, tickIndices, axisLabel } = useChartAxis(data);
 
   if (!data || data.length === 0) {
     return (
@@ -88,7 +93,6 @@ export function AdminAreaChart({
   // Tìm min và max value
   const values = data.map((d) => d.value);
   const rawMax = values.reduce((max, value) => Math.max(max, value), 0);
-  const rawMin = Math.min(...values, 0);
 
   // Thêm padding cho min max
   const maxVal = rawMax === 0 ? 100 : Math.ceil(rawMax * 1.15);
@@ -96,12 +100,12 @@ export function AdminAreaChart({
   const range = maxVal - minVal || 1;
 
   // Kích thước SVG
-  const svgWidth = 800;
+  const svgWidth = chartWidthPx;
   const svgHeight = height;
   const padLeft = 60;
   const padRight = 20;
   const padTop = 20;
-  const padBottom = 35;
+  const padBottom = showXAxisLabels ? 35 : 12;
 
   const chartWidth = svgWidth - padLeft - padRight;
   const chartHeight = svgHeight - padTop - padBottom;
@@ -151,7 +155,7 @@ export function AdminAreaChart({
   const activePoint = hoverIndex !== null ? points[hoverIndex] : null;
 
   return (
-    <div className="w-full">
+    <div ref={chartRef} className="w-full">
       {(title || subtitle) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-1">
           <div>
@@ -171,7 +175,7 @@ export function AdminAreaChart({
         </div>
       )}
 
-      <div className="relative w-full overflow-hidden select-none">
+      <div className="relative w-full select-none" onMouseLeave={() => setHoverIndex(null)}>
         <svg
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           className="w-full h-auto overflow-visible"
@@ -212,25 +216,17 @@ export function AdminAreaChart({
           ))}
 
           {/* Trục X nhãn ngày */}
-          {points.map((p, i) => {
-            // Hiển thị cách quãng để không bị chật nếu nhiều điểm
-            const showLabel =
-              data.length <= 14
-                ? true
-                : i === 0 ||
-                  i === points.length - 1 ||
-                  i % Math.ceil(data.length / 7) === 0;
-
-            if (!showLabel) return null;
+          {showXAxisLabels && points.map((p, i) => {
+            if (!tickIndices.has(i)) return null;
             return (
               <text
                 key={i}
                 x={p.x}
                 y={svgHeight - 10}
-                textAnchor="middle"
+                textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}
                 className="text-[11px] fill-slate-400 font-medium"
               >
-                {p.data.label}
+                {axisLabel(p.data)}
               </text>
             );
           })}
@@ -278,29 +274,20 @@ export function AdminAreaChart({
           {points.map((p, i) => (
             <rect
               key={i}
-              x={p.x - (chartWidth / (data.length - 1 || 1)) / 2}
+              x={i === 0 ? padLeft : (points[i - 1].x + p.x) / 2}
               y={padTop}
-              width={chartWidth / (data.length - 1 || 1)}
+              width={(i === points.length - 1 ? svgWidth - padRight : (p.x + points[i + 1].x) / 2) - (i === 0 ? padLeft : (points[i - 1].x + p.x) / 2)}
               height={chartHeight + padBottom}
               fill="transparent"
               className="cursor-pointer"
               onMouseEnter={() => setHoverIndex(i)}
-              onMouseLeave={() => setHoverIndex(null)}
             />
           ))}
         </svg>
 
         {/* Floating Tooltip HTML Overlay */}
         {activePoint && (
-          <div
-            className="absolute z-30 pointer-events-none transition-all duration-100 ease-out"
-            style={{
-              left: `${(activePoint.x / svgWidth) * 100}%`,
-              top: `${(activePoint.y / svgHeight) * 100}%`,
-              transform: `translate(-50%, -120%)`,
-            }}
-          >
-            <div className="bg-slate-900/95 backdrop-blur-xs text-white px-3 py-2 rounded-xl shadow-xl text-xs whitespace-nowrap border border-slate-700/80 animate-in fade-in zoom-in-95 duration-150">
+          <AdminChartTooltip anchorPercent={(activePoint.x / svgWidth) * 100}>
               <div className="text-[10px] text-slate-300 font-semibold mb-1">
                 {activePoint.data.tooltipTitle || activePoint.data.label}
               </div>
@@ -317,8 +304,7 @@ export function AdminAreaChart({
                   {secondaryLabel}: <span className="font-medium text-white">{activePoint.data.secondaryValue.toLocaleString("vi-VN")}</span>
                 </div>
               )}
-            </div>
-          </div>
+          </AdminChartTooltip>
         )}
       </div>
     </div>

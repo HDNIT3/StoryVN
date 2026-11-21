@@ -172,3 +172,18 @@ export interface AdminDashboardOverviewData {
   };
 }
 
+export interface AdminContentStatistics {
+  counts: { stories: number; chapters: number; authors: number; views: number };
+  storyStatuses: Record<string, number>;
+  chapterStatuses: Record<string, number>;
+  authors: { _id: string; name: string; username: string; penName: string | null }[];
+  timeline: { date: string; label: string; stories: number; chapters: number; views: number }[];
+  categories: AdminDashboardCategoryDist[];
+  stories: {
+    _id: string; title: string; slug: string; authorId: string; authorName: string;
+    status: string; newStory: boolean; chapters: number; publishedChapters: number; pendingChapters: number; views: number;
+  }[];
+  pending: { stories: number; chapters: number; authorRequests: number };
+  urgentQueue: AdminDashboardOverviewData["urgentQueue"];
+}
+

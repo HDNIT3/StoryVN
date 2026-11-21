@@ -103,7 +103,7 @@ export function Header({
         </div>
 
         {/* Center: Search Bar (fluidly shrinks without forcing overflow) */}
-        <div className="mx-1.5 hidden min-w-[160px] max-w-xs flex-1 items-center justify-center md:flex md:max-w-sm lg:max-w-md xl:mx-2 xl:min-w-[190px] xl:max-w-[270px] 2xl:max-w-md">
+        <div className="mx-1.5 hidden min-w-[160px] flex-1 items-center justify-center md:flex xl:mx-2 xl:min-w-[190px]">
           <HeaderSearch className="w-full" {...search} />
         </div>
 
@@ -113,7 +113,6 @@ export function Header({
             isLoggedIn={isLoggedIn}
             user={user}
             wallet={wallet}
-            bookmark={bookmark}
             onLoginClick={onLoginClick}
             onLogoutClick={onLogoutClick}
             onRechargeClick={() => {

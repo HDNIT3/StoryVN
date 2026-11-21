@@ -4,6 +4,18 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { authorService } from "../services/author.service";
 import { authorRequestService } from "../services/author-request.service";
 import { authorKeys, authorRequestKeys } from "./author.keys";
+import { useAuth } from "@/lib/context/AuthContext";
+
+export function useAuthorAnalytics(range: { startDate?: string; endDate?: string } = {}, storyId?: string, enabled = true) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['author', 'analytics', user?._id, storyId || 'all', range],
+    queryFn: async () => (await authorService.getAnalytics(range, storyId)).data,
+    enabled: enabled && !!user,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+}
 import { toast } from "@/lib/toast";
 import type {
   CreateAuthorRequestPayload,
@@ -13,13 +25,14 @@ import type {
 } from "../types";
 
 export function useAuthorOverview(range: { startDate?: string; endDate?: string } = {}, enabled = true) {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: authorKeys.overview(range),
+    queryKey: [...authorKeys.overview(range), user?._id],
     queryFn: async () => {
       const res = await authorService.getAuthorOverview(range);
       return res.data;
     },
-    enabled,
+    enabled: enabled && !!user,
     staleTime: 1000 * 60 * 2,
   });
 }

@@ -5,74 +5,16 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   HeaderActionsProps,
-  BookmarkInfo,
   WalletInfo,
   UserProfile,
   DEFAULT_USER,
   DEFAULT_WALLET,
-  DEFAULT_BOOKMARK,
   ROLE_LABEL,
   ROLE_COLOR,
   ACCOUNT_MENU_ITEMS,
   LOGOUT_ICON_PATH,
 } from "./header.config";
 import { NotificationBell } from "./NotificationBell";
-
-// ─── Bookmark ─────────────────────────────────────────────────────
-function HeaderBookmark({
-  bookmark = DEFAULT_BOOKMARK,
-  onClick,
-  className = "",
-}: {
-  bookmark?: BookmarkInfo;
-  onClick?: () => void;
-  className?: string;
-}) {
-  const count = bookmark.count ?? 0;
-  const iconSrc = bookmark.iconSrc ?? "/icon/bookmark.svg";
-  const href = bookmark.href ?? "/tai-khoan/theo-doi";
-
-  const content = (
-    <div
-      className={`group relative shrink-0 cursor-pointer rounded-full p-1 text-slate-500 transition-colors select-none hover:bg-sky-50 hover:text-sky-600 sm:p-2 ${className}`}
-      title="Tủ truyện"
-      aria-label={`Tủ truyện: ${count} truyện đã lưu`}
-    >
-      <div className="relative h-5 w-5 shrink-0 sm:h-6 sm:w-6">
-        <Image
-          src={iconSrc}
-          alt="Icon tủ truyện"
-          width={24}
-          height={24}
-          className="h-full w-full object-contain"
-        />
-      </div>
-
-      {/* Badge Count */}
-      {count > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[15px] sm:min-w-[20px] h-[15px] sm:h-[20px] px-0.5 sm:px-1 bg-sky-500 text-white text-[9px] sm:text-[11px] font-bold rounded-full flex items-center justify-center shadow-xs ring-1.5 sm:ring-2 ring-white">
-          {count > 99 ? "99+" : count}
-        </span>
-      )}
-    </div>
-  );
-
-  if (bookmark.onClick || onClick) {
-    return (
-      <button
-        type="button"
-        onClick={() => {
-          onClick?.();
-          bookmark.onClick?.();
-        }}
-      >
-        {content}
-      </button>
-    );
-  }
-
-  return <Link href={href}>{content}</Link>;
-}
 
 // ─── Wallet ───────────────────────────────────────────────────────
 function HeaderWallet({
@@ -324,18 +266,13 @@ export function HeaderActions({
   isLoggedIn = true,
   user = DEFAULT_USER,
   wallet = DEFAULT_WALLET,
-  bookmark = DEFAULT_BOOKMARK,
   onLoginClick,
   onLogoutClick,
   onRechargeClick,
-  onBookmarkClick,
   className = "",
 }: HeaderActionsProps) {
   return (
     <div className={`flex items-center gap-1 sm:gap-2 md:gap-2.5 shrink-0 ${className}`}>
-      {/* Bookmark ribbon with badge */}
-      {isLoggedIn && <HeaderBookmark bookmark={bookmark} onClick={onBookmarkClick} />}
-
       {/* Notification Bell */}
       {isLoggedIn && <NotificationBell size="md" />}
 
