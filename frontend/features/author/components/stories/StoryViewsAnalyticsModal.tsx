@@ -1,187 +1,120 @@
 "use client";
 
-import React from "react";
-import type { DateRange } from "@/components/statistics";
-import { StoryItem, useMyStoryDailyViews } from "@/features/stories";
+import React, { useEffect, useId, useRef } from "react";
+import { type DateRange, useDateRange } from "@/components/statistics";
+import type { StoryItem } from "@/features/stories";
+import { AuthorAnalyticsReport } from "../dashboard/AuthorAnalyticsReport";
 
 interface StoryViewsAnalyticsModalProps {
-  story: StoryItem | null;
+  story: Pick<StoryItem, "_id" | "id" | "slug" | "title"> | null;
   isOpen: boolean;
   onClose: () => void;
   range: DateRange;
 }
 
-export function StoryViewsAnalyticsModal({
-  story,
-  isOpen,
-  onClose,
-  range,
-}: StoryViewsAnalyticsModalProps) {
-
-  const storyId = story?._id || story?.id || story?.slug || "";
-  const { data, isLoading, isError } = useMyStoryDailyViews(
-    storyId,
-    range,
-    isOpen && Boolean(storyId)
-  );
-
-  if (!isOpen || !story) return null;
-
-  const summary = data?.story;
-  const series = data?.series || [];
-  const maxViews = Math.max(...series.map((d) => d.views), 1);
-  const periodSum = series.reduce((sum, item) => sum + item.views, 0);
-
+export function StoryViewsAnalyticsModal(props: StoryViewsAnalyticsModalProps) {
+  if (!props.isOpen || !props.story) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-zinc-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[88vh] flex flex-col border border-zinc-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
-        {/* Header */}
-        <div className="px-5 py-4 border-b border-zinc-200 flex items-center justify-between gap-3 bg-zinc-50/80 shrink-0">
+    <StoryAnalyticsDialog
+      key={`${props.story._id || props.story.id || props.story.slug}-${JSON.stringify(props.range)}`}
+      story={props.story}
+      range={props.range}
+      onClose={props.onClose}
+    />
+  );
+}
+
+function StoryAnalyticsDialog({
+  story,
+  range,
+  onClose,
+}: {
+  story: NonNullable<StoryViewsAnalyticsModalProps["story"]>;
+  range: DateRange;
+  onClose: () => void;
+}) {
+  const dateRange = useDateRange(range);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+  useEffect(() => {
+    const previousFocus =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
+  }, []);
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      onClose();
+    }
+    if (event.key !== "Tab") return;
+    const items = Array.from(
+      dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), [tabindex="0"]',
+      ) || [],
+    );
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  };
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-2 backdrop-blur-xs sm:p-5"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onKeyDown={handleKeyDown}
+        className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-2xl"
+      >
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-sky-100 text-sky-600 shrink-0">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </span>
-              <h3 className="text-sm sm:text-base font-bold text-zinc-900 truncate">
-                Thống kê lượt đọc: {story.title}
-              </h3>
-            </div>
-            <p className="text-xs text-zinc-500 mt-0.5 truncate">
-              {range.startDate ? `${range.startDate} - ${range.endDate}` : "Toàn bộ thời gian"} (Asia/Ho_Chi_Minh). Các thẻ bên dưới là số liệu hiện tại.
+            <h2
+              id={titleId}
+              className="break-words text-base font-bold text-slate-900"
+            >
+              Thống kê tác phẩm: {story.title}
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Theo dõi lượt đọc, đánh giá, tương tác và hiệu quả từng chương.
             </p>
           </div>
           <button
+            ref={closeRef}
             type="button"
             onClick={onClose}
-            className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/70 rounded-lg transition cursor-pointer"
+            aria-label="Đóng thống kê tác phẩm"
+            className="shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            Đóng ✕
           </button>
         </div>
-
-        {/* Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
-          {/* 4 KPI Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-sky-600">
-                Hôm nay
-              </span>
-              <p className="text-xl font-extrabold text-zinc-900 mt-1">
-                +{(summary?.viewsToday ?? story.stats?.viewsToday ?? 0).toLocaleString("vi-VN")}
-              </p>
-              <span className="text-[11px] text-zinc-500">lượt đọc trong ngày</span>
-            </div>
-
-            <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">
-                7 ngày qua
-              </span>
-              <p className="text-xl font-extrabold text-zinc-900 mt-1">
-                +{(summary?.viewsWeek ?? story.stats?.viewsWeek ?? 0).toLocaleString("vi-VN")}
-              </p>
-              <span className="text-[11px] text-zinc-500">lượt đọc tuần này</span>
-            </div>
-
-            <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
-                30 ngày qua
-              </span>
-              <p className="text-xl font-extrabold text-zinc-900 mt-1">
-                +{(summary?.viewsMonth ?? story.stats?.viewsMonth ?? 0).toLocaleString("vi-VN")}
-              </p>
-              <span className="text-[11px] text-zinc-500">lượt đọc tháng này</span>
-            </div>
-
-            <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-3.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-700">
-                Tổng lượt đọc
-              </span>
-              <p className="text-xl font-extrabold text-zinc-900 mt-1">
-                {(summary?.totalViews ?? story.stats?.viewCount ?? 0).toLocaleString("vi-VN")}
-              </p>
-              <span className="text-[11px] text-zinc-500">toàn thời gian</span>
-            </div>
-          </div>
-
-          {/* Chart Filter & Bar Chart */}
-          <div className="rounded-xl border border-zinc-200 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-              <div>
-                <h4 className="text-sm font-bold text-zinc-900">
-                  Biểu đồ lượt đọc trong kỳ đã chọn
-                </h4>
-                <p className="text-xs text-zinc-500">
-                  Tổng trong kỳ:{" "}
-                  <strong className="text-zinc-800">
-                    {periodSum.toLocaleString("vi-VN")} lượt đọc
-                  </strong>
-                </p>
-              </div>
-
-            </div>
-
-            {isError ? <p role="alert" className="text-sm text-red-600">Không thể tải lượt đọc trong kỳ.</p> : isLoading ? (
-              <div className="h-44 flex items-center justify-center text-xs text-zinc-400">
-                Đang tải dữ liệu biểu đồ...
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="h-44 flex items-end gap-1 sm:gap-1.5 pt-4 pb-2 px-1 border-b border-zinc-100 overflow-x-auto">
-                  {series.map((item) => {
-                    const heightPct =
-                      item.views > 0
-                        ? Math.max(Math.round((item.views / maxViews) * 100), 8)
-                        : 3;
-                    return (
-                      <div
-                        key={item.date}
-                        className="flex-1 min-w-[14px] flex flex-col items-center justify-end h-full group relative"
-                        title={`${item.date}: ${item.views.toLocaleString("vi-VN")} lượt đọc`}
-                      >
-                        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-sky-700 mb-1 whitespace-nowrap">
-                          {item.views > 0 ? item.views : ""}
-                        </span>
-                        <div
-                          style={{ height: `${heightPct}%` }}
-                          className={`w-full rounded-t transition-all ${
-                            item.views > 0
-                              ? "bg-linear-to-t from-sky-600 to-sky-400 group-hover:from-sky-700 group-hover:to-sky-500"
-                              : "bg-zinc-100"
-                          }`}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-zinc-400 px-1">
-                  <span>{series[0]?.label || ""}</span>
-                  {series.length > 2 && (
-                    <span>{series[Math.floor(series.length / 2)]?.label || ""}</span>
-                  )}
-                  <span>{series[series.length - 1]?.label || "Hôm nay"}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-zinc-200 bg-zinc-50 flex justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold transition cursor-pointer"
-          >
-            Đóng
-          </button>
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
+          <AuthorAnalyticsReport
+            dateRange={dateRange}
+            storyId={story._id || story.id || story.slug || ""}
+          />
         </div>
       </div>
     </div>
   );
 }
-

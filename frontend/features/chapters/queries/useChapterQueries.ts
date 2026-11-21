@@ -90,6 +90,7 @@ export function useCreateChapter() {
       toast.success(res.message || "Tạo chương thành công!");
       queryClient.invalidateQueries({ queryKey: chapterKeys.all });
       queryClient.invalidateQueries({ queryKey: storyKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["author"] });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Tạo chương thất bại!";
@@ -119,6 +120,7 @@ export function useUpdateChapter() {
         queryKey: chapterKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: storyKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["author"] });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Cập nhật chương thất bại!";
@@ -148,6 +150,7 @@ export function useRestoreChapterRevision() {
         queryKey: chapterKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: storyKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["author"] });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Khôi phục bản sửa thất bại!";
@@ -168,6 +171,7 @@ export function useDeleteChapter() {
       toast.success(res.message || "Xóa chương thành công!");
       queryClient.invalidateQueries({ queryKey: chapterKeys.all });
       queryClient.invalidateQueries({ queryKey: storyKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["author"] });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Xóa chương thất bại!";
@@ -213,6 +217,7 @@ export function useBulkSubmitChapters() {
       toast.success(res.message || "Gửi phê duyệt hàng loạt thành công!");
       queryClient.invalidateQueries({ queryKey: chapterKeys.all });
       queryClient.invalidateQueries({ queryKey: storyKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["author"] });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Gửi phê duyệt hàng loạt thất bại!";

@@ -344,6 +344,11 @@ body {
   outline-offset: 2px;
 }
 
+/* The search form provides the focus indicator around the whole field. */
+.header-search input:focus-visible {
+  outline: none;
+}
+
 
 
 

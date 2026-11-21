@@ -21,7 +21,6 @@ export function DateRangeToolbar({ dateRange, onExport, exportDisabled = false, 
       </label>}
       {dateRange.mode === "custom" && <label className="text-xs font-semibold text-slate-600">Đến<input disabled={locked} type="date" value={dateRange.endValue} onChange={(e) => dateRange.setEndValue(e.target.value)} className="mt-1 block rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-700" /></label>}
       {dateRange.mode === "week" && <span className="text-xs text-slate-500">{dateRange.range.startDate} đến {dateRange.range.endDate}</span>}
-      <span className="text-xs text-slate-500">Giờ Việt Nam (UTC+7)</span>
       {dateRange.error && <span className="text-xs font-medium text-rose-600">{dateRange.error}</span>}
       {onExport && <><label className="text-xs font-semibold text-slate-600">Định dạng
         <select disabled={locked} value={format} onChange={(e) => setFormat(e.target.value as ExportFormat)} className="mt-1 block rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-700"><option value="xlsx">Excel (.xlsx)</option><option value="csv">CSV (.csv)</option></select>

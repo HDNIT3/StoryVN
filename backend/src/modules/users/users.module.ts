@@ -28,6 +28,7 @@ import { User, UserSchema } from './schemas/user.schema.js';
 import { AdminUsersService } from './services/admin-users.service.js';
 import { AuthorRequestsService } from './services/author-requests.service.js';
 import { AuthorsService } from './services/authors.service.js';
+import { AuthorAnalyticsService } from './services/author-analytics.service.js';
 import { UsersService } from './services/users.service.js';
 
 @Global()
@@ -59,6 +60,7 @@ import { UsersService } from './services/users.service.js';
     AuthorsController,
   ],
   providers: [
+    AuthorAnalyticsService,
     UsersService,
     AdminUsersService,
     AuthorRequestsService,

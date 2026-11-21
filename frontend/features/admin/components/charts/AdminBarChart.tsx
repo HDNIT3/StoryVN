@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { AdminChartTooltip } from "./AdminChartTooltip";
+import { useChartAxis } from "./useChartAxis";
 
 export interface BarChartItem {
   label: string;
@@ -21,6 +23,7 @@ interface AdminBarChartProps {
   secondaryLegend?: string;
   valuePrefix?: string;
   valueSuffix?: string;
+  showXAxisLabels?: boolean;
 }
 
 export function AdminBarChart({
@@ -34,8 +37,10 @@ export function AdminBarChart({
   secondaryLegend,
   valuePrefix = "",
   valueSuffix = "",
+  showXAxisLabels = true,
 }: AdminBarChartProps) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const { ref: chartRef, width: chartWidthPx, tickIndices, axisLabel } = useChartAxis(data);
 
   if (!data || data.length === 0) {
     return (
@@ -52,12 +57,12 @@ export function AdminBarChart({
   const rawMax = allValues.reduce((max, value) => Math.max(max, value), 0);
   const maxVal = rawMax === 0 ? 10 : Math.ceil(rawMax * 1.15);
 
-  const svgWidth = 800;
+  const svgWidth = chartWidthPx;
   const svgHeight = height;
   const padLeft = 45;
   const padRight = 20;
   const padTop = 20;
-  const padBottom = 35;
+  const padBottom = showXAxisLabels ? 35 : 12;
 
   const chartWidth = svgWidth - padLeft - padRight;
   const chartHeight = svgHeight - padTop - padBottom;
@@ -73,7 +78,7 @@ export function AdminBarChart({
   });
 
   return (
-    <div className="w-full">
+    <div ref={chartRef} className="w-full">
       {(title || subtitle || primaryLegend) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2">
           <div>
@@ -99,7 +104,7 @@ export function AdminBarChart({
         </div>
       )}
 
-      <div className="relative w-full overflow-hidden select-none">
+      <div className="relative w-full select-none" onMouseLeave={() => setHoverIndex(null)}>
         <svg
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           className="w-full h-auto overflow-visible"
@@ -123,7 +128,7 @@ export function AdminBarChart({
                 textAnchor="end"
                 className="text-[11px] fill-slate-400 font-medium"
               >
-                {Math.round(tick.val).toLocaleString("vi-VN")}
+                {Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 }).format(Math.round(tick.val))}
               </text>
             </g>
           ))}
@@ -149,19 +154,16 @@ export function AdminBarChart({
                 className="cursor-pointer transition-opacity duration-150"
                 opacity={hoverIndex === null || isHovered ? 1 : 0.45}
                 onMouseEnter={() => setHoverIndex(i)}
-                onMouseLeave={() => setHoverIndex(null)}
               >
-                {/* Background column highlight on hover */}
-                {isHovered && (
+                {/* The entire time bucket remains hoverable, including zero values. */}
                   <rect
-                    x={groupX + 2}
+                    x={groupX}
                     y={padTop}
-                    width={groupWidth - 4}
+                    width={groupWidth}
                     height={chartHeight}
-                    fill="#f1f5f9"
+                    fill={isHovered ? "#f1f5f9" : "transparent"}
                     rx={6}
                   />
-                )}
 
                 {hasSecondary ? (
                   <>
@@ -196,16 +198,16 @@ export function AdminBarChart({
                 )}
 
                 {/* Nhãn trục X */}
-                <text
+                {showXAxisLabels && tickIndices.has(i) && <text
                   x={groupX + groupWidth / 2}
                   y={svgHeight - 10}
-                  textAnchor="middle"
+                  textAnchor={i === 0 ? "start" : i === data.length - 1 ? "end" : "middle"}
                   className={`text-[11px] font-medium transition-colors ${
                     isHovered ? "fill-indigo-600 font-bold" : "fill-slate-400"
                   }`}
                 >
-                  {item.label}
-                </text>
+                  {axisLabel(item)}
+                </text>}
               </g>
             );
           })}
@@ -213,15 +215,7 @@ export function AdminBarChart({
 
         {/* Hover Tooltip Overlay */}
         {hoverIndex !== null && data[hoverIndex] && (
-          <div
-            className="absolute z-30 pointer-events-none transition-all duration-75 ease-out"
-            style={{
-              left: `${((padLeft + hoverIndex * groupWidth + groupWidth / 2) / svgWidth) * 100}%`,
-              top: "20%",
-              transform: `translate(-50%, -100%)`,
-            }}
-          >
-            <div className="bg-slate-900/95 backdrop-blur-xs text-white px-3 py-2 rounded-xl shadow-xl text-xs whitespace-nowrap border border-slate-700/80">
+          <AdminChartTooltip anchorPercent={((padLeft + hoverIndex * groupWidth + groupWidth / 2) / svgWidth) * 100}>
               <div className="text-[10px] text-slate-300 font-semibold mb-1">
                 {data[hoverIndex].tooltipTitle || data[hoverIndex].label}
               </div>
@@ -243,8 +237,7 @@ export function AdminBarChart({
                   </span>
                 </div>
               )}
-            </div>
-          </div>
+          </AdminChartTooltip>
         )}
       </div>
     </div>

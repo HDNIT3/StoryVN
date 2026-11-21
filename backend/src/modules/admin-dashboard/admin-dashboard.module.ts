@@ -6,6 +6,7 @@ import { RedisModule } from '../redis/redis.module.js';
 import { Transaction, TransactionSchema } from '../payments/schemas/transaction.schema.js';
 import { User, UserSchema } from '../users/schemas/user.schema.js';
 import { AuthorRequest, AuthorRequestSchema } from '../users/schemas/author-request.schema.js';
+import { AuthorProfile, AuthorProfileSchema } from '../users/schemas/author-profile.schema.js';
 import { Story, StorySchema } from '../stories/schemas/story.schema.js';
 import { StoryDailyView, StoryDailyViewSchema } from '../stories/schemas/story-daily-view.schema.js';
 import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema.js';
@@ -21,6 +22,7 @@ import { AdminDashboardService } from './admin-dashboard.service.js';
       { name: Transaction.name, schema: TransactionSchema },
       { name: User.name, schema: UserSchema },
       { name: AuthorRequest.name, schema: AuthorRequestSchema },
+      { name: AuthorProfile.name, schema: AuthorProfileSchema },
       { name: Story.name, schema: StorySchema },
       { name: StoryDailyView.name, schema: StoryDailyViewSchema },
       { name: Chapter.name, schema: ChapterSchema },
