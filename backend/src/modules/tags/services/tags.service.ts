@@ -1,8 +1,10 @@
+import { SearchEmbeddingService } from '../../search/services/search-embedding.service.js';
 import {
   BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -21,6 +23,7 @@ export class TagsService {
   constructor(
     @InjectModel(Tag.name) private readonly tagModel: Model<TagDocument>,
     @InjectModel(Story.name) private readonly storyModel: Model<StoryDocument>,
+    @Optional() private readonly searchEmbedding?: SearchEmbeddingService,
   ) {}
 
   async create(dto: CreateTagDto): Promise<TagDocument> {
@@ -110,6 +113,9 @@ export class TagsService {
       throw new NotFoundException(ErrorCode.TAG_NOT_FOUND);
     }
 
+    const embeddingChanged = (dto.name !== undefined && dto.name.trim() !== tag.name)
+      || (dto.isActive !== undefined && dto.isActive !== tag.isActive);
+
     if (dto.name) {
       const trimmedName = dto.name.trim();
       const existingName = await this.tagModel.findOne({
@@ -149,7 +155,9 @@ export class TagsService {
       tag.isActive = dto.isActive;
     }
 
-    return tag.save();
+    const saved = await tag.save();
+    if (embeddingChanged) this.searchEmbedding?.taxonomyChanged('tagIds', id);
+    return saved;
   }
 
   async delete(id: string): Promise<{ success: boolean; message: string }> {

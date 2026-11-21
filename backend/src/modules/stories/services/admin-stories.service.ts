@@ -1,3 +1,4 @@
+import { SearchEmbeddingService } from '../../search/services/search-embedding.service.js';
 import {
   BadRequestException,
   Injectable,
@@ -58,6 +59,7 @@ export class AdminStoriesService {
     @Optional()
     @InjectModel(StoryDailyView.name)
     private readonly storyDailyViewModel?: Model<StoryDailyViewDocument>,
+    @Optional() private readonly searchEmbedding?: SearchEmbeddingService,
   ) { }
 
   private async computePeriodViewsMap(
@@ -420,6 +422,9 @@ export class AdminStoriesService {
       throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
     }
 
+    const searchContent = () => JSON.stringify([story.title, story.description, story.genreIds, story.tagIds]);
+    const previousSearchContent = searchContent();
+    const firstPublication = story.status !== StoryStatus.PUBLISHED;
     const revisions = (story.revisions || []) as any[];
     const pendingRevision = getLatestRevisionWithStatus(revisions, [
       RevisionStatus.PENDING_REVIEW,
@@ -480,6 +485,9 @@ export class AdminStoriesService {
 
     trimRevisions(revisions);
     await story.save();
+    if (firstPublication || searchContent() !== previousSearchContent) {
+      this.searchEmbedding?.storyChanged(String(story._id));
+    }
 
     if (
       story.status === StoryStatus.PUBLISHED &&
@@ -695,6 +703,7 @@ export class AdminStoriesService {
     story.visibility = StoryVisibility.PUBLIC;
     story.rejectReason = null;
     await story.save();
+    this.searchEmbedding?.storyChanged(String(story._id));
 
     if (story.status === StoryStatus.PUBLISHED) {
       try {

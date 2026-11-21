@@ -1,8 +1,10 @@
+import { SearchEmbeddingService } from '../../search/services/search-embedding.service.js';
 import {
   BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -21,6 +23,7 @@ export class GenresService {
   constructor(
     @InjectModel(Genre.name) private readonly genreModel: Model<GenreDocument>,
     @InjectModel(Story.name) private readonly storyModel: Model<StoryDocument>,
+    @Optional() private readonly searchEmbedding?: SearchEmbeddingService,
   ) {}
 
   async create(dto: CreateGenreDto): Promise<GenreDocument> {
@@ -111,6 +114,9 @@ export class GenresService {
       throw new NotFoundException(ErrorCode.CATEGORY_NOT_FOUND);
     }
 
+    const embeddingChanged = (dto.name !== undefined && dto.name.trim() !== genre.name)
+      || (dto.isActive !== undefined && dto.isActive !== genre.isActive);
+
     if (dto.name) {
       const trimmedName = dto.name.trim();
       const existingName = await this.genreModel.findOne({
@@ -155,7 +161,9 @@ export class GenresService {
       genre.isActive = dto.isActive;
     }
 
-    return genre.save();
+    const saved = await genre.save();
+    if (embeddingChanged) this.searchEmbedding?.taxonomyChanged('genreIds', id);
+    return saved;
   }
 
   async delete(id: string): Promise<{ success: boolean; message: string }> {

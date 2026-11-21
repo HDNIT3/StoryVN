@@ -98,7 +98,7 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
 ];
 
 export const DEFAULT_SEARCH: HeaderSearchProps = {
-  placeholder: "Tìm tên truyện, tác giả...",
+  placeholder: "Tìm truyện nhanh, chính xác…",
   iconSrc: "/icon/search.svg",
 };
 

@@ -211,6 +211,9 @@ export class Story {
   @Prop({ type: [StoryRevisionSchema], default: [], select: false })
   revisions: StoryRevision[];
 
+  @Prop({ type: [Number], default: undefined, select: false })
+  embedding?: number[];
+
   createdAt?: Date;
   updatedAt?: Date;
 }
