@@ -16,14 +16,14 @@ export const MediaFilterBar: React.FC<MediaFilterBarProps> = ({
   onRefresh,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-zinc-200">
+    <div className="admin-filter-bar flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
         <div className="flex items-center gap-2.5">
-          <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight">
+          <h1 className="admin-page-title text-2xl sm:text-2xl font-semibold text-zinc-900 tracking-tight">
             Thư viện ảnh {total > 0 && <span className="text-zinc-500 font-normal">({total})</span>}
           </h1>
           {isFetching && (
-            <span className="w-4 h-4 border-2 border-sky-600 border-t-transparent rounded-full animate-spin" />
+            <span className="w-4 h-4 border-2 border-admin-brand-600 border-t-transparent rounded-full animate-spin" />
           )}
         </div>
         <p className="text-xs text-zinc-500 mt-0.5">
@@ -38,7 +38,7 @@ export const MediaFilterBar: React.FC<MediaFilterBarProps> = ({
             onClick={() => onSourceChange("all")}
             className={`px-3 py-1 rounded-md transition cursor-pointer ${
               sourceFilter === "all"
-                ? "bg-white text-zinc-900 shadow-2xs font-semibold"
+                ? "bg-white text-zinc-900 shadow-admin-card font-semibold"
                 : "text-zinc-600 hover:text-zinc-900"
             }`}
           >
@@ -49,7 +49,7 @@ export const MediaFilterBar: React.FC<MediaFilterBarProps> = ({
             onClick={() => onSourceChange("cloud")}
             className={`px-3 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
               sourceFilter === "cloud"
-                ? "bg-white text-zinc-900 shadow-2xs font-semibold"
+                ? "bg-white text-zinc-900 shadow-admin-card font-semibold"
                 : "text-zinc-600 hover:text-zinc-900"
             }`}
           >
@@ -60,7 +60,7 @@ export const MediaFilterBar: React.FC<MediaFilterBarProps> = ({
             onClick={() => onSourceChange("local")}
             className={`px-3 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
               sourceFilter === "local"
-                ? "bg-white text-zinc-900 shadow-2xs font-semibold"
+                ? "bg-white text-zinc-900 shadow-admin-card font-semibold"
                 : "text-zinc-600 hover:text-zinc-900"
             }`}
           >

@@ -31,7 +31,7 @@ export function AdminBarChart({
   title,
   subtitle,
   height = 240,
-  barColor = "#4f46e5",
+  barColor = "#465fff",
   secondaryBarColor = "#10b981",
   primaryLegend,
   secondaryLegend,
@@ -44,7 +44,7 @@ export function AdminBarChart({
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+      <div className="flex flex-col items-center justify-center h-48 text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
         <span className="text-xs font-medium">Chưa có dữ liệu biểu đồ cột</span>
       </div>
     );
@@ -82,11 +82,11 @@ export function AdminBarChart({
       {(title || subtitle || primaryLegend) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2">
           <div>
-            {title && <h3 className="text-sm sm:text-base font-bold text-slate-900">{title}</h3>}
-            {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+            {title && <h3 className="text-sm sm:text-base font-semibold text-gray-900">{title}</h3>}
+            {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
           </div>
           {(primaryLegend || secondaryLegend) && (
-            <div className="flex items-center gap-3 text-xs font-medium text-slate-600">
+            <div className="flex items-center gap-3 text-xs font-medium text-gray-600">
               {primaryLegend && (
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: barColor }} />
@@ -118,7 +118,7 @@ export function AdminBarChart({
                 y1={tick.y}
                 x2={svgWidth - padRight}
                 y2={tick.y}
-                stroke="#e2e8f0"
+                stroke="#eaecf0"
                 strokeDasharray={i === 0 ? "none" : "3 3"}
                 strokeWidth={1}
               />
@@ -126,7 +126,7 @@ export function AdminBarChart({
                 x={padLeft - 8}
                 y={tick.y + 3.5}
                 textAnchor="end"
-                className="text-[11px] fill-slate-400 font-medium"
+                className="text-xs fill-gray-400 font-medium"
               >
                 {Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 }).format(Math.round(tick.val))}
               </text>
@@ -161,7 +161,7 @@ export function AdminBarChart({
                     y={padTop}
                     width={groupWidth}
                     height={chartHeight}
-                    fill={isHovered ? "#f1f5f9" : "transparent"}
+                    fill={isHovered ? "#f2f4f7" : "transparent"}
                     rx={6}
                   />
 
@@ -202,8 +202,8 @@ export function AdminBarChart({
                   x={groupX + groupWidth / 2}
                   y={svgHeight - 10}
                   textAnchor={i === 0 ? "start" : i === data.length - 1 ? "end" : "middle"}
-                  className={`text-[11px] font-medium transition-colors ${
-                    isHovered ? "fill-indigo-600 font-bold" : "fill-slate-400"
+                  className={`text-xs font-medium transition-colors ${
+                    isHovered ? "fill-admin-brand-600 font-medium" : "fill-gray-400"
                   }`}
                 >
                   {axisLabel(item)}
@@ -216,13 +216,13 @@ export function AdminBarChart({
         {/* Hover Tooltip Overlay */}
         {hoverIndex !== null && data[hoverIndex] && (
           <AdminChartTooltip anchorPercent={((padLeft + hoverIndex * groupWidth + groupWidth / 2) / svgWidth) * 100}>
-              <div className="text-[10px] text-slate-300 font-semibold mb-1">
+              <div className="text-xs text-gray-300 font-semibold mb-1">
                 {data[hoverIndex].tooltipTitle || data[hoverIndex].label}
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: barColor }} />
-                <span className="text-slate-300">{primaryLegend || "Giá trị"}:</span>
-                <span className="font-bold text-white">
+                <span className="text-gray-300">{primaryLegend || "Giá trị"}:</span>
+                <span className="font-medium text-white">
                   {valuePrefix}
                   {data[hoverIndex].value.toLocaleString("vi-VN")}
                   {valueSuffix}
@@ -231,8 +231,8 @@ export function AdminBarChart({
               {hasSecondary && data[hoverIndex].secondaryValue !== undefined && (
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: secondaryBarColor }} />
-                  <span className="text-slate-300">{secondaryLegend || "Phụ"}:</span>
-                  <span className="font-bold text-white">
+                  <span className="text-gray-300">{secondaryLegend || "Phụ"}:</span>
+                  <span className="font-medium text-white">
                     {data[hoverIndex].secondaryValue!.toLocaleString("vi-VN")}
                   </span>
                 </div>

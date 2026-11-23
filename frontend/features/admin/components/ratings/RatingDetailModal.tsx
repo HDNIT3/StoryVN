@@ -31,28 +31,28 @@ export function RatingDetailModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150"
+      className="admin-dialog-overlay fixed inset-0 z-[70] flex items-center justify-center p-4 bg-gray-950/50 animate-in fade-in duration-150"
     >
       <div
-        className="bg-white rounded-3xl max-w-xl w-full border border-slate-200/80 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
+        className="admin-dialog bg-white rounded-2xl max-w-xl w-full border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[calc(100dvh-3rem)] animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="admin-dialog-header flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-base">
               ★
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Chi tiết đánh giá</h3>
-              <p className="text-[11px] text-slate-400">ID: {rating._id}</p>
+              <h3 className="admin-dialog-title text-sm font-semibold text-gray-900">Chi tiết đánh giá</h3>
+              <p className="text-xs text-gray-400">ID: {rating._id}</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+            className="admin-dialog-close p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -61,10 +61,10 @@ export function RatingDetailModal({
         </div>
 
         {/* Content body */}
-        <div className="p-6 overflow-y-auto space-y-5 text-xs sm:text-sm">
+        <div className="admin-dialog-body p-6 overflow-y-auto space-y-5 text-xs sm:text-sm">
           {/* Người đánh giá */}
-          <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60 flex items-center gap-3.5">
-            <div className="relative w-11 h-11 rounded-full overflow-hidden bg-slate-200 border border-slate-300 shrink-0">
+          <div className="p-4 rounded-2xl bg-gray-50/80 border border-gray-200 flex items-center gap-3.5">
+            <div className="relative w-11 h-11 rounded-full overflow-hidden bg-gray-200 border border-gray-300 shrink-0">
               {user?.avatarUrl ? (
                 <Image
                   src={user.avatarUrl}
@@ -74,31 +74,31 @@ export function RatingDetailModal({
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center font-bold text-amber-700 bg-amber-100">
+                <div className="w-full h-full flex items-center justify-center font-medium text-amber-700 bg-amber-100">
                   {(user?.displayName || user?.username || "U").charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <span className="font-bold text-slate-900 text-sm">
+              <span className="font-medium text-gray-900 text-sm">
                 {user?.displayName || user?.username || "Ẩn danh"}
               </span>
-              <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+              <p className="text-xs text-gray-500 mt-0.5 truncate">
                 @{user?.username || "username"} {user?.email ? `• ${user.email}` : ""}
               </p>
             </div>
           </div>
 
           {/* Tác phẩm được đánh giá */}
-          <div className="p-3.5 rounded-xl border border-slate-200/70 bg-white">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+          <div className="p-3.5 rounded-xl border border-gray-200 bg-white">
+            <span className="text-xs font-medium text-gray-500 block mb-1">
               Tác phẩm được đánh giá
             </span>
             {story ? (
               <Link
                 href={`/truyen/${story.slug}`}
                 target="_blank"
-                className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1.5"
+                className="font-semibold text-admin-brand-600 hover:text-admin-brand-800 hover:underline flex items-center gap-1.5"
               >
                 <span>{story.title}</span>
                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,50 +106,50 @@ export function RatingDetailModal({
                 </svg>
               </Link>
             ) : (
-              <span className="text-slate-400 italic">Không rõ tác phẩm</span>
+              <span className="text-gray-400 italic">Không rõ tác phẩm</span>
             )}
           </div>
 
           {/* Điểm sao */}
           <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/70 flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-amber-900 block">Số sao đánh giá</span>
+              <span className="text-xs font-medium text-amber-900 block">Số sao đánh giá</span>
               <div className="flex items-center gap-1 text-lg text-amber-400 mt-1">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <span key={star} className={star <= rating.rating ? "text-amber-500" : "text-slate-300"}>
+                  <span key={star} className={star <= rating.rating ? "text-amber-500" : "text-gray-300"}>
                     ★
                   </span>
                 ))}
               </div>
             </div>
             <div className="text-right">
-              <span className="text-2xl font-black text-amber-700">{rating.rating}</span>
-              <span className="text-xs font-bold text-amber-600"> / 5.0</span>
+              <span className="text-2xl font-semibold text-amber-700">{rating.rating}</span>
+              <span className="text-xs font-medium text-amber-600"> / 5.0</span>
             </div>
           </div>
 
           {/* Nội dung nhận xét */}
           <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+            <span className="text-xs font-medium text-gray-500 block mb-2">
               Nội dung bài viết nhận xét
             </span>
-            <div className="p-4 rounded-2xl bg-slate-50/50 border border-slate-200/80 whitespace-pre-wrap leading-relaxed text-slate-800 font-normal min-h-[70px]">
-              {rating.review ? rating.review : <span className="text-slate-400 italic">Người dùng chỉ để lại số sao, không viết nhận xét văn bản.</span>}
+            <div className="p-4 rounded-2xl bg-gray-50/50 border border-gray-200 whitespace-pre-wrap leading-relaxed text-gray-800 font-normal min-h-[70px]">
+              {rating.review ? rating.review : <span className="text-gray-400 italic">Người dùng chỉ để lại số sao, không viết nhận xét văn bản.</span>}
             </div>
           </div>
 
           {/* Thời gian & Trạng thái */}
-          <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
             <div>
               <span>Ngày gửi: </span>
-              <span className="font-semibold text-slate-700">
+              <span className="font-semibold text-gray-700">
                 {new Date(rating.createdAt).toLocaleString("vi-VN")}
               </span>
             </div>
             <div>
               <span>Trạng thái: </span>
               <span
-                className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                   rating.status === "VISIBLE"
                     ? "bg-emerald-100 text-emerald-800"
                     : rating.status === "HIDDEN"
@@ -168,7 +168,7 @@ export function RatingDetailModal({
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+        <div className="admin-dialog-footer flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
           <button
             type="button"
             disabled={isUpdating}
@@ -178,7 +178,7 @@ export function RatingDetailModal({
                 onClose();
               }
             }}
-            className="px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
           >
             Xóa vĩnh viễn
           </button>
@@ -189,7 +189,7 @@ export function RatingDetailModal({
                 type="button"
                 disabled={isUpdating}
                 onClick={() => onUpdateStatus(rating._id, "VISIBLE")}
-                className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors cursor-pointer shadow-admin-card disabled:opacity-50"
               >
                 Hiện đánh giá
               </button>
@@ -200,7 +200,7 @@ export function RatingDetailModal({
                 type="button"
                 disabled={isUpdating}
                 onClick={() => onUpdateStatus(rating._id, "HIDDEN")}
-                className="px-4 py-2 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
               >
                 Ẩn đánh giá
               </button>
@@ -209,7 +209,7 @@ export function RatingDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
             >
               Đóng
             </button>

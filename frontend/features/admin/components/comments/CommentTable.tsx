@@ -24,15 +24,15 @@ export function CommentTable({
 }: CommentTableProps) {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="flex items-center gap-4 animate-pulse">
-            <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0" />
+            <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-slate-100 rounded w-1/3" />
-              <div className="h-3 bg-slate-100 rounded w-2/3" />
+              <div className="h-4 bg-gray-100 rounded w-1/3" />
+              <div className="h-3 bg-gray-100 rounded w-2/3" />
             </div>
-            <div className="w-20 h-6 bg-slate-100 rounded" />
+            <div className="w-20 h-6 bg-gray-100 rounded" />
           </div>
         ))}
       </div>
@@ -41,33 +41,33 @@ export function CommentTable({
 
   if (comments.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center">
-        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
+      <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
         </div>
-        <p className="text-sm font-bold text-slate-800">Không tìm thấy bình luận nào</p>
-        <p className="text-xs text-slate-400 mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+        <p className="text-sm font-medium text-gray-800">Không tìm thấy bình luận nào</p>
+        <p className="text-xs text-gray-400 mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs">
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-admin-card">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs sm:text-sm">
-          <thead className="bg-slate-50/75 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <table className="admin-data-table w-full text-left text-xs sm:text-sm">
+          <thead className="bg-gray-50/75 border-b border-gray-200 text-xs font-medium uppercase tracking-wider text-gray-500">
             <tr>
-              <th className="py-3.5 px-4">Người bình luận</th>
-              <th className="py-3.5 px-4">Tác phẩm / Vị trí</th>
-              <th className="py-3.5 px-4 min-w-[200px]">Nội dung</th>
-              <th className="py-3.5 px-4">Ngày đăng</th>
-              <th className="py-3.5 px-4">Trạng thái</th>
-              <th className="py-3.5 px-4 text-right">Thao tác</th>
+              <th className="py-3.5 px-5">Người bình luận</th>
+              <th className="py-3.5 px-5">Tác phẩm / Vị trí</th>
+              <th className="py-3.5 px-5 min-w-[200px]">Nội dung</th>
+              <th className="py-3.5 px-5">Ngày đăng</th>
+              <th className="py-3.5 px-5">Trạng thái</th>
+              <th className="py-3.5 px-5 text-right">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-gray-100">
             {comments.map((comment) => {
               const commenter = comment.userId;
               const replyTo = comment.replyToUserId;
@@ -80,12 +80,12 @@ export function CommentTable({
               return (
                 <tr
                   key={comment._id}
-                  className="hover:bg-slate-50/60 transition-colors"
+                  className="hover:bg-gray-50/60 transition-colors"
                 >
                   {/* Người bình luận */}
-                  <td className="py-3.5 px-4 align-top">
+                  <td className="py-4 px-5 align-top">
                     <div className="flex items-center gap-2.5">
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-slate-200 border border-slate-300 shrink-0">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200 border border-gray-300 shrink-0">
                         {commenter?.avatarUrl ? (
                           <Image
                             src={commenter.avatarUrl}
@@ -95,16 +95,16 @@ export function CommentTable({
                             className="object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center font-bold text-[11px] text-indigo-700 bg-indigo-100">
+                          <div className="w-full h-full flex items-center justify-center font-medium text-xs text-admin-brand-700 bg-admin-brand-100">
                             {(commenter?.displayName || commenter?.username || "U").charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-900 truncate max-w-[130px]">
+                        <p className="font-medium text-gray-900 truncate max-w-[130px]">
                           {commenter?.displayName || commenter?.username || "Ẩn danh"}
                         </p>
-                        <p className="text-[10px] text-slate-400 truncate max-w-[130px]">
+                        <p className="text-xs text-gray-400 truncate max-w-[130px]">
                           @{commenter?.username || "user"}
                         </p>
                       </div>
@@ -112,23 +112,23 @@ export function CommentTable({
                   </td>
 
                   {/* Tác phẩm / Vị trí */}
-                  <td className="py-3.5 px-4 align-top max-w-[160px]">
+                  <td className="py-4 px-5 align-top max-w-[160px]">
                     {story ? (
                       <>
                         <Link
                           href={`/truyen/${story.slug}`}
                           target="_blank"
-                          className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1 block text-xs"
+                          className="font-semibold text-gray-900 hover:text-admin-brand-600 transition-colors line-clamp-1 block text-xs"
                           title={story.title}
                         >
                           {story.title}
                         </Link>
                         {chapter ? (
-                          <span className="inline-block mt-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                          <span className="inline-block mt-1 px-1.5 py-0.2 rounded text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
                             Chương {chapter.chapterNumber}
                           </span>
                         ) : (
-                          <span className="inline-block mt-1 text-[10px] text-slate-400">
+                          <span className="inline-block mt-1 text-xs text-gray-400">
                             Trang truyện
                           </span>
                         )}
@@ -138,47 +138,47 @@ export function CommentTable({
                         <Link
                           href={`/dien-dan/${forumPost.slug || forumPost._id}`}
                           target="_blank"
-                          className="font-semibold text-slate-900 hover:text-sky-600 transition-colors line-clamp-1 block text-xs"
+                          className="font-semibold text-gray-900 hover:text-admin-brand-600 transition-colors line-clamp-1 block text-xs"
                           title={forumPost.title}
                         >
                           {forumPost.title}
                         </Link>
-                        <span className="inline-block mt-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                        <span className="inline-block mt-1 px-1.5 py-0.2 rounded text-xs font-semibold bg-admin-brand-50 text-admin-brand-700 border border-admin-brand-200">
                           Bài viết diễn đàn
                         </span>
                       </>
                     ) : (
-                      <span className="text-slate-400 italic text-xs">Không rõ</span>
+                      <span className="text-gray-400 italic text-xs">Không rõ</span>
                     )}
                   </td>
 
                   {/* Nội dung */}
-                  <td className="py-3.5 px-4 align-top">
+                  <td className="py-4 px-5 align-top">
                     {replyTo && (
-                      <div className="inline-flex items-center gap-1 text-[11px] text-indigo-600 bg-indigo-50/70 px-1.5 py-0.2 rounded mb-1 border border-indigo-100">
-                        <span className="text-slate-400">Trả lời</span>
+                      <div className="inline-flex items-center gap-1 text-xs text-admin-brand-600 bg-admin-brand-50/70 px-1.5 py-0.2 rounded mb-1 border border-admin-brand-100">
+                        <span className="text-gray-400">Trả lời</span>
                         <span className="font-semibold">@{replyTo.displayName || replyTo.username}</span>
                       </div>
                     )}
-                    <p className={`line-clamp-2 text-xs leading-relaxed ${isDeleted ? "text-slate-400 italic" : "text-slate-800"}`}>
+                    <p className={`line-clamp-2 text-xs leading-relaxed ${isDeleted ? "text-gray-400 italic" : "text-gray-800"}`}>
                       {comment.content}
                     </p>
                     {comment.replyCount > 0 && (
-                      <span className="inline-block mt-1 text-[10px] text-slate-400 font-medium">
+                      <span className="inline-block mt-1 text-xs text-gray-400 font-medium">
                         💬 {comment.replyCount} phản hồi
                       </span>
                     )}
                   </td>
 
                   {/* Ngày đăng */}
-                  <td className="py-3.5 px-4 align-top whitespace-nowrap text-xs text-slate-500">
+                  <td className="py-4 px-5 align-top whitespace-nowrap text-sm text-gray-500">
                     {new Date(comment.createdAt).toLocaleDateString("vi-VN")}
                   </td>
 
                   {/* Trạng thái */}
-                  <td className="py-3.5 px-4 align-top whitespace-nowrap">
+                  <td className="py-4 px-5 align-top whitespace-nowrap">
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                         comment.status === "VISIBLE"
                           ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                           : isHidden
@@ -204,12 +204,12 @@ export function CommentTable({
                   </td>
 
                   {/* Thao tác */}
-                  <td className="py-3.5 px-4 align-top whitespace-nowrap text-right">
+                  <td className="py-4 px-5 align-top whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button
                         type="button"
                         onClick={() => onViewDetail(comment)}
-                        className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-gray-500 hover:text-admin-brand-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                         title="Xem chi tiết"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -63,8 +63,8 @@ describe('AdminChaptersService - Follower Release Notification Trigger', () => {
       chapterNumber: 1,
       title: 'Chương 1 cũ',
       content: 'Nội dung cũ',
-      isFree: true,
-      coinPrice: 0,
+      isFree: false,
+      coinPrice: 80,
       requirePreviousChapter: false,
       status: ChapterStatus.PUBLISHED,
       scheduledAt: new Date('2026-11-01T10:00:00.000Z'),
@@ -105,6 +105,8 @@ describe('AdminChaptersService - Follower Release Notification Trigger', () => {
 
     await service.approveChapter(chapterId.toString(), reviewerId);
 
+    expect(chapterDoc.isFree).toBe(false);
+    expect(chapterDoc.coinPrice).toBe(80);
     expect(chapterDoc.notifyFollowersPending).toBeUndefined();
     expect(
       mockChapterReleaseService.releaseAndNotifyStoryChapters,

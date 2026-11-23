@@ -255,8 +255,6 @@ export class ChaptersService {
     return (
       a.title !== b.title ||
       a.content !== b.content ||
-      a.isFree !== b.isFree ||
-      a.coinPrice !== b.coinPrice ||
       a.requirePreviousChapter !== b.requirePreviousChapter
     );
   }
@@ -873,6 +871,11 @@ export class ChaptersService {
     const base = activeRevision
       ? this.cloneRevisionSnapshot(activeRevision.snapshot)
       : this.buildChapterSnapshotFromDoc(chapter);
+    // Pricing is live configuration, even when a content revision is pending.
+    // Never restore obsolete pricing from an older revision into the edit form.
+    base.isFree = chapter.isFree;
+    base.coinPrice = chapter.coinPrice;
+    if (chapter.isFree) base.requirePreviousChapter = false;
     const merged = this.mergeChapterSnapshot(base, dto);
 
     if (
@@ -882,7 +885,21 @@ export class ChaptersService {
       throw new BadRequestException('Nội dung chương không được vượt quá 2.500 từ');
     }
 
-    const contentChanged = this.chapterSnapshotChanged(base, merged);
+    const contentChanged = this.chapterSnapshotChanged(
+      { ...base, requirePreviousChapter: merged.isFree ? false : base.requirePreviousChapter },
+      merged,
+    );
+
+    // Free/paid and coin price take effect immediately, without content review.
+    // Keep the active snapshot consistent so a later approval cannot undo this.
+    chapter.isFree = merged.isFree;
+    chapter.coinPrice = merged.coinPrice;
+    if (merged.isFree) chapter.requirePreviousChapter = false;
+    if (activeRevision) {
+      activeRevision.snapshot.isFree = merged.isFree;
+      activeRevision.snapshot.coinPrice = merged.coinPrice;
+      if (merged.isFree) activeRevision.snapshot.requirePreviousChapter = false;
+    }
     const now = new Date();
     let submittedForReview = false;
 
@@ -1158,6 +1175,10 @@ export class ChaptersService {
 
     const storyId = chapter.storyId;
     const deletedChapterNumber = chapter.chapterNumber;
+
+    if (this.chapterUnlockModel && await this.chapterUnlockModel.exists({ chapterId: chapter._id })) {
+      throw new BadRequestException('Không thể xóa chương đã có lượt mua vì cần giữ lịch sử doanh thu. Vui lòng tạm ẩn chương.');
+    }
 
     // 3. Xóa chương (lịch sử chỉnh sửa nhúng đi kèm)
     await this.chapterModel.deleteOne({ _id: chapter._id });
@@ -1860,35 +1881,24 @@ export class ChaptersService {
         throw new BadRequestException(ErrorCode.WALLET_INSUFFICIENT_BALANCE);
       }
 
-      // Bước 1: Tạo bản ghi mở khóa trước (Unique Index { userId: 1, chapterId: 1 } chặn mọi request trùng lặp ở tầng DB)
-      let createdUnlock: ChapterUnlockDocument;
-      try {
-        createdUnlock = await this.chapterUnlockModel.create({
-          userId: userObjectId,
-          chapterId: chapterObjectId,
-          coinPrice: chapter.coinPrice,
-          unlockedAt: new Date(),
-        });
-      } catch (err: any) {
-        if (err?.code === 11000) {
-          throw new ConflictException(ErrorCode.CHAPTER_ALREADY_UNLOCKED);
+      // Commit unlock and reader debit together. Financial readers must never
+      // observe an unlock whose wallet debit can still fail or be rolled back.
+      const unlockModel = this.chapterUnlockModel;
+      const walletService = this.walletService;
+      const purchase = await unlockModel.db.transaction(async session => {
+        try {
+          const [createdUnlock] = await unlockModel.create([{
+            userId: userObjectId, chapterId: chapterObjectId,
+            coinPrice: chapter.coinPrice, unlockedAt: new Date(),
+          }], { session });
+          const updatedWallet = await walletService.debitInSession(userObjectId.toString(), chapter.coinPrice, session);
+          return { createdUnlock, updatedWallet };
+        } catch (error) {
+          if ((error as { code?: number }).code === 11000) throw new ConflictException(ErrorCode.CHAPTER_ALREADY_UNLOCKED);
+          throw error;
         }
-        throw err;
-      }
-
-      // Bước 2: Trừ Xu nguyên tử trên ví ({ balance: { $gte: coinPrice } }). Nếu trừ thất bại thì hoàn tác bản ghi mở khóa ngay lập tức.
-      let updatedWallet;
-      try {
-        updatedWallet = await this.walletService.debit(
-          userObjectId.toString(),
-          chapter.coinPrice,
-        );
-      } catch (debitError) {
-        await this.chapterUnlockModel
-          .deleteOne({ _id: createdUnlock._id })
-          .catch(() => undefined);
-        throw debitError;
-      }
+      }, { readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' } });
+      const { createdUnlock, updatedWallet } = purchase;
 
       // Bước 3: Tăng lượt đọc khi mở khóa thành công
       await this.chapterModel

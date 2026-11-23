@@ -22,7 +22,7 @@ interface AdminDonutChartProps {
 }
 
 const DEFAULT_COLORS = [
-  "#4f46e5", // Indigo
+  "#465fff", // Indigo
   "#10b981", // Emerald
   "#06b6d4", // Cyan
   "#f59e0b", // Amber
@@ -46,7 +46,7 @@ export function AdminDonutChart({
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+      <div className="flex flex-col items-center justify-center h-48 text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
         <span className="text-xs font-medium">Chưa có dữ liệu phân bổ</span>
       </div>
     );
@@ -83,8 +83,8 @@ export function AdminDonutChart({
     <div className="w-full">
       {(title || subtitle) && (
         <div className="pb-3">
-          {title && <h3 className="text-sm sm:text-base font-bold text-slate-900">{title}</h3>}
-          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+          {title && <h3 className="text-sm sm:text-base font-semibold text-gray-900">{title}</h3>}
+          {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
         </div>
       )}
 
@@ -98,7 +98,7 @@ export function AdminDonutChart({
               cy={size / 2}
               r={radius}
               fill="transparent"
-              stroke="#f1f5f9"
+              stroke="#f2f4f7"
               strokeWidth={thickness}
             />
 
@@ -128,10 +128,10 @@ export function AdminDonutChart({
 
           {/* Center Info */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate max-w-[110px]">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate max-w-[110px]">
               {activeSegment ? activeSegment.name : centerLabel}
             </span>
-            <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <span className="text-xl sm:text-2xl font-semibold text-gray-900 tracking-tight">
               {activeSegment
                 ? activeSegment.value.toLocaleString("vi-VN")
                 : centerValue !== undefined
@@ -141,7 +141,7 @@ export function AdminDonutChart({
                 : total.toLocaleString("vi-VN")}
             </span>
             {activeSegment && (
-              <span className="text-xs font-bold text-indigo-600 mt-0.5">
+              <span className="text-xs font-medium text-admin-brand-600 mt-0.5">
                 {activeSegment.percentage}%
               </span>
             )}
@@ -158,24 +158,24 @@ export function AdminDonutChart({
                   key={seg.id}
                   className={`flex items-center justify-between p-2 rounded-xl text-xs transition-all cursor-pointer ${
                     isHovered
-                      ? "bg-slate-100/90 font-bold shadow-2xs"
-                      : "hover:bg-slate-50 text-slate-600"
+                      ? "bg-gray-100/90 font-medium shadow-admin-card"
+                      : "hover:bg-gray-50 text-gray-600"
                   }`}
                   onMouseEnter={() => setHoveredId(seg.id)}
                   onMouseLeave={() => setHoveredId(null)}
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-2">
                     <span
-                      className="w-3 h-3 rounded-md shrink-0 shadow-2xs"
+                      className="w-3 h-3 rounded-md shrink-0 shadow-admin-card"
                       style={{ backgroundColor: seg.color }}
                     />
                     <span className="truncate">{seg.name}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-semibold text-slate-800">
+                    <span className="font-semibold text-gray-800">
                       {seg.value.toLocaleString("vi-VN")}
                     </span>
-                    <span className="text-[11px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">
+                    <span className="text-xs font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md">
                       {seg.percentage}%
                     </span>
                   </div>

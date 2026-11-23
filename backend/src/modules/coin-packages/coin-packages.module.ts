@@ -5,11 +5,13 @@ import { UsersModule } from '../users/users.module.js';
 import { CoinPackagesController } from './controllers/coin-packages.controller.js';
 import { CoinPackage, CoinPackageSchema } from './schemas/coin-package.schema.js';
 import { CoinPackagesService } from './services/coin-packages.service.js';
+import { Transaction, TransactionSchema } from '../payments/schemas/transaction.schema.js';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: CoinPackage.name, schema: CoinPackageSchema },
+      { name: Transaction.name, schema: TransactionSchema },
     ]),
     AuthModule,
     UsersModule,

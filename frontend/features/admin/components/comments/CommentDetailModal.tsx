@@ -34,30 +34,30 @@ export function CommentDetailModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150"
+      className="admin-dialog-overlay fixed inset-0 z-[70] flex items-center justify-center p-4 bg-gray-950/50 animate-in fade-in duration-150"
     >
       <div
-        className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200/80 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
+        className="admin-dialog bg-white rounded-2xl max-w-2xl w-full border border-gray-200 shadow-2xl overflow-hidden flex flex-col max-h-[calc(100dvh-3rem)] animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="admin-dialog-header flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-admin-brand-50 text-admin-brand-600 flex items-center justify-center">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Chi tiết bình luận</h3>
-              <p className="text-[11px] text-slate-400">Kiểm duyệt nội dung thảo luận</p>
+              <h3 className="admin-dialog-title text-sm font-semibold text-gray-900">Chi tiết bình luận</h3>
+              <p className="text-xs text-gray-400">Kiểm duyệt nội dung thảo luận</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+            className="admin-dialog-close p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -66,10 +66,10 @@ export function CommentDetailModal({
         </div>
 
         {/* Content body */}
-        <div className="p-6 overflow-y-auto space-y-5 text-xs sm:text-sm">
+        <div className="admin-dialog-body p-6 overflow-y-auto space-y-5 text-xs sm:text-sm">
           {/* Người bình luận */}
-          <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60 flex items-center gap-3.5">
-            <div className="relative w-11 h-11 rounded-full overflow-hidden bg-slate-200 border border-slate-300 shrink-0">
+          <div className="p-4 rounded-2xl bg-gray-50/80 border border-gray-200 flex items-center gap-3.5">
+            <div className="relative w-11 h-11 rounded-full overflow-hidden bg-gray-200 border border-gray-300 shrink-0">
               {commenter?.avatarUrl ? (
                 <Image
                   src={commenter.avatarUrl}
@@ -79,23 +79,23 @@ export function CommentDetailModal({
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center font-bold text-indigo-700 bg-indigo-100">
+                <div className="w-full h-full flex items-center justify-center font-medium text-admin-brand-700 bg-admin-brand-100">
                   {(commenter?.displayName || commenter?.username || "U").charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-slate-900 text-sm">
+                <span className="font-medium text-gray-900 text-sm">
                   {commenter?.displayName || commenter?.username || "Không tên"}
                 </span>
                 {commenter?.role && (
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/70">
+                  <span className="px-1.5 py-0.2 rounded text-xs font-medium bg-admin-brand-50 text-admin-brand-700 border border-admin-brand-200/70">
                     {commenter.role}
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+              <p className="text-xs text-gray-500 mt-0.5 truncate">
                 @{commenter?.username || "username"} {commenter?.email ? `• ${commenter.email}` : ""}
               </p>
             </div>
@@ -103,15 +103,15 @@ export function CommentDetailModal({
 
           {/* Vị trí bình luận: Truyện / Bài viết & Chương */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="p-3.5 rounded-xl border border-slate-200/70 bg-white">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+            <div className="p-3.5 rounded-xl border border-gray-200 bg-white">
+              <span className="text-xs font-medium text-gray-500 block mb-1">
                 {forumPost ? "Bài viết diễn đàn" : "Tác phẩm"}
               </span>
               {story ? (
                 <Link
                   href={`/truyen/${story.slug}`}
                   target="_blank"
-                  className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1.5 line-clamp-1"
+                  className="font-semibold text-admin-brand-600 hover:text-admin-brand-800 hover:underline flex items-center gap-1.5 line-clamp-1"
                 >
                   <span>{story.title}</span>
                   <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -122,7 +122,7 @@ export function CommentDetailModal({
                 <Link
                   href={`/dien-dan/${forumPost.slug || forumPost._id}`}
                   target="_blank"
-                  className="font-semibold text-sky-600 hover:text-sky-800 hover:underline flex items-center gap-1.5 line-clamp-1"
+                  className="font-semibold text-admin-brand-600 hover:text-admin-brand-800 hover:underline flex items-center gap-1.5 line-clamp-1"
                 >
                   <span>{forumPost.title}</span>
                   <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -130,19 +130,19 @@ export function CommentDetailModal({
                   </svg>
                 </Link>
               ) : (
-                <span className="text-slate-400 italic">Không rõ</span>
+                <span className="text-gray-400 italic">Không rõ</span>
               )}
             </div>
 
-            <div className="p-3.5 rounded-xl border border-slate-200/70 bg-white">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+            <div className="p-3.5 rounded-xl border border-gray-200 bg-white">
+              <span className="text-xs font-medium text-gray-500 block mb-1">
                 Vị trí đăng
               </span>
               {chapter && story ? (
                 <Link
                   href={`/truyen/${story.slug}/chuong/${chapter.chapterNumber}`}
                   target="_blank"
-                  className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1.5 line-clamp-1"
+                  className="font-semibold text-admin-brand-600 hover:text-admin-brand-800 hover:underline flex items-center gap-1.5 line-clamp-1"
                 >
                   <span>Chương {chapter.chapterNumber}: {chapter.title}</span>
                   <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,26 +150,26 @@ export function CommentDetailModal({
                   </svg>
                 </Link>
               ) : forumPost ? (
-                <span className="text-slate-700 font-medium">Bình luận bài viết diễn đàn</span>
+                <span className="text-gray-700 font-medium">Bình luận bài viết diễn đàn</span>
               ) : (
-                <span className="text-slate-700 font-medium">Bình luận cấp truyện chính</span>
+                <span className="text-gray-700 font-medium">Bình luận cấp truyện chính</span>
               )}
             </div>
           </div>
 
           {/* Phản hồi ai & số phản hồi con */}
           {(replyTo || comment.replyCount > 0) && (
-            <div className="flex items-center gap-4 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+            <div className="flex items-center gap-4 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-200">
               {replyTo && (
                 <div className="flex items-center gap-1.5">
-                  <span className="text-slate-400">Trả lời:</span>
-                  <span className="font-semibold text-indigo-700">@{replyTo.displayName || replyTo.username}</span>
+                  <span className="text-gray-400">Trả lời:</span>
+                  <span className="font-semibold text-admin-brand-700">@{replyTo.displayName || replyTo.username}</span>
                 </div>
               )}
               {comment.replyCount > 0 && (
                 <div className="flex items-center gap-1.5">
-                  <span className="text-slate-400">Số phản hồi con:</span>
-                  <span className="font-bold text-slate-800">{comment.replyCount}</span>
+                  <span className="text-gray-400">Số phản hồi con:</span>
+                  <span className="font-medium text-gray-800">{comment.replyCount}</span>
                 </div>
               )}
             </div>
@@ -177,26 +177,26 @@ export function CommentDetailModal({
 
           {/* Nội dung bình luận */}
           <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+            <span className="text-xs font-medium text-gray-500 block mb-2">
               Nội dung bình luận
             </span>
-            <div className="p-4 rounded-2xl bg-slate-50/50 border border-slate-200/80 whitespace-pre-wrap leading-relaxed text-slate-800 font-normal">
+            <div className="p-4 rounded-2xl bg-gray-50/50 border border-gray-200 whitespace-pre-wrap leading-relaxed text-gray-800 font-normal">
               {comment.content}
             </div>
           </div>
 
           {/* Thời gian & Trạng thái */}
-          <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
             <div>
               <span>Ngày đăng: </span>
-              <span className="font-semibold text-slate-700">
+              <span className="font-semibold text-gray-700">
                 {new Date(comment.createdAt).toLocaleString("vi-VN")}
               </span>
             </div>
             <div>
               <span>Trạng thái: </span>
               <span
-                className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                   comment.status === "VISIBLE"
                     ? "bg-emerald-100 text-emerald-800"
                     : comment.status === "HIDDEN"
@@ -215,7 +215,7 @@ export function CommentDetailModal({
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+        <div className="admin-dialog-footer flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
           <button
             type="button"
             disabled={isUpdating}
@@ -225,7 +225,7 @@ export function CommentDetailModal({
                 onClose();
               }
             }}
-            className="px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
           >
             Xóa vĩnh viễn
           </button>
@@ -236,7 +236,7 @@ export function CommentDetailModal({
                 type="button"
                 disabled={isUpdating}
                 onClick={() => onUpdateStatus(comment._id, "VISIBLE")}
-                className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors cursor-pointer shadow-admin-card disabled:opacity-50"
               >
                 Hiện bình luận
               </button>
@@ -247,7 +247,7 @@ export function CommentDetailModal({
                 type="button"
                 disabled={isUpdating}
                 onClick={() => onUpdateStatus(comment._id, "HIDDEN")}
-                className="px-4 py-2 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
               >
                 Ẩn bình luận
               </button>
@@ -256,7 +256,7 @@ export function CommentDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
             >
               Đóng
             </button>

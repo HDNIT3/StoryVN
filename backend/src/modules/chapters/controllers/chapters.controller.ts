@@ -418,7 +418,7 @@ export class ChaptersController {
 
   @ApiOperation({
     summary: 'Chỉnh sửa chương truyện - UC-15 & UC-16',
-    description: 'Chỉnh sửa tiêu đề, nội dung, giá xu. Nếu chương đã PUBLISHED, hệ thống sẽ chuyển sang PENDING_REVIEW để duyệt lại.',
+    description: 'Miễn phí/trả phí và giá Xu được cập nhật trực tiếp. Tiêu đề, nội dung và ràng buộc mua chương trước của chương đã có bản chính thức được lưu thành bản sửa để gửi duyệt, bản đang phát hành giữ nguyên.',
   })
   @Roles(UserRole.AUTHOR, UserRole.ADMIN)
   @Patch(':id')

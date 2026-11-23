@@ -47,6 +47,14 @@ export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
   private readonly notificationSubject = new Subject<NotificationStreamEvent>();
 
+  /** Publish a notification already committed by a financial transaction. */
+  async publishPersisted(id: string): Promise<void> {
+    try {
+      const notification = await this.notificationModel.findById(id).lean();
+      if (notification) this.notificationSubject.next({ targetUserIds: [String(notification.userId)], notification });
+    } catch (error) { this.logger.warn(`Không phát được SSE thông báo ${id}: ${String(error)}`); }
+  }
+
   constructor(
     @InjectModel(Notification.name)
     private notificationModel: Model<NotificationDocument>,

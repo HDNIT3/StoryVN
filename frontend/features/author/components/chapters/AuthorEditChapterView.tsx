@@ -18,6 +18,7 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
 
   // Fetch chapter detail
   const { data: chapter, isLoading, isError } = useChapterDetail(chapterId);
+  const hasOfficialVersion = chapter?.status === "PUBLISHED" || chapter?.status === "HIDDEN" || !!chapter?.pendingRevision;
 
   // Fetch stories to find current story info
   const { data: storiesData } = useMyStories({ limit: 100 });
@@ -47,8 +48,9 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
       setChapterNumber(chapter.chapterNumber);
       setTitle(source.title);
       setContent(source.content || "");
-      setIsFree(source.isFree);
-      setCoinPrice(source.coinPrice ?? 0);
+      // Pricing is live; an older content revision must not populate old prices.
+      setIsFree(chapter.isFree);
+      setCoinPrice(chapter.coinPrice ?? 0);
       setRequirePrevious(source.requirePreviousChapter ?? false);
 
       if (chapter.scheduledAt) {
@@ -84,22 +86,25 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
     if (!validateForm() || !chapterId) return;
 
     // Không gửi chapterNumber khi chỉnh sửa (việc đổi vị trí dùng chức năng Sắp xếp thứ tự)
-    const isPublished = chapter?.status === "PUBLISHED";
     const payload = {
       title: title.trim(),
       content,
       isFree,
       coinPrice: isFree ? 0 : coinPrice,
       requirePreviousChapter: isFree ? false : requirePrevious,
-      ...(isPublished
+      ...(hasOfficialVersion
         ? {}
         : { scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null }),
     };
 
     // Bản đang chờ duyệt: rút khỏi hàng đợi và lưu luôn nội dung mới vào
     // chính bản sửa đó (một request), rồi gửi duyệt lại nếu cần.
-    const needsWithdrawFirst =
-      chapter?.pendingRevision?.status === "PENDING_REVIEW";
+    const currentContent = chapter?.pendingRevision ?? chapter;
+    const reviewFieldsChanged = title.trim() !== currentContent?.title ||
+      content !== (currentContent?.content || "") ||
+      (!isFree && requirePrevious !== (currentContent?.requirePreviousChapter ?? false));
+    const needsWithdrawFirst = chapter?.pendingRevision?.status === "PENDING_REVIEW" &&
+      (reviewFieldsChanged || action === "SUBMIT");
 
     if (needsWithdrawFirst) {
       await updateChapterMutation.mutateAsync({
@@ -221,7 +226,7 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
             onClick={() => handleSubmit("DRAFT")}
             className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-md transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
-            Lưu bản nháp
+            {hasOfficialVersion ? "Lưu thay đổi" : "Lưu bản nháp"}
           </button>
           <button
             type="button"
@@ -273,8 +278,8 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
                   </div>
                   <p className="mt-1 text-xs leading-relaxed text-zinc-500">
                     {pendingRevision?.status === "PENDING_REVIEW"
-                      ? "Biểu mẫu đang mở chính bản sửa đã gửi duyệt. Khi lưu, bản sửa được rút khỏi hàng đợi (vẫn giữ nguyên là một bản) và lưu nội dung mới — gửi duyệt lại để đưa vào kiểm duyệt."
-                      : "Bản sửa được lưu riêng để kiểm duyệt trước khi cập nhật tới độc giả."}
+                      ? "Nếu sửa nội dung, bản chờ duyệt được rút về nháp để gửi lại. Chỉ đổi miễn phí/thu phí hoặc giá Xu sẽ áp dụng ngay và giữ nguyên bản đang chờ duyệt."
+                      : "Tiêu đề, nội dung và yêu cầu mua chương trước được lưu riêng để gửi duyệt. Miễn phí/thu phí và giá Xu áp dụng ngay khi lưu."}
                   </p>
                   {pendingRevision?.status === "REJECTED" && pendingRevision.rejectReason && (
                     <p className="mt-1 text-xs text-rose-600">
@@ -414,9 +419,13 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
             setRequirePrevious={setRequirePrevious}
             error={errors.coinPrice}
           />
+          {hasOfficialVersion && <p className="text-xs text-sky-700">
+            Đổi miễn phí/thu phí và giá Xu có hiệu lực ngay khi bấm “Lưu thay đổi”, không cần gửi duyệt.
+            Yêu cầu mua chương trước vẫn thuộc bản chỉnh sửa cần duyệt.
+          </p>}
 
           {/* Scheduled At */}
-          {chapter.status !== "PUBLISHED" && (
+          {!hasOfficialVersion && (
             <div className="bg-slate-50/80 rounded-lg border border-slate-200/80 p-5 space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
@@ -480,7 +489,7 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
                 onClick={() => handleSubmit("DRAFT")}
               className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              Lưu bản nháp
+              {hasOfficialVersion ? "Lưu thay đổi" : "Lưu bản nháp"}
             </button>
             <button
               type="button"

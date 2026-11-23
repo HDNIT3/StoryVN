@@ -151,10 +151,10 @@ export function AdminCoinPackagesView() {
       {/* Header bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="admin-page-title text-2xl sm:text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
             <span className="text-amber-500">🪙</span> Quản lý gói nạp Xu
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Cấu hình danh sách các gói nạp Xu, số Xu cơ bản, Xu khuyến mãi và bảng giá VND.
           </p>
         </div>
@@ -164,7 +164,7 @@ export function AdminCoinPackagesView() {
             type="button"
             variant="outline"
             onClick={() => setShowCharts(!showCharts)}
-            className="text-xs px-3.5 py-2 font-semibold text-indigo-700 bg-indigo-50/60 hover:bg-indigo-100 border-indigo-200"
+            className="text-xs px-3.5 py-2 font-semibold text-admin-brand-700 bg-admin-brand-50/60 hover:bg-admin-brand-100 border-admin-brand-200"
           >
             {showCharts ? "Ẩn biểu đồ" : "Biểu đồ so sánh"}
           </Button>
@@ -174,7 +174,7 @@ export function AdminCoinPackagesView() {
             variant="outline"
             onClick={handleSeed}
             disabled={seedMutation.isPending}
-            className="text-xs px-3.5 py-2 font-semibold text-slate-700 bg-white hover:bg-slate-50 border-slate-200"
+            className="text-xs px-3.5 py-2 font-semibold text-gray-700 bg-white hover:bg-gray-50 border-gray-200"
             title="Tạo nhanh 6 gói nạp chuẩn mẫu nếu chưa có"
           >
             {seedMutation.isPending ? "Đang tạo..." : "⚡ Nạp mẫu"}
@@ -184,7 +184,7 @@ export function AdminCoinPackagesView() {
             type="button"
             variant="primary"
             onClick={handleOpenCreate}
-            className="text-xs px-4 py-2 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs flex items-center gap-1.5"
+            className="text-xs px-4 py-2 font-medium bg-admin-brand-600 hover:bg-admin-brand-700 text-white shadow-admin-card flex items-center gap-1.5"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -199,9 +199,9 @@ export function AdminCoinPackagesView() {
         <AdminStatCard
           label="Tổng số gói nạp"
           value={totalPackages}
-          color="border-indigo-100 text-indigo-700"
+          color="border-admin-brand-100 text-admin-brand-700"
           icon={
-            <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-admin-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           }
@@ -232,9 +232,9 @@ export function AdminCoinPackagesView() {
         <AdminStatCard
           label="Đang ẩn"
           value={inactiveCount}
-          color="border-slate-200 text-slate-600"
+          color="border-gray-200 text-gray-600"
           icon={
-            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
             </svg>
           }
@@ -243,7 +243,7 @@ export function AdminCoinPackagesView() {
 
       {/* Biểu đồ so sánh mệnh giá & Xu thưởng các gói */}
       {showCharts && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs animate-in fade-in duration-300">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card animate-in fade-in duration-300">
           <AdminBarChart
             title="So Sánh Lượng Xu Cơ Bản & Xu Khuyến Mãi Các Gói"
             subtitle="Tỷ lệ khuyến mãi kích cầu theo từng mức giá gói nạp"
@@ -288,17 +288,17 @@ export function AdminCoinPackagesView() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 pt-2 text-xs text-slate-500">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 pt-2 text-xs text-gray-500">
           <div>
-            Trang <span className="font-semibold text-slate-800">{page}</span> /{" "}
-            <span className="font-semibold text-slate-800">{totalPages}</span>
+            Trang <span className="font-semibold text-gray-800">{page}</span> /{" "}
+            <span className="font-semibold text-gray-800">{totalPages}</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-1.5">
             <button
               onClick={() => setPage(page - 1)}
               disabled={page <= 1}
-              className="px-3 py-1.5 font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="px-3 py-1.5 font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
             >
               ← Trước
             </button>
@@ -311,14 +311,14 @@ export function AdminCoinPackagesView() {
                 return (
                   <React.Fragment key={p}>
                     {prev && p - prev > 1 && (
-                      <span className="px-1 text-slate-400">...</span>
+                      <span className="px-1 text-gray-400">...</span>
                     )}
                     <button
                       onClick={() => setPage(p)}
-                      className={`w-8 h-8 rounded-lg font-semibold text-xs transition-colors cursor-pointer ${
+                      className={`w-8 h-8 rounded-lg font-semibold text-sm transition-colors cursor-pointer ${
                         isCurrent
-                          ? "bg-indigo-600 text-white shadow-xs"
-                          : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                          ? "bg-admin-brand-600 text-white shadow-admin-card"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
                       }`}
                     >
                       {p}
@@ -330,7 +330,7 @@ export function AdminCoinPackagesView() {
             <button
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages}
-              className="px-3 py-1.5 font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="px-3 py-1.5 font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
             >
               Sau →
             </button>

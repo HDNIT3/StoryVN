@@ -142,9 +142,9 @@ export class AdminChaptersService {
   ): void {
     chapter.title = snapshot.title;
     chapter.content = snapshot.content;
-    chapter.isFree = snapshot.isFree;
-    chapter.coinPrice = snapshot.coinPrice;
-    chapter.requirePreviousChapter = snapshot.requirePreviousChapter;
+    // Pricing is updated directly by the author, independently of moderation.
+    // An older pending/restored revision must not overwrite the current price.
+    chapter.requirePreviousChapter = chapter.isFree ? false : snapshot.requirePreviousChapter;
     chapter.wordCount = countWords(snapshot.content || '');
   }
 

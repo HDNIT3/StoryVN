@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import {
   NavItem,
   UserProfile,
@@ -42,31 +41,23 @@ export function HeaderMobileMenu({
   wallet,
   bookmark,
   onNavItemClick,
-  onSearch,
   onLoginClick,
   onLogoutClick,
   onRechargeClick,
   onBookmarkClick,
 }: HeaderMobileMenuProps) {
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
+  const [searchOpen, setSearchOpen] = useState(false);
+  // Prevent background scroll while the drawer or search panel is open.
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Prevent background scroll when mobile drawer is open
-  useEffect(() => {
-    if (isOpen) {
+    const previousOverflow = document.body.style.overflow;
+    if (isOpen || searchOpen) {
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
-  }, [isOpen]);
+  }, [isOpen, searchOpen]);
 
   // Close on Escape key press
   useEffect(() => {
@@ -105,9 +96,11 @@ export function HeaderMobileMenu({
         </div>
       </button>
 
+      {/* Keep search mounted outside the drawer so closing it preserves the query. */}
+      <HeaderSearch hideTrigger open={searchOpen} onOpenChange={setSearchOpen} />
+
       {/* Drawer Overlay */}
-      {mounted &&
-        isOpen &&
+      {isOpen &&
         createPortal(
           <div className="fixed inset-0 z-[80] overflow-hidden xl:hidden">
             {/* Backdrop */}
@@ -250,17 +243,19 @@ export function HeaderMobileMenu({
 
             {/* Mobile Search */}
             <div className="mb-3">
-              <HeaderSearch
-                className="max-w-none w-full"
-                onSearch={(q) => {
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={searchOpen}
+                onClick={() => {
                   setIsOpen(false);
-                  if (onSearch) {
-                    onSearch(q);
-                  } else {
-                    router.push(`/truyen?search=${encodeURIComponent(q)}`);
-                  }
+                  setSearchOpen(true);
                 }}
-              />
+                className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border border-slate-200 bg-white/95 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-2xs transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 sm:text-base"
+              >
+                <Image src="/icon/search.svg" alt="" width={20} height={20} className="h-5 w-5 shrink-0" />
+                <span>Tìm kiếm truyện</span>
+              </button>
             </div>
 
             {/* Mobile Nav Links */}

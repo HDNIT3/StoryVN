@@ -29,7 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
   REJECTED: "#f43f5e",
   DRAFT: "#94a3b8",
 };
-const panel = "rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs";
+const panel = "rounded-2xl border border-gray-200/80 bg-white p-5 shadow-2xs";
 const number = (value: number) => value.toLocaleString("vi-VN");
 
 function ChartPanel({
@@ -43,10 +43,10 @@ function ChartPanel({
 }) {
   return (
     <section className={panel}>
-      <div className="mb-4 border-b border-slate-100 pb-3">
-        <h2 className="text-base font-bold text-slate-900">{title}</h2>
+      <div className="mb-4 border-b border-gray-100 pb-3">
+        <h2 className="text-base font-semibold text-gray-900">{title}</h2>
         {description && (
-          <p className="mt-1 text-xs text-slate-500">{description}</p>
+          <p className="mt-1 text-xs text-gray-500">{description}</p>
         )}
       </div>
       {children}
@@ -215,27 +215,27 @@ export function AdminContentStatisticsView() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Truyện & tác giả</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="admin-page-title text-2xl font-semibold text-gray-900">Truyện & tác giả</h1>
+          <p className="mt-1 text-sm text-gray-500">
             Theo dõi sáng tác, lượt đọc và tiến độ kiểm duyệt.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs font-semibold text-indigo-600">
+        <div className="flex flex-wrap gap-2 text-xs font-semibold text-admin-brand-600">
           <Link
             href="/quan-ly/truyen"
-            className="rounded-lg border border-indigo-100 bg-white px-3 py-2 hover:bg-indigo-50"
+            className="rounded-lg border border-admin-brand-100 bg-white px-3 py-2 hover:bg-admin-brand-50"
           >
             Quản lý truyện
           </Link>
           <Link
             href="/quan-ly/chuong"
-            className="rounded-lg border border-indigo-100 bg-white px-3 py-2 hover:bg-indigo-50"
+            className="rounded-lg border border-admin-brand-100 bg-white px-3 py-2 hover:bg-admin-brand-50"
           >
             Quản lý chương
           </Link>
           <Link
             href="/quan-ly/duyet-tac-gia"
-            className="rounded-lg border border-indigo-100 bg-white px-3 py-2 hover:bg-indigo-50"
+            className="rounded-lg border border-admin-brand-100 bg-white px-3 py-2 hover:bg-admin-brand-50"
           >
             Duyệt tác giả
           </Link>
@@ -248,8 +248,8 @@ export function AdminContentStatisticsView() {
           exporting={exporting}
           exportDisabled={!ready}
         />
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3">
-          <label className="text-xs font-semibold text-slate-600">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-3">
+          <label className="text-xs font-semibold text-gray-600">
             Tác giả
             <select
               value={author.id}
@@ -260,7 +260,7 @@ export function AdminContentStatisticsView() {
                   name: event.target.selectedOptions[0].text,
                 })
               }
-              className="ml-3 max-w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
+              className="ml-3 max-w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700"
             >
               <option value="">Tất cả tác giả</option>
               {author.id &&
@@ -278,7 +278,7 @@ export function AdminContentStatisticsView() {
             <button
               type="button"
               onClick={() => setAuthor({ id: "", name: "Tất cả tác giả" })}
-              className="text-xs font-semibold text-indigo-600"
+              className="text-sm font-semibold text-admin-brand-600"
             >
               Xóa lọc tác giả
             </button>
@@ -300,11 +300,11 @@ export function AdminContentStatisticsView() {
           </button>
         </div>
       ) : !dateRange.isValid ? (
-        <p role="status" className="text-sm text-slate-500">
+        <p role="status" className="text-sm text-gray-500">
           Chọn khoảng thời gian hợp lệ để xem thống kê.
         </p>
       ) : isFetching && !data ? (
-        <p role="status" className="py-12 text-center text-sm text-slate-500">
+        <p role="status" className="py-12 text-center text-sm text-gray-500">
           Đang tải thống kê truyện và tác giả...
         </p>
       ) : (
@@ -352,7 +352,7 @@ export function AdminContentStatisticsView() {
                     colorScheme={colorScheme}
                     sparklineData={[...sparkline]}
                     icon={
-                      <span className="text-lg font-bold">
+                      <span className="text-lg font-medium">
                         {["▤", "≡", "✎", "↗"][index]}
                       </span>
                     }
@@ -432,7 +432,7 @@ export function AdminContentStatisticsView() {
                       key={tab}
                       aria-pressed={statusTab === tab}
                       onClick={() => setStatusTab(tab)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${statusTab === tab ? "bg-indigo-50 text-indigo-700" : "bg-slate-50 text-slate-600"}`}
+                      className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${statusTab === tab ? "bg-admin-brand-50 text-admin-brand-700" : "bg-gray-50 text-gray-600"}`}
                     >
                       {tab === "stories" ? "Truyện" : "Chương"}
                     </button>
@@ -478,8 +478,8 @@ export function AdminContentStatisticsView() {
               description="10 tác giả có nhiều chương mới nhất; chọn tên để xem chi tiết"
             >
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-xs text-slate-500">
+                <table className="admin-data-table w-full text-left text-sm">
+                  <thead className="bg-gray-50 text-xs text-gray-500">
                     <tr>
                       <th className="p-3">Tác giả</th>
                       <th className="p-3 text-right">Truyện mới</th>
@@ -487,7 +487,7 @@ export function AdminContentStatisticsView() {
                       <th className="p-3 text-right">Lượt đọc</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-gray-100">
                     {authors.slice(0, 10).map((item) => (
                       <tr key={item.id}>
                         <td className="p-3">
@@ -496,7 +496,7 @@ export function AdminContentStatisticsView() {
                             onClick={() =>
                               setAuthor({ id: item.id, name: data.authors.find((option) => option._id === item.id)?.name || item.name })
                             }
-                            className="font-semibold text-indigo-600 hover:underline"
+                            className="font-semibold text-admin-brand-600 hover:underline"
                           >
                             {item.name}
                           </button>
@@ -515,7 +515,7 @@ export function AdminContentStatisticsView() {
                   </tbody>
                 </table>
                 {authors.length === 0 && (
-                  <p className="py-8 text-center text-sm text-slate-400">
+                  <p className="py-8 text-center text-sm text-gray-400">
                     Chưa có hoạt động trong khoảng đã chọn.
                   </p>
                 )}
@@ -525,19 +525,19 @@ export function AdminContentStatisticsView() {
               title="Chi tiết theo truyện"
               description="Truyện mới hoặc có chương, lượt đọc trong kỳ; sắp xếp theo lượt đọc"
             >
-              <label className="mb-4 block text-xs font-semibold text-slate-600">
+              <label className="mb-4 block text-xs font-semibold text-gray-600">
                 Tìm truyện hoặc tác giả
                 <input
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Nhập tên truyện, tác giả..."
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm sm:max-w-sm"
+                  className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm sm:max-w-sm"
                 />
               </label>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="whitespace-nowrap bg-slate-50 text-xs text-slate-500">
+                <table className="admin-data-table w-full text-left text-sm">
+                  <thead className="whitespace-nowrap bg-gray-50 text-xs text-gray-500">
                     <tr>
                       <th className="p-3">Truyện / tác giả</th>
                       <th className="p-3">Trạng thái</th>
@@ -547,9 +547,9 @@ export function AdminContentStatisticsView() {
                       <th className="p-3 text-right">Lượt đọc</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-gray-100">
                     {searchRows.slice((page - 1) * 10, page * 10).map((row) => (
-                      <tr key={row._id} className="hover:bg-slate-50/60">
+                      <tr key={row._id} className="hover:bg-gray-50/60">
                         <td className="min-w-48 p-3">
                           <Link
                             href={
@@ -557,15 +557,15 @@ export function AdminContentStatisticsView() {
                                 ? `/truyen/${row.slug}`
                                 : "/quan-ly/truyen"
                             }
-                            className="font-semibold text-slate-800 hover:text-indigo-600"
+                            className="font-semibold text-gray-800 hover:text-admin-brand-600"
                           >
                             {row.title}
                           </Link>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-gray-500">
                             {row.authorName}
                           </p>
                         </td>
-                        <td className="whitespace-nowrap p-3 text-xs text-slate-600">
+                        <td className="whitespace-nowrap p-3 text-sm text-gray-600">
                           {STATUS_NAMES[row.status] || row.status}
                         </td>
                         <td className="p-3 text-right tabular-nums">
@@ -585,12 +585,12 @@ export function AdminContentStatisticsView() {
                   </tbody>
                 </table>
                 {searchRows.length === 0 && (
-                  <p className="py-10 text-center text-sm text-slate-400">
+                  <p className="py-10 text-center text-sm text-gray-400">
                     Không có truyện phù hợp.
                   </p>
                 )}
               </div>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 text-xs text-gray-500">
                 <span>
                   {number(searchRows.length)} truyện · Trang {page}/{pageCount}
                 </span>
@@ -601,7 +601,7 @@ export function AdminContentStatisticsView() {
                     onClick={() =>
                       setPagination({ key: pageKey, page: page - 1 })
                     }
-                    className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40"
+                    className="rounded-lg border border-gray-200 px-3 py-2 disabled:opacity-40"
                   >
                     Trước
                   </button>
@@ -611,7 +611,7 @@ export function AdminContentStatisticsView() {
                     onClick={() =>
                       setPagination({ key: pageKey, page: page + 1 })
                     }
-                    className="rounded-lg border border-slate-200 px-3 py-2 disabled:opacity-40"
+                    className="rounded-lg border border-gray-200 px-3 py-2 disabled:opacity-40"
                   >
                     Sau
                   </button>

@@ -85,19 +85,19 @@ export function TagFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="admin-dialog-overlay fixed inset-0 z-[70] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-gray-900/40 transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Dialog */}
-      <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="admin-dialog relative bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="admin-dialog-header px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100/60">
+            <div className="w-8 h-8 rounded-lg bg-admin-brand-50 text-admin-brand-600 flex items-center justify-center border border-admin-brand-100/60">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -112,13 +112,13 @@ export function TagFormModal({
                 />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="admin-dialog-title text-xl font-semibold text-gray-900">
               {isEdit ? "Chỉnh sửa thẻ tag" : "Thêm thẻ tag mới"}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="admin-dialog-close p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             ✕
           </button>
@@ -135,7 +135,7 @@ export function TagFormModal({
 
             {/* Tên Tag */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Tên thẻ tag <span className="text-red-500">*</span>
               </label>
               <input
@@ -143,10 +143,10 @@ export function TagFormModal({
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="Ví dụ: Xuyên Không, Hệ Thống, Trọng Sinh..."
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                className="w-full px-3.5 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-admin-brand-500/20 focus:border-admin-brand-500 transition-colors"
                 autoFocus
               />
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-xs text-gray-400 mt-1">
                 Từ 2 đến 50 ký tự, không được trùng với tag đã tồn tại.
               </p>
             </div>
@@ -154,7 +154,7 @@ export function TagFormModal({
             {/* Slug URL */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-slate-700">
+                <label className="text-xs font-semibold text-gray-700">
                   Định danh URL (Slug)
                 </label>
                 {isManualSlug && (
@@ -164,7 +164,7 @@ export function TagFormModal({
                       setIsManualSlug(false);
                       setSlug(toSlug(name));
                     }}
-                    className="text-[11px] text-sky-600 hover:underline cursor-pointer"
+                    className="text-sm text-admin-brand-600 hover:underline cursor-pointer"
                   >
                     Tự sinh theo tên
                   </button>
@@ -175,9 +175,9 @@ export function TagFormModal({
                 value={slug}
                 onChange={(e) => handleSlugChange(e.target.value)}
                 placeholder="xuyen-khong"
-                className="w-full px-3.5 py-2.5 font-mono text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+                className="w-full px-3.5 py-2.5 font-mono text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-admin-brand-500/20 focus:border-admin-brand-500 transition-colors"
               />
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-xs text-gray-400 mt-1">
                 Định danh trên đường dẫn URL. Nếu bỏ trống, hệ thống sẽ tự sinh từ tên tag.
               </p>
             </div>
@@ -189,9 +189,9 @@ export function TagFormModal({
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500 cursor-pointer"
+                  className="w-4 h-4 text-admin-brand-600 border-gray-300 rounded focus:ring-admin-brand-500 cursor-pointer"
                 />
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-medium text-gray-700">
                   Kích hoạt thẻ tag (cho phép người đọc & tác giả gắn thẻ)
                 </span>
               </label>
@@ -199,14 +199,14 @@ export function TagFormModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <div className="admin-dialog-footer px-6 py-4 bg-gray-50/70 border-t border-gray-100 flex items-center justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={onClose}
               disabled={isLoading}
-              className="border-slate-200 text-slate-700 hover:bg-slate-100"
+              className="border-gray-200 text-gray-700 hover:bg-gray-100"
             >
               Hủy
             </Button>
@@ -215,7 +215,7 @@ export function TagFormModal({
               variant="primary"
               size="sm"
               disabled={isLoading}
-              className="bg-sky-500 hover:bg-sky-600 text-white"
+              className="bg-admin-brand-500 hover:bg-admin-brand-600 text-white"
             >
               {isLoading
                 ? "Đang lưu..."

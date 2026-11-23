@@ -198,16 +198,16 @@ export const AdminStoriesView: React.FC = () => {
       {/* Tiêu đề trang */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="admin-page-title text-2xl md:text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
             Quản lý Truyện
             {counts && counts.pending > 0 && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/80 shadow-admin-card">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                 {counts.pending} tác phẩm cần duyệt
               </span>
             )}
           </h1>
-          <p className="text-xs md:text-sm text-slate-500 mt-1">
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
             Kiểm duyệt tác phẩm mới, theo dõi trạng thái xuất bản, gỡ duyệt và quản lý hiển thị công khai.
           </p>
         </div>
@@ -215,7 +215,7 @@ export const AdminStoriesView: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowCharts(!showCharts)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 transition-all cursor-pointer shadow-2xs self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-admin-brand-700 bg-admin-brand-50 hover:bg-admin-brand-100 rounded-lg border border-admin-brand-200 transition-all cursor-pointer shadow-admin-card self-start sm:self-auto"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -226,7 +226,7 @@ export const AdminStoriesView: React.FC = () => {
 
       <DateRangeToolbar dateRange={dateRange} onExport={(format) => void exportAll(format)} exporting={exporting} exportDisabled={isFetching || countsQuery.isFetching || dashboardQuery.isFetching || isError || countsQuery.isError || dashboardQuery.isError || !counts} />
       <fieldset disabled={exporting} className="min-w-0 space-y-6">
-      <p className="text-xs text-slate-500">Theo ngày tạo truyện; thống kê và biểu đồ thể hiện trạng thái hiện tại của toàn bộ nhóm truyện trong kỳ.</p>
+      <p className="text-xs text-gray-500">Theo ngày tạo truyện; thống kê và biểu đồ thể hiện trạng thái hiện tại của toàn bộ nhóm truyện trong kỳ.</p>
       {/* Tabs thống kê tương tác */}
       {countsQuery.isPending && <p role="status">Đang tải thống kê...</p>}
       {countsQuery.isError && <p role="alert">Không thể tải thống kê.</p>}
@@ -239,7 +239,7 @@ export const AdminStoriesView: React.FC = () => {
       {/* Khối biểu đồ phân tích khi mở */}
       {showCharts && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
             <AdminDonutChart
               title="Phân Bổ Thể Loại Tác Phẩm"
               subtitle="Cơ cấu truyện theo các danh mục thể loại"
@@ -256,7 +256,7 @@ export const AdminStoriesView: React.FC = () => {
             />
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
             <AdminBarChart
               title="Trạng Thái Kiểm Duyệt & Xuất Bản"
               subtitle="Số lượng truyện theo từng trạng thái kiểm duyệt"

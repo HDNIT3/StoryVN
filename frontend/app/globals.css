@@ -269,20 +269,13 @@ body {
   }
 }
 
-/* Nền chung cho trang CRM Quản lý - Sáng sủa, hiện đại, tối giản và chuyên nghiệp */
+/* TailAdmin-inspired admin shell. Page content keeps its existing styles. */
 .admin-crm-bg {
-  background-color: #f8fafc;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.04) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.04) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.02) 0px, transparent 50%);
-  background-attachment: fixed;
+  background: #f9fafb;
 }
 
 .admin-crm-header {
-  background-color: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
 }
 
 /* Glassmorphism & Elevated Surfaces */
@@ -401,4 +394,364 @@ body {
 
 .animate-check-draw {
   animation: checkPathDraw 0.45s 0.5s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+/* TailAdmin visual tokens. These utilities are used only by the admin components. */
+@theme {
+  --color-admin-brand-50: #ecf3ff;
+  --color-admin-brand-100: #dde9ff;
+  --color-admin-brand-200: #c2d6ff;
+  --color-admin-brand-300: #9cb9ff;
+  --color-admin-brand-400: #7592ff;
+  --color-admin-brand-500: #465fff;
+  --color-admin-brand-600: #3641f5;
+  --color-admin-brand-700: #2a31d8;
+  --color-admin-brand-800: #252dae;
+  --color-admin-brand-900: #262e89;
+  --color-admin-brand-950: #161950;
+  --shadow-admin-card: 0 1px 2px rgb(16 24 40 / 3%);
+}
+
+/* Shared components used by admin and manager; public pages keep their own styles. */
+.admin-crm-bg {
+  --admin-brand: #465fff;
+  --admin-brand-soft: #ecf3ff;
+  --admin-border: #e4e7ec;
+  --color-sky-50: var(--color-admin-brand-50);
+  --color-sky-100: var(--color-admin-brand-100);
+  --color-sky-200: var(--color-admin-brand-200);
+  --color-sky-400: var(--color-admin-brand-400);
+  --color-sky-500: var(--color-admin-brand-500);
+  --color-sky-600: var(--color-admin-brand-600);
+  --color-sky-700: var(--color-admin-brand-700);
+}
+
+.admin-crm-bg :where(button, a):focus-visible {
+  outline: 3px solid rgb(70 95 255 / 25%);
+  outline-offset: 3px;
+}
+
+.admin-page-content .admin-stat-card {
+  background: #fff;
+  border-color: var(--admin-border);
+  box-shadow: var(--shadow-admin-card);
+  backdrop-filter: none;
+}
+
+.admin-page-content .admin-stat-card:hover {
+  transform: none;
+  border-color: #c2d6ff;
+  box-shadow: var(--shadow-admin-card);
+}
+
+.admin-page-content .admin-stat-card[data-active="true"] {
+  border-color: var(--admin-brand);
+  background: var(--admin-brand-soft);
+  box-shadow: 0 0 0 1px var(--admin-brand);
+}
+
+.admin-page-content .admin-stat-icon {
+  background: #f2f4f7;
+  color: #344054;
+  border: none;
+  box-shadow: none;
+}
+
+.admin-page-content .admin-metric-label {
+  font-size: 0.875rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Shared visual rules for every management page and its existing dialogs. */
+.admin-page-content .admin-page-title {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #101828;
+}
+
+.admin-page-content .admin-filter-bar {
+  padding: 1.25rem;
+  gap: 0.75rem;
+  border: 1px solid #e4e7ec;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: var(--shadow-admin-card);
+}
+
+.admin-page-content .admin-filter-bar :is(input, select) {
+  min-height: 2.75rem;
+  border-radius: 0.5rem;
+  background-color: #fff;
+  font-size: 0.875rem;
+}
+
+.admin-page-content .admin-date-toolbar {
+  padding: 1.25rem;
+  gap: 0.75rem;
+  border-color: #e4e7ec;
+  box-shadow: var(--shadow-admin-card);
+}
+
+.admin-page-content .admin-date-toolbar :is(input, select, button) {
+  min-height: 2.75rem;
+  padding-block: 0.625rem;
+  padding-inline: 0.875rem;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+}
+
+.admin-page-content .app-button {
+  border-radius: 0.5rem;
+  background-image: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-admin-card);
+  transform: none;
+}
+
+.admin-page-content .app-button[data-ui-variant="primary"] {
+  background-color: #465fff;
+  color: #fff;
+}
+
+.admin-page-content .app-button[data-ui-variant="primary"]:hover {
+  background-color: #3641f5;
+}
+
+.admin-page-content .app-button[data-ui-variant="outline"] {
+  border-color: #d0d5dd;
+  background-color: #fff;
+  color: #344054;
+}
+
+.admin-page-content .app-button[data-ui-variant="outline"]:hover {
+  background-color: #f9fafb;
+}
+
+.admin-page-content .app-button[data-ui-variant="danger"] {
+  background-color: #e11d48;
+  color: #fff;
+}
+
+.admin-page-content .app-button[data-ui-variant="success"] {
+  background-color: #059669;
+  color: #fff;
+}
+
+.admin-page-content .admin-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.admin-page-content .admin-data-table thead {
+  background: #f9fafb;
+}
+
+.admin-page-content .admin-data-table th {
+  padding-block: 0.875rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #667085;
+}
+
+.admin-page-content .admin-data-table td {
+  padding-block: 1rem;
+  border-color: #f2f4f7;
+}
+
+.admin-page-content .admin-pagination {
+  padding: 1rem 1.25rem;
+  border: 1px solid #e4e7ec;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #667085;
+  font-size: 0.875rem;
+}
+
+.admin-page-content .admin-dialog-overlay {
+  margin: 0;
+  padding: 1.5rem;
+  backdrop-filter: none;
+  overscroll-behavior: contain;
+}
+
+.admin-page-content .admin-dialog-overlay.z-50 {
+  z-index: 70;
+}
+
+.admin-page-content .admin-dialog {
+  max-height: calc(100dvh - 3rem);
+  min-width: 0;
+  border: 1px solid #e4e7ec;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 24px 48px -12px rgb(16 24 40 / 25%);
+  overflow-y: auto;
+}
+
+.admin-page-content .admin-dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e4e7ec;
+  background: #fff;
+}
+
+.admin-page-content .admin-dialog-title {
+  color: #101828;
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.admin-page-content .admin-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.5rem;
+  border-radius: 50%;
+  background: #f2f4f7;
+  color: #667085;
+}
+
+.admin-page-content .admin-dialog-close:hover {
+  background: #e4e7ec;
+  color: #344054;
+}
+
+.admin-page-content .admin-dialog-body {
+  min-height: 0;
+  padding: 1.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.admin-page-content .admin-dialog-form {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.admin-page-content .admin-dialog :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea) {
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.admin-page-content .admin-dialog label,
+.admin-page-content .admin-dialog-body > p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.admin-page-content .admin-dialog-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #e4e7ec;
+  background: #fff;
+}
+
+.admin-page-content .admin-dialog-form > .admin-dialog-footer {
+  margin: 1.5rem -1.5rem -1.5rem;
+}
+
+.admin-page-content .admin-dialog-footer button {
+  min-height: 2.5rem;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.admin-page-content .admin-dialog-alert {
+  max-height: 8rem;
+  overflow-y: auto;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.admin-page-content .admin-chapter-meta {
+  padding: 1rem 1.5rem;
+  background: #f9fafb;
+  font-size: 0.875rem;
+}
+
+.admin-page-content .admin-chapter-reader {
+  background: #f9fafb;
+  padding: 1.5rem;
+}
+
+.admin-page-content .admin-chapter-document {
+  max-width: 72ch;
+  margin-inline: auto;
+  padding: 2rem;
+  border: 1px solid #e4e7ec;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #344054;
+}
+
+@media (max-width: 1279px) {
+  .admin-page-content .admin-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 639px) {
+  .admin-page-content .admin-dialog-overlay {
+    padding: 0.75rem;
+  }
+
+  .admin-page-content .admin-dialog {
+    max-height: calc(100dvh - 1.5rem);
+    border-radius: 1rem;
+  }
+
+  .admin-page-content :is(.admin-dialog-header, .admin-dialog-body, .admin-dialog-footer, .admin-chapter-reader) {
+    padding: 1rem;
+  }
+
+  .admin-page-content .admin-dialog-title {
+    font-size: 1.125rem;
+  }
+
+  .admin-page-content .admin-dialog-form > .admin-dialog-footer {
+    margin: 1rem -1rem -1rem;
+  }
+
+  .admin-page-content .admin-chapter-document {
+    padding: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-crm-bg :where(aside, button, a, .admin-stat-card) {
+    transition: none;
+  }
 }

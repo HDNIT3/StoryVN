@@ -14,11 +14,11 @@ export function CommentStatsCards({ counts, isLoading }: CommentStatsCardsProps)
       title: "Tổng bình luận",
       value: counts?.total ?? 0,
       icon: (
-        <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5 text-admin-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
       ),
-      bg: "bg-indigo-50",
+      bg: "bg-admin-brand-50",
     },
     {
       title: "Đang hiển thị",
@@ -57,16 +57,16 @@ export function CommentStatsCards({ counts, isLoading }: CommentStatsCardsProps)
       {stats.map((item, idx) => (
         <div
           key={idx}
-          className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-4"
+          className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-admin-card flex items-center gap-4"
         >
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${item.bg}`}>
             {item.icon}
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{item.title}</p>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{item.title}</p>
+            <p className="text-xl sm:text-2xl font-semibold text-gray-900 mt-0.5">
               {isLoading ? (
-                <span className="inline-block w-12 h-6 bg-slate-200 animate-pulse rounded" />
+                <span className="inline-block w-12 h-6 bg-gray-200 animate-pulse rounded" />
               ) : (
                 item.value.toLocaleString("vi-VN")
               )}

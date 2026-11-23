@@ -36,7 +36,7 @@ export function CommentFilterBar({
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-4 shadow-2xs">
+    <div className="admin-filter-bar bg-white rounded-2xl border border-gray-200 p-4 space-y-4 shadow-admin-card">
       {/* Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
         {tabs.map((tab) => {
@@ -46,19 +46,19 @@ export function CommentFilterBar({
               key={tab.key}
               type="button"
               onClick={() => onTabChange(tab.key)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm sm:text-sm font-medium transition-all shrink-0 cursor-pointer ${
                 isActive
-                  ? "bg-indigo-600 text-white shadow-xs"
-                  : "bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900"
+                  ? "bg-admin-brand-600 text-white shadow-admin-card"
+                  : "bg-gray-100/80 text-gray-600 hover:bg-gray-200/70 hover:text-gray-900"
               }`}
             >
               <span>{tab.label}</span>
               {tab.count !== undefined && (
                 <span
-                  className={`text-[11px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                  className={`text-xs px-1.5 py-0.2 rounded-full font-semibold ${
                     isActive
                       ? "bg-white/20 text-white"
-                      : "bg-slate-200/90 text-slate-700"
+                      : "bg-gray-200/90 text-gray-700"
                   }`}
                 >
                   {tab.count > 999 ? "999+" : tab.count}
@@ -72,7 +72,7 @@ export function CommentFilterBar({
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="ml-auto p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+          className="ml-auto p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-50"
           title="Làm mới dữ liệu"
         >
           <svg
@@ -96,7 +96,7 @@ export function CommentFilterBar({
         {/* Search */}
         <div className="relative w-full sm:w-80">
           <svg
-            className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -113,17 +113,17 @@ export function CommentFilterBar({
             placeholder="Tìm theo nội dung, người dùng..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+            className="w-full pl-9 pr-3.5 py-2 text-sm sm:text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-admin-brand-500/20 focus:border-admin-brand-500 transition-all placeholder:text-gray-400"
           />
         </div>
 
         {/* Sort */}
         <div className="flex items-center gap-2 self-end sm:self-auto text-xs">
-          <span className="text-slate-500 font-medium">Sắp xếp:</span>
+          <span className="text-gray-500 font-medium">Sắp xếp:</span>
           <select
             value={sort}
             onChange={(e) => onSortChange(e.target.value as "NEWEST" | "OLDEST")}
-            className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+            className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg font-semibold text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-admin-brand-500/20 focus:border-admin-brand-500 cursor-pointer"
           >
             <option value="NEWEST">Mới nhất</option>
             <option value="OLDEST">Cũ nhất</option>

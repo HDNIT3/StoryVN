@@ -27,10 +27,10 @@ export function CoinPackageFilterBar({
     featuredFilter !== "ALL";
 
   return (
-    <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+    <div className="admin-filter-bar bg-white p-4 rounded-2xl border border-gray-200 shadow-admin-card flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
       {/* Ô tìm kiếm */}
       <div className="relative flex-1 max-w-md">
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               strokeLinecap="round"
@@ -45,12 +45,12 @@ export function CoinPackageFilterBar({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Tìm theo tên gói nạp..."
-          className="w-full pl-9.5 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all text-slate-800 placeholder-slate-400"
+          className="w-full pl-9.5 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-hidden focus:bg-white focus:border-admin-brand-500 focus:ring-2 focus:ring-admin-brand-100 transition-all text-gray-800 placeholder-gray-400"
         />
         {search && (
           <button
             onClick={() => onSearchChange("")}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -62,13 +62,13 @@ export function CoinPackageFilterBar({
       {/* Nhóm bộ lọc */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Lọc Trạng thái */}
-        <div className="flex items-center bg-slate-100/80 p-1 rounded-xl text-xs font-medium text-slate-600">
+        <div className="flex items-center bg-gray-100/80 p-1 rounded-xl text-xs font-medium text-gray-600">
           <button
             onClick={() => onStatusFilterChange("ALL")}
             className={`px-3 py-1.5 rounded-lg transition-all ${
               statusFilter === "ALL"
-                ? "bg-white text-slate-900 font-bold shadow-2xs"
-                : "hover:text-slate-900"
+                ? "bg-white text-gray-900 font-medium shadow-admin-card"
+                : "hover:text-gray-900"
             }`}
           >
             Tất cả
@@ -77,7 +77,7 @@ export function CoinPackageFilterBar({
             onClick={() => onStatusFilterChange("ACTIVE")}
             className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
               statusFilter === "ACTIVE"
-                ? "bg-white text-emerald-700 font-bold shadow-2xs"
+                ? "bg-white text-emerald-700 font-medium shadow-admin-card"
                 : "hover:text-emerald-600"
             }`}
           >
@@ -88,23 +88,23 @@ export function CoinPackageFilterBar({
             onClick={() => onStatusFilterChange("INACTIVE")}
             className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
               statusFilter === "INACTIVE"
-                ? "bg-white text-slate-700 font-bold shadow-2xs"
-                : "hover:text-slate-900"
+                ? "bg-white text-gray-700 font-medium shadow-admin-card"
+                : "hover:text-gray-900"
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
             Đang ẩn
           </button>
         </div>
 
         {/* Lọc Gói nổi bật */}
-        <div className="flex items-center bg-slate-100/80 p-1 rounded-xl text-xs font-medium text-slate-600">
+        <div className="flex items-center bg-gray-100/80 p-1 rounded-xl text-xs font-medium text-gray-600">
           <button
             onClick={() => onFeaturedFilterChange("ALL")}
             className={`px-3 py-1.5 rounded-lg transition-all ${
               featuredFilter === "ALL"
-                ? "bg-white text-slate-900 font-bold shadow-2xs"
-                : "hover:text-slate-900"
+                ? "bg-white text-gray-900 font-medium shadow-admin-card"
+                : "hover:text-gray-900"
             }`}
           >
             Tất cả loại
@@ -113,7 +113,7 @@ export function CoinPackageFilterBar({
             onClick={() => onFeaturedFilterChange("FEATURED")}
             className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
               featuredFilter === "FEATURED"
-                ? "bg-white text-amber-700 font-bold shadow-2xs"
+                ? "bg-white text-amber-700 font-medium shadow-admin-card"
                 : "hover:text-amber-600"
             }`}
           >
@@ -125,7 +125,7 @@ export function CoinPackageFilterBar({
         {isFiltered && (
           <button
             onClick={onReset}
-            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer text-xs flex items-center gap-1"
+            className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer text-sm flex items-center gap-1"
             title="Xóa bộ lọc"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
