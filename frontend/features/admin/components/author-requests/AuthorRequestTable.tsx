@@ -67,10 +67,10 @@ export function AuthorRequestTable({
 }: Props) {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-8 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-admin-card">
         <div className="flex flex-col items-center justify-center py-12 gap-3">
-          <div className="w-8 h-8 border-3 border-sky-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-slate-500 font-medium">Đang tải danh sách yêu cầu...</p>
+          <div className="w-8 h-8 border-3 border-admin-brand-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-gray-500 font-medium">Đang tải danh sách yêu cầu...</p>
         </div>
       </div>
     );
@@ -78,14 +78,14 @@ export function AuthorRequestTable({
 
   if (items.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-sm">
-        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
+      <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-admin-card">
+        <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-400">
           <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <h3 className="text-base font-semibold text-slate-800">Không có yêu cầu nào</h3>
-        <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+        <h3 className="text-base font-semibold text-gray-800">Không có yêu cầu nào</h3>
+        <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
           Hiện tại không tìm thấy yêu cầu nâng cấp tác giả nào phù hợp với bộ lọc.
         </p>
       </div>
@@ -93,20 +93,20 @@ export function AuthorRequestTable({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-admin-card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        <table className="admin-data-table w-full text-left text-sm">
           <thead>
-            <tr className="bg-slate-50/80 border-b border-slate-200/80 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              <th className="py-3.5 px-4">Người dùng</th>
-              <th className="py-3.5 px-4">Bút danh đăng ký</th>
-              <th className="py-3.5 px-4">Thông tin ngân hàng</th>
-              <th className="py-3.5 px-4">Ngày gửi</th>
-              <th className="py-3.5 px-4">Trạng thái</th>
-              <th className="py-3.5 px-4 text-right">Thao tác</th>
+            <tr className="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className="py-3.5 px-5">Người dùng</th>
+              <th className="py-3.5 px-5">Bút danh đăng ký</th>
+              <th className="py-3.5 px-5">Thông tin ngân hàng</th>
+              <th className="py-3.5 px-5">Ngày gửi</th>
+              <th className="py-3.5 px-5">Trạng thái</th>
+              <th className="py-3.5 px-5 text-right">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-slate-700">
+          <tbody className="divide-y divide-gray-100 text-gray-700">
             {items.map((req) => {
               const userInfo = typeof req.userId === "object" && req.userId !== null ? req.userId : null;
               const displayName = userInfo?.displayName || userInfo?.username || "Người dùng ẩn";
@@ -116,12 +116,12 @@ export function AuthorRequestTable({
               return (
                 <tr
                   key={req._id}
-                  className="hover:bg-slate-50/70 transition-colors group"
+                  className="hover:bg-gray-50/70 transition-colors group"
                 >
                   {/* Người dùng */}
-                  <td className="py-3.5 px-4">
+                  <td className="py-4 px-5">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 font-bold flex items-center justify-center shrink-0 text-sm overflow-hidden border border-sky-200">
+                      <div className="w-9 h-9 rounded-xl bg-admin-brand-100 text-admin-brand-700 font-medium flex items-center justify-center shrink-0 text-sm overflow-hidden border border-admin-brand-200">
                         {userInfo?.avatarUrl ? (
                           <Image
                             src={userInfo.avatarUrl}
@@ -135,41 +135,41 @@ export function AuthorRequestTable({
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-slate-900 truncate">{displayName}</p>
-                        <p className="text-xs text-slate-400 truncate">{email}</p>
+                        <p className="font-semibold text-gray-900 truncate">{displayName}</p>
+                        <p className="text-xs text-gray-400 truncate">{email}</p>
                       </div>
                     </div>
                   </td>
 
                   {/* Bút danh đăng ký */}
-                  <td className="py-3.5 px-4">
-                    <div className="font-semibold text-sky-600">{req.penName}</div>
+                  <td className="py-4 px-5">
+                    <div className="font-semibold text-admin-brand-600">{req.penName}</div>
                     {req.reason && (
-                      <p className="text-xs text-slate-500 line-clamp-1 max-w-xs mt-0.5">
+                      <p className="text-xs text-gray-500 line-clamp-1 max-w-xs mt-0.5">
                         {req.reason}
                       </p>
                     )}
                   </td>
 
                   {/* Thông tin ngân hàng */}
-                  <td className="py-3.5 px-4">
+                  <td className="py-4 px-5">
                     {req.bankName ? (
                       <div className="text-xs space-y-0.5">
-                        <p className="font-medium text-slate-800">{req.bankName}</p>
-                        <p className="text-slate-500 font-mono">{req.bankAccountNumber || "-"}</p>
+                        <p className="font-medium text-gray-800">{req.bankName}</p>
+                        <p className="text-gray-500 font-mono">{req.bankAccountNumber || "-"}</p>
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-400 italic">Chưa cập nhật</span>
+                      <span className="text-xs text-gray-400 italic">Chưa cập nhật</span>
                     )}
                   </td>
 
                   {/* Ngày gửi */}
-                  <td className="py-3.5 px-4 text-xs text-slate-500 whitespace-nowrap">
+                  <td className="py-4 px-5 text-sm text-gray-500 whitespace-nowrap">
                     {formatDate(req.createdAt)}
                   </td>
 
                   {/* Trạng thái */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">
+                  <td className="py-4 px-5 whitespace-nowrap">
                     <span
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${badge.bg} ${badge.text} ${badge.border}`}
                     >
@@ -179,12 +179,12 @@ export function AuthorRequestTable({
                   </td>
 
                   {/* Thao tác */}
-                  <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                  <td className="py-4 px-5 text-right whitespace-nowrap">
                     <div className="inline-flex items-center gap-1.5">
                       {/* Xem chi tiết */}
                       <button
                         onClick={() => onViewDetail(req)}
-                        className="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
+                        className="w-8 h-8 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-900 hover:text-white hover:border-gray-900 flex items-center justify-center transition-all cursor-pointer shadow-admin-card "
                         title="Xem chi tiết đơn yêu cầu"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -198,7 +198,7 @@ export function AuthorRequestTable({
                         <>
                           <button
                             onClick={() => onOpenReview(req, "APPROVED")}
-                            className="w-8 h-8 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
+                            className="w-8 h-8 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 flex items-center justify-center transition-all cursor-pointer shadow-admin-card "
                             title="Phê duyệt yêu cầu tác giả"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -207,7 +207,7 @@ export function AuthorRequestTable({
                           </button>
                           <button
                             onClick={() => onOpenReview(req, "REJECTED")}
-                            className="w-8 h-8 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
+                            className="w-8 h-8 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white hover:border-rose-600 flex items-center justify-center transition-all cursor-pointer shadow-admin-card "
                             title="Từ chối yêu cầu tác giả"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -11,7 +11,7 @@ interface AdminMiniSparklineProps {
 
 export function AdminMiniSparkline({
   data,
-  color = "#6366f1",
+  color = "#465fff",
   width = 80,
   height = 28,
 }: AdminMiniSparklineProps) {

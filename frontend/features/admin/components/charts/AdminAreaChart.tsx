@@ -26,11 +26,11 @@ interface AdminAreaChartProps {
 
 const COLOR_MAP = {
   indigo: {
-    stroke: "#6366f1",
-    fillStart: "rgba(99, 102, 241, 0.35)",
-    fillEnd: "rgba(99, 102, 241, 0.01)",
-    point: "#4f46e5",
-    badge: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    stroke: "#465fff",
+    fillStart: "rgba(70, 95, 255, 0.16)",
+    fillEnd: "rgba(70, 95, 255, 0.01)",
+    point: "#465fff",
+    badge: "bg-admin-brand-50 text-admin-brand-700 border-admin-brand-200",
   },
   emerald: {
     stroke: "#10b981",
@@ -51,7 +51,7 @@ const COLOR_MAP = {
     fillStart: "rgba(2, 132, 199, 0.35)",
     fillEnd: "rgba(2, 132, 199, 0.01)",
     point: "#0369a1",
-    badge: "bg-sky-50 text-sky-700 border-sky-200",
+    badge: "bg-admin-brand-50 text-admin-brand-700 border-admin-brand-200",
   },
   amber: {
     stroke: "#f59e0b",
@@ -79,7 +79,7 @@ export function AdminAreaChart({
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+      <div className="flex flex-col items-center justify-center h-48 text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
         <svg className="w-8 h-8 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
@@ -159,13 +159,13 @@ export function AdminAreaChart({
       {(title || subtitle) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-1">
           <div>
-            {title && <h3 className="text-sm sm:text-base font-bold text-slate-900">{title}</h3>}
-            {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+            {title && <h3 className="text-sm sm:text-base font-semibold text-gray-900">{title}</h3>}
+            {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
           </div>
           {activePoint && (
             <div className="flex items-center gap-2 self-start sm:self-auto">
-              <span className="text-xs text-slate-500 font-medium">{activePoint.data.label}:</span>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${colors.badge}`}>
+              <span className="text-xs text-gray-500 font-medium">{activePoint.data.label}:</span>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-md border ${colors.badge}`}>
                 {valuePrefix}
                 {activePoint.data.value.toLocaleString("vi-VN")}
                 {valueSuffix}
@@ -200,7 +200,7 @@ export function AdminAreaChart({
                 y1={tick.y}
                 x2={svgWidth - padRight}
                 y2={tick.y}
-                stroke="#e2e8f0"
+                stroke="#eaecf0"
                 strokeDasharray={i === 0 ? "none" : "3 3"}
                 strokeWidth={1}
               />
@@ -208,7 +208,7 @@ export function AdminAreaChart({
                 x={padLeft - 10}
                 y={tick.y + 3.5}
                 textAnchor="end"
-                className="text-[11px] fill-slate-400 font-medium"
+                className="text-xs fill-gray-400 font-medium"
               >
                 {formatter(tick.val)}
               </text>
@@ -224,7 +224,7 @@ export function AdminAreaChart({
                 x={p.x}
                 y={svgHeight - 10}
                 textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}
-                className="text-[11px] fill-slate-400 font-medium"
+                className="text-xs fill-gray-400 font-medium"
               >
                 {axisLabel(p.data)}
               </text>
@@ -288,19 +288,19 @@ export function AdminAreaChart({
         {/* Floating Tooltip HTML Overlay */}
         {activePoint && (
           <AdminChartTooltip anchorPercent={(activePoint.x / svgWidth) * 100}>
-              <div className="text-[10px] text-slate-300 font-semibold mb-1">
+              <div className="text-xs text-gray-300 font-semibold mb-1">
                 {activePoint.data.tooltipTitle || activePoint.data.label}
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.stroke }} />
-                <span className="font-bold text-sm text-white">
+                <span className="font-medium text-sm text-white">
                   {valuePrefix}
                   {activePoint.data.value.toLocaleString("vi-VN")}
                   {valueSuffix}
                 </span>
               </div>
               {activePoint.data.secondaryValue !== undefined && (
-                <div className="text-[11px] text-slate-300 mt-0.5">
+                <div className="text-xs text-gray-300 mt-0.5">
                   {secondaryLabel}: <span className="font-medium text-white">{activePoint.data.secondaryValue.toLocaleString("vi-VN")}</span>
                 </div>
               )}

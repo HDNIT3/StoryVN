@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { royaltyPolicy, validatePackageEconomics } from '../../../common/utils/royalty-policy.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import qs from 'qs';
@@ -108,6 +109,7 @@ export class PaymentsService {
     if (!pkg.isActive) {
       throw new BadRequestException('Gói nạp này hiện đang tạm dừng hoặc không còn hoạt động');
     }
+    validatePackageEconomics(pkg.price, pkg.totalCoin, royaltyPolicy());
 
     // 2. Đọc cấu hình VNPay từ ConfigService
     const tmnCode = this.configService.get<string>('VNPAY_TMN_CODE');

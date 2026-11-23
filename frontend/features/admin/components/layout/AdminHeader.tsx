@@ -53,7 +53,7 @@ export function AdminHeader({ onMobileOpen }: AdminHeaderProps) {
   if (!user) return null;
 
   return (
-    <header className="sticky top-0 z-40 admin-crm-header px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-3 border-b border-slate-200/80 shadow-2xs">
+    <header className="sticky top-0 z-40 admin-crm-header min-h-20 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 border-b border-gray-200">
       {/* Mobile hamburger + Page Breadcrumbs */}
       <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
         <button
@@ -85,12 +85,12 @@ export function AdminHeader({ onMobileOpen }: AdminHeaderProps) {
 
         {/* Breadcrumb & Section Name */}
         <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 truncate">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-500 truncate">
             <span className="hidden sm:inline">Quản trị</span>
             <span className="hidden sm:inline text-slate-300">/</span>
             <span className="text-slate-700 font-semibold truncate">{currentRouteInfo.title}</span>
           </div>
-          <p className="text-[11px] text-slate-400 hidden md:block truncate">
+          <p className="mt-1 text-xs text-gray-500 hidden md:block truncate">
             {currentRouteInfo.subtitle}
           </p>
         </div>
@@ -99,7 +99,7 @@ export function AdminHeader({ onMobileOpen }: AdminHeaderProps) {
       {/* Right actions */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Live Date Badge (Desktop) */}
-        <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-slate-600 bg-slate-100/80 border border-slate-200/60 capitalize">
+        <div className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-gray-500 bg-gray-50 border border-gray-200 capitalize">
           <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -107,7 +107,7 @@ export function AdminHeader({ onMobileOpen }: AdminHeaderProps) {
         </div>
 
         {/* Status indicator */}
-        <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70 shadow-2xs">
+        <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>Hệ thống ổn định</span>
         </div>
@@ -115,7 +115,7 @@ export function AdminHeader({ onMobileOpen }: AdminHeaderProps) {
         {/* Return to public site */}
         <Link
           href="/"
-          className="text-xs font-semibold text-slate-700 hover:text-sky-600 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200/80 bg-white hover:bg-slate-50 shadow-2xs transition-all active:scale-95"
+          className="text-sm font-medium text-gray-600 hover:text-[#465fff] flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
         >
           <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -129,28 +129,28 @@ export function AdminHeader({ onMobileOpen }: AdminHeaderProps) {
         </Link>
 
         {/* Notification Bell */}
-        <NotificationBell size="md" />
+        <NotificationBell size="lg" className="rounded-full border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100" />
 
         {/* User Avatar Chip */}
         <Link
           href="/ho-so"
-          className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border border-slate-200/80 bg-white hover:bg-slate-50 shadow-2xs transition-all cursor-pointer group"
+          className="flex items-center gap-3 px-1 py-1 rounded-lg bg-white transition-colors cursor-pointer group"
           title={`Đang đăng nhập: ${user.displayName || user.username}`}
         >
-          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-2xs shrink-0 overflow-hidden ring-1 ring-slate-200">
+          <div className="w-10 h-10 rounded-full bg-[#ecf3ff] flex items-center justify-center text-sm font-semibold text-[#465fff] shrink-0 overflow-hidden">
             {user.avatarUrl ? (
               <Image
                 src={user.avatarUrl}
                 alt={user.displayName}
-                width={28}
-                height={28}
+                width={40}
+                height={40}
                 className="rounded-full object-cover w-full h-full"
               />
             ) : (
               (user.displayName || "A").charAt(0).toUpperCase()
             )}
           </div>
-          <span className="text-xs font-bold text-slate-800 max-w-[90px] truncate hidden sm:inline group-hover:text-sky-600">
+          <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate hidden sm:inline group-hover:text-[#465fff]">
             {user.displayName || user.username}
           </span>
         </Link>

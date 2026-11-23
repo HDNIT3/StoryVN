@@ -12,10 +12,18 @@ export function HeaderSearch({
   iconSrc = DEFAULT_SEARCH.iconSrc ?? "/icon/search.svg",
   defaultValue = "",
   className = "",
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: HeaderSearchProps) {
   const router = useRouter();
   const [query, setQuery] = useState(defaultValue);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (value: boolean) => {
+    if (controlledOpen === undefined) setInternalOpen(value);
+    onOpenChange?.(value);
+  };
   const [composing, setComposing] = useState(false);
   const [active, setActive] = useState(-1);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -36,26 +44,31 @@ export function HeaderSearch({
     }
     const positionPanel = () => {
       const trigger = triggerRef.current?.getBoundingClientRect();
-      if (!trigger) return;
       const viewport = window.visualViewport;
       const viewportWidth = viewport?.width ?? window.innerWidth;
       const viewportHeight = viewport?.height ?? window.innerHeight;
       const viewportLeft = viewport?.offsetLeft ?? 0;
       const viewportTop = viewport?.offsetTop ?? 0;
       const gutter = viewportWidth < 640 ? 8 : 16;
+      const centered = window.innerWidth < 1280;
       const width = Math.min(560, viewportWidth - gutter * 2);
-      const left = Math.max(viewportLeft + gutter, Math.min(trigger.left + (trigger.width - width) / 2, viewportLeft + viewportWidth - width - gutter));
+      const left = centered || !trigger
+        ? viewportLeft + (viewportWidth - width) / 2
+        : Math.max(viewportLeft + gutter, Math.min(trigger.left + (trigger.width - width) / 2, viewportLeft + viewportWidth - width - gutter));
       const bottom = viewportTop + viewportHeight;
       const minimumHeight = Math.min(220, viewportHeight - gutter * 2);
-      const top = Math.max(viewportTop + gutter, Math.min(trigger.bottom + 10, bottom - minimumHeight - gutter));
+      const top = centered
+        ? viewportTop + viewportHeight / 2
+        : Math.max(viewportTop + gutter, Math.min((trigger?.bottom ?? viewportTop) + 10, bottom - minimumHeight - gutter));
       Object.assign(panel.style, {
         width: `${width}px`, left: `${left}px`, top: `${top}px`,
-        maxHeight: `${Math.max(0, Math.min(520, bottom - top - gutter))}px`,
+        transform: centered ? "translateY(-50%)" : "none",
+        maxHeight: `${Math.max(0, Math.min(520, centered ? viewportHeight - gutter * 2 : bottom - top - gutter))}px`,
       });
     };
     positionPanel();
     if (!panel.matches(":popover-open")) panel.showPopover();
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
     window.addEventListener("resize", positionPanel);
     window.addEventListener("scroll", positionPanel, true);
     window.visualViewport?.addEventListener("resize", positionPanel);
@@ -72,14 +85,15 @@ export function HeaderSearch({
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k" && triggerRef.current?.getBoundingClientRect().width) {
         event.preventDefault();
-        setOpen(true);
+        triggerRef.current.click();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const close = () => { reset(); setOpen(false); setActive(-1); };
+  // Closing only hides the panel; keep the query and results for the next visit.
+  const close = () => { setOpen(false); setActive(-1); };
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (composing || loading || !hasQuery) return;
@@ -89,12 +103,10 @@ export function HeaderSearch({
 
   return (
     <div className={`header-search ${className}`}>
-      <button
+      {!hideTrigger && <button
         ref={triggerRef}
         type="button"
-        onClick={() => setActive(-1)}
-        popoverTarget={panelId}
-        popoverTargetAction="toggle"
+        onClick={() => { setActive(-1); setOpen(!open); }}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={panelId}
@@ -102,7 +114,7 @@ export function HeaderSearch({
       >
         <Image src={iconSrc} alt="" width={20} height={20} className="h-5 w-5 shrink-0" />
         <span>Tìm kiếm truyện</span>
-      </button>
+      </button>}
 
       <div
         ref={panelRef}
@@ -113,7 +125,7 @@ export function HeaderSearch({
         aria-labelledby={`${panelId}-title`}
         onToggle={(event) => {
           if (event.newState === "open") setOpen(true);
-          else { reset(); setOpen(false); setActive(-1); }
+          else { setOpen(false); setActive(-1); }
         }}
         onKeyDown={(event) => {
           if (event.key === "Escape") {
@@ -123,7 +135,7 @@ export function HeaderSearch({
             triggerRef.current?.focus();
           }
         }}
-        className="fixed bottom-auto right-auto m-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-0 text-slate-900 shadow-[0_16px_48px_-12px_rgba(15,23,42,0.22)]"
+        className="fixed bottom-auto right-auto m-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-0 text-slate-900 shadow-[0_16px_48px_-12px_rgba(15,23,42,0.22)] backdrop:bg-black/40 xl:backdrop:bg-transparent"
       >
         <form onSubmit={handleSubmit} role="search" className="flex max-h-[inherit] flex-col">
           <div className="shrink-0 border-b border-slate-100 p-3">
@@ -139,17 +151,26 @@ export function HeaderSearch({
               </button>
               <input
                 ref={inputRef}
-                type="text"
+                type="search"
+                enterKeyHint="search"
                 value={query}
                 onChange={(event) => { reset(); setQuery(event.target.value); setActive(-1); }}
                 onCompositionStart={() => setComposing(true)}
                 onCompositionEnd={() => setComposing(false)}
                 onKeyDown={(event) => {
-                  if (event.nativeEvent.isComposing) return;
-                  if (event.key === "Enter" && showResults && active >= 0 && items[active]) {
+                  if (event.nativeEvent.isComposing || composing) {
+                    if (event.key === "Enter") event.preventDefault();
+                    return;
+                  }
+                  if (event.key === "Enter") {
                     event.preventDefault();
-                    router.push(`/truyen/${items[active].slug}`);
-                    close();
+                    if (showResults && active >= 0 && items[active]) {
+                      close();
+                      router.push(`/truyen/${items[active].slug}`);
+                    } else {
+                      // Use the same submit path for hardware and mobile keyboards.
+                      event.currentTarget.form?.requestSubmit();
+                    }
                     return;
                   }
                   if (showResults && items.length && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
@@ -169,7 +190,7 @@ export function HeaderSearch({
                 maxLength={256}
                 placeholder={placeholder}
                 aria-label="Tìm kiếm truyện"
-                className="w-full min-w-0 bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                className="w-full min-w-0 bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
               />
               {query && <button type="button" onClick={() => { reset(); setQuery(""); setActive(-1); inputRef.current?.focus(); }} aria-label="Xóa từ khóa" className="flex h-11 w-9 shrink-0 sm:h-9 cursor-pointer items-center justify-center rounded text-slate-400 hover:bg-slate-200 hover:text-slate-700">✕</button>}
             </div>
@@ -182,7 +203,7 @@ export function HeaderSearch({
                   <span aria-hidden="true" className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-emerald-100 border-t-emerald-600 motion-reduce:animate-none" />
                   <span className="font-medium text-slate-700">Đang phân tích nội dung tìm kiếm…</span>
                 </div>
-              ) : error ? "Tìm kiếm chưa thành công. Vui lòng thử lại." : !searchedQuery ? "Nhập tên truyện hoặc mô tả nội dung để bắt đầu tìm kiếm." : items.length ? `${items.length} truyện phù hợp` : "Chưa tìm thấy truyện phù hợp. Thử tên truyện hoặc mô tả khác."}
+              ) : error ? "Tìm kiếm chưa thành công. Vui lòng thử lại." : !searchedQuery ? "Nhập ít nhất 2 ký tự trong tên truyện hoặc mô tả nội dung, rồi nhấn Tìm kiếm hoặc Enter." : items.length ? `${items.length} truyện phù hợp` : "Không có kết quả. Thử tên truyện hoặc mô tả khác."}
             </div>
             {showResults && <ul id={listId} role="listbox" aria-label="Kết quả tìm truyện" className="space-y-1">
               {items.map((item, index) => (

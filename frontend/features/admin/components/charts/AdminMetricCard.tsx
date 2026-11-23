@@ -20,9 +20,9 @@ interface AdminMetricCardProps {
 
 const COLOR_CLASSES = {
   indigo: {
-    bgIcon: "bg-indigo-50 text-indigo-600",
-    border: "border-indigo-100/80 hover:border-indigo-300",
-    sparkColor: "#6366f1",
+    bgIcon: "bg-admin-brand-50 text-admin-brand-600",
+    border: "border-admin-brand-100/80 hover:border-admin-brand-300",
+    sparkColor: "#465fff",
   },
   emerald: {
     bgIcon: "bg-emerald-50 text-emerald-600",
@@ -35,8 +35,8 @@ const COLOR_CLASSES = {
     sparkColor: "#f59e0b",
   },
   sky: {
-    bgIcon: "bg-sky-50 text-sky-600",
-    border: "border-sky-100/80 hover:border-sky-300",
+    bgIcon: "bg-admin-brand-50 text-admin-brand-600",
+    border: "border-admin-brand-100/80 hover:border-admin-brand-300",
     sparkColor: "#0284c7",
   },
   rose: {
@@ -66,38 +66,38 @@ export function AdminMetricCard({
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-2xl p-4 sm:p-5 border transition-all duration-200 shadow-2xs ${styles.border} ${
-        onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5" : ""
+      className={`admin-stat-card bg-white rounded-2xl p-4 sm:p-5 border transition-all duration-200 shadow-admin-card ${styles.border} ${
+        onClick ? "cursor-pointer hover:shadow-md " : ""
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate mb-1">
+          <p className="admin-metric-label text-xs font-semibold text-gray-500 uppercase tracking-wider truncate mb-1">
             {label}
           </p>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
               {typeof value === "number" ? value.toLocaleString("vi-VN") : value}
             </h3>
           </div>
           {subValue && (
-            <p className="text-xs text-slate-400 mt-0.5 truncate">{subValue}</p>
+            <p className="text-xs text-gray-400 mt-0.5 truncate">{subValue}</p>
           )}
         </div>
 
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${styles.bgIcon} shadow-2xs`}>
+        <div className={`admin-stat-icon w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${styles.bgIcon} shadow-admin-card`}>
           {icon}
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
         {trend ? (
           <div className="flex items-center gap-1.5 text-xs font-semibold">
             <span
               className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md ${
                 trend.isPositive !== false
-                  ? "bg-emerald-50 text-emerald-700 font-bold"
-                  : "bg-rose-50 text-rose-700 font-bold"
+                  ? "bg-emerald-50 text-emerald-700 font-medium"
+                  : "bg-rose-50 text-rose-700 font-medium"
               }`}
             >
               {trend.isPositive !== false ? (
@@ -111,10 +111,10 @@ export function AdminMetricCard({
               )}
               {trend.value > 0 ? `+${trend.value}%` : `${trend.value}%`}
             </span>
-            {trend.label && <span className="text-[11px] text-slate-400 font-normal">{trend.label}</span>}
+            {trend.label && <span className="text-xs text-gray-400 font-normal">{trend.label}</span>}
           </div>
         ) : (
-          <span className="text-[11px] text-slate-400">Dữ liệu thời gian thực</span>
+          <span className="text-xs text-gray-400">Dữ liệu thời gian thực</span>
         )}
 
         {sparklineData && sparklineData.length > 1 && (

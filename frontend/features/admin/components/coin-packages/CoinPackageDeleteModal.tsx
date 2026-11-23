@@ -30,12 +30,12 @@ export function CoinPackageDeleteModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150"
+      className="admin-dialog-overlay fixed inset-0 z-[70] flex items-center justify-center p-4 bg-gray-950/50 animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isLoading) onClose();
       }}
     >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="admin-dialog bg-white rounded-xl shadow-2xl w-full max-w-md p-6 overflow-hidden animate-in zoom-in-95 duration-150">
         <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -48,18 +48,19 @@ export function CoinPackageDeleteModal({
         </div>
 
         <div className="text-center mb-6">
-          <h3 className="text-base font-bold text-slate-900">
+          <h3 className="admin-dialog-title text-xl font-semibold text-gray-900">
             Xác nhận xóa gói nạp Xu?
           </h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             Bạn có chắc chắn muốn xóa gói nạp này? Hành động này không thể hoàn tác.
+            Gói đã có giao dịch không được xóa; hãy tắt kích hoạt để ngừng bán.
           </p>
 
-          <div className="mt-3.5 p-3 bg-slate-50 rounded-lg text-left text-xs">
-            <p className="font-bold text-slate-900">{pkg.name}</p>
-            <div className="flex items-center justify-between text-slate-500 mt-1">
-              <span>Giá: <strong className="text-indigo-600">{formatCurrency(pkg.price)}</strong></span>
-              <span>Tổng nhận: <strong className="text-amber-600 font-bold">{pkg.totalCoin} Xu</strong></span>
+          <div className="mt-3.5 p-3 bg-gray-50 rounded-lg text-left text-xs">
+            <p className="font-medium text-gray-900">{pkg.name}</p>
+            <div className="flex items-center justify-between text-gray-500 mt-1">
+              <span>Giá: <strong className="text-admin-brand-600">{formatCurrency(pkg.price)}</strong></span>
+              <span>Tổng nhận: <strong className="text-amber-600 font-medium">{pkg.totalCoin} Xu</strong></span>
             </div>
           </div>
         </div>
@@ -79,7 +80,7 @@ export function CoinPackageDeleteModal({
             variant="primary"
             onClick={onConfirm}
             disabled={isLoading}
-            className="text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white flex-1 font-bold rounded-lg shadow-xs"
+            className="text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white flex-1 font-medium rounded-lg shadow-admin-card"
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-1.5">

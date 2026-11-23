@@ -42,7 +42,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
         <button
           type="button"
           onClick={onRetry}
-          className="mt-3 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded text-xs font-semibold transition cursor-pointer"
+          className="mt-3 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded text-sm font-semibold transition cursor-pointer"
         >
           Thử lại
         </button>
@@ -58,7 +58,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
-        <h3 className="text-sm font-bold text-zinc-900">Chưa có hình ảnh nào</h3>
+        <h3 className="text-sm font-semibold text-zinc-900">Chưa có hình ảnh nào</h3>
         <p className="text-xs text-zinc-500 mt-0.5">
           Không tìm thấy file ảnh nào trong hệ thống hoặc theo bộ lọc hiện tại.
         </p>
@@ -72,7 +72,7 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
         <div
           key={item.id}
           onClick={() => onPreview(item)}
-          className="aspect-square rounded-lg sm:rounded-xl overflow-hidden bg-zinc-100 relative group cursor-pointer border border-zinc-200/80 hover:border-sky-500 hover:shadow-md transition-all duration-150 select-none"
+          className="aspect-square rounded-lg sm:rounded-xl overflow-hidden bg-zinc-100 relative group cursor-pointer border border-zinc-200/80 hover:border-admin-brand-500 hover:shadow-md transition-all duration-150 select-none"
         >
           <img
             src={item.thumbnailUrl || item.url}
@@ -90,14 +90,14 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
 
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex flex-col justify-between p-1.5 pointer-events-none">
             <span
-              className={`self-end text-[9px] font-semibold px-1 py-0.5 rounded text-white ${
-                item.source === "cloud" ? "bg-sky-600/90" : "bg-emerald-600/90"
+              className={`self-end text-xs font-semibold px-1 py-0.5 rounded text-white ${
+                item.source === "cloud" ? "bg-admin-brand-600/90" : "bg-emerald-600/90"
               }`}
             >
               {item.source === "cloud" ? "Cloud" : "Local"}
             </span>
 
-            <p className="text-[10px] text-white truncate drop-shadow-xs font-medium">
+            <p className="text-xs text-white truncate drop-shadow-xs font-medium">
               {item.name}
             </p>
           </div>

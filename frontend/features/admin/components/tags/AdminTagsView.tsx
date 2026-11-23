@@ -140,10 +140,10 @@ export const AdminTagsView: React.FC = () => {
       {/* Tiêu đề & Nút hành động */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+          <h1 className="admin-page-title text-2xl font-semibold text-gray-900 tracking-tight">
             Quản lý Thẻ Tag
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-gray-500 mt-0.5">
             Quản lý các thẻ phân loại đặc trưng của truyện (như Hệ thống, Xuyên không, Trùng sinh...)
           </p>
         </div>
@@ -153,9 +153,9 @@ export const AdminTagsView: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => setShowCharts(!showCharts)}
-            className="border-indigo-200 text-indigo-700 bg-indigo-50/60 hover:bg-indigo-100"
+            className="border-admin-brand-200 text-admin-brand-700 bg-admin-brand-50/60 hover:bg-admin-brand-100"
             leftIcon={
-              <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-admin-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             }
@@ -168,10 +168,10 @@ export const AdminTagsView: React.FC = () => {
             size="sm"
             onClick={handleSeed}
             disabled={seedMutation.isPending}
-            className="border-slate-200 text-slate-700 hover:bg-slate-50"
+            className="border-gray-200 text-gray-700 hover:bg-gray-50"
             leftIcon={
               <svg
-                className={`w-4 h-4 text-slate-500 ${
+                className={`w-4 h-4 text-gray-500 ${
                   seedMutation.isPending ? "animate-spin" : ""
                 }`}
                 fill="none"
@@ -194,7 +194,7 @@ export const AdminTagsView: React.FC = () => {
             variant="primary"
             size="sm"
             onClick={handleOpenCreate}
-            className="bg-sky-500 hover:bg-sky-600 text-white shadow-xs font-semibold"
+            className="bg-admin-brand-500 hover:bg-admin-brand-600 text-white shadow-admin-card font-semibold"
             leftIcon={
               <svg
                 className="w-4 h-4"
@@ -221,11 +221,11 @@ export const AdminTagsView: React.FC = () => {
         <AdminStatCard
           label="Tổng thẻ tag"
           value={totalTags}
-          color="border-sky-100 text-sky-800"
+          color="border-admin-brand-100 text-admin-brand-800"
           isActive={statusFilter === "ALL"}
           onClick={() => handleStatusFilterChange("ALL")}
           icon={
-            <svg className="w-6 h-6 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-6 h-6 text-admin-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
           }
@@ -269,7 +269,7 @@ export const AdminTagsView: React.FC = () => {
       {/* Biểu đồ phân bổ trạng thái thẻ tag */}
       {showCharts && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
             <AdminDonutChart
               title="Tỷ Lệ Trạng Thái Thẻ Tag"
               subtitle="Cơ cấu thẻ tag đang hoạt động so với tạm khóa"
@@ -284,7 +284,7 @@ export const AdminTagsView: React.FC = () => {
             />
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
             <AdminBarChart
               title="Số Lượng Thẻ Tag"
               subtitle="Thống kê số lượng thẻ tag theo trạng thái"

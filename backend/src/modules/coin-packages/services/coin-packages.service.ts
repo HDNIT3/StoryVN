@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Transaction } from '../../payments/schemas/transaction.schema.js';
+import { royaltyPolicy, validatePackageEconomics } from '../../../common/utils/royalty-policy.js';
 import { Model, Types } from 'mongoose';
 import { buildPaginationMeta, PaginatedResult } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
@@ -18,7 +20,10 @@ export class CoinPackagesService {
   constructor(
     @InjectModel(CoinPackage.name)
     private readonly coinPackageModel: Model<CoinPackageDocument>,
+    @InjectModel(Transaction.name) private readonly transactionModel: Model<Transaction>,
   ) { }
+
+  getEconomics() { return royaltyPolicy(); }
 
   private validateObjectId(id: string): void {
     if (!Types.ObjectId.isValid(id)) {
@@ -40,6 +45,7 @@ export class CoinPackagesService {
     const coinAmount = dto.coinAmount;
     const bonusCoin = dto.bonusCoin ?? 0;
     const totalCoin = coinAmount + bonusCoin;
+    validatePackageEconomics(dto.price, totalCoin, this.getEconomics());
 
     // Xử lý thứ tự hiển thị: bắt đầu từ 1, không trùng lặp
     let targetOrder = dto.sortOrder && dto.sortOrder >= 1 ? dto.sortOrder : 0;
@@ -151,6 +157,9 @@ export class CoinPackagesService {
 
     const coinAmount = dto.coinAmount !== undefined ? dto.coinAmount : pkg.coinAmount;
     const bonusCoin = dto.bonusCoin !== undefined ? dto.bonusCoin : pkg.bonusCoin;
+    if (dto.price !== undefined || dto.coinAmount !== undefined || dto.bonusCoin !== undefined || dto.isActive === true) {
+      validatePackageEconomics(pkg.price, coinAmount + bonusCoin, this.getEconomics());
+    }
 
     pkg.coinAmount = coinAmount;
     pkg.bonusCoin = bonusCoin;
@@ -189,6 +198,7 @@ export class CoinPackagesService {
   async toggleStatus(id: string): Promise<CoinPackageDocument> {
     this.validateObjectId(id);
     const pkg = await this.findById(id);
+    if (!pkg.isActive) validatePackageEconomics(pkg.price, pkg.totalCoin, this.getEconomics());
     pkg.isActive = !pkg.isActive;
     return pkg.save();
   }
@@ -196,6 +206,9 @@ export class CoinPackagesService {
   async delete(id: string): Promise<{ success: boolean; message: string }> {
     this.validateObjectId(id);
     const pkg = await this.findById(id);
+    if (await this.transactionModel.exists({ packageId: pkg._id })) {
+      throw new BadRequestException('Gói đã có giao dịch, không được xóa. Vui lòng tắt kích hoạt để ngừng bán.');
+    }
     const deletedOrder = pkg.sortOrder;
     const result = await this.coinPackageModel.findByIdAndDelete(id).exec();
     if (!result) {
@@ -290,6 +303,7 @@ export class CoinPackagesService {
     let skippedCount = 0;
 
     for (const pkg of DEFAULT_PACKAGES) {
+      validatePackageEconomics(pkg.price, pkg.totalCoin, this.getEconomics());
       const exists = await this.coinPackageModel.findOne({ name: pkg.name });
       if (!exists) {
         await this.coinPackageModel.create(pkg);

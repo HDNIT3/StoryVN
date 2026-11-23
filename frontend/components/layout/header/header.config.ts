@@ -49,6 +49,9 @@ export interface HeaderSearchProps {
   defaultValue?: string;
   onSearch?: (query: string) => void;
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
 export interface HeaderActionsProps {

@@ -6,6 +6,7 @@ import { chapterKeys } from "./chapter.keys";
 import { storyKeys } from "@/features/stories";
 import { walletKeys } from "@/features/wallet";
 import { toast } from "@/lib/toast";
+import { getApiErrorMessage } from "@/lib/api";
 import type {
   CreateChapterPayload,
   QueryChaptersParams,
@@ -123,7 +124,7 @@ export function useUpdateChapter() {
       queryClient.invalidateQueries({ queryKey: ["author"] });
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : "Cập nhật chương thất bại!";
+      const msg = getApiErrorMessage(err, "Cập nhật chương thất bại!");
       toast.error(msg);
     },
   });
@@ -242,7 +243,7 @@ export function useUnlockChapter() {
       toast.success(res.message || "Mở khóa chương truyện thành công!");
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : "Mở khóa chương thất bại!";
+      const msg = getApiErrorMessage(err, "Mở khóa chương thất bại!");
       toast.error(msg);
     },
   });

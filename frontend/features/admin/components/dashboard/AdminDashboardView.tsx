@@ -121,8 +121,8 @@ export function AdminDashboardView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Tổng quan</h1>
-        <p className="mt-1 text-sm text-slate-500">Theo dõi số liệu, doanh thu và hoạt động của hệ thống.</p>
+        <h1 className="admin-page-title text-2xl font-semibold text-gray-900 tracking-tight">Tổng quan</h1>
+        <p className="mt-1 text-sm text-gray-500">Theo dõi số liệu, doanh thu và hoạt động của hệ thống.</p>
       </div>
       {/* ─── 3. 4 THẺ METRICS KPI MASTER ─────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -195,31 +195,31 @@ export function AdminDashboardView() {
 
       <DateRangeToolbar dateRange={dateRange} exportDisabled={!canExport} exporting={exporting} onExport={exportOverview} />
       {isError && <p role="alert" className="text-sm text-red-600">Không thể tải thống kê. <button type="button" onClick={() => refetch()} className="underline">Thử lại</button></p>}
-      {isLoading && <p role="status" className="text-sm text-slate-500">Đang tải thống kê...</p>}
+      {isLoading && <p role="status" className="text-sm text-gray-500">Đang tải thống kê...</p>}
 
       {/* ─── 4. BIỂU ĐỒ DIỆN TÍCH DOANH THU & BIỂU ĐỒ CỘT NGƯỜI DÙNG ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Biểu đồ Doanh thu (Area Chart - chiếm 2 cột) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-semibold text-gray-900">
                 Xu Hướng Doanh Thu & Dòng Tiền ({dateRange.mode === "all" ? "toàn bộ thời gian" : "kỳ đã chọn"})
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-gray-500">
                 Thống kê các giao dịch nạp tiền thành công qua cổng thanh toán VNPay
               </p>
             </div>
 
             {/* Switch tabs */}
-            <div className="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-semibold self-start sm:self-auto">
+            <div className="inline-flex p-1 bg-gray-100 rounded-xl text-xs font-semibold self-start sm:self-auto">
               <button
                 type="button"
                 onClick={() => setRevenueTab("revenue")}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
                   revenueTab === "revenue"
-                    ? "bg-white text-indigo-700 font-bold shadow-2xs"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-admin-brand-700 font-medium shadow-admin-card"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 Doanh thu (VND)
@@ -229,8 +229,8 @@ export function AdminDashboardView() {
                 onClick={() => setRevenueTab("transactions")}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
                   revenueTab === "transactions"
-                    ? "bg-white text-indigo-700 font-bold shadow-2xs"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-admin-brand-700 font-medium shadow-admin-card"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 Số giao dịch
@@ -240,8 +240,8 @@ export function AdminDashboardView() {
                 onClick={() => setRevenueTab("coins")}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
                   revenueTab === "coins"
-                    ? "bg-white text-indigo-700 font-bold shadow-2xs"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-admin-brand-700 font-medium shadow-admin-card"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 Số Xu nạp
@@ -270,11 +270,11 @@ export function AdminDashboardView() {
         </div>
 
         {/* Biểu đồ Cột: Tăng trưởng người dùng mới */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card flex flex-col justify-between">
           <div>
-            <div className="pb-4 border-b border-slate-100">
-              <h2 className="text-base font-bold text-slate-900">Người Dùng Đăng Ký Mới</h2>
-              <p className="text-xs text-slate-500">Số lượng tài khoản mới tham gia nền tảng</p>
+            <div className="pb-4 border-b border-gray-100">
+              <h2 className="text-base font-semibold text-gray-900">Người Dùng Đăng Ký Mới</h2>
+              <p className="text-xs text-gray-500">Số lượng tài khoản mới tham gia nền tảng</p>
             </div>
 
             <div className="mt-4">
@@ -288,9 +288,9 @@ export function AdminDashboardView() {
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
             <span>Trong kỳ: <b className="text-emerald-600">+{kpi?.users.total || 0}</b></span>
-            <span>Tài khoản mới: <b className="text-slate-800">{kpi?.users.total.toLocaleString("vi-VN") || 0}</b></span>
+            <span>Tài khoản mới: <b className="text-gray-800">{kpi?.users.total.toLocaleString("vi-VN") || 0}</b></span>
           </div>
         </div>
       </div>
@@ -298,10 +298,10 @@ export function AdminDashboardView() {
       {/* ─── 5. PHÂN BỐ THỂ LOẠI & TRẠNG THÁI KIỂM DUYỆT ─────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Phân bố thể loại truyện */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-          <div className="pb-3 border-b border-slate-100 mb-4">
-            <h2 className="text-base font-bold text-slate-900">Cơ Cấu Thể Loại Truyện</h2>
-            <p className="text-xs text-slate-500">Thị phần tác phẩm phân bổ theo các thể loại chính</p>
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
+          <div className="pb-3 border-b border-gray-100 mb-4">
+            <h2 className="text-base font-semibold text-gray-900">Cơ Cấu Thể Loại Truyện</h2>
+            <p className="text-xs text-gray-500">Thị phần tác phẩm phân bổ theo các thể loại chính</p>
           </div>
 
           <AdminDonutChart
@@ -314,10 +314,10 @@ export function AdminDashboardView() {
         </div>
 
         {/* Trạng thái duyệt tác phẩm */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-          <div className="pb-3 border-b border-slate-100 mb-4">
-            <h2 className="text-base font-bold text-slate-900">Trạng Thái Nội Dung Truyện</h2>
-            <p className="text-xs text-slate-500">Tỷ lệ tác phẩm đã xuất bản, chờ duyệt và bản nháp</p>
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
+          <div className="pb-3 border-b border-gray-100 mb-4">
+            <h2 className="text-base font-semibold text-gray-900">Trạng Thái Nội Dung Truyện</h2>
+            <p className="text-xs text-gray-500">Tỷ lệ tác phẩm đã xuất bản, chờ duyệt và bản nháp</p>
           </div>
 
           <AdminDonutChart
@@ -333,35 +333,35 @@ export function AdminDashboardView() {
       {/* ─── 6. TOP TRUYỆN THỊNH HÀNH & GIAO DỊCH GẦN ĐÂY ──────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top truyện lượt xem cao nhất */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
             <div>
-              <h2 className="text-base font-bold text-slate-900">Top Tác Phẩm Nổi Bật Nhất</h2>
-              <p className="text-xs text-slate-500">Top {topStories.length} đã tải; lượt đọc trong kỳ, điểm/chương hiện tại</p>
+              <h2 className="text-base font-semibold text-gray-900">Top Tác Phẩm Nổi Bật Nhất</h2>
+              <p className="text-xs text-gray-500">Top {topStories.length} đã tải; lượt đọc trong kỳ, điểm/chương hiện tại</p>
             </div>
             <Link
               href="/quan-ly/truyen"
-              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline"
+              className="text-xs font-medium text-admin-brand-600 hover:text-admin-brand-800 hover:underline"
             >
               Xem tất cả &rarr;
             </Link>
           </div>
 
           {topStories.length === 0 ? (
-            <p className="text-xs text-slate-400 py-8 text-center italic">Chưa có truyện nào xuất bản</p>
+            <p className="text-xs text-gray-400 py-8 text-center italic">Chưa có truyện nào xuất bản</p>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-gray-100">
               {topStories.map((story, idx) => (
                 <div key={story._id} className="py-2.5 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black shrink-0 ${
+                    <span className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-semibold shrink-0 ${
                       idx === 0
                         ? "bg-amber-100 text-amber-800"
                         : idx === 1
-                        ? "bg-slate-200 text-slate-700"
+                        ? "bg-gray-200 text-gray-700"
                         : idx === 2
                         ? "bg-amber-50 text-amber-700"
-                        : "text-slate-400"
+                        : "text-gray-400"
                     }`}>
                       #{idx + 1}
                     </span>
@@ -369,21 +369,21 @@ export function AdminDashboardView() {
                       <Link
                         href={`/truyen/${story.slug}`}
                         target="_blank"
-                        className="text-xs sm:text-sm font-bold text-slate-800 hover:text-indigo-600 truncate block transition-colors"
+                        className="text-xs sm:text-sm font-medium text-gray-800 hover:text-admin-brand-600 truncate block transition-colors"
                       >
                         {story.title}
                       </Link>
-                      <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                        Tác giả: <span className="text-slate-600 font-medium">{story.authorName}</span> • {story.chapterCount} chương
+                      <p className="text-xs text-gray-400 truncate mt-0.5">
+                        Tác giả: <span className="text-gray-600 font-medium">{story.authorName}</span> • {story.chapterCount} chương
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="text-xs font-bold text-indigo-600 block">
+                    <span className="text-xs font-medium text-admin-brand-600 block">
                       {story.views.toLocaleString("vi-VN")} lượt xem
                     </span>
-                    <span className="text-[11px] text-amber-500 font-semibold flex items-center justify-end gap-1">
+                    <span className="text-xs text-amber-500 font-semibold flex items-center justify-end gap-1">
                       ★ {story.ratingAverage.toFixed(1)}
                     </span>
                   </div>
@@ -394,33 +394,33 @@ export function AdminDashboardView() {
         </div>
 
         {/* Giao dịch gần đây */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
             <div>
-              <h2 className="text-base font-bold text-slate-900">Giao Dịch Nạp Xu Gần Nhất</h2>
-              <p className="text-xs text-slate-500">{recentTransactions.length} giao dịch gần nhất trong kỳ đã tải</p>
+              <h2 className="text-base font-semibold text-gray-900">Giao Dịch Nạp Xu Gần Nhất</h2>
+              <p className="text-xs text-gray-500">{recentTransactions.length} giao dịch gần nhất trong kỳ đã tải</p>
             </div>
             <Link
               href="/quan-ly/giao-dich"
-              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline"
+              className="text-xs font-medium text-admin-brand-600 hover:text-admin-brand-800 hover:underline"
             >
               Xem tất cả &rarr;
             </Link>
           </div>
 
           {recentTransactions.length === 0 ? (
-            <p className="text-xs text-slate-400 py-8 text-center italic">Chưa có giao dịch nào được ghi nhận</p>
+            <p className="text-xs text-gray-400 py-8 text-center italic">Chưa có giao dịch nào được ghi nhận</p>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-gray-100">
               {recentTransactions.map((tx) => (
                 <div key={tx._id} className="py-2.5 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-slate-700">
+                      <span className="font-mono text-xs font-medium text-gray-700">
                         #{tx.orderCode}
                       </span>
                       <span
-                        className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                        className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
                           tx.status === "SUCCESS"
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             : tx.status === "PENDING"
@@ -431,7 +431,7 @@ export function AdminDashboardView() {
                         {tx.status === "SUCCESS" ? "Thành công" : tx.status === "PENDING" ? "Chờ xử lý" : "Thất bại"}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">
                       {tx.user?.displayName || tx.user?.username} • {new Date(tx.createdAt).toLocaleDateString("vi-VN", {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -442,10 +442,10 @@ export function AdminDashboardView() {
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="text-xs font-black text-slate-900 block">
+                    <span className="text-xs font-semibold text-gray-900 block">
                       {formatCurrency(tx.amount)}
                     </span>
-                    <span className="text-[11px] font-semibold text-amber-600">
+                    <span className="text-xs font-semibold text-amber-600">
                       +{tx.totalCoin.toLocaleString("vi-VN")} Xu
                     </span>
                   </div>

@@ -39,6 +39,7 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
   const chapter1Id = new Types.ObjectId('507f1f77bcf86cd799439021');
   const chapter2Id = new Types.ObjectId('507f1f77bcf86cd799439022');
   const unlockRecordId = new Types.ObjectId('507f1f77bcf86cd799439099');
+  const session = { transaction: true };
 
   beforeEach(() => {
     mockChapterModel = {
@@ -64,6 +65,7 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
     };
 
     mockChapterUnlockModel = {
+      db: { transaction: vi.fn(async (callback: (value: unknown) => unknown) => callback(session)) },
       findOne: vi.fn(),
       find: vi.fn().mockImplementation(() => createChainQuery([])),
       countDocuments: vi.fn(),
@@ -75,6 +77,7 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
     mockWalletService = {
       getMyWallet: vi.fn(),
       debit: vi.fn(),
+      debitInSession: vi.fn(),
     };
 
     service = new ChaptersService(
@@ -126,15 +129,15 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
       updatedAt: unlockedAt,
     });
 
-    mockChapterUnlockModel.create.mockResolvedValue({
+    mockChapterUnlockModel.create.mockResolvedValue([{
       _id: unlockRecordId,
       userId: readerId,
       chapterId: chapter1Id,
       coinPrice: 20,
       unlockedAt,
-    });
+    }]);
 
-    mockWalletService.debit.mockResolvedValue({
+    mockWalletService.debitInSession.mockResolvedValue({
       userId: readerId.toString(),
       balance: 80,
       totalSpent: 20,
@@ -150,16 +153,17 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
 
     expect(mockChapterUnlockModel.create).toHaveBeenCalledTimes(1);
     expect(mockChapterUnlockModel.create).toHaveBeenCalledWith(
-      expect.objectContaining({
+      [expect.objectContaining({
         userId: readerId,
         chapterId: chapter1Id,
         coinPrice: 20,
-      }),
+      })], { session },
     );
-    expect(mockWalletService.debit).toHaveBeenCalledTimes(1);
-    expect(mockWalletService.debit).toHaveBeenCalledWith(
+    expect(mockWalletService.debitInSession).toHaveBeenCalledTimes(1);
+    expect(mockWalletService.debitInSession).toHaveBeenCalledWith(
       readerId.toString(),
       20,
+      session,
     );
     expect(result.wallet.balance).toBe(80);
     expect(result.wallet.totalSpent).toBe(20);
@@ -231,16 +235,16 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
 
     mockChapterUnlockModel.create.mockImplementation(async () => {
       await new Promise((r) => setTimeout(r, 20));
-      return {
+      return [{
         _id: unlockRecordId,
         userId: readerId,
         chapterId: chapter1Id,
         coinPrice: 25,
         unlockedAt: new Date(),
-      };
+      }];
     });
 
-    mockWalletService.debit.mockResolvedValue({
+    mockWalletService.debitInSession.mockResolvedValue({
       userId: readerId.toString(),
       balance: 0,
       totalSpent: 25,
@@ -262,7 +266,7 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
     expect(fulfilled).toHaveLength(1);
     expect(rejected).toHaveLength(9);
     expect(mockChapterUnlockModel.create).toHaveBeenCalledTimes(1);
-    expect(mockWalletService.debit).toHaveBeenCalledTimes(1);
+    expect(mockWalletService.debitInSession).toHaveBeenCalledTimes(1);
   });
 
   it('xử lý trùng khóa Unique Index (E11000) từ DB khi đa tiến trình cạnh tranh: không trừ ví lần 2', async () => {
@@ -331,16 +335,16 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
       totalSpent: 0,
     });
 
-    mockChapterUnlockModel.create.mockResolvedValue({
+    mockChapterUnlockModel.create.mockResolvedValue([{
       _id: unlockRecordId,
       userId: readerId,
       chapterId: chapter1Id,
       coinPrice: 30,
       unlockedAt: new Date(),
-    });
+    }]);
 
     // Giả lập ví bị giao dịch khác trừ mất ngay trước tích tắc debit
-    mockWalletService.debit.mockRejectedValue(
+    mockWalletService.debitInSession.mockRejectedValue(
       new BadRequestException('Số dư không đủ'),
     );
 
@@ -352,9 +356,8 @@ describe('ChaptersService - Task 1: Mua & Mở khóa chương bằng Xu', () => 
       ),
     ).rejects.toThrow(BadRequestException);
 
-    expect(mockChapterUnlockModel.deleteOne).toHaveBeenCalledWith({
-      _id: unlockRecordId,
-    });
+    expect(mockChapterUnlockModel.db.transaction).toHaveBeenCalledTimes(1);
+    expect(mockChapterUnlockModel.deleteOne).not.toHaveBeenCalled();
   });
 
   it('chặn mở khóa nếu chương bật requirePreviousChapter mà chương trả phí liền trước chưa mở khóa', async () => {

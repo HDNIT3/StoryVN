@@ -10,7 +10,7 @@ export function DateRangeToolbar({ dateRange, onExport, exportDisabled = false, 
   const [format, setFormat] = React.useState<ExportFormat>("xlsx");
   const locked = disabled || exporting;
   return (
-    <div className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-white p-3">
+    <div className="admin-date-toolbar flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-white p-3">
       <label className="text-xs font-semibold text-slate-600">Khoảng thời gian
         <select disabled={locked} value={dateRange.mode} onChange={(e) => dateRange.setMode(e.target.value as DateState["mode"])} className="mt-1 block rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-700">
           <option value="all">Toàn bộ thời gian</option><option value="custom">Tùy chọn</option><option value="day">Ngày</option><option value="week">Tuần (ISO)</option><option value="month">Tháng</option><option value="year">Năm</option>

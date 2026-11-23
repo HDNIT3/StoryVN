@@ -47,10 +47,10 @@ export function ChapterFilterBar({
   }, [search]);
 
   return (
-    <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/70 shadow-2xs p-2.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+    <div className="admin-filter-bar bg-white rounded-2xl border border-gray-200 shadow-admin-card p-2.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
       {/* Tìm kiếm */}
-      <div className="relative flex-1 min-w-[240px]">
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+      <div className="relative flex-1 min-w-0">
+        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -60,7 +60,7 @@ export function ChapterFilterBar({
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
           placeholder="Tìm tiêu đề chương, số chương hoặc tên tác phẩm..."
-          className="w-full pl-9 pr-9 py-2 text-xs md:text-sm bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 placeholder:text-slate-400"
+          className="w-full pl-9 pr-9 py-2 text-sm md:text-sm bg-white border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-admin-brand-500/20 focus:border-admin-brand-500 transition-all text-gray-800 placeholder:text-gray-400"
         />
         {localSearch && (
           <button
@@ -69,7 +69,7 @@ export function ChapterFilterBar({
               setLocalSearch("");
               onSearchChange("");
             }}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -86,7 +86,7 @@ export function ChapterFilterBar({
             <select
               value={selectedStoryId}
               onChange={(e) => onStoryChange(e.target.value)}
-              className="appearance-none pl-3 pr-8 py-2 text-xs font-medium bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 cursor-pointer max-w-[200px] truncate"
+              className="appearance-none pl-3 pr-8 py-2 text-sm font-medium bg-white border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-admin-brand-500/20 focus:border-admin-brand-500 transition-all text-gray-700 cursor-pointer max-w-[200px] truncate"
             >
               <option value="">Tất cả tác phẩm</option>
               {storyOptions.map((st) => (
@@ -95,7 +95,7 @@ export function ChapterFilterBar({
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -108,7 +108,7 @@ export function ChapterFilterBar({
           <select
             value={sortBy}
             onChange={(e) => onSortByChange(e.target.value)}
-            className="appearance-none pl-3 pr-8 py-2 text-xs font-medium bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 cursor-pointer"
+            className="appearance-none pl-3 pr-8 py-2 text-sm font-medium bg-white border border-gray-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-admin-brand-500/20 focus:border-admin-brand-500 transition-all text-gray-700 cursor-pointer"
           >
             <option value="createdAt">Ngày tạo</option>
             <option value="updatedAt">Ngày cập nhật</option>
@@ -116,7 +116,7 @@ export function ChapterFilterBar({
             <option value="title">Tên chương</option>
             <option value="viewCount">Lượt xem</option>
           </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -127,7 +127,7 @@ export function ChapterFilterBar({
         <button
           type="button"
           onClick={onSortOrderToggle}
-          className="p-2 text-slate-600 bg-slate-50/70 border border-slate-200/80 rounded-xl hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+          className="p-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-gray-800 transition-colors cursor-pointer"
           title={sortOrder === "asc" ? "Tăng dần (Click để giảm dần)" : "Giảm dần (Click để tăng dần)"}
         >
           {sortOrder === "asc" ? (
@@ -146,7 +146,7 @@ export function ChapterFilterBar({
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="p-2 text-slate-600 bg-slate-50/70 border border-slate-200/80 rounded-xl hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-50"
+          className="p-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-gray-800 transition-colors cursor-pointer disabled:opacity-50"
           title="Làm mới danh sách"
         >
           <svg

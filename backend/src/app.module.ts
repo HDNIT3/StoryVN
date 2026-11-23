@@ -1,4 +1,5 @@
 import { SearchModule } from './modules/search/search.module.js';
+import { WithdrawalsModule } from './modules/withdrawals/withdrawals.module.js';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -56,6 +57,7 @@ import { AdminDashboardModule } from './modules/admin-dashboard/admin-dashboard.
     PaymentsModule,
     WalletModule,
     AdminDashboardModule,
+    WithdrawalsModule,
   ],
   controllers: [AppController],
   providers: [

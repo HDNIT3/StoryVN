@@ -75,7 +75,7 @@ export const AdminMediaView: React.FC = () => {
               <select
                 value={limit}
                 onChange={(e) => handleLimitChange(Number(e.target.value))}
-                className="bg-zinc-50 border border-zinc-200 rounded px-1.5 py-0.5 text-xs text-zinc-800 cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-sky-500"
+                className="bg-zinc-50 border border-zinc-200 rounded px-1.5 py-0.5 text-sm text-zinc-800 cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-admin-brand-500"
               >
                 <option value={40}>40</option>
                 <option value={60}>60</option>
@@ -117,9 +117,9 @@ export const AdminMediaView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setPage(p)}
-                      className={`min-w-7 h-7 rounded text-xs font-semibold transition cursor-pointer flex items-center justify-center ${
+                      className={`min-w-7 h-7 rounded text-sm font-semibold transition cursor-pointer flex items-center justify-center ${
                         page === p
-                          ? "bg-sky-600 text-white shadow-2xs"
+                          ? "bg-admin-brand-600 text-white shadow-admin-card"
                           : "border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700"
                       }`}
                     >

@@ -1,5 +1,7 @@
 "use client";
 
+import { getApiErrorMessage } from "@/lib/api";
+
 import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -220,10 +222,7 @@ export const ChapterReaderView: React.FC<ChapterReaderViewProps> = ({
         }
       );
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Không thể hoàn tất giao dịch mở khóa chương.";
+      const msg = getApiErrorMessage(err, "Không thể hoàn tất giao dịch mở khóa chương.");
       setUnlockError(msg);
     }
   };

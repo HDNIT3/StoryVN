@@ -32,11 +32,11 @@ export function ChapterStats({ currentFilter, onFilterChange, counts }: Props) {
       label: "Tổng số chương",
       count: counts?.all ?? 0,
       icon: (
-        <svg className="w-6 h-6 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-6 h-6 text-admin-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
-      color: "border-sky-100 text-sky-800",
+      color: "border-admin-brand-100 text-admin-brand-800",
     },
     {
       tab: "PENDING_REVIEW",
@@ -87,11 +87,11 @@ export function ChapterStats({ currentFilter, onFilterChange, counts }: Props) {
       label: "Bản nháp",
       count: counts?.draft ?? 0,
       icon: (
-        <svg className="w-6 h-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
       ),
-      color: "border-slate-200 text-slate-700",
+      color: "border-gray-200 text-gray-700",
     },
   ];
 
