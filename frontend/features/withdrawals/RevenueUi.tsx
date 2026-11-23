@@ -149,7 +149,7 @@ export function RevenuePagination({
     .filter((value) => value >= 1 && value <= count)
     .sort((a, b) => a - b);
   return (
-    <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-5 py-3.5 sm:flex-row">
+    <div className="admin-pagination flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-5 py-3.5 sm:flex-row">
       <p className="text-xs text-slate-500">
         Hiển thị{" "}
         <span className="font-semibold text-slate-700">
@@ -270,7 +270,7 @@ export function RevenueDialog({
   }, []);
   return (
     <div
-      className="fixed inset-0 z-50 m-0! flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm sm:p-6"
+      className="admin-dialog-overlay fixed inset-0 z-50 m-0! flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm sm:p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !busy) onClose();
       }}
@@ -281,13 +281,13 @@ export function RevenueDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none sm:max-h-[calc(100dvh-3rem)]"
+        className="admin-dialog flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none sm:max-h-[calc(100dvh-3rem)]"
       >
-        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-100 px-5 py-5 sm:px-6">
+        <div className="admin-dialog-header flex shrink-0 items-start justify-between gap-4 border-b border-slate-100 px-5 py-5 sm:px-6">
           <div className="min-w-0">
             <h2
               id={titleId}
-              className="text-base font-bold tracking-tight text-slate-900"
+              className="admin-dialog-title text-base font-bold tracking-tight text-slate-900"
             >
               {title}
             </h2>
@@ -302,16 +302,16 @@ export function RevenueDialog({
             aria-label="Đóng cửa sổ"
             onClick={onClose}
             disabled={busy}
-            className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40"
+            className="admin-dialog-close shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40"
           >
             <RevenueIcon name="close" className="h-5 w-5" />
           </button>
         </div>
-        <div className="min-h-0 overflow-y-auto overscroll-contain p-5 sm:p-6">
+        <div className="admin-dialog-body min-h-0 overflow-y-auto overscroll-contain p-5 sm:p-6">
           {children}
         </div>
         {footer && (
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/80 px-5 py-4 sm:px-6">
+          <div className="admin-dialog-footer flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/80 px-5 py-4 sm:px-6">
             {footer}
           </div>
         )}

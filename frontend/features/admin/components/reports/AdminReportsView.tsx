@@ -14,7 +14,7 @@ const TARGET_BADGE_CONFIG: Record<
 > = {
   FORUM_POST: {
     label: "Bài viết diễn đàn",
-    className: "bg-sky-50 text-sky-700 border-sky-200",
+    className: "bg-admin-brand-50 text-admin-brand-700 border-admin-brand-200",
     manageHref: "/quan-ly/dien-dan",
   },
   STORY: {
@@ -87,17 +87,17 @@ export function AdminReportsView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            <Link href="/quan-ly" className="hover:text-slate-700 transition">
+          <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+            <Link href="/quan-ly" className="hover:text-gray-700 transition">
               Quản trị
             </Link>
             <span>/</span>
             <span className="text-rose-600">Báo cáo vi phạm</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight sm:text-3xl">
+          <h1 className="admin-page-title text-2xl font-semibold text-gray-900 tracking-tight sm:text-3xl">
             Quản lý báo cáo nội dung vi phạm
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Theo dõi toàn bộ báo cáo từ người dùng đối với bài viết diễn đàn, truyện, chương truyện và bình luận.
           </p>
         </div>
@@ -106,7 +106,7 @@ export function AdminReportsView() {
           type="button"
           onClick={() => void reportsQuery.refetch()}
           disabled={reportsQuery.isFetching}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition shadow-admin-card cursor-pointer self-start sm:self-auto"
         >
           <svg
             className={`w-4 h-4 ${reportsQuery.isFetching ? "animate-spin" : ""}`}
@@ -126,7 +126,7 @@ export function AdminReportsView() {
       </div>
 
       {/* Filter Bar */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs space-y-4">
+      <div className="admin-filter-bar rounded-2xl border border-gray-200 bg-white p-4 shadow-admin-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-1.5">
             {tabs.map((item) => {
@@ -139,9 +139,9 @@ export function AdminReportsView() {
                     setTab(item.key);
                     setPage(1);
                   }}
-                  className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer ${active
-                      ? "bg-slate-900 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900"
+                  className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition cursor-pointer ${active
+                      ? "bg-gray-900 text-white shadow-admin-card"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200/80 hover:text-gray-900"
                     }`}
                 >
                   {item.label}
@@ -150,15 +150,15 @@ export function AdminReportsView() {
             })}
           </div>
 
-          <label className="text-xs font-semibold text-slate-600">Trạng thái
-            <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value as ReportStatus | "ALL"); setPage(1); }} className="mt-1 block rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+          <label className="text-xs font-semibold text-gray-600">Trạng thái
+            <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value as ReportStatus | "ALL"); setPage(1); }} className="mt-1 block rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
               <option value="ALL">Tất cả trạng thái</option><option value="PENDING">Chưa xử lý</option><option value="IN_REVIEW">Đang xem xét</option><option value="ACTION_TAKEN">Đã xử lý vi phạm</option><option value="REJECTED">Từ chối báo cáo</option>
             </select>
           </label>
 
           <div className="relative min-w-[240px] max-w-sm">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -175,16 +175,16 @@ export function AdminReportsView() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo nội dung bị tố cáo, lý do, người gửi..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+              className="w-full rounded-lg border border-gray-200 bg-gray-50/50 pl-9 pr-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-admin-brand-500 focus:bg-white focus:outline-none transition"
             />
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white shadow-2xs overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-admin-card overflow-hidden">
         {reportsQuery.isPending ? (
-          <div className="p-16 text-center text-sm text-slate-500">
+          <div className="p-16 text-center text-sm text-gray-500">
             Đang tải danh sách báo cáo vi phạm...
           </div>
         ) : reportsQuery.isError ? (
@@ -193,7 +193,7 @@ export function AdminReportsView() {
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="p-16 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -203,28 +203,28 @@ export function AdminReportsView() {
                 />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="text-base font-semibold text-gray-900">
               Không có báo cáo vi phạm nào
             </h3>
-            <p className="mt-1 text-xs sm:text-sm text-slate-500">
+            <p className="mt-1 text-xs sm:text-sm text-gray-500">
               Hiện chưa ghi nhận báo cáo nào trong bộ lọc này.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+            <table className="admin-data-table w-full text-left border-collapse text-xs sm:text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  <th className="py-3.5 px-4">Người báo cáo</th>
-                  <th className="py-3.5 px-4">Loại nội dung</th>
-                  <th className="py-3.5 px-4 min-w-[220px]">Nội dung bị báo cáo</th>
-                  <th className="py-3.5 px-4 min-w-[260px]">Lý do & Chi tiết tố cáo</th>
-                  <th className="py-3.5 px-4">{"Trạng thái xử lý"}</th>
-                  <th className="py-3.5 px-4">{"Thời gian"}</th>
-                  <th className="py-3.5 px-4 text-right">Đi tới xử lý</th>
+                <tr className="border-b border-gray-200 bg-gray-50/75 text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="py-3.5 px-5">Người báo cáo</th>
+                  <th className="py-3.5 px-5">Loại nội dung</th>
+                  <th className="py-3.5 px-5 min-w-[220px]">Nội dung bị báo cáo</th>
+                  <th className="py-3.5 px-5 min-w-[260px]">Lý do & Chi tiết tố cáo</th>
+                  <th className="py-3.5 px-5">{"Trạng thái xử lý"}</th>
+                  <th className="py-3.5 px-5">{"Thời gian"}</th>
+                  <th className="py-3.5 px-5 text-right">Đi tới xử lý</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-gray-100">
                 {filteredItems.map((report) => {
                   const reporter = report.userId;
                   const name =
@@ -234,10 +234,10 @@ export function AdminReportsView() {
                     TARGET_BADGE_CONFIG.FORUM_POST;
 
                   return (
-                    <tr key={report._id} className="hover:bg-slate-50/70 transition">
-                      <td className="py-3.5 px-4 align-top">
+                    <tr key={report._id} className="hover:bg-gray-50/70 transition">
+                      <td className="py-4 px-5 align-top">
                         <div className="flex items-center gap-2.5">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
                             {reporter?.avatarUrl ? (
                               <Image
                                 src={reporter.avatarUrl}
@@ -247,83 +247,83 @@ export function AdminReportsView() {
                                 className="object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center font-bold text-[11px] text-indigo-700 bg-indigo-50">
+                              <div className="w-full h-full flex items-center justify-center font-medium text-xs text-admin-brand-700 bg-admin-brand-50">
                                 {name.charAt(0).toUpperCase()}
                               </div>
                             )}
                           </div>
                           <div>
-                            <div className="font-semibold text-slate-900 text-xs">
+                            <div className="font-semibold text-gray-900 text-xs">
                               {name}
                             </div>
-                            <div className="text-[10px] text-slate-400">
+                            <div className="text-xs text-gray-400">
                               @{reporter?.username || "user"}
                             </div>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 align-top whitespace-nowrap">
+                      <td className="py-4 px-5 align-top whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${badge.className}`}
+                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${badge.className}`}
                         >
                           {badge.label}
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-4 align-top text-xs text-slate-700">
+                      <td className="py-4 px-5 align-top text-sm text-gray-700">
                         {report.targetMeta ? (
                           <div className="space-y-0.5 max-w-[260px]">
                             {report.targetMeta.url ? (
                               <Link
                                 href={report.targetMeta.url}
                                 target="_blank"
-                                className="font-bold text-sky-700 hover:text-sky-800 hover:underline line-clamp-2 block"
+                                className="font-medium text-admin-brand-700 hover:text-admin-brand-800 hover:underline line-clamp-2 block"
                               >
                                 {report.targetMeta.title} ↗
                               </Link>
                             ) : (
-                              <span className="font-bold text-slate-800 line-clamp-2 block">
+                              <span className="font-medium text-gray-800 line-clamp-2 block">
                                 {report.targetMeta.title}
                               </span>
                             )}
                             {report.targetMeta.subtitle && (
-                              <p className="text-[11px] text-slate-400 line-clamp-1">
+                              <p className="text-xs text-gray-400 line-clamp-1">
                                 {report.targetMeta.subtitle}
                               </p>
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-400 italic">Nội dung đã ẩn hoặc xóa</span>
+                          <span className="text-gray-400 italic">Nội dung đã ẩn hoặc xóa</span>
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4 align-top">
-                        <p className="text-xs text-slate-800 whitespace-pre-wrap break-words leading-relaxed">
+                      <td className="py-4 px-5 align-top">
+                        <p className="text-xs text-gray-800 whitespace-pre-wrap break-words leading-relaxed">
                           {report.reason}
                         </p>
                       </td>
 
-                      <td className="py-3.5 px-4 align-top min-w-[280px]">
+                      <td className="py-4 px-5 align-top min-w-[280px]">
                         <div className="space-y-2">
-                          <select value={statuses[report._id] ?? report.status ?? "PENDING"} onChange={(e) => setStatuses((current) => ({ ...current, [report._id]: e.target.value as ReportStatus }))} className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs">
+                          <select value={statuses[report._id] ?? report.status ?? "PENDING"} onChange={(e) => setStatuses((current) => ({ ...current, [report._id]: e.target.value as ReportStatus }))} className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm">
                             <option value="PENDING">{"Chưa xử lý"}</option><option value="IN_REVIEW">{"Đang xem xét"}</option><option value="ACTION_TAKEN">{"Đã xử lý vi phạm"}</option><option value="REJECTED">{"Từ chối báo cáo"}</option>
                           </select>
-                          <textarea rows={2} value={resolutionNotes[report._id] ?? report.resolutionNote ?? ""} onChange={(e) => setResolutionNotes((current) => ({ ...current, [report._id]: e.target.value }))} placeholder="Ghi kết quả xem xét; bắt buộc khi đóng hồ sơ" className="w-full resize-y rounded-lg border border-slate-200 px-2 py-1.5 text-xs" />
-                          <button type="button" disabled={updateReport.isPending || (((statuses[report._id] ?? report.status) === "ACTION_TAKEN" || (statuses[report._id] ?? report.status) === "REJECTED") && !(resolutionNotes[report._id] ?? report.resolutionNote)?.trim())} onClick={() => updateReport.mutate({ id: report._id, status: statuses[report._id] ?? report.status ?? "PENDING", resolutionNote: resolutionNotes[report._id] ?? report.resolutionNote ?? "" })} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">{"Lưu cập nhật"}</button>
-                          {report.history?.length ? <details className="text-[10px] text-slate-500"><summary className="cursor-pointer">Review history ({report.history.length})</summary><ol className="mt-1 space-y-1">{report.history.map((entry, index) => <li key={`${entry.createdAt}-${index}`} className="border-l-2 border-slate-200 pl-2">{new Date(entry.createdAt).toLocaleString("vi-VN")} - {entry.actorId?.displayName || entry.actorId?.username || "Manager"} - {entry.status}{entry.note ? `: ${entry.note}` : ""}</li>)}</ol></details> : null}
-                          {report.reviewedBy && <p className="text-[10px] text-slate-400">{"Đã cập nhật bởi "}{report.reviewedBy.displayName || report.reviewedBy.username}{report.reviewedAt ? ` ? ${new Date(report.reviewedAt).toLocaleString("vi-VN")}` : ""}</p>}
+                          <textarea rows={2} value={resolutionNotes[report._id] ?? report.resolutionNote ?? ""} onChange={(e) => setResolutionNotes((current) => ({ ...current, [report._id]: e.target.value }))} placeholder="Ghi kết quả xem xét; bắt buộc khi đóng hồ sơ" className="w-full resize-y rounded-lg border border-gray-200 px-2 py-1.5 text-sm" />
+                          <button type="button" disabled={updateReport.isPending || (((statuses[report._id] ?? report.status) === "ACTION_TAKEN" || (statuses[report._id] ?? report.status) === "REJECTED") && !(resolutionNotes[report._id] ?? report.resolutionNote)?.trim())} onClick={() => updateReport.mutate({ id: report._id, status: statuses[report._id] ?? report.status ?? "PENDING", resolutionNote: resolutionNotes[report._id] ?? report.resolutionNote ?? "" })} className="rounded-lg bg-admin-brand-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50">{"Lưu cập nhật"}</button>
+                          {report.history?.length ? <details className="text-xs text-gray-500"><summary className="cursor-pointer">Review history ({report.history.length})</summary><ol className="mt-1 space-y-1">{report.history.map((entry, index) => <li key={`${entry.createdAt}-${index}`} className="border-l-2 border-gray-200 pl-2">{new Date(entry.createdAt).toLocaleString("vi-VN")} - {entry.actorId?.displayName || entry.actorId?.username || "Manager"} - {entry.status}{entry.note ? `: ${entry.note}` : ""}</li>)}</ol></details> : null}
+                          {report.reviewedBy && <p className="text-xs text-gray-400">{"Đã cập nhật bởi "}{report.reviewedBy.displayName || report.reviewedBy.username}{report.reviewedAt ? ` ? ${new Date(report.reviewedAt).toLocaleString("vi-VN")}` : ""}</p>}
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 align-top whitespace-nowrap text-xs text-slate-500">
+                      <td className="py-4 px-5 align-top whitespace-nowrap text-sm text-gray-500">
                         {new Date(report.createdAt).toLocaleString("vi-VN")}
                       </td>
 
-                      <td className="py-3.5 px-4 align-top text-right whitespace-nowrap">
+                      <td className="py-4 px-5 align-top text-right whitespace-nowrap">
                         <Link
                           href={badge.manageHref}
-                          className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition"
+                          className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-admin-brand-600 hover:bg-admin-brand-50 hover:border-admin-brand-200 transition"
                         >
                           <span>Kiểm duyệt</span>
                           <span>→</span>
@@ -339,7 +339,7 @@ export function AdminReportsView() {
 
         {/* Pagination */}
         {pagination && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-500">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-xs text-gray-500">
             <span>
               Trang <strong>{pagination.page}</strong> / {pagination.totalPages} (Tổng{" "}
               {pagination.total} báo cáo)
@@ -349,7 +349,7 @@ export function AdminReportsView() {
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 Trước
               </button>
@@ -359,7 +359,7 @@ export function AdminReportsView() {
                 onClick={() =>
                   setPage((p) => Math.min(pagination.totalPages, p + 1))
                 }
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 Sau
               </button>

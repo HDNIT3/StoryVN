@@ -75,14 +75,14 @@ export function AdminTransactionsView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <h1 className="admin-page-title text-2xl sm:text-2xl font-semibold text-gray-900 tracking-tight">
               Quản lý Giao Dịch Nạp Xu
             </h1>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-admin-brand-50 text-admin-brand-700 border border-admin-brand-200">
               VNPay Sandbox
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Theo dõi, đối soát và quản lý tất cả các giao dịch thanh toán gói Xu trên hệ thống StoryVN.
           </p>
         </div>
@@ -92,7 +92,7 @@ export function AdminTransactionsView() {
           <button
             type="button"
             onClick={() => setShowCharts(!showCharts)}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-admin-brand-50 hover:bg-admin-brand-100 text-admin-brand-700 border border-admin-brand-200 rounded-lg text-sm font-semibold transition-all shadow-admin-card cursor-pointer"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -104,9 +104,9 @@ export function AdminTransactionsView() {
           <button
             type="button"
             onClick={() => refetch()}
-            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-gray-50 active:bg-gray-100 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold transition-all shadow-admin-card cursor-pointer"
           >
-            <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             <span>Làm mới</span>
@@ -117,7 +117,7 @@ export function AdminTransactionsView() {
       {/* ─── Khối Biểu Đồ Thống Kê Giao Dịch Thực Tế ──────────────── */}
       {showCharts && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-in fade-in duration-300">
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
             <AdminAreaChart
               title="Biểu Đồ Doanh Thu Giao Dịch (14 ngày qua)"
               subtitle="Số liệu thanh toán thực tế đã đối soát thành công qua VNPay"
@@ -139,7 +139,7 @@ export function AdminTransactionsView() {
             />
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-admin-card">
             <AdminDonutChart
               title="Tỷ Lệ Trạng Thái Giao Dịch"
               subtitle="Cơ cấu các lệnh nạp xu theo trạng thái"
@@ -176,13 +176,13 @@ export function AdminTransactionsView() {
           label="Đã Thanh Toán (Thành công)"
           value={stats.successCount}
           icon={
-            <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 text-admin-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           }
-          color="border-indigo-200 text-indigo-800"
+          color="border-admin-brand-200 text-admin-brand-800"
           badge={
-            <div className="flex items-center gap-1 font-bold text-amber-600 text-xs">
+            <div className="flex items-center gap-1 font-medium text-amber-600 text-xs">
               <Image src="/icon/coin.svg" alt="Xu" width={14} height={14} className="w-3.5 h-3.5 object-contain" />
               <span>{stats.totalCoinSold.toLocaleString("vi-VN")} Xu</span>
             </div>
@@ -237,11 +237,11 @@ export function AdminTransactionsView() {
 
       {/* ─── Phân Trang ───────────────────────────────────────────── */}
       {meta.totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-gray-500">
           <span>
-            Hiển thị <strong className="text-slate-800">{items.length}</strong> /{" "}
-            <strong className="text-slate-800">{meta.total}</strong> giao dịch (Trang{" "}
-            <strong className="text-slate-800">{meta.page}</strong> / {meta.totalPages})
+            Hiển thị <strong className="text-gray-800">{items.length}</strong> /{" "}
+            <strong className="text-gray-800">{meta.total}</strong> giao dịch (Trang{" "}
+            <strong className="text-gray-800">{meta.page}</strong> / {meta.totalPages})
           </span>
 
           <div className="flex items-center gap-1.5">
@@ -249,7 +249,7 @@ export function AdminTransactionsView() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               ← Trước
             </button>
@@ -262,14 +262,14 @@ export function AdminTransactionsView() {
 
                 return (
                   <React.Fragment key={p}>
-                    {showEllipsis && <span className="px-1 text-slate-400">...</span>}
+                    {showEllipsis && <span className="px-1 text-gray-400">...</span>}
                     <button
                       type="button"
                       onClick={() => setPage(p)}
-                      className={`w-8 h-8 rounded-xl font-bold transition-all cursor-pointer ${
+                      className={`w-8 h-8 rounded-lg font-medium transition-all cursor-pointer ${
                         page === p
-                          ? "bg-indigo-600 text-white shadow-xs"
-                          : "border border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
+                          ? "bg-admin-brand-600 text-white shadow-admin-card"
+                          : "border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
                       }`}
                     >
                       {p}
@@ -282,7 +282,7 @@ export function AdminTransactionsView() {
               type="button"
               disabled={page >= meta.totalPages}
               onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               Sau →
             </button>

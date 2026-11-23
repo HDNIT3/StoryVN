@@ -279,31 +279,22 @@ export function AdminSidebar({
     router.push("/dang-nhap");
   };
 
-  const avatarInitial = user
-    ? (user.displayName || user.username || "A").charAt(0).toUpperCase()
-    : "A";
-
-  const roleLabel: Record<string, string> = {
-    ADMIN: "Quản trị viên",
-    MANAGER: "Quản lý",
-  };
-
   return (
     <>
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 lg:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 bg-gray-900/40 z-50 lg:hidden animate-in fade-in duration-200"
           onClick={onMobileClose}
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-full flex flex-col bg-white border-r border-slate-200/80 text-slate-700 transition-all duration-300 z-50 shadow-[0_0_25px_-5px_rgba(0,0,0,0.04)] ${
-          mobileOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0"
-        } ${collapsed ? "lg:w-20" : "lg:w-64"}`}
+        className={`fixed top-0 left-0 h-full flex flex-col bg-white border-r border-gray-200 text-gray-700 transition-all duration-300 z-50 ${
+          mobileOpen ? "translate-x-0 w-[290px]" : "-translate-x-full lg:translate-x-0"
+        } ${collapsed ? "lg:w-[90px]" : "lg:w-[290px]"}`}
       >
         {/* Header Logo + Collapse */}
-        <div className={`flex items-center justify-between px-5 pt-5 pb-3 ${collapsed ? "lg:flex-col lg:px-2 lg:gap-2.5 lg:items-center" : ""}`}>
+        <div className={`flex items-center justify-between px-5 pt-6 pb-5 ${collapsed ? "lg:flex-col lg:px-2 lg:gap-2.5 lg:items-center" : ""}`}>
           <Link
             href="/"
             onClick={onMobileClose}
@@ -321,8 +312,8 @@ export function AdminSidebar({
               />
             </div>
             <div className="flex flex-col select-none">
-              <span className="font-black text-xl tracking-tight text-slate-900 flex items-center leading-none">
-                Story<span className="text-sky-500 ml-0.5">VN</span>
+              <span className="font-bold text-2xl tracking-tight text-gray-900 flex items-center leading-none">
+                Story<span className="text-[#465fff] ml-0.5">VN</span>
               </span>
               <span className="text-[9px] font-bold tracking-widest text-slate-400 mt-1 uppercase leading-none">
                 TIỂU THUYẾT TRỰC TUYẾN
@@ -375,36 +366,8 @@ export function AdminSidebar({
           </button>
         </div>
 
-        {/* User Card Pill */}
-        {user && (
-          <div className={`px-3 py-2 ${collapsed ? "lg:hidden" : ""}`}>
-            <div className="bg-slate-50 hover:bg-slate-100/70 transition-colors rounded-2xl p-2.5 flex items-center gap-3 border border-slate-200/80 shadow-2xs">
-              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-sky-500 text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-xs ring-1 ring-slate-200">
-                {user.avatarUrl ? (
-                  <Image
-                    src={user.avatarUrl}
-                    alt={user.displayName}
-                    width={36}
-                    height={36}
-                    className="rounded-xl object-cover w-full h-full"
-                  />
-                ) : (
-                  avatarInitial
-                )}
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
-              </div>
-              <div className="overflow-hidden min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">{user.displayName}</p>
-                <span className="inline-block text-[10px] text-indigo-700 font-semibold bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100 mt-0.5">
-                  {roleLabel[user.role] || user.role}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Navigation list */}
-        <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
+        <nav className="flex-1 px-5 py-4 overflow-y-auto space-y-6">
           {[
             {
               key: "overview",
@@ -431,13 +394,13 @@ export function AdminSidebar({
             return (
               <div key={group.key} className="space-y-1">
                 <p
-                  className={`text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ${
+                  className={`text-xs font-normal text-gray-400 uppercase tracking-wide mb-3 ${
                     collapsed ? "lg:text-center px-1" : "px-3"
                   }`}
                 >
                   {collapsed ? "···" : group.title}
                 </p>
-                <ul className="space-y-0.5">
+                <ul className="space-y-1">
                   {group.items.map((item) => {
                     const isActive =
                       item.href === "/quan-ly"
@@ -448,21 +411,21 @@ export function AdminSidebar({
                         <Link
                           href={item.href}
                           onClick={onMobileClose}
-                          className={`group relative flex items-center gap-3 px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-[13px] transition-all cursor-pointer ${
+                          className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer ${
                             isActive
-                              ? "bg-gradient-to-r from-indigo-50/90 to-sky-50/40 text-indigo-900 font-bold border border-indigo-200/80 shadow-2xs"
-                              : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 font-medium"
+                              ? "bg-[#ecf3ff] text-[#465fff] font-medium"
+                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium"
                           }`}
                           title={collapsed ? item.label : undefined}
                         >
                           {isActive && (
-                            <span className="absolute left-0 top-2 bottom-2 w-1 bg-gradient-to-b from-sky-500 to-indigo-600 rounded-r" />
+                            <span className="hidden" />
                           )}
                           <div
                             className={`shrink-0 transition-colors ${
                               isActive
-                                ? "text-indigo-600"
-                                : "text-slate-400 group-hover:text-slate-700"
+                                ? "text-[#465fff]"
+                                : "text-gray-500 group-hover:text-gray-700"
                             }`}
                           >
                             {item.icon}
@@ -472,12 +435,12 @@ export function AdminSidebar({
                           </span>
                           {item.badge !== undefined && item.badge > 0 && (
                             <span
-                              className={`ml-auto text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-2xs ${
+                              className={`ml-auto text-[11px] font-medium px-1.5 py-0.5 rounded-md min-w-[18px] text-center ${
                                 collapsed ? "lg:hidden" : ""
                               } ${
                                 isActive
-                                  ? "bg-indigo-600 text-white"
-                                  : "bg-amber-500 text-white animate-pulse"
+                                  ? "bg-[#465fff] text-white"
+                                  : "bg-[#ecf3ff] text-[#465fff]"
                               }`}
                             >
                               {item.badge > 99 ? "99+" : item.badge}
@@ -494,7 +457,7 @@ export function AdminSidebar({
 
           {/* Account Group */}
           <div className="pt-2 border-t border-slate-200/70">
-            <p className={`text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 ${collapsed ? "lg:text-center px-1" : "px-3"}`}>
+            <p className={`text-xs font-normal text-gray-400 uppercase tracking-wide mb-2 ${collapsed ? "lg:text-center px-1" : "px-3"}`}>
               {collapsed ? "···" : "Tài khoản"}
             </p>
             <ul className="space-y-1">
@@ -502,10 +465,10 @@ export function AdminSidebar({
                 <Link
                   href="/ho-so"
                   onClick={onMobileClose}
-                  className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-[13px] font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-all"
+                  className="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-all"
                   title={collapsed ? "Hồ sơ cá nhân" : undefined}
                 >
-                  <svg className="w-5 h-5 shrink-0 text-slate-400 group-hover:text-slate-700 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 shrink-0 text-gray-500 group-hover:text-gray-700 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span className={collapsed ? "lg:hidden" : ""}>Hồ sơ cá nhân</span>
@@ -517,7 +480,7 @@ export function AdminSidebar({
                     onMobileClose();
                     handleLogout();
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-[13px] font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
                   title={collapsed ? "Đăng xuất" : undefined}
                 >
                   <svg className="w-5 h-5 shrink-0 text-slate-400 hover:text-rose-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -531,7 +494,7 @@ export function AdminSidebar({
         </nav>
 
         {/* Footer */}
-        <div className="p-3 border-t border-slate-200/60 mt-auto">
+        <div className="p-4 border-t border-gray-200 mt-auto">
           <div className="flex items-center gap-2.5 px-2 py-1.5 text-[11px] text-slate-500 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 shrink-0" />
             <span className={collapsed ? "lg:hidden" : ""}>Hệ thống trực tuyến</span>

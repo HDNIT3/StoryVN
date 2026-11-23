@@ -111,17 +111,17 @@ function TicketDetailAndReplyModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs animate-in fade-in duration-150"
+      className="admin-dialog-overlay fixed inset-0 z-[70] flex items-center justify-center bg-gray-950/50 p-4 animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+        className="admin-dialog w-full max-w-3xl max-h-[calc(100dvh-3rem)] flex flex-col rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-6 py-4">
+        <div className="admin-dialog-header flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gray-50/70 px-6 py-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 font-bold">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-admin-brand-100 text-admin-brand-700 font-medium">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -133,22 +133,22 @@ function TicketDetailAndReplyModal({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded-lg bg-slate-900 px-2 py-0.5 text-xs font-extrabold text-white">
+                <span className="rounded-lg bg-gray-900 px-2 py-0.5 text-xs font-semibold text-white">
                   #{ticket.ticketCode}
                 </span>
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${statusCfg.badgeClass}`}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusCfg.badgeClass}`}
                 >
                   <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dotClass}`} />
                   {statusCfg.label}
                 </span>
                 <span
-                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-bold ${priorityCfg.badgeClass}`}
+                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${priorityCfg.badgeClass}`}
                 >
                   {priorityCfg.label}
                 </span>
               </div>
-              <h3 className="mt-1 text-sm sm:text-base font-bold text-slate-900 line-clamp-1">
+              <h3 className="admin-dialog-title mt-1 text-sm sm:text-base font-semibold text-gray-900 line-clamp-1">
                 {ticket.subject}
               </h3>
             </div>
@@ -157,7 +157,7 @@ function TicketDetailAndReplyModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
+            className="admin-dialog-close rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition cursor-pointer"
             aria-label="Đóng"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -167,11 +167,11 @@ function TicketDetailAndReplyModal({
         </div>
 
         {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        <div className="admin-dialog-body flex-1 overflow-y-auto p-6 space-y-5">
           {/* Sender & Quick Controls */}
-          <div className="grid gap-3 sm:grid-cols-12 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+          <div className="grid gap-3 sm:grid-cols-12 rounded-2xl border border-gray-200 bg-gray-50/70 p-4">
             <div className="sm:col-span-7 flex items-center gap-3 min-w-0">
-              <div className="relative h-11 w-11 shrink-0 rounded-full overflow-hidden border border-slate-200 bg-indigo-50 flex items-center justify-center font-bold text-indigo-700">
+              <div className="relative h-11 w-11 shrink-0 rounded-full overflow-hidden border border-gray-200 bg-admin-brand-50 flex items-center justify-center font-medium text-admin-brand-700">
                 {ticket.userId?.avatarUrl ? (
                   <Image
                     src={ticket.userId.avatarUrl}
@@ -186,23 +186,23 @@ function TicketDetailAndReplyModal({
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-bold text-slate-900 truncate">
+                  <span className="text-sm font-medium text-gray-900 truncate">
                     {ticket.senderName}
                   </span>
                   {ticket.userId ? (
-                    <span className="rounded bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700">
+                    <span className="rounded bg-admin-brand-50 border border-admin-brand-200 px-1.5 py-0.5 text-xs font-medium text-admin-brand-700">
                       Thành viên @{ticket.userId.username}
                     </span>
                   ) : (
-                    <span className="rounded bg-slate-200/70 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+                    <span className="rounded bg-gray-200/70 px-1.5 py-0.5 text-xs font-semibold text-gray-600">
                       Khách liên hệ
                     </span>
                   )}
                 </div>
-                <p className="text-xs font-medium text-sky-700 truncate mt-0.5">
+                <p className="text-xs font-medium text-admin-brand-700 truncate mt-0.5">
                   ✉️ {ticket.email}
                 </p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   Chủ đề: <strong>{SUPPORT_TOPIC_LABELS[ticket.topic] || ticket.topic}</strong> · Gửi lúc{" "}
                   {new Date(ticket.createdAt).toLocaleString("vi-VN")}
                 </p>
@@ -211,7 +211,7 @@ function TicketDetailAndReplyModal({
 
             <div className="sm:col-span-5 flex flex-wrap sm:justify-end items-center gap-2">
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                <label className="block text-xs font-medium uppercase text-gray-400 mb-1">
                   Trạng thái phiếu
                 </label>
                 <select
@@ -220,7 +220,7 @@ function TicketDetailAndReplyModal({
                   onChange={(e) =>
                     void handleQuickStatusChange(e.target.value as SupportTicketStatus)
                   }
-                  className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:border-indigo-500 focus:outline-none"
+                  className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-800 focus:border-admin-brand-500 focus:outline-none"
                 >
                   <option value="OPEN">Chờ phản hồi</option>
                   <option value="IN_PROGRESS">Đang xử lý</option>
@@ -230,7 +230,7 @@ function TicketDetailAndReplyModal({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                <label className="block text-xs font-medium uppercase text-gray-400 mb-1">
                   Độ ưu tiên
                 </label>
                 <select
@@ -241,7 +241,7 @@ function TicketDetailAndReplyModal({
                       e.target.value as SupportTicketPriority
                     )
                   }
-                  className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:border-indigo-500 focus:outline-none"
+                  className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-800 focus:border-admin-brand-500 focus:outline-none"
                 >
                   <option value="NORMAL">Bình thường</option>
                   <option value="HIGH">Ưu tiên cao</option>
@@ -253,7 +253,7 @@ function TicketDetailAndReplyModal({
 
           {/* Conversation Thread */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Lịch sử trao đổi & Phản hồi ({threadMessages.length})
             </h4>
 
@@ -265,40 +265,40 @@ function TicketDetailAndReplyModal({
                     key={msg._id || idx}
                     className={`rounded-2xl border p-4 ${
                       isAdmin
-                        ? "border-sky-200 bg-sky-50/60 ml-4 sm:ml-10"
-                        : "border-slate-200 bg-white mr-4 sm:mr-10"
+                        ? "border-admin-brand-200 bg-admin-brand-50/60 ml-4 sm:ml-10"
+                        : "border-gray-200 bg-white mr-4 sm:mr-10"
                     }`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[11px] font-bold ${
+                          className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${
                             isAdmin
-                              ? "bg-sky-600 text-white"
-                              : "bg-slate-800 text-white"
+                              ? "bg-admin-brand-600 text-white"
+                              : "bg-gray-800 text-white"
                           }`}
                         >
                           {isAdmin ? `Ban quản trị (${msg.senderName})` : msg.senderName}
                         </span>
                         {isAdmin && msg.emailSent && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-medium text-emerald-700">
                             ✓ Đã gửi qua Email người dùng
                           </span>
                         )}
                         {isAdmin && msg.emailError && (
                           <span
                             title={msg.emailError}
-                            className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-700"
+                            className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-medium text-amber-700"
                           >
                             ⚠ Chưa gửi được SMTP (Chỉ lưu hệ thống)
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-xs text-gray-400">
                         {new Date(msg.createdAt).toLocaleString("vi-VN")}
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
                       {msg.content}
                     </p>
                   </div>
@@ -310,10 +310,10 @@ function TicketDetailAndReplyModal({
           {/* Reply Composer */}
           <form
             onSubmit={handleSendReply}
-            className="rounded-2xl border border-indigo-200/80 bg-indigo-50/30 p-4 sm:p-5 space-y-3.5"
+            className="admin-dialog-form rounded-2xl border border-admin-brand-200/80 bg-admin-brand-50/30 p-4 sm:p-5 space-y-3.5"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-indigo-950">
+              <label className="text-xs font-medium uppercase tracking-wider text-admin-brand-950">
                 Soạn phản hồi gửi người dùng
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -322,7 +322,7 @@ function TicketDetailAndReplyModal({
                     key={tpl.label}
                     type="button"
                     onClick={() => setReplyText(tpl.text)}
-                    className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-50 transition cursor-pointer"
+                    className="rounded-lg border border-admin-brand-200 bg-white px-2.5 py-1 text-sm font-semibold text-admin-brand-700 hover:bg-admin-brand-50 transition cursor-pointer"
                   >
                     + {tpl.label}
                   </button>
@@ -337,32 +337,32 @@ function TicketDetailAndReplyModal({
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder={`Nhập nội dung giải đáp cho ${ticket.senderName}...`}
-              className="w-full rounded-2xl border border-slate-200 bg-white p-3.5 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none resize-none"
+              className="w-full rounded-lg border border-gray-200 bg-white p-3.5 text-sm sm:text-sm text-gray-800 placeholder-gray-400 focus:border-admin-brand-500 focus:outline-none resize-none"
             />
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
               <div className="flex flex-wrap items-center gap-4">
-                <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                <label className="inline-flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={sendEmail}
                     onChange={(e) => setSendEmail(e.target.checked)}
-                    className="h-4 w-4 rounded accent-sky-600"
+                    className="h-4 w-4 rounded accent-admin-brand-600"
                   />
                   <span>
                     Gửi trực tiếp qua Email tới{" "}
-                    <strong className="text-sky-700">{ticket.email}</strong>
+                    <strong className="text-admin-brand-700">{ticket.email}</strong>
                   </span>
                 </label>
 
                 <div className="flex items-center gap-1.5 text-xs">
-                  <span className="text-slate-500 font-medium">Chuyển sang:</span>
+                  <span className="text-gray-500 font-medium">Chuyển sang:</span>
                   <select
                     value={nextStatus}
                     onChange={(e) =>
                       setNextStatus(e.target.value as SupportTicketStatus)
                     }
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold text-slate-800 focus:border-indigo-500 focus:outline-none"
+                    className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm font-medium text-gray-800 focus:border-admin-brand-500 focus:outline-none"
                   >
                     <option value="RESOLVED">Đã phản hồi (Resolved)</option>
                     <option value="IN_PROGRESS">Đang xử lý (In Progress)</option>
@@ -380,7 +380,7 @@ function TicketDetailAndReplyModal({
                   size="sm"
                   isLoading={replyMutation.isPending}
                   disabled={replyMutation.isPending || !replyText.trim()}
-                  className="bg-sky-600 hover:bg-sky-700 text-white"
+                  className="bg-admin-brand-600 hover:bg-admin-brand-700 text-white"
                 >
                   {sendEmail ? "Gửi phản hồi & Email" : "Lưu phản hồi"}
                 </Button>
@@ -428,17 +428,17 @@ export function AdminSupportView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            <Link href="/quan-ly" className="hover:text-slate-700 transition">
+          <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+            <Link href="/quan-ly" className="hover:text-gray-700 transition">
               Quản trị
             </Link>
             <span>/</span>
-            <span className="text-sky-600">Tiếp nhận hỗ trợ</span>
+            <span className="text-admin-brand-600">Tiếp nhận hỗ trợ</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight sm:text-3xl">
+          <h1 className="admin-page-title text-2xl font-semibold text-gray-900 tracking-tight sm:text-3xl">
             Tiếp nhận & Phản hồi Hỗ trợ người dùng
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Quản lý các phiếu yêu cầu trợ giúp, giải đáp thắc mắc và gửi phản hồi trực tiếp qua Email & Hộp thư hỗ trợ của người dùng.
           </p>
         </div>
@@ -447,7 +447,7 @@ export function AdminSupportView() {
           <Link
             href="/ho-tro"
             target="_blank"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-admin-card"
           >
             <span>Trang Hỗ trợ công khai</span>
             <span>↗</span>
@@ -459,7 +459,7 @@ export function AdminSupportView() {
               void ticketsQuery.refetch();
             }}
             disabled={ticketsQuery.isFetching}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition shadow-admin-card cursor-pointer"
           >
             <svg
               className={`h-4 w-4 ${ticketsQuery.isFetching ? "animate-spin" : ""}`}
@@ -481,29 +481,29 @@ export function AdminSupportView() {
 
       {/* KPI Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-admin-card flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-admin-brand-50 text-admin-brand-600 flex items-center justify-center shrink-0">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500">Tổng phiếu hỗ trợ</div>
-            <div className="text-2xl font-bold text-slate-900 mt-0.5">
+            <div className="text-xs font-medium text-gray-500">Tổng phiếu hỗ trợ</div>
+            <div className="text-2xl font-medium text-gray-900 mt-0.5">
               {(stats?.total ?? 0).toLocaleString("vi-VN")}
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs flex items-center gap-4">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-admin-card flex items-center gap-4">
           <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500">Chờ phản hồi</div>
-            <div className="text-2xl font-bold text-amber-600 mt-0.5 flex items-center gap-2">
+            <div className="text-xs font-medium text-gray-500">Chờ phản hồi</div>
+            <div className="text-2xl font-medium text-amber-600 mt-0.5 flex items-center gap-2">
               {(stats?.open ?? 0).toLocaleString("vi-VN")}
               {(stats?.open ?? 0) > 0 && (
                 <span className="relative flex h-2.5 w-2.5">
@@ -515,29 +515,29 @@ export function AdminSupportView() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-admin-card flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-admin-brand-50 text-admin-brand-600 flex items-center justify-center shrink-0">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500">Đang xử lý</div>
-            <div className="text-2xl font-bold text-sky-600 mt-0.5">
+            <div className="text-xs font-medium text-gray-500">Đang xử lý</div>
+            <div className="text-2xl font-medium text-admin-brand-600 mt-0.5">
               {(stats?.inProgress ?? 0).toLocaleString("vi-VN")}
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs flex items-center gap-4">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-admin-card flex items-center gap-4">
           <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500">Đã giải quyết</div>
-            <div className="text-2xl font-bold text-emerald-600 mt-0.5">
+            <div className="text-xs font-medium text-gray-500">Đã giải quyết</div>
+            <div className="text-2xl font-medium text-emerald-600 mt-0.5">
               {(stats?.resolved ?? 0).toLocaleString("vi-VN")}
             </div>
           </div>
@@ -545,7 +545,7 @@ export function AdminSupportView() {
       </div>
 
       {/* Filter Bar */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs space-y-3">
+      <div className="admin-filter-bar rounded-2xl border border-gray-200 bg-white p-4 shadow-admin-card space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-1.5">
             {statusTabs.map((t) => {
@@ -558,16 +558,16 @@ export function AdminSupportView() {
                     setStatusTab(t.key);
                     setPage(1);
                   }}
-                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer ${
+                  className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold transition cursor-pointer ${
                     active
-                      ? "bg-slate-900 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900"
+                      ? "bg-gray-900 text-white shadow-admin-card"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200/80 hover:text-gray-900"
                   }`}
                 >
                   <span>{t.label}</span>
                   <span
-                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                      active ? "bg-white/20 text-white" : "bg-white text-slate-700"
+                    className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${
+                      active ? "bg-white/20 text-white" : "bg-white text-gray-700"
                     }`}
                   >
                     {t.count}
@@ -584,7 +584,7 @@ export function AdminSupportView() {
                 setTopicFilter(e.target.value as "ALL" | SupportTopic);
                 setPage(1);
               }}
-              className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none"
+              className="rounded-lg border border-gray-200 bg-gray-50/70 px-3 py-2 text-sm font-semibold text-gray-700 focus:border-admin-brand-500 focus:bg-white focus:outline-none"
             >
               <option value="ALL">Tất cả chủ đề</option>
               <option value="ACCOUNT">Tài khoản / OTP</option>
@@ -596,7 +596,7 @@ export function AdminSupportView() {
 
             <div className="relative min-w-[230px] flex-1 sm:flex-initial">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -611,7 +611,7 @@ export function AdminSupportView() {
                   setPage(1);
                 }}
                 placeholder="Tìm mã #SP, email, tên, tiêu đề..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50/50 pl-9 pr-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-admin-brand-500 focus:bg-white focus:outline-none transition"
               />
             </div>
           </div>
@@ -619,9 +619,9 @@ export function AdminSupportView() {
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white shadow-2xs overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-admin-card overflow-hidden">
         {ticketsQuery.isPending ? (
-          <div className="p-16 text-center text-sm text-slate-500">
+          <div className="p-16 text-center text-sm text-gray-500">
             Đang tải danh sách phiếu hỗ trợ...
           </div>
         ) : ticketsQuery.isError ? (
@@ -630,33 +630,33 @@ export function AdminSupportView() {
           </div>
         ) : items.length === 0 ? (
           <div className="p-16 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-3">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="text-base font-semibold text-gray-900">
               Chưa có phiếu yêu cầu hỗ trợ nào
             </h3>
-            <p className="mt-1 text-xs sm:text-sm text-slate-500">
+            <p className="mt-1 text-xs sm:text-sm text-gray-500">
               Các yêu cầu trợ giúp mới từ độc giả và tác giả sẽ hiển thị tại đây.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+            <table className="admin-data-table w-full text-left border-collapse text-xs sm:text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  <th className="py-3.5 px-4">Mã phiếu</th>
-                  <th className="py-3.5 px-4">Người gửi & Email</th>
-                  <th className="py-3.5 px-4">Chủ đề</th>
-                  <th className="py-3.5 px-4 min-w-[260px]">Tiêu đề & Nội dung</th>
-                  <th className="py-3.5 px-4">Trạng thái</th>
-                  <th className="py-3.5 px-4">Thời gian</th>
-                  <th className="py-3.5 px-4 text-right">Thao tác</th>
+                <tr className="border-b border-gray-200 bg-gray-50/75 text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="py-3.5 px-5">Mã phiếu</th>
+                  <th className="py-3.5 px-5">Người gửi & Email</th>
+                  <th className="py-3.5 px-5">Chủ đề</th>
+                  <th className="py-3.5 px-5 min-w-[260px]">Tiêu đề & Nội dung</th>
+                  <th className="py-3.5 px-5">Trạng thái</th>
+                  <th className="py-3.5 px-5">Thời gian</th>
+                  <th className="py-3.5 px-5 text-right">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-gray-100">
                 {items.map((ticket) => {
                   const statusCfg =
                     SUPPORT_STATUS_CONFIG[ticket.status] || SUPPORT_STATUS_CONFIG.OPEN;
@@ -673,76 +673,76 @@ export function AdminSupportView() {
                   return (
                     <tr
                       key={ticket.ticketCode}
-                      className="hover:bg-slate-50/70 transition"
+                      className="hover:bg-gray-50/70 transition"
                     >
-                      <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                        <span className="inline-block rounded-lg bg-slate-900 px-2 py-1 text-xs font-extrabold text-white">
+                      <td className="py-4 px-5 align-top whitespace-nowrap">
+                        <span className="inline-block rounded-lg bg-gray-900 px-2 py-1 text-xs font-semibold text-white">
                           #{ticket.ticketCode}
                         </span>
                         <div className="mt-1">
                           <span
-                            className={`inline-block rounded-full border px-2 py-0.2 text-[10px] font-bold ${priorityCfg.badgeClass}`}
+                            className={`inline-block rounded-full border px-2 py-0.2 text-xs font-medium ${priorityCfg.badgeClass}`}
                           >
                             {priorityCfg.label}
                           </span>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 align-top">
-                        <div className="font-bold text-slate-900 text-xs">
+                      <td className="py-4 px-5 align-top">
+                        <div className="font-medium text-gray-900 text-xs">
                           {ticket.senderName}
                         </div>
-                        <div className="text-[11px] text-sky-700 font-medium break-all">
+                        <div className="text-xs text-admin-brand-700 font-medium break-all">
                           {ticket.email}
                         </div>
                         {ticket.userId && (
-                          <div className="text-[10px] text-slate-400 mt-0.5">
+                          <div className="text-xs text-gray-400 mt-0.5">
                             @{ticket.userId.username}
                           </div>
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                        <span className="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                      <td className="py-4 px-5 align-top whitespace-nowrap">
+                        <span className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700">
                           {SUPPORT_TOPIC_LABELS[ticket.topic] || ticket.topic}
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-4 align-top max-w-xs">
+                      <td className="py-4 px-5 align-top max-w-xs">
                         <button
                           type="button"
                           onClick={() => setSelectedTicket(ticket)}
                           className="text-left group cursor-pointer"
                         >
-                          <div className="font-bold text-slate-900 text-xs group-hover:text-sky-600 transition line-clamp-1">
+                          <div className="font-medium text-gray-900 text-xs group-hover:text-admin-brand-600 transition line-clamp-1">
                             {ticket.subject}
                           </div>
-                          <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-relaxed">
+                          <p className="text-xs text-gray-500 line-clamp-2 mt-0.5 leading-relaxed">
                             {ticket.message}
                           </p>
                         </button>
                       </td>
 
-                      <td className="py-3.5 px-4 align-top whitespace-nowrap">
+                      <td className="py-4 px-5 align-top whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${statusCfg.badgeClass}`}
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusCfg.badgeClass}`}
                         >
                           <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dotClass}`} />
                           {statusCfg.label}
                         </span>
                         {adminRepliesCount > 0 && (
-                          <div className="mt-1 text-[10px] text-slate-500 font-medium">
+                          <div className="mt-1 text-xs text-gray-500 font-medium">
                             {adminRepliesCount} phản hồi{" "}
                             {anyEmailSent && (
-                              <span className="text-emerald-600 font-bold">· ✓ Mail</span>
+                              <span className="text-emerald-600 font-medium">· ✓ Mail</span>
                             )}
                           </div>
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4 align-top whitespace-nowrap text-xs text-slate-500">
+                      <td className="py-4 px-5 align-top whitespace-nowrap text-sm text-gray-500">
                         <div>{new Date(ticket.createdAt).toLocaleDateString("vi-VN")}</div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-xs text-gray-400">
                           {new Date(ticket.createdAt).toLocaleTimeString("vi-VN", {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -750,11 +750,11 @@ export function AdminSupportView() {
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 align-top text-right whitespace-nowrap">
+                      <td className="py-4 px-5 align-top text-right whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => setSelectedTicket(ticket)}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-700 transition shadow-2xs cursor-pointer"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-admin-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-admin-brand-700 transition shadow-admin-card cursor-pointer"
                         >
                           <span>Xem & Phản hồi</span>
                         </button>
@@ -768,7 +768,7 @@ export function AdminSupportView() {
         )}
 
         {pagination && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-500">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-xs text-gray-500">
             <span>
               Trang <strong>{pagination.page}</strong> / {pagination.totalPages} (Tổng{" "}
               {pagination.total} phiếu)
@@ -778,7 +778,7 @@ export function AdminSupportView() {
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 Trước
               </button>
@@ -788,7 +788,7 @@ export function AdminSupportView() {
                 onClick={() =>
                   setPage((p) => Math.min(pagination.totalPages, p + 1))
                 }
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 Sau
               </button>

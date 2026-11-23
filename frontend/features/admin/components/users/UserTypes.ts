@@ -27,7 +27,7 @@ export const STATUS_LABEL: Record<string, string> = {
 };
 
 export const ROLE_COLOR: Record<string, string> = {
-  USER: "bg-slate-100 text-slate-700",
+  USER: "bg-gray-100 text-gray-700",
   AUTHOR: "bg-violet-100 text-violet-700",
   MANAGER: "bg-amber-100 text-amber-700",
   ADMIN: "bg-rose-100 text-rose-700",

@@ -12,10 +12,10 @@ export function StoryPagination({ page, totalPages, onPageChange }: Props) {
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 pt-4 text-xs text-slate-500">
+    <div className="admin-pagination flex flex-col sm:flex-row items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 text-sm text-gray-500">
       <div>
-        Trang <span className="font-bold text-slate-800">{page}</span> /{" "}
-        <span className="font-bold text-slate-800">{totalPages}</span>
+        Trang <span className="font-medium text-gray-800">{page}</span> /{" "}
+        <span className="font-medium text-gray-800">{totalPages}</span>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-1.5">
@@ -23,7 +23,7 @@ export function StoryPagination({ page, totalPages, onPageChange }: Props) {
           type="button"
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="px-3 py-1.5 font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+          className="px-3 py-1.5 font-semibold rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
         >
           ← Trước
         </button>
@@ -35,14 +35,14 @@ export function StoryPagination({ page, totalPages, onPageChange }: Props) {
             const isCurrent = p === page;
             return (
               <React.Fragment key={p}>
-                {prev && p - prev > 1 && <span className="px-1 text-slate-400">...</span>}
+                {prev && p - prev > 1 && <span className="px-1 text-gray-400">...</span>}
                 <button
                   type="button"
                   onClick={() => onPageChange(p)}
-                  className={`w-8 h-8 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                  className={`w-9 h-9 rounded-lg font-medium text-sm transition-all cursor-pointer ${
                     isCurrent
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-2xs"
-                      : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                      ? "bg-admin-brand-50 text-admin-brand-600"
+                      : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   {p}
@@ -55,7 +55,7 @@ export function StoryPagination({ page, totalPages, onPageChange }: Props) {
           type="button"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
-          className="px-3 py-1.5 font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+          className="px-3 py-1.5 font-semibold rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
         >
           Sau →
         </button>

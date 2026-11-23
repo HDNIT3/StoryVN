@@ -37,17 +37,17 @@ export function AuthorRequestDetailModal({
   const email = userInfo?.email || "-";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="admin-dialog-overlay fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-gray-950/50 animate-in fade-in duration-200">
+      <div className="admin-dialog bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="admin-dialog-header flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 bg-gray-50/50">
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900">Chi tiết đơn đăng ký tác giả</h3>
-            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate max-w-[220px] sm:max-w-none">Mã đơn: {request._id}</p>
+            <h3 className="admin-dialog-title text-xl font-semibold text-gray-900">Chi tiết đơn đăng ký tác giả</h3>
+            <p className="text-xs sm:text-xs text-gray-500 mt-0.5 truncate max-w-[220px] sm:max-w-none">Mã đơn: {request._id}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1.5 rounded-lg transition-colors cursor-pointer"
+            className="admin-dialog-close text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded-lg transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -56,10 +56,10 @@ export function AuthorRequestDetailModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 text-sm text-slate-700">
+        <div className="admin-dialog-body p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 text-sm text-gray-700">
           {/* Thông tin tài khoản người dùng */}
-          <div className="bg-slate-50 rounded-xl p-3.5 sm:p-4 border border-slate-100 flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-100 text-sky-700 font-bold flex items-center justify-center shrink-0 text-sm sm:text-base overflow-hidden border border-sky-200">
+          <div className="bg-gray-50 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-admin-brand-100 text-admin-brand-700 font-medium flex items-center justify-center shrink-0 text-sm sm:text-base overflow-hidden border border-admin-brand-200">
               {userInfo?.avatarUrl ? (
                 <Image
                   src={userInfo.avatarUrl}
@@ -74,25 +74,25 @@ export function AuthorRequestDetailModal({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-bold text-slate-900 truncate text-sm sm:text-base">{displayName}</p>
-                <span className="text-[10px] font-semibold uppercase bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">
+                <p className="font-medium text-gray-900 truncate text-sm sm:text-base">{displayName}</p>
+                <span className="text-xs font-semibold uppercase bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded">
                   {userInfo?.role || "USER"}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5 truncate">{email}</p>
+              <p className="text-xs text-gray-500 mt-0.5 truncate">{email}</p>
             </div>
           </div>
 
           {/* Thông tin tác giả đăng ký */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Bút danh đăng ký</span>
-              <p className="font-bold text-sky-600 text-base">{request.penName}</p>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Bút danh đăng ký</span>
+              <p className="font-medium text-admin-brand-600 text-base">{request.penName}</p>
             </div>
 
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Trạng thái đơn</span>
-              <p className="font-semibold text-slate-800">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Trạng thái đơn</span>
+              <p className="font-semibold text-gray-800">
                 {request.status === "PENDING" && <span className="text-amber-600">⏳ Chờ xét duyệt</span>}
                 {request.status === "APPROVED" && <span className="text-emerald-600">✅ Đã phê duyệt</span>}
                 {request.status === "REJECTED" && <span className="text-rose-600">❌ Đã từ chối</span>}
@@ -100,22 +100,22 @@ export function AuthorRequestDetailModal({
             </div>
 
             <div className="space-y-1 sm:col-span-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tiểu sử tác giả</span>
-              <p className="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 leading-relaxed text-xs">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tiểu sử tác giả</span>
+              <p className="text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100 leading-relaxed text-xs">
                 {request.biography || "Chưa cập nhật tiểu sử."}
               </p>
             </div>
 
             <div className="space-y-1 sm:col-span-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lý do muốn làm tác giả</span>
-              <p className="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 leading-relaxed text-xs">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Lý do muốn làm tác giả</span>
+              <p className="text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100 leading-relaxed text-xs">
                 {request.reason || "Không có lý do ghi chú."}
               </p>
             </div>
 
             {request.website && (
               <div className="space-y-1 sm:col-span-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Website / Blog cá nhân</span>
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Website / Blog cá nhân</span>
                 <p className="text-blue-600 truncate text-xs">
                   <a href={request.website} target="_blank" rel="noreferrer" className="hover:underline">
                     {request.website}
@@ -126,41 +126,41 @@ export function AuthorRequestDetailModal({
           </div>
 
           {/* Thông tin ngân hàng nhận thù lao */}
-          <div className="border-t border-slate-100 pt-4">
-            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">
+          <div className="border-t border-gray-100 pt-4">
+            <h4 className="text-xs font-semibold text-gray-800 uppercase tracking-wider mb-3">
               Thông tin thanh toán / Ngân hàng
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-100 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 bg-gray-50 p-3 sm:p-3.5 rounded-xl border border-gray-100 text-xs">
               <div>
-                <span className="text-slate-400 block mb-0.5">Tên ngân hàng</span>
-                <span className="font-semibold text-slate-800">{request.bankName || "-"}</span>
+                <span className="text-gray-400 block mb-0.5">Tên ngân hàng</span>
+                <span className="font-semibold text-gray-800">{request.bankName || "-"}</span>
               </div>
               <div>
-                <span className="text-slate-400 block mb-0.5">Số tài khoản</span>
-                <span className="font-semibold text-slate-800 font-mono">{request.bankAccountNumber || "-"}</span>
+                <span className="text-gray-400 block mb-0.5">Số tài khoản</span>
+                <span className="font-semibold text-gray-800 font-mono">{request.bankAccountNumber || "-"}</span>
               </div>
               <div>
-                <span className="text-slate-400 block mb-0.5">Chủ tài khoản</span>
-                <span className="font-semibold text-slate-800">{request.bankAccountName || "-"}</span>
+                <span className="text-gray-400 block mb-0.5">Chủ tài khoản</span>
+                <span className="font-semibold text-gray-800">{request.bankAccountName || "-"}</span>
               </div>
             </div>
           </div>
 
           {/* Thông tin xét duyệt (nếu đã xử lý) */}
           {request.status !== "PENDING" && (
-            <div className="border-t border-slate-100 pt-4 space-y-2">
-              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+            <div className="border-t border-gray-100 pt-4 space-y-2">
+              <h4 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
                 Lịch sử xét duyệt
               </h4>
-              <div className="bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-100 space-y-1.5 text-xs">
+              <div className="bg-gray-50 p-3 sm:p-3.5 rounded-xl border border-gray-100 space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Thời gian xử lý:</span>
-                  <span className="font-medium text-slate-700">{formatDate(request.processedAt)}</span>
+                  <span className="text-gray-400">Thời gian xử lý:</span>
+                  <span className="font-medium text-gray-700">{formatDate(request.processedAt)}</span>
                 </div>
                 {request.adminNote && (
-                  <div className="pt-2 border-t border-slate-200/60">
-                    <span className="text-slate-400 block mb-1">Ghi chú từ Ban quản trị:</span>
-                    <p className="text-slate-800 italic bg-white p-2.5 rounded-lg border border-slate-200">
+                  <div className="pt-2 border-t border-gray-200">
+                    <span className="text-gray-400 block mb-1">Ghi chú từ Ban quản trị:</span>
+                    <p className="text-gray-800 italic bg-white p-2.5 rounded-lg border border-gray-200">
                       &quot;{request.adminNote}&quot;
                     </p>
                   </div>
@@ -171,10 +171,10 @@ export function AuthorRequestDetailModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2">
+        <div className="admin-dialog-footer px-4 sm:px-6 py-3.5 sm:py-4 border-t border-gray-100 bg-gray-50/50 flex flex-wrap items-center justify-between gap-2">
           <button
             onClick={onClose}
-            className="px-3.5 sm:px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+            className="px-3.5 sm:px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
           >
             Đóng
           </button>
@@ -186,7 +186,7 @@ export function AuthorRequestDetailModal({
                   onClose();
                   onOpenReview(request, "REJECTED");
                 }}
-                className="px-3.5 sm:px-4 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                className="px-3.5 sm:px-4 py-2 text-sm font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
               >
                 Từ chối
               </button>
@@ -195,7 +195,7 @@ export function AuthorRequestDetailModal({
                   onClose();
                   onOpenReview(request, "APPROVED");
                 }}
-                className="px-3.5 sm:px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors cursor-pointer"
+                className="px-3.5 sm:px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-admin-card transition-colors cursor-pointer"
               >
                 Phê duyệt
               </button>

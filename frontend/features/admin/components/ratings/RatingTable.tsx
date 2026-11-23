@@ -24,15 +24,15 @@ export function RatingTable({
 }: RatingTableProps) {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="flex items-center gap-4 animate-pulse">
-            <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0" />
+            <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-slate-100 rounded w-1/3" />
-              <div className="h-3 bg-slate-100 rounded w-2/3" />
+              <div className="h-4 bg-gray-100 rounded w-1/3" />
+              <div className="h-3 bg-gray-100 rounded w-2/3" />
             </div>
-            <div className="w-20 h-6 bg-slate-100 rounded" />
+            <div className="w-20 h-6 bg-gray-100 rounded" />
           </div>
         ))}
       </div>
@@ -41,32 +41,32 @@ export function RatingTable({
 
   if (ratings.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center">
-        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-xl">
+      <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xl">
           ★
         </div>
-        <p className="text-sm font-bold text-slate-800">Không tìm thấy đánh giá nào</p>
-        <p className="text-xs text-slate-400 mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+        <p className="text-sm font-medium text-gray-800">Không tìm thấy đánh giá nào</p>
+        <p className="text-xs text-gray-400 mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs">
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-admin-card">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs sm:text-sm">
-          <thead className="bg-slate-50/75 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <table className="admin-data-table w-full text-left text-xs sm:text-sm">
+          <thead className="bg-gray-50/75 border-b border-gray-200 text-xs font-medium uppercase tracking-wider text-gray-500">
             <tr>
-              <th className="py-3.5 px-4">Người đánh giá</th>
-              <th className="py-3.5 px-4">Tác phẩm</th>
-              <th className="py-3.5 px-4">Số sao</th>
-              <th className="py-3.5 px-4 min-w-[200px]">Nhận xét</th>
-              <th className="py-3.5 px-4">Ngày gửi</th>
-              <th className="py-3.5 px-4">Trạng thái</th>
-              <th className="py-3.5 px-4 text-right">Thao tác</th>
+              <th className="py-3.5 px-5">Người đánh giá</th>
+              <th className="py-3.5 px-5">Tác phẩm</th>
+              <th className="py-3.5 px-5">Số sao</th>
+              <th className="py-3.5 px-5 min-w-[200px]">Nhận xét</th>
+              <th className="py-3.5 px-5">Ngày gửi</th>
+              <th className="py-3.5 px-5">Trạng thái</th>
+              <th className="py-3.5 px-5 text-right">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-gray-100">
             {ratings.map((item) => {
               const user = item.userId;
               const story = item.storyId;
@@ -75,12 +75,12 @@ export function RatingTable({
               return (
                 <tr
                   key={item._id}
-                  className="hover:bg-slate-50/60 transition-colors"
+                  className="hover:bg-gray-50/60 transition-colors"
                 >
                   {/* Người đánh giá */}
-                  <td className="py-3.5 px-4 align-top">
+                  <td className="py-4 px-5 align-top">
                     <div className="flex items-center gap-2.5">
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-slate-200 border border-slate-300 shrink-0">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200 border border-gray-300 shrink-0">
                         {user?.avatarUrl ? (
                           <Image
                             src={user.avatarUrl}
@@ -90,16 +90,16 @@ export function RatingTable({
                             className="object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center font-bold text-[11px] text-amber-700 bg-amber-100">
+                          <div className="w-full h-full flex items-center justify-center font-medium text-xs text-amber-700 bg-amber-100">
                             {(user?.displayName || user?.username || "U").charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-900 truncate max-w-[130px]">
+                        <p className="font-medium text-gray-900 truncate max-w-[130px]">
                           {user?.displayName || user?.username || "Ẩn danh"}
                         </p>
-                        <p className="text-[10px] text-slate-400 truncate max-w-[130px]">
+                        <p className="text-xs text-gray-400 truncate max-w-[130px]">
                           @{user?.username || "user"}
                         </p>
                       </div>
@@ -107,45 +107,45 @@ export function RatingTable({
                   </td>
 
                   {/* Tác phẩm */}
-                  <td className="py-3.5 px-4 align-top max-w-[160px]">
+                  <td className="py-4 px-5 align-top max-w-[160px]">
                     {story ? (
                       <Link
                         href={`/truyen/${story.slug}`}
                         target="_blank"
-                        className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors line-clamp-2 block text-xs"
+                        className="font-semibold text-gray-900 hover:text-admin-brand-600 transition-colors line-clamp-2 block text-xs"
                         title={story.title}
                       >
                         {story.title}
                       </Link>
                     ) : (
-                      <span className="text-slate-400 italic text-xs">Không rõ</span>
+                      <span className="text-gray-400 italic text-xs">Không rõ</span>
                     )}
                   </td>
 
                   {/* Số sao */}
-                  <td className="py-3.5 px-4 align-top whitespace-nowrap">
+                  <td className="py-4 px-5 align-top whitespace-nowrap">
                     <div className="flex items-center gap-1">
-                      <span className="font-black text-amber-600 text-sm">{item.rating}</span>
+                      <span className="font-semibold text-amber-600 text-sm">{item.rating}</span>
                       <span className="text-amber-500 text-sm">★</span>
                     </div>
                   </td>
 
                   {/* Nhận xét */}
-                  <td className="py-3.5 px-4 align-top">
-                    <p className="line-clamp-2 text-xs leading-relaxed text-slate-800">
-                      {item.review ? item.review : <span className="text-slate-400 italic">Không có nhận xét văn bản</span>}
+                  <td className="py-4 px-5 align-top">
+                    <p className="line-clamp-2 text-xs leading-relaxed text-gray-800">
+                      {item.review ? item.review : <span className="text-gray-400 italic">Không có nhận xét văn bản</span>}
                     </p>
                   </td>
 
                   {/* Ngày gửi */}
-                  <td className="py-3.5 px-4 align-top whitespace-nowrap text-xs text-slate-500">
+                  <td className="py-4 px-5 align-top whitespace-nowrap text-sm text-gray-500">
                     {new Date(item.createdAt).toLocaleDateString("vi-VN")}
                   </td>
 
                   {/* Trạng thái */}
-                  <td className="py-3.5 px-4 align-top whitespace-nowrap">
+                  <td className="py-4 px-5 align-top whitespace-nowrap">
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                         item.status === "VISIBLE"
                           ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                           : isHidden
@@ -171,12 +171,12 @@ export function RatingTable({
                   </td>
 
                   {/* Thao tác */}
-                  <td className="py-3.5 px-4 align-top whitespace-nowrap text-right">
+                  <td className="py-4 px-5 align-top whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button
                         type="button"
                         onClick={() => onViewDetail(item)}
-                        className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-gray-500 hover:text-admin-brand-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                         title="Xem chi tiết"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
