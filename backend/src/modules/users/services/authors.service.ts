@@ -1302,7 +1302,7 @@ export class AuthorsService {
     if (targetStoryIds.length === 0 || !this.chapterUnlockModel) {
       return {
         items: [],
-        meta: buildPaginationMeta(1, limit, 0),
+        meta: { ...buildPaginationMeta(0, page, limit), total: 0, hasPreviousPage: page > 1 },
         summary: {
           totalCoinsEarned: 0,
           totalUnlocks: 0,
@@ -1326,7 +1326,7 @@ export class AuthorsService {
     if (chapterIds.length === 0) {
       return {
         items: [],
-        meta: buildPaginationMeta(1, limit, 0),
+        meta: { ...buildPaginationMeta(0, page, limit), total: 0, hasPreviousPage: page > 1 },
         summary: {
           totalCoinsEarned: 0,
           totalUnlocks: 0,
@@ -1489,7 +1489,7 @@ export class AuthorsService {
 
     return {
       items,
-      meta: buildPaginationMeta(page, limit, total),
+      meta: { ...buildPaginationMeta(total, page, limit), total, hasPreviousPage: page > 1 },
       summary: {
         totalCoinsEarned,
         totalUnlocks,

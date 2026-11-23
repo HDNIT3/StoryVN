@@ -138,6 +138,10 @@ export function NotificationBell({
       setIsOpen(false);
       if (notification.type === "SYSTEM") {
         const ref = notification.referenceId ? String(notification.referenceId) : "";
+        if (ref.startsWith("withdrawal:")) {
+          router.push("/tac-gia/doanh-thu");
+          return;
+        }
         if (ref.startsWith("support-admin:")) {
           router.push("/quan-ly/ho-tro");
           return;
@@ -206,7 +210,11 @@ export function NotificationBell({
         if (commentId) {
           try {
             const commentRes = await commentService.getCommentById(commentId);
-            const commentData = commentRes?.data as any;
+            const commentData = commentRes?.data as {
+              parentId?: string | { _id: string } | null;
+              storyId?: string | { slug: string } | null;
+              chapterId?: string | { chapterNumber: number } | null;
+            } | undefined;
             if (commentData) {
               if (commentData.parentId) {
                 parentId = typeof commentData.parentId === "object" ? commentData.parentId._id : commentData.parentId;

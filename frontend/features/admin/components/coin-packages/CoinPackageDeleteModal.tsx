@@ -53,6 +53,7 @@ export function CoinPackageDeleteModal({
           </h3>
           <p className="text-xs text-slate-500 mt-1">
             Bạn có chắc chắn muốn xóa gói nạp này? Hành động này không thể hoàn tác.
+            Gói đã có giao dịch không được xóa; hãy tắt kích hoạt để ngừng bán.
           </p>
 
           <div className="mt-3.5 p-3 bg-slate-50 rounded-lg text-left text-xs">

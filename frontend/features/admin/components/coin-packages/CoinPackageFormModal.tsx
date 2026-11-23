@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import type { RoyaltyPolicy } from "@/features/withdrawals/types";
 import { Button } from "@/components/ui";
 import type {
   CoinPackageItem,
@@ -16,54 +19,49 @@ interface Props {
   onSubmit: (data: CreateCoinPackagePayload | UpdateCoinPackagePayload) => Promise<void>;
 }
 
-export function CoinPackageFormModal({
+export function CoinPackageFormModal(props: Props) {
+  if (!props.open) return null;
+  return <CoinPackageForm key={props.pkg?._id || 'new'} {...props} />;
+}
+
+function CoinPackageForm({
   open,
   pkg,
   isLoading,
   onClose,
   onSubmit,
 }: Props) {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState<number | "">(20000);
-  const [coinAmount, setCoinAmount] = useState<number | "">(200);
-  const [bonusCoin, setBonusCoin] = useState<number | "">(0);
-  const [isActive, setIsActive] = useState(true);
-  const [isFeatured, setIsFeatured] = useState(false);
-  const [sortOrder, setSortOrder] = useState<number | "">(1);
+  const [name, setName] = useState(pkg?.name ?? '');
+  const [price, setPrice] = useState<number | "">(pkg?.price ?? 20000);
+  const [coinAmount, setCoinAmount] = useState<number | "">(pkg?.coinAmount ?? 200);
+  const [bonusPercent, setBonusPercent] = useState<number | "">(pkg?.coinAmount ? (pkg.bonusCoin || 0) / pkg.coinAmount * 100 : 0);
+  const [isActive, setIsActive] = useState(pkg?.isActive ?? true);
+  const [isFeatured, setIsFeatured] = useState(pkg?.isFeatured ?? false);
+  const [sortOrder, setSortOrder] = useState<number | "">(pkg?.sortOrder ?? 1);
   const [error, setError] = useState<string | null>(null);
 
   const isEdit = Boolean(pkg);
-
-  useEffect(() => {
-    if (pkg) {
-      setName(pkg.name);
-      setPrice(pkg.price);
-      setCoinAmount(pkg.coinAmount);
-      setBonusCoin(pkg.bonusCoin || 0);
-      setIsActive(pkg.isActive);
-      setIsFeatured(pkg.isFeatured);
-      setSortOrder(pkg.sortOrder || 1);
-    } else {
-      setName("");
-      setPrice(20000);
-      setCoinAmount(200); // 1000đ = 10 xu => 20.000đ = 200 xu
-      setBonusCoin(0);
-      setIsActive(true);
-      setIsFeatured(false);
-      setSortOrder(1);
-    }
-    setError(null);
-  }, [pkg, open]);
-
-  if (!open) return null;
+  const economics = useQuery({
+    queryKey: ['coin-packages', 'economics'],
+    queryFn: async () => (await api.get<{ data: RoyaltyPolicy }>('/coin-packages/admin/economics')).data,
+    enabled: open,
+  });
 
   const numCoinAmount = typeof coinAmount === "number" ? coinAmount : 0;
-  const numBonusCoin = typeof bonusCoin === "number" ? bonusCoin : 0;
+  const numBonusCoin = Math.round(numCoinAmount * (typeof bonusPercent === 'number' ? bonusPercent : 0) / 100);
   const calculatedTotalCoin = numCoinAmount + numBonusCoin;
   const numPrice = typeof price === "number" ? price : 0;
+  const estimatedPayout = economics.data ? calculatedTotalCoin * economics.data.exchangeRate * economics.data.payoutPercent / 100 : 0;
+  const retained = numPrice - estimatedPayout;
+  const retainedPercent = numPrice > 0 ? retained / numPrice * 100 : 0;
+  const economicsInvalid = !economics.data || estimatedPayout >= numPrice;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (economicsInvalid) {
+      setError('Giá bán không đủ bù nhuận bút 70%, hoặc chưa tải được chính sách. Vui lòng kiểm tra giá và Xu thưởng.');
+      return;
+    }
     const trimmedName = name.trim();
     if (!trimmedName) {
       setError("Vui lòng nhập tên gói nạp");
@@ -84,7 +82,7 @@ export function CoinPackageFormModal({
       return;
     }
 
-    if (typeof bonusCoin === "number" && bonusCoin < 0) {
+    if (typeof bonusPercent === "number" && bonusPercent < 0) {
       setError("Số Xu thưởng không được âm");
       return;
     }
@@ -100,7 +98,7 @@ export function CoinPackageFormModal({
       name: trimmedName,
       price,
       coinAmount,
-      bonusCoin: typeof bonusCoin === "number" ? bonusCoin : 0,
+      bonusCoin: numBonusCoin,
       isActive,
       isFeatured,
       sortOrder: typeof sortOrder === "number" ? Math.max(1, sortOrder) : 1,
@@ -132,7 +130,7 @@ export function CoinPackageFormModal({
             <p className="text-xs text-slate-500 mt-0.5">
               {isEdit
                 ? "Cập nhật mệnh giá, số Xu thưởng và thứ tự hiển thị"
-                : "Tạo gói nạp mới cho độc giả nạp Xu trên hệ thống (1.000đ = 10 Xu)"}
+                : "Tạo gói nạp và kiểm tra chi phí nhuận bút trước khi bán"}
             </p>
           </div>
           <button
@@ -231,7 +229,7 @@ export function CoinPackageFormModal({
                         setPrice(v);
                         // Tự động tính Xu cơ bản: 1.000đ = 10 Xu (chia 100)
                         if (typeof v === "number" && v >= 0) {
-                          setCoinAmount(Math.floor(v / 100));
+                          setCoinAmount(Math.floor(v / (economics.data?.exchangeRate || 100)));
                         }
                       }}
                       className="w-full pl-3 pr-7 py-2 text-sm bg-slate-50 rounded-lg focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-100 transition-all font-semibold text-slate-900"
@@ -285,21 +283,21 @@ export function CoinPackageFormModal({
                     required
                   />
                   <p className="text-[10px] text-slate-400 mt-1 truncate">
-                    Tỷ lệ: 1.000đ = 10 Xu
+                    Giá trị chuẩn: {economics.data?.exchangeRate ?? '…'}đ/Xu
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Xu thưởng thêm
+                    Xu thưởng (%)
                   </label>
                   <input
                     type="number"
                     min={0}
-                    value={bonusCoin}
+                    step="any"
+                    value={bonusPercent}
                     onChange={(e) => {
-                      const v = e.target.value === "" ? "" : Number(e.target.value);
-                      setBonusCoin(v);
+                      setBonusPercent(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)));
                     }}
                     className="w-full px-3 py-2 text-sm bg-slate-50 rounded-lg focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-100 transition-all text-slate-800"
                   />
@@ -337,6 +335,15 @@ export function CoinPackageFormModal({
             </div>
           </div>
 
+          <div className={`mt-4 rounded-lg p-3 text-xs space-y-1 ${economicsInvalid ? 'bg-rose-50 text-rose-800' : 'bg-emerald-50 text-emerald-900'}`}>
+            {economics.isPending ? <p>Đang tải chính sách nhuận bút…</p> : economics.isError ? <p>Không tải được chính sách. <button type="button" className="underline" onClick={() => economics.refetch()}>Thử lại</button></p> : <>
+              <p>Tiền thu trên mỗi Xu: {calculatedTotalCoin > 0 ? formatCurrency(numPrice / calculatedTotalCoin) : '—'}</p>
+              <p>Nhuận bút 70% nếu toàn bộ Xu được mua chương: {formatCurrency(estimatedPayout)}</p>
+              <p>Phần còn lại trước phí và chi phí vận hành: {formatCurrency(retained)} ({retainedPercent.toFixed(2)}%).</p>
+              {economicsInvalid && <p className="font-semibold">Cần tăng giá hoặc giảm Xu để gói hợp lệ.</p>}
+            </>}
+          </div>
+
           {/* Footer Actions */}
           <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
             <Button
@@ -352,6 +359,7 @@ export function CoinPackageFormModal({
               type="submit"
               size="sm"
               isLoading={isLoading}
+              disabled={economicsInvalid}
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               {isEdit ? "Lưu thay đổi" : "Tạo gói nạp"}

@@ -28,6 +28,12 @@ export class CoinPackagesController {
 
   // ─── ADMIN ENDPOINTS ────────────────────────────────────────────────────────
 
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Get('admin/economics')
+  economics() { return { success: true, data: this.coinPackagesService.getEconomics() }; }
+
   @ApiOperation({ summary: 'Khởi tạo danh sách gói nạp mặc định (Seed Data)' })
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)

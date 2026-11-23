@@ -19,6 +19,11 @@ interface SidebarItem {
 }
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
+  {
+    id: "rut-tien", label: "Rút nhuận bút", href: "/quan-ly/rut-tien",
+    roles: ["ADMIN", "MANAGER"], section: "finance",
+    icon: <span className="w-5 text-center text-lg" aria-hidden="true">₫</span>,
+  },
   // Nhóm 0: Tổng quan
   {
     id: "tong-quan",

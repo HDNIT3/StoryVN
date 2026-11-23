@@ -24,6 +24,19 @@ export interface ApiError {
   error?: string;
 }
 
+/** ApiClient throws plain response objects as well as native errors. */
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = error.message;
+    if (typeof message === "string" && message.trim()) return message;
+    if (Array.isArray(message)) {
+      const details = message.filter((item): item is string => typeof item === "string" && !!item.trim());
+      if (details.length) return details.join(", ");
+    }
+  }
+  return fallback;
+}
+
 export interface ApiRequestInit extends RequestInit {
   skipAuthLogout?: boolean;
 }

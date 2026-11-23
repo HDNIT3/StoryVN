@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import type { ClientSession } from 'mongoose';
 import {
   buildPaginationMeta,
   PaginatedResult,
@@ -115,6 +116,18 @@ export class WalletService {
       throw new BadRequestException(ErrorCode.WALLET_INSUFFICIENT_BALANCE);
     }
 
+    return this.toSummary(updated);
+  }
+
+  /** Used with chapter unlock creation so unpaid unlocks never become revenue. */
+  async debitInSession(userId: string, amount: number, session: ClientSession): Promise<WalletSummary> {
+    const coinAmount = this.normalizeAmount(amount);
+    const updated = await this.walletModel.findOneAndUpdate(
+      { userId: new Types.ObjectId(userId), balance: { $gte: coinAmount } },
+      { $inc: { balance: -coinAmount, totalSpent: coinAmount } },
+      { returnDocument: 'after', session },
+    ).exec();
+    if (!updated) throw new BadRequestException(ErrorCode.WALLET_INSUFFICIENT_BALANCE);
     return this.toSummary(updated);
   }
 
