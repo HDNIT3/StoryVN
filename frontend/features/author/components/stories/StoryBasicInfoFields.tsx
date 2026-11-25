@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { useId } from "react";
 import { StoryAgeRating, StoryProgressState } from "@/features/stories";
 
 interface StoryBasicInfoFieldsProps {
@@ -13,9 +13,33 @@ interface StoryBasicInfoFieldsProps {
   onTitleChange: (val: string) => void;
   onSlugChange: (val: string) => void;
   onDescriptionChange: (val: string) => void;
-  onProgressStateChange: (val: StoryProgressState) => void;
+  onProgressStateChange?: (val: StoryProgressState) => void;
   onAgeRatingChange: (val: StoryAgeRating) => void;
   onAuthorNoteChange: (val: string) => void;
+}
+
+export function StoryProgressField({ value, onChange }: {
+  value: StoryProgressState;
+  onChange: (value: StoryProgressState) => void;
+}) {
+  const id = useId();
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-semibold text-zinc-800 mb-1.5">
+        Tình trạng tiến độ
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value as StoryProgressState)}
+        className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-medium focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 cursor-pointer"
+      >
+        <option value="ONGOING">Đang ra (Đang cập nhật chương)</option>
+        <option value="COMPLETED">Đã hoàn thành (Trọn bộ)</option>
+        <option value="ON_HOLD">Tạm ngưng ra chương</option>
+      </select>
+    </div>
+  );
 }
 
 export function StoryBasicInfoFields({
@@ -89,20 +113,9 @@ export function StoryBasicInfoFields({
 
       {/* Tiến độ sáng tác & Độ tuổi độc giả */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-semibold text-zinc-800 mb-1.5">
-            Tình trạng tiến độ
-          </label>
-          <select
-            value={progressState}
-            onChange={(e) => onProgressStateChange(e.target.value as StoryProgressState)}
-            className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-medium focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 cursor-pointer"
-          >
-            <option value="ONGOING">Đang ra (Đang cập nhật chương)</option>
-            <option value="COMPLETED">Đã hoàn thành (Trọn bộ)</option>
-            <option value="ON_HOLD">Tạm ngưng ra chương</option>
-          </select>
-        </div>
+        {onProgressStateChange && (
+          <StoryProgressField value={progressState} onChange={onProgressStateChange} />
+        )}
 
         <div>
           <label className="block text-sm font-semibold text-zinc-800 mb-1.5">

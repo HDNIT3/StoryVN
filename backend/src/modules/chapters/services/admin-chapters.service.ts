@@ -142,9 +142,6 @@ export class AdminChaptersService {
   ): void {
     chapter.title = snapshot.title;
     chapter.content = snapshot.content;
-    // Pricing is updated directly by the author, independently of moderation.
-    // An older pending/restored revision must not overwrite the current price.
-    chapter.requirePreviousChapter = chapter.isFree ? false : snapshot.requirePreviousChapter;
     chapter.wordCount = countWords(snapshot.content || '');
   }
 
@@ -381,6 +378,10 @@ export class AdminChaptersService {
         chapter,
         this.cloneChapterSnapshot(pendingRevision.snapshot),
       );
+      pendingRevision.snapshot.isFree = chapter.isFree;
+      pendingRevision.snapshot.coinPrice = chapter.coinPrice;
+      pendingRevision.snapshot.requirePreviousChapter =
+        !chapter.isFree && Boolean(chapter.requirePreviousChapter);
       chapter.status = ChapterStatus.PUBLISHED;
       chapter.rejectReason = null;
       chapter.scheduledAt = chapter.scheduledAt || new Date();

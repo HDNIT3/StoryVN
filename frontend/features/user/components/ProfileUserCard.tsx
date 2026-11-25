@@ -16,13 +16,6 @@ const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Quản trị viên",
 };
 
-const ROLE_BG: Record<string, string> = {
-  USER: "from-zinc-400 to-zinc-600",
-  AUTHOR: "from-sky-400 to-blue-600",
-  MANAGER: "from-blue-400 to-indigo-600",
-  ADMIN: "from-purple-500 to-purple-700",
-};
-
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Đang hoạt động",
   BANNED: "Bị cấm",
@@ -53,7 +46,6 @@ export function ProfileUserCard({
   const updateAvatarMutation = useUpdateAvatar();
 
   const avatarInitial = (user.displayName || user.username || "U").charAt(0).toUpperCase();
-  const coverGradient = ROLE_BG[user.role] || ROLE_BG.USER;
 
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -95,14 +87,9 @@ export function ProfileUserCard({
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
-      <div className={`h-28 sm:h-32 md:h-36 bg-gradient-to-r ${coverGradient} relative overflow-hidden`}>
-        <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]" />
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/20 rounded-full blur-2xl pointer-events-none" />
-      </div>
-
-      <div className="px-5 sm:px-7 pb-6">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 -mt-12 sm:-mt-14 mb-4 sm:mb-5">
-          <div className="relative group">
+      <div className="px-5 sm:px-7 py-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
+          <div className="relative group w-fit shrink-0">
             <input
               ref={avatarInputRef}
               type="file"

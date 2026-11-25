@@ -131,7 +131,7 @@ export function Footer() {
                   className="transition-colors hover:text-sky-600 flex items-center gap-1.5"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-                  Trung tâm hỗ trợ &amp; FAQ
+                  Trung tâm hỗ trợ
                 </Link>
               </li>
               <li>

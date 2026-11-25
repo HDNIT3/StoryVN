@@ -131,7 +131,7 @@ function HeaderUserAvatar({
         <Link
           href="/dang-ky"
           onClick={onLoginClick}
-          className="shimmer-hover whitespace-nowrap rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-md shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/30"
+          className="shimmer-hover hidden whitespace-nowrap rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 px-2.5 py-1.5 sm:block sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-md shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/30"
         >
           Đăng ký
         </Link>
@@ -277,7 +277,11 @@ export function HeaderActions({
       {isLoggedIn && <NotificationBell size="md" />}
 
       {/* Wallet coin pill */}
-      {isLoggedIn && <HeaderWallet wallet={wallet} onRechargeClick={onRechargeClick} />}
+      {isLoggedIn && (
+        <div className="hidden sm:flex">
+          <HeaderWallet wallet={wallet} onRechargeClick={onRechargeClick} />
+        </div>
+      )}
 
       {/* User profile avatar or login button */}
       <HeaderUserAvatar

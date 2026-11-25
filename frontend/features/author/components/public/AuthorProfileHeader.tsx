@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import type { PublicAuthorProfile } from "@/features/author";
 
@@ -27,23 +29,27 @@ export function AuthorProfileHeader({
   formatJoinedDate,
   effectiveFollowerCount,
 }: AuthorProfileHeaderProps) {
+  const coverUrl = author.coverUrl?.trim();
+  const [failedCoverUrl, setFailedCoverUrl] = useState<string>();
+
   return (
     <div className="bg-white rounded-2xl border border-[#EDE7DF] shadow-xs relative overflow-hidden">
-      {/* Cover */}
-      <div className="relative aspect-[3/1] w-full bg-gradient-to-br from-[#8B1E2D] via-[#A8323F] to-[#5C1420]">
-        {author.coverUrl && (
+      {coverUrl && coverUrl !== failedCoverUrl && (
+        <div className="relative aspect-[3/1] w-full">
           <Image
-            src={author.coverUrl}
+            key={coverUrl}
+            src={coverUrl}
             alt={`Ảnh bìa của ${author.penName}`}
             fill
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 1152px"
             priority
             unoptimized
+            onError={() => setFailedCoverUrl(coverUrl)}
           />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/5 pointer-events-none" />
-      </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/5 pointer-events-none" />
+        </div>
+      )}
 
       <div className="px-5 sm:px-7 md:px-8 pt-5 sm:pt-6 pb-5 sm:pb-7 md:pb-8">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 lg:gap-8 relative z-10">

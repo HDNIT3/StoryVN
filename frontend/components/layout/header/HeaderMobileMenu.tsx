@@ -10,6 +10,7 @@ import {
   WalletInfo,
   BookmarkInfo,
   DEFAULT_NAV_ITEMS,
+  SMART_SEARCH_LABEL,
   ROLE_LABEL,
   ROLE_COLOR,
   ACCOUNT_MENU_ITEMS,
@@ -254,7 +255,7 @@ export function HeaderMobileMenu({
                 className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border border-slate-200 bg-white/95 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-2xs transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 sm:text-base"
               >
                 <Image src="/icon/search.svg" alt="" width={20} height={20} className="h-5 w-5 shrink-0" />
-                <span>Tìm kiếm truyện</span>
+                <span>{SMART_SEARCH_LABEL}</span>
               </button>
             </div>
 

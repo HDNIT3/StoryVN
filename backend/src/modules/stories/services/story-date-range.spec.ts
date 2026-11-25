@@ -47,7 +47,7 @@ describe('story management date range', () => {
     const records = Array.from({ length: 101 }, () => ({ _id: new Types.ObjectId(), stats: { viewCount: 10, chapterCount: 2 } }));
     const model: any = { find: vi.fn().mockReturnValue(chain(records)), countDocuments: vi.fn().mockResolvedValue(101) };
     const daily: any = { find: vi.fn().mockReturnValue(chain([])), aggregate: vi.fn().mockReturnValue(chain([{ views: 9 }])) };
-    const service = new StoriesService(model, {} as any, {} as any, {} as any, {} as any, undefined, daily);
+    const service = new StoriesService(model, {} as any, {} as any, {} as any, {} as any, {} as any, undefined, daily);
     const counts = await service.getMyCounts(authorId, dates);
     expect(counts).toMatchObject({ all: 101, totalViews: 1010, totalChapters: 202, selectedPeriodViews: 9 });
     expect(model.find).toHaveBeenCalledWith({ authorId, createdAt });
@@ -62,7 +62,7 @@ describe('story management date range', () => {
   it('daily views use actual selected records and zero-fill dates without lifetime substitution', async () => {
     const model: any = { findOne: vi.fn().mockResolvedValue({ _id: storyId, authorId, title: 'Story', stats: { viewCount: 500 } }) };
     const daily: any = { find: vi.fn().mockReturnValue(chain([{ date: '2026-11-02', views: 7 }])) };
-    const service = new StoriesService(model, {} as any, {} as any, {} as any, {} as any, undefined, daily);
+    const service = new StoriesService(model, {} as any, {} as any, {} as any, {} as any, {} as any, undefined, daily);
     const result = await service.getMyStoryDailyViews(authorId, storyId.toString(), 30, dates);
     expect(result.series.map((item: any) => item.views)).toEqual([0, 7]);
     expect(result.selectedPeriodViews).toBe(7);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useId, useMemo, useEffect } from "react";
+import React, { useState, useRef, useId, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCreateStory, useUpdateStory } from "@/features/stories";
@@ -48,17 +48,11 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
       ...initialStory,
       title: revision.title || initialStory.title,
       description: revision.description ?? initialStory.description,
-      coverUrl: revision.coverUrl ?? initialStory.coverUrl,
+      coverUrl: revision.coverUrl === undefined ? initialStory.coverUrl : revision.coverUrl,
       authorNote: revision.authorNote ?? initialStory.authorNote,
       ageRating: revision.ageRating ?? initialStory.ageRating,
-      genreIds:
-        revision.genreIds && revision.genreIds.length > 0
-          ? revision.genreIds
-          : initialStory.genreIds,
-      tagIds:
-        revision.tagIds && revision.tagIds.length > 0
-          ? revision.tagIds
-          : initialStory.tagIds,
+      genreIds: revision.genreIds ?? initialStory.genreIds,
+      tagIds: revision.tagIds ?? initialStory.tagIds,
     };
   }, [initialStory]);
 
@@ -69,37 +63,14 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
   const [ageRating, setAgeRating] = useState<StoryAgeRating>(
     initialSource?.ageRating || "ALL"
   );
-  const [visibility, setVisibility] = useState<StoryVisibility>(
-    initialStory?.visibility || "PUBLIC"
-  );
+  const [visibilityChoice, setVisibilityChoice] = useState<StoryVisibility>();
   const [authorNote, setAuthorNote] = useState(initialSource?.authorNote || "");
-  const [progressState, setProgressState] = useState<StoryProgressState>(
-    initialStory?.progressState || "ONGOING"
-  );
+  const [progressChoice, setProgressChoice] = useState<StoryProgressState>();
 
   // Genres & Tags
-  const rawInitialGenres = useMemo(() => {
-    if (initialSource?.genreIds && initialSource.genreIds.length > 0) {
-      return initialSource.genreIds.map((g: any) =>
-        typeof g === "object" && g !== null ? g.name : g
-      );
-    }
-    return initialSource?.genres || [];
-  }, [initialSource]);
-
-  const [selectedGenres, setSelectedGenres] = useState<string[]>(rawInitialGenres);
+  const [genreSelection, setGenreSelection] = useState<string[] | null>(null);
   const [genreModalOpen, setGenreModalOpen] = useState(false);
-
-  const rawInitialTags = useMemo(() => {
-    if (initialSource?.tagIds && initialSource.tagIds.length > 0) {
-      return initialSource.tagIds.map((t: any) =>
-        typeof t === "object" && t !== null ? t.name : t
-      );
-    }
-    return initialSource?.tags || [];
-  }, [initialSource]);
-
-  const [selectedTags, setSelectedTags] = useState<string[]>(rawInitialTags);
+  const [tagSelection, setTagSelection] = useState<string[] | null>(null);
   const [tagModalOpen, setTagModalOpen] = useState(false);
 
   // Cover image
@@ -122,37 +93,33 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
   const { data: tagsData } = useTags({ all: true });
   const apiTags = tagsData?.items || [];
 
-  useEffect(() => {
-    if (initialSource) {
-      if (initialSource.progressState) setProgressState(initialSource.progressState);
+  const selectedGenres = genreSelection ?? initialSource?.genreIds?.map((genre) =>
+    typeof genre === "string" ? apiCategories.find((item) => item._id === genre)?.name ?? genre : genre.name
+  ) ?? initialSource?.genres ?? [];
+  const selectedTags = tagSelection ?? initialSource?.tagIds?.map((tag) =>
+    typeof tag === "string" ? apiTags.find((item) => item._id === tag)?.name ?? tag : tag.name
+  ) ?? initialSource?.tags ?? [];
 
-      if (initialSource.genreIds && initialSource.genreIds.length > 0) {
-        const names = initialSource.genreIds
-          .map((g: any) => {
-            if (typeof g === "object" && g !== null && g.name) return g.name;
-            const matched = apiCategories.find(
-              (c: any) => c._id === g || c.name === g
-            );
-            return matched ? matched.name : typeof g === "string" ? g : "";
-          })
-          .filter(Boolean);
-        if (names.length > 0) setSelectedGenres(names);
-      }
+  const savedProgress = initialStory?.progressState ?? "ONGOING";
+  const savedVisibility = initialStory?.visibility ?? "PUBLIC";
+  const progressState = progressChoice ?? savedProgress;
+  const visibility = initialStory?.hiddenByModerator ? "PRIVATE" : visibilityChoice ?? savedVisibility;
+  const settingsChanged = progressState !== savedProgress || visibility !== savedVisibility;
 
-      if (initialSource.tagIds && initialSource.tagIds.length > 0) {
-        const names = initialSource.tagIds
-          .map((t: any) => {
-            if (typeof t === "object" && t !== null && t.name) return t.name;
-            const matched = apiTags.find(
-              (tag: any) => tag._id === t || tag.name === t
-            );
-            return matched ? matched.name : typeof t === "string" ? t : "";
-          })
-          .filter(Boolean);
-        if (names.length > 0) setSelectedTags(names);
-      }
+  const handleSaveSettings = async () => {
+    if (!storyId || !initialStory || !settingsChanged) return;
+    try {
+      await updateStoryMutation.mutateAsync({
+        id: storyId,
+        payload: {
+          progressState: progressState === savedProgress ? undefined : progressState,
+          visibility: visibility === savedVisibility ? undefined : visibility,
+        },
+      });
+    } catch {
+      // The mutation displays the error.
     }
-  }, [initialSource, apiCategories, apiTags]);
+  };
 
   const generateSlug = (str: string) => {
     return str
@@ -249,11 +216,12 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
       try {
         setIsUploadingImage(true);
         const uploadRes = await uploadService.uploadImage(selectedFile, "covers");
-        finalCoverUrl = uploadRes.data?.url || (uploadRes as any).url || "";
-      } catch (err: any) {
+        const fallbackUrl = "url" in uploadRes && typeof uploadRes.url === "string" ? uploadRes.url : "";
+        finalCoverUrl = uploadRes.data?.url || fallbackUrl;
+        if (!finalCoverUrl) throw new Error("Không nhận được đường dẫn ảnh bìa");
+      } catch (err) {
         setIsSubmitting(false);
-        setIsUploadingImage(false);
-        toast.error(err.message || "Tải ảnh bìa thất bại, vui lòng thử lại");
+        toast.error(err instanceof Error ? err.message : "Tải ảnh bìa thất bại, vui lòng thử lại");
         return;
       } finally {
         setIsUploadingImage(false);
@@ -265,43 +233,48 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
     const resolvedGenreIds: string[] = [];
     selectedGenres.forEach((name) => {
       const matched = apiCategories.find(
-        (c: any) =>
+        (c) =>
           c._id === name ||
           c.name.trim().toLowerCase() === name.trim().toLowerCase()
       );
-      if (matched && matched._id) {
-        resolvedGenreIds.push(matched._id);
-      }
+      const id = matched?._id ?? (/^[a-f\d]{24}$/i.test(name) ? name : undefined);
+      if (id) resolvedGenreIds.push(id);
     });
 
     const resolvedTagIds: string[] = [];
     selectedTags.forEach((name) => {
       const matched = apiTags.find(
-        (t: any) =>
+        (t) =>
           t._id === name ||
           t.name.trim().toLowerCase() === name.trim().toLowerCase()
       );
-      if (matched && matched._id) {
-        resolvedTagIds.push(matched._id);
-      }
+      const id = matched?._id ?? (/^[a-f\d]{24}$/i.test(name) ? name : undefined);
+      if (id) resolvedTagIds.push(id);
     });
+
+    const sendGenreIds = isEdit
+      ? genreSelection !== null && (genreSelection.length === 0 || resolvedGenreIds.length > 0)
+      : resolvedGenreIds.length > 0;
+    const sendTagIds = isEdit
+      ? tagSelection !== null && (tagSelection.length === 0 || resolvedTagIds.length > 0)
+      : resolvedTagIds.length > 0;
 
     const payload: CreateStoryPayload = {
       title: title.trim(),
       slug: slug.trim() || undefined,
       description: description.trim(),
-      coverImage: finalCoverUrl || undefined,
-      genreIds: resolvedGenreIds.length > 0 ? resolvedGenreIds : undefined,
-      tagIds: resolvedTagIds.length > 0 ? resolvedTagIds : undefined,
+      coverImage: isEdit ? finalCoverUrl : finalCoverUrl || undefined,
+      genreIds: sendGenreIds ? resolvedGenreIds : undefined,
+      tagIds: sendTagIds ? resolvedTagIds : undefined,
       ageRating,
-      visibility,
-      authorNote: authorNote.trim() || undefined,
-      progressState,
+      visibility: isEdit ? undefined : visibility,
+      authorNote: isEdit ? authorNote.trim() : authorNote.trim() || undefined,
+      progressState: isEdit ? undefined : progressState,
     };
 
     try {
       if (isEdit) {
-        const identifier = initialStory?.slug || storyId;
+        const identifier = storyId || initialStory?.slug;
         if (identifier) {
           // Bản đang chờ duyệt: rút khỏi hàng đợi và lưu luôn nội dung mới vào
           // chính bản sửa đó, rồi gửi duyệt lại nếu cần.
@@ -379,16 +352,8 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
       setPreviewUrl(initialStory.coverUrl || "");
       setImageUrlInput(initialStory.coverUrl || "");
       setSelectedFile(null);
-      setSelectedGenres(
-        (initialStory.genreIds || [])
-          .map((g: any) => (typeof g === "object" && g !== null ? g.name : g))
-          .filter(Boolean)
-      );
-      setSelectedTags(
-        (initialStory.tagIds || [])
-          .map((t: any) => (typeof t === "object" && t !== null ? t.name : t))
-          .filter(Boolean)
-      );
+      setGenreSelection(null);
+      setTagSelection(null);
     }
     toast.success("Đã hủy bản sửa đổi!");
   };
@@ -506,7 +471,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
             onTitleChange={handleTitleChange}
             onSlugChange={setSlug}
             onDescriptionChange={setDescription}
-            onProgressStateChange={setProgressState}
+            onProgressStateChange={isEdit ? undefined : setProgressChoice}
             onAgeRatingChange={setAgeRating}
             onAuthorNoteChange={setAuthorNote}
           />
@@ -516,8 +481,8 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
             selectedTags={selectedTags}
             onOpenGenreModal={() => setGenreModalOpen(true)}
             onOpenTagModal={() => setTagModalOpen(true)}
-            onRemoveGenre={(genre) => setSelectedGenres((prev) => prev.filter((g) => g !== genre))}
-            onRemoveTag={(tag) => setSelectedTags((prev) => prev.filter((t) => t !== tag))}
+            onRemoveGenre={(genre) => setGenreSelection(selectedGenres.filter((g) => g !== genre))}
+            onRemoveTag={(tag) => setTagSelection(selectedTags.filter((t) => t !== tag))}
           />
         </div>
 
@@ -547,8 +512,15 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
             isSubmitting={isSubmitting}
             isUploadingImage={isUploadingImage}
             isPendingMutation={createStoryMutation.isPending || updateStoryMutation.isPending}
-            onVisibilityChange={setVisibility}
+            onVisibilityChange={setVisibilityChoice}
             onSubmit={handleSubmit}
+            editSettings={isEdit ? {
+              progressState,
+              onProgressStateChange: setProgressChoice,
+              hiddenByModerator: initialStory?.hiddenByModerator,
+              settingsChanged,
+              onSave: handleSaveSettings,
+            } : undefined}
           />
         </div>
       </div>
@@ -565,7 +537,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
         onClose={() => setGenreModalOpen(false)}
         availableGenres={apiCategories}
         selectedGenres={selectedGenres}
-        onConfirm={setSelectedGenres}
+        onConfirm={setGenreSelection}
       />
 
       <TagPickerModal
@@ -573,7 +545,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
         onClose={() => setTagModalOpen(false)}
         availableTags={apiTags}
         selectedTags={selectedTags}
-        onConfirm={setSelectedTags}
+        onConfirm={setTagSelection}
       />
 
       <ImageCropperModal

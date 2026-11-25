@@ -39,6 +39,11 @@ export class FilterStoriesDto extends PaginationQueryDto {
   @IsString({ message: 'Thể loại phải là chuỗi' })
   genre?: string;
 
+  @ApiPropertyOptional({ description: 'Slug của thẻ tag, ví dụ "trong-sinh"' })
+  @IsOptional()
+  @IsString({ message: 'Thẻ tag phải là chuỗi' })
+  tag?: string;
+
   @ApiPropertyOptional({
     enum: StoryProgressState,
     description: 'Trạng thái tiến độ: ONGOING (Đang ra), COMPLETED (Hoàn thành), ON_HOLD (Tạm ngưng)',

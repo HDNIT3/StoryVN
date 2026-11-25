@@ -48,10 +48,10 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
       setChapterNumber(chapter.chapterNumber);
       setTitle(source.title);
       setContent(source.content || "");
-      // Pricing is live; an older content revision must not populate old prices.
+      // Use the current unlock settings while editing any content revision.
       setIsFree(chapter.isFree);
       setCoinPrice(chapter.coinPrice ?? 0);
-      setRequirePrevious(source.requirePreviousChapter ?? false);
+      setRequirePrevious(chapter.requirePreviousChapter ?? false);
 
       if (chapter.scheduledAt) {
         const d = new Date(chapter.scheduledAt);
@@ -101,8 +101,7 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
     // chính bản sửa đó (một request), rồi gửi duyệt lại nếu cần.
     const currentContent = chapter?.pendingRevision ?? chapter;
     const reviewFieldsChanged = title.trim() !== currentContent?.title ||
-      content !== (currentContent?.content || "") ||
-      (!isFree && requirePrevious !== (currentContent?.requirePreviousChapter ?? false));
+      content !== (currentContent?.content || "");
     const needsWithdrawFirst = chapter?.pendingRevision?.status === "PENDING_REVIEW" &&
       (reviewFieldsChanged || action === "SUBMIT");
 
@@ -411,6 +410,7 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
 
           {/* Pricing Fields */}
           <ChapterPricingFields
+            chapterNumber={chapterNumber}
             isFree={isFree}
             setIsFree={setIsFree}
             coinPrice={coinPrice}
@@ -420,8 +420,7 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
             error={errors.coinPrice}
           />
           {hasOfficialVersion && <p className="text-xs text-sky-700">
-            Đổi miễn phí/thu phí và giá Xu có hiệu lực ngay khi bấm “Lưu thay đổi”, không cần gửi duyệt.
-            Yêu cầu mua chương trước vẫn thuộc bản chỉnh sửa cần duyệt.
+            Cấu hình mở khóa có hiệu lực ngay khi bấm “Lưu thay đổi”. Tiêu đề và nội dung chỉnh sửa có hiệu lực sau khi được duyệt.
           </p>}
 
           {/* Scheduled At */}

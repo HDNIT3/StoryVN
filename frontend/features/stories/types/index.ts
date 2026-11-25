@@ -55,6 +55,7 @@ export interface StoryItem {
   tags?: string[];
   status: StoryStatus;
   visibility: StoryVisibility;
+  hiddenByModerator?: boolean;
   ageRating?: StoryAgeRating;
   progressState?: StoryProgressState;
   authorNote?: string;
@@ -271,6 +272,7 @@ export type StoryViewTimeFrame = "all" | "today" | "week" | "month" | "year";
 export interface FilterStoriesParams {
   search?: string;
   genre?: string;
+  tag?: string;
   progressState?: StoryProgressState;
   sortBy?: StorySortOption;
   timeFrame?: StoryViewTimeFrame;
@@ -294,6 +296,7 @@ export interface FilteredStoryItem {
   stats: StoryStats;
   author: FilteredStoryAuthor;
   genres: PopulatedRef[];
+  tags?: PopulatedRef[];
   publishedAt?: string | null;
   updatedAt: string;
 }

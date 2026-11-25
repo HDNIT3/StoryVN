@@ -2,6 +2,7 @@
 
 import React from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import type { StoryDetailData } from "@/features/stories";
 
 const StoryRatingsSection = dynamic(
@@ -143,12 +144,13 @@ export const StoryDetailTabs: React.FC<StoryDetailTabsProps> = ({
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {story.tags.map((tag) => (
-                    <span
+                    <Link
                       key={tag._id || tag.slug}
+                      href={`/truyen?tag=${encodeURIComponent(tag.slug)}`}
                       className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200/70 transition-colors"
                     >
                       #{tag.name}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               </div>

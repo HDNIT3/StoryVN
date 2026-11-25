@@ -87,7 +87,7 @@ export function Header({
           className="pointer-events-none absolute inset-0 bg-white/95 backdrop-blur-xl supports-[backdrop-filter]:bg-white/90"
         />
       )}
-      <div className="relative mx-auto flex h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-2 px-3.5 sm:h-20 sm:gap-2.5 sm:px-5 lg:gap-3 lg:px-6 xl:px-8">
+      <div className="relative mx-auto flex h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-2 px-4 sm:h-20 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
         {/* Left Side: Logo & Desktop Navigation */}
         <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5 lg:gap-3">
           <HeaderLogo {...logo} />
@@ -103,7 +103,7 @@ export function Header({
         </div>
 
         {/* Center: Search Bar (fluidly shrinks without forcing overflow) */}
-        <div className="mx-1.5 hidden min-w-[160px] flex-1 items-center justify-center md:flex xl:mx-2 xl:min-w-[190px]">
+        <div className="hidden min-w-0 flex-1 items-center md:flex">
           <HeaderSearch className="w-full" {...search} />
         </div>
 
@@ -176,7 +176,7 @@ export function SmartHeader() {
   } else if (pathname.startsWith("/nap-xu")) {
     activeNavId = "nap-xu";
   } else if (pathname.startsWith("/ho-tro")) {
-    activeNavId = "ho-tro";
+    activeNavId = "";
   } else if (pathname.startsWith("/dien-dan") || pathname.startsWith("/tai-khoan/bai-viet")) {
     activeNavId = "dien-dan";
   }
