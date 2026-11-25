@@ -20,6 +20,7 @@ import { ChapterUnlock, ChapterUnlockSchema } from '../chapters/schemas/chapter-
 import { Follow, FollowSchema } from '../follows/schemas/follow.schema.js';
 import { ReadingHistory, ReadingHistorySchema } from '../reading-history/schemas/reading-history.schema.js';
 import { StoryRating, StoryRatingSchema } from '../story-ratings/schemas/story-rating.schema.js';
+import { Tag, TagSchema } from '../tags/schemas/tag.schema.js';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { StoryRating, StoryRatingSchema } from '../story-ratings/schemas/story-r
       { name: AuthorProfile.name, schema: AuthorProfileSchema },
       { name: User.name, schema: UserSchema },
       { name: Genre.name, schema: GenreSchema },
+      { name: Tag.name, schema: TagSchema },
       { name: Chapter.name, schema: ChapterSchema },
       { name: ChapterUnlock.name, schema: ChapterUnlockSchema },
       { name: Follow.name, schema: FollowSchema },

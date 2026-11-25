@@ -326,6 +326,7 @@ export function AuthorNewChapterView() {
 
         {/* Cài đặt Xu */}
         <ChapterPricingFields
+          chapterNumber={chapterNumber}
           isFree={isFree}
           setIsFree={setIsFree}
           coinPrice={coinPrice}

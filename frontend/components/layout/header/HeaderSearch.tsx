@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchSuggestions } from "@/features/search/hooks/useSearchSuggestions";
-import { HeaderSearchProps, DEFAULT_SEARCH } from "./header.config";
+import { HeaderSearchProps, DEFAULT_SEARCH, SMART_SEARCH_LABEL } from "./header.config";
 
 export function HeaderSearch({
   placeholder = DEFAULT_SEARCH.placeholder ?? "Tìm truyện nhanh, chính xác…",
@@ -113,7 +113,7 @@ export function HeaderSearch({
         className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border border-slate-200 bg-white/95 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-2xs transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 sm:text-base"
       >
         <Image src={iconSrc} alt="" width={20} height={20} className="h-5 w-5 shrink-0" />
-        <span>Tìm kiếm truyện</span>
+        <span className="whitespace-nowrap">{SMART_SEARCH_LABEL}</span>
       </button>}
 
       <div
@@ -141,7 +141,7 @@ export function HeaderSearch({
           <div className="shrink-0 border-b border-slate-100 p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <h2 id={`${panelId}-title`} className="text-sm font-semibold leading-snug text-slate-800">Tìm truyện nhanh, chính xác</h2>
+                <h2 id={`${panelId}-title`} className="text-sm font-semibold leading-snug text-slate-800">{SMART_SEARCH_LABEL}</h2>
               </div>
               <button type="button" onClick={close} aria-label="Đóng tìm kiếm" className="flex h-11 w-11 shrink-0 cursor-pointer sm:h-9 sm:w-9 items-center justify-center rounded-lg text-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">✕</button>
             </div>
@@ -189,7 +189,7 @@ export function HeaderSearch({
                 autoComplete="off"
                 maxLength={256}
                 placeholder={placeholder}
-                aria-label="Tìm kiếm truyện"
+                aria-label={SMART_SEARCH_LABEL}
                 className="w-full min-w-0 bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
               />
               {query && <button type="button" onClick={() => { reset(); setQuery(""); setActive(-1); inputRef.current?.focus(); }} aria-label="Xóa từ khóa" className="flex h-11 w-9 shrink-0 sm:h-9 cursor-pointer items-center justify-center rounded text-slate-400 hover:bg-slate-200 hover:text-slate-700">✕</button>}

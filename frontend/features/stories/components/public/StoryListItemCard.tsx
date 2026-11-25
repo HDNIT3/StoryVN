@@ -13,6 +13,7 @@ interface StoryListItemCardProps {
   isFollowing?: boolean;
   isFollowPending?: boolean;
   onToggleBookmark?: () => void;
+  onSelectTag: (slug: string) => void;
 }
 
 export const StoryListItemCard: React.FC<StoryListItemCardProps> = ({
@@ -21,6 +22,7 @@ export const StoryListItemCard: React.FC<StoryListItemCardProps> = ({
   isFollowing = false,
   isFollowPending = false,
   onToggleBookmark,
+  onSelectTag,
 }) => {
   const periodViewBadge = React.useMemo(() => {
     if (activeTimeFrame === "today") {
@@ -132,6 +134,16 @@ export const StoryListItemCard: React.FC<StoryListItemCardProps> = ({
             >
               {g.name}
             </span>
+          ))}
+          {story.tags?.slice(0, 2).map((tag) => (
+            <button
+              key={tag._id}
+              type="button"
+              onClick={() => onSelectTag(tag.slug)}
+              className="max-w-full cursor-pointer truncate rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-800 transition-colors hover:bg-emerald-100 focus-visible:outline-emerald-600"
+            >
+              #{tag.name}
+            </button>
           ))}
         </div>
       </div>

@@ -77,7 +77,7 @@ describe('AdminChaptersService - Follower Release Notification Trigger', () => {
             content: 'Nội dung mới đã sửa',
             isFree: true,
             coinPrice: 0,
-            requirePreviousChapter: false,
+            requirePreviousChapter: true,
           },
         },
       ],
@@ -103,10 +103,13 @@ describe('AdminChaptersService - Follower Release Notification Trigger', () => {
       createChainQuery([{ _id: chapterId, wordCount: 5 }]),
     );
 
+    const pendingSnapshot = chapterDoc.revisions[0].snapshot;
     await service.approveChapter(chapterId.toString(), reviewerId);
 
     expect(chapterDoc.isFree).toBe(false);
     expect(chapterDoc.coinPrice).toBe(80);
+    expect(chapterDoc.requirePreviousChapter).toBe(false);
+    expect(pendingSnapshot.requirePreviousChapter).toBe(false);
     expect(chapterDoc.notifyFollowersPending).toBeUndefined();
     expect(
       mockChapterReleaseService.releaseAndNotifyStoryChapters,

@@ -15,7 +15,6 @@ import {
 } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
 import { RevisionStatus } from '../../../common/enums/revision-status.enum.js';
-import { generateUniqueSlug } from '../../../common/utils/slug.util.js';
 import {
   getActiveRevision,
   getLatestRevisionWithStatus,
@@ -433,16 +432,7 @@ export class AdminStoriesService {
     if (pendingRevision) {
       // Duyệt bản chỉnh sửa: ghi đè bản chính thức bằng snapshot
       const snapshot = pendingRevision.snapshot as any;
-      if (snapshot.title) {
-        const newTitle = snapshot.title.trim();
-        if (newTitle && newTitle !== story.title) {
-          story.title = newTitle;
-          story.slug = await generateUniqueSlug(this.storyModel, newTitle, {
-            excludeId: story._id,
-            fallback: 'tac-pham',
-          });
-        }
-      }
+      if (snapshot.title?.trim()) story.title = snapshot.title.trim();
       story.description = snapshot.description ?? '';
       story.coverUrl = snapshot.coverUrl ?? null;
       story.authorNote = snapshot.authorNote ?? '';
@@ -651,7 +641,9 @@ export class AdminStoriesService {
     }
 
     const reason = dto?.reason?.trim() || null;
+    story.hiddenByModerator = true;
     story.visibility = StoryVisibility.PRIVATE;
+    story.markModified('visibility');
     if (reason) {
       story.rejectReason = reason;
     }
@@ -700,6 +692,7 @@ export class AdminStoriesService {
       throw new NotFoundException(ErrorCode.STORY_NOT_FOUND);
     }
 
+    story.hiddenByModerator = false;
     story.visibility = StoryVisibility.PUBLIC;
     story.rejectReason = null;
     await story.save();

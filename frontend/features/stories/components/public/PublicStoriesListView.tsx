@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { storyService, storyKeys } from "@/features/stories";
 import { useAllCategories } from "@/features/categories";
+import { useTags } from "@/features/tags";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useFollowStatusBatch, useToggleFollow } from "@/features/follows";
 import { useLoginHref } from "@/lib/hooks/useLoginHref";
@@ -34,6 +35,7 @@ export const PublicStoriesListView: React.FC = () => {
   // Đọc params từ URL
   const urlSearch = searchParams.get("search") || "";
   const urlGenre = searchParams.get("genre") || "";
+  const selectedTag = searchParams.get("tag") || "";
   const urlProgress = (searchParams.get("progressState") as StoryProgressState) || "";
   const urlSort = (searchParams.get("sortBy") as StorySortOption) || "published";
   const urlTimeFrame = (searchParams.get("timeFrame") as StoryViewTimeFrame) || "all";
@@ -63,6 +65,12 @@ export const PublicStoriesListView: React.FC = () => {
 
   // Lấy danh sách thể loại từ API
   const { data: genresData = [] } = useAllCategories();
+  const { data: tagsData, isLoading: isLoadingTags } = useTags({
+    all: true,
+    isActive: true,
+    sortBy: "name",
+    sortOrder: "asc",
+  });
 
   // Lấy danh sách truyện chính với bộ lọc
   const {
@@ -72,6 +80,7 @@ export const PublicStoriesListView: React.FC = () => {
     queryKey: storyKeys.filtered({
       search: urlSearch,
       genre: selectedGenre,
+      tag: selectedTag,
       progressState: selectedProgress,
       sortBy: selectedSort,
       timeFrame: selectedSort === "views" ? selectedTimeFrame : "all",
@@ -82,6 +91,7 @@ export const PublicStoriesListView: React.FC = () => {
       const res = await storyService.getStories({
         search: urlSearch || undefined,
         genre: selectedGenre || undefined,
+        tag: selectedTag || undefined,
         progressState: (selectedProgress as StoryProgressState) || undefined,
         sortBy: selectedSort,
         timeFrame: selectedSort === "views" ? selectedTimeFrame : "all",
@@ -106,6 +116,7 @@ export const PublicStoriesListView: React.FC = () => {
   const handleApplyFilter = (overrideParams?: {
     search?: string;
     genre?: string;
+    tag?: string;
     progressState?: string;
     sortBy?: StorySortOption;
     timeFrame?: StoryViewTimeFrame;
@@ -113,6 +124,7 @@ export const PublicStoriesListView: React.FC = () => {
   }) => {
     const qSearch = overrideParams?.search !== undefined ? overrideParams.search : searchInput;
     const qGenre = overrideParams?.genre !== undefined ? overrideParams.genre : selectedGenre;
+    const qTag = overrideParams?.tag ?? selectedTag;
     const qProgress = overrideParams?.progressState !== undefined ? overrideParams.progressState : selectedProgress;
     const qSort = overrideParams?.sortBy !== undefined ? overrideParams.sortBy : selectedSort;
     const qTimeFrame =
@@ -124,6 +136,7 @@ export const PublicStoriesListView: React.FC = () => {
     const params = new URLSearchParams();
     if (qSearch.trim()) params.set("search", qSearch.trim());
     if (qGenre) params.set("genre", qGenre);
+    if (qTag) params.set("tag", qTag);
     if (qProgress) params.set("progressState", qProgress);
     if (qSort) params.set("sortBy", qSort);
     if (qSort === "views" && qTimeFrame && qTimeFrame !== "all") {
@@ -214,6 +227,9 @@ export const PublicStoriesListView: React.FC = () => {
           selectedTimeFrame={selectedTimeFrame}
           setSelectedTimeFrame={setSelectedTimeFrame}
           genresData={genresData}
+          selectedTag={selectedTag}
+          tags={tagsData?.items ?? []}
+          isLoadingTags={isLoadingTags}
           currentGenreName={currentGenreName}
           currentProgressName={currentProgressName}
           currentSortName={currentSortName}
@@ -269,7 +285,7 @@ export const PublicStoriesListView: React.FC = () => {
                   Không tìm thấy truyện phù hợp
                 </h3>
                 <p className="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto mb-5">
-                  Hãy thử thay đổi từ khóa tìm kiếm hoặc bỏ bớt các bộ lọc thể loại, trạng thái để xem nhiều kết quả hơn.
+                  Hãy thử thay đổi từ khóa tìm kiếm hoặc bỏ bớt bộ lọc.
                 </p>
                 <button
                   type="button"
@@ -295,6 +311,7 @@ export const PublicStoriesListView: React.FC = () => {
                   isFollowing={Boolean(followStatusMap?.[story._id])}
                   isFollowPending={isTogglePending && variables?.targetId === story._id}
                   onToggleBookmark={() => handleToggleBookmark(story)}
+                  onSelectTag={(tag) => handleApplyFilter({ tag })}
                 />
               ))
             )}
