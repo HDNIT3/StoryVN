@@ -94,6 +94,7 @@ export const DEFAULT_LOGO: LogoProps = {
 export const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: "home", label: "Trang Chủ", href: "/" },
   { id: "truyen", label: "Truyện", href: "/truyen" },
+  { id: "bang-xep-hang", label: "Bảng Xếp Hạng", href: "/bang-xep-hang" },
   { id: "tac-gia", label: "Tác Giả", href: "/tac-gia" },
   { id: "dien-dan", label: "Diễn Đàn", href: "/dien-dan" },
   { id: "nap-xu", label: "Nạp Xu", href: "/nap-xu" },

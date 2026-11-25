@@ -15,6 +15,7 @@ import { StoryDetailTabs } from "./StoryDetailTabs";
 import { StoryChapterList } from "./StoryChapterList";
 import { AuthorSidebarCard } from "./AuthorSidebarCard";
 import { SameGenreStoriesWidget } from "./SameGenreStoriesWidget";
+import { useRecommendations } from "../../queries/useRecommendations";
 
 interface StoryDetailViewProps {
   slug?: string;
@@ -74,7 +75,8 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({
   });
 
   const story = storyRes?.data;
-  const sameGenreStories: SameGenreStoryItem[] = story?.sameGenreStories || [];
+  const { data: recommendations } = useRecommendations(story?._id, Boolean(story?._id));
+  const sameGenreStories: SameGenreStoryItem[] = recommendations?.items.length ? recommendations.items : story?.sameGenreStories || [];
 
   // Query danh sách chương
   const {
@@ -300,6 +302,7 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({
               slugParam={slugParam}
               publicChapterCount={publicChapterCount}
               firstChapter={firstChapter}
+              readingContext={recommendations?.readingContext}
               onShare={handleShare}
               onPlaceholder={handleFunctionPlaceholder}
               isFollowing={isFollowingStory}
@@ -337,6 +340,8 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({
             <SameGenreStoriesWidget
               sameGenreStories={sameGenreStories}
               genres={story.genres}
+              personalized={Boolean(recommendations?.personalized && recommendations.items.length)}
+              recommended={Boolean(recommendations?.items.length)}
             />
           </div>
         </div>

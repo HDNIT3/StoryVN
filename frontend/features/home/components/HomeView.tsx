@@ -5,20 +5,20 @@ import { useQuery } from "@tanstack/react-query";
 import {
   storyService,
   storyKeys,
-  type TopViewStoryItem,
   type PaginatedRecentStories,
   type FilteredStoryItem,
 } from "@/features/stories";
 import type { AuthorListItem } from "@/features/author";
 import { HeroStoryBanner } from "./HeroStoryBanner";
-import { HomeTopViewsSection } from "./HomeTopViewsSection";
 import { HomeNewestStoriesSection } from "./HomeNewestStoriesSection";
 import { HomeLatestChaptersSection } from "./HomeLatestChaptersSection";
 import { HomeFeaturedAuthorsSection } from "./HomeFeaturedAuthorsSection";
 import { HomeSideNav } from "./HomeSideNav";
+import { HomeRecommendationsSection } from "./HomeRecommendationsSection";
+import { useRecommendations } from '@/features/stories/queries/useRecommendations';
+import { useAuth } from '@/lib/context/AuthContext';
 
 export interface HomeViewInitialData {
-  topStories?: TopViewStoryItem[];
   latestUpdatedData?: PaginatedRecentStories;
   newestStories?: FilteredStoryItem[];
   featuredAuthors?: AuthorListItem[];
@@ -29,14 +29,8 @@ export function HomeView({
 }: {
   initialData?: HomeViewInitialData;
 } = {}) {
-  const { data: topStories = [], isLoading: isLoadingTopViews } = useQuery({
-    queryKey: storyKeys.topViews(10),
-    queryFn: async () => {
-      const res = await storyService.getTopViews(10);
-      return res.data || [];
-    },
-    initialData: initialData?.topStories,
-  });
+  const { user } = useAuth();
+  const recommendations = useRecommendations();
 
   const { data: latestUpdatedData, isLoading: isLoadingLatest } = useQuery({
     queryKey: storyKeys.latestUpdated({ limit: 12 }),
@@ -57,7 +51,10 @@ export function HomeView({
   });
 
   const latestStories = latestUpdatedData?.items || [];
-  const heroStories = newestStories.slice(0, 5);
+  const hasPersonalizedStories = Boolean(recommendations.data?.personalized && recommendations.data.items.length);
+  const heroStories = hasPersonalizedStories
+    ? recommendations.data!.items.slice(0, 5)
+    : newestStories.slice(0, 5);
 
   return (
     <div className="relative min-h-screen w-full overflow-x-clip bg-white">
@@ -68,18 +65,15 @@ export function HomeView({
         {/* HERO — Truyện mới nhất nổi bật */}
         <section id="noi-bat" aria-label="Tiêu điểm nổi bật" className="scroll-mt-28">
           <HeroStoryBanner
+            key={`${user?._id ?? 'guest'}-${hasPersonalizedStories ? 'personalized' : 'newest'}`}
             stories={heroStories}
-            isLoading={isLoadingNewest}
+            isLoading={!heroStories.length && isLoadingNewest}
+            personalized={hasPersonalizedStories}
           />
         </section>
 
-        {/* BẢNG XẾP HẠNG — Top truyện nhiều lượt xem */}
-        <HomeTopViewsSection
-          topStories={topStories}
-          isLoading={isLoadingTopViews}
-        />
-
         {/* TÁC GIẢ NỔI BẬT — Avatar tròn + Tên + Tổng lượt đọc */}
+        <HomeRecommendationsSection recommendations={recommendations} />
         <HomeFeaturedAuthorsSection
           initialAuthors={initialData?.featuredAuthors}
         />

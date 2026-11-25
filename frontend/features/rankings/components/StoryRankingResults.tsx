@@ -10,14 +10,6 @@ function formatNumber(num?: number): string {
   return new Intl.NumberFormat("vi-VN").format(num);
 }
 
-function FlameIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 23c-4.97 0-9-3.95-9-8.83 0-3.66 2.05-6.38 4.67-8.9.72-.7 1.48-1.42 2.22-2.18.39-.4.99-.48 1.46-.19.48.29.68.86.47 1.38-.4 1-.45 1.83-.17 2.47.45 1.03 1.63 1.76 2.87 2.53 1.25.78 2.53 1.57 3.33 2.82C18.66 13.56 19 14.89 19 16.17 19 20.05 15.86 23 12 23zm-1.07-16.71c-.72.76-1.46 1.47-2.16 2.16C6.46 10.74 5 12.87 5 15.17 5 18.94 8.14 21 12 21c3.15 0 5.09-1.74 5.09-3.83 0-.96-.28-1.95-1-3.08-.66-1.03-1.72-1.69-2.9-2.42-1.3-.81-2.73-1.7-3.26-2.91-.49-1.12-.4-2.44.15-3.83-.05.06-.1.11-.15.16z" />
-    </svg>
-  );
-}
-
 function EyeIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <svg
@@ -94,13 +86,19 @@ const PODIUM_STYLES = [
   "bg-gradient-to-br from-orange-200 via-amber-100 to-orange-50 text-orange-700 ring-1 ring-orange-200 shadow-[0_12px_30px_-14px_rgba(251,146,60,0.9)]",
 ];
 
-interface HomeTopViewsSectionProps {
+interface StoryRankingResultsProps {
   topStories: TopViewStoryItem[];
   isLoading: boolean;
+  title?: string;
+  description?: string;
+  controls?: React.ReactNode;
+  valueLabel?: string;
+  formatValue?: (story: TopViewStoryItem) => string;
+  rankOffset?: number;
 }
 
-export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSectionProps) {
-  const hasPodium = topStories.length >= 3;
+export function StoryRankingResults({ topStories, isLoading, title, description, controls, valueLabel = 'lượt đọc', formatValue = story => formatNumber(story.viewCount), rankOffset = 0 }: StoryRankingResultsProps) {
+  const hasPodium = rankOffset === 0 && topStories.length >= 3;
   const remainingStories = hasPodium ? topStories.slice(3) : topStories;
 
   return (
@@ -119,10 +117,10 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
             id="leaderboard-heading"
             className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900"
           >
-            Top truyện nhiều lượt xem nhất
+            {title ?? 'Top truyện nhiều lượt xem nhất'}
           </h2>
           <p className="max-w-[65ch] text-sm sm:text-base leading-relaxed text-slate-500 italic">
-            Những tác phẩm thu hút độc giả hàng đầu đang được đọc nhiều nhất trên StoryVN.
+            {description ?? 'Những tác phẩm thu hút độc giả hàng đầu đang được đọc nhiều nhất trên StoryVN.'}
           </p>
         </div>
 
@@ -135,6 +133,7 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
         </Link>
       </div>
 
+      {controls}
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-5">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -158,7 +157,7 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
           </div>
           <h3 className="text-lg font-bold text-slate-800">Chưa có truyện nào trong danh sách</h3>
           <p className="mx-auto mt-1 mb-5 max-w-md text-base text-slate-500">
-            Các tác phẩm mới được xuất bản sẽ xuất hiện tại đây khi có lượt đọc.
+            Chưa có dữ liệu phù hợp với tiêu chí đang chọn.
           </p>
           <Link
             href="/truyen"
@@ -196,7 +195,7 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-500 ring-1 ring-slate-100">
                           <EyeIcon className="h-4 w-4 text-sky-400" />
                           <span className="tabular-nums">
-                            {formatNumber(story.viewCount)} lượt đọc
+                            {formatValue(story)} {valueLabel}
                           </span>
                         </span>
                       ) : (
@@ -252,7 +251,7 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
 
               <div className="divide-y divide-slate-100">
                 {remainingStories.map((story, idx) => {
-                  const rank = hasPodium ? idx + 4 : idx + 1;
+                  const rank = rankOffset + (hasPodium ? idx + 4 : idx + 1);
 
                   return (
                     <Link
@@ -295,9 +294,9 @@ export function HomeTopViewsSection({ topStories, isLoading }: HomeTopViewsSecti
                           <>
                             <div className="flex items-center justify-end gap-1.5 text-sm font-semibold tabular-nums text-slate-700">
                               <EyeIcon className="h-3.5 w-3.5 text-sky-400" />
-                              {formatNumber(story.viewCount)}
+                              {formatValue(story)}
                             </div>
-                            <span className="hidden text-sm text-slate-400 sm:inline">lượt đọc</span>
+                            <span className="hidden text-sm text-slate-400 sm:inline">{valueLabel}</span>
                           </>
                         ) : (
                           <NewBadge />

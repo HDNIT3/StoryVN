@@ -44,4 +44,6 @@ export const ChapterUnlockSchema = SchemaFactory.createForClass(ChapterUnlock);
 // Đảm bảo mỗi User chỉ mở khóa một chương một lần duy nhất (chống giao dịch đồng thời)
 ChapterUnlockSchema.index({ userId: 1, chapterId: 1 }, { unique: true });
 ChapterUnlockSchema.index({ userId: 1, unlockedAt: -1 });
+// Public purchase rankings filter by time across all readers.
+ChapterUnlockSchema.index({ unlockedAt: -1 });
 

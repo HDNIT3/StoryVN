@@ -167,7 +167,9 @@ export function SmartHeader() {
   };
 
   let activeNavId = "home";
-  if (pathname.startsWith("/truyen")) {
+  if (pathname.startsWith("/bang-xep-hang")) {
+    activeNavId = "bang-xep-hang";
+  } else if (pathname.startsWith("/truyen")) {
     activeNavId = "truyen";
   } else if (pathname.startsWith("/tac-gia")) {
     activeNavId = "tac-gia";

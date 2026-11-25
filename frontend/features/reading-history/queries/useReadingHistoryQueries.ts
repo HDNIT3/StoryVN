@@ -51,6 +51,7 @@ export function useRecordReading() {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
       queryClient.invalidateQueries({ queryKey: followsKeys.all });
       if (!data?.recorded) return;
+      queryClient.invalidateQueries({ queryKey: ['stories', 'recommendations'] });
       queryClient.invalidateQueries({ queryKey: readingHistoryKeys.all });
     },
   });
