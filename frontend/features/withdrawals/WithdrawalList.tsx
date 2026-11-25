@@ -34,13 +34,13 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
     endDate,
   });
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-      <div className="flex items-start justify-between gap-3 px-5 py-5">
+    <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-2xs">
+      <div className="flex items-start justify-between gap-3 p-4 sm:p-5">
         <div>
-          <h2 className="text-sm font-bold text-slate-900">
+          <h2 className="text-sm font-bold text-zinc-900">
             {admin ? "Danh sách yêu cầu rút nhuận bút" : "Yêu cầu rút tiền"}
           </h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-zinc-500">
             {admin
               ? "Theo dõi và xử lý các yêu cầu chuyển khoản cho tác giả."
               : "Theo dõi tiến trình xét duyệt và kết quả thanh toán của từng yêu cầu."}
@@ -59,15 +59,15 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
         </button>
       </div>
       <div
-        className={`grid items-end gap-3 border-y border-slate-100 bg-slate-50/60 px-5 py-3 sm:grid-cols-2 ${admin ? "lg:grid-cols-4" : "lg:grid-cols-[1.25fr_1fr_1fr_auto]"}`}
+        className={`grid items-end gap-3 border-y border-zinc-200 bg-zinc-50/50 p-3.5 sm:p-4 sm:grid-cols-2 ${admin ? "lg:grid-cols-4" : "lg:grid-cols-[1.25fr_1fr_1fr_auto]"}`}
       >
         {admin && (
-          <label className="space-y-1.5 text-[11px] font-medium text-slate-500">
+          <label className="space-y-1.5 text-[11px] font-medium text-zinc-500">
             Tìm kiếm
             <div className="relative">
               <RevenueIcon
                 name="search"
-                className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"
               />
               <input
                 aria-label="Tìm tác giả hoặc mã yêu cầu"
@@ -82,7 +82,7 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
             </div>
           </label>
         )}
-        <label className="space-y-1.5 text-[11px] font-medium text-slate-500">
+        <label className="space-y-1.5 text-[11px] font-medium text-zinc-500">
           Trạng thái
           <select
             aria-label="Trạng thái yêu cầu"
@@ -101,7 +101,7 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
             ))}
           </select>
         </label>
-        <label className="space-y-1.5 text-[11px] font-medium text-slate-500">
+        <label className="space-y-1.5 text-[11px] font-medium text-zinc-500">
           Từ ngày
           <input
             type="date"
@@ -114,7 +114,7 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
             }}
           />
         </label>
-        <label className="space-y-1.5 text-[11px] font-medium text-slate-500">
+        <label className="space-y-1.5 text-[11px] font-medium text-zinc-500">
           Đến ngày
           <input
             type="date"
@@ -166,7 +166,7 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px] text-left">
-            <thead className="border-b border-slate-100 bg-slate-50/50">
+            <thead className="border-b border-zinc-200 bg-zinc-50">
               <tr>
                 <th className={revenueHead}>
                   {admin ? "Tác giả / Mã yêu cầu" : "Mã yêu cầu"}
@@ -180,12 +180,12 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-zinc-200">
               {query.data.items.map((request) => (
-                <tr key={request._id} className="hover:bg-slate-50/70">
+                <tr key={request._id} className="hover:bg-zinc-50/70">
                   <td className={revenueCell}>
                     {admin && typeof request.authorId !== "string" && (
-                      <p className="mb-1.5 text-xs font-semibold text-slate-800">
+                      <p className="mb-1.5 text-xs font-semibold text-zinc-800">
                         {request.authorId?.displayName ||
                           request.authorId?.username ||
                           "Tài khoản đã xóa"}
@@ -194,23 +194,23 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
                     <button
                       title={request._id}
                       onClick={() => setSelected(request._id)}
-                      className="font-mono text-xs font-semibold tracking-wide text-slate-600 hover:text-sky-700"
+                      className="font-mono text-xs font-semibold tracking-wide text-zinc-600 hover:text-sky-700"
                     >
                       #{request._id.slice(-8).toUpperCase()}
                     </button>
                   </td>
                   <td
-                    className={`${revenueCell} whitespace-nowrap text-[11px] text-slate-500`}
+                    className={`${revenueCell} whitespace-nowrap text-[11px] text-zinc-500`}
                   >
                     {dateTime(request.createdAt)}
                   </td>
                   <td
-                    className={`${revenueCell} whitespace-nowrap text-right text-xs text-slate-600 tabular-nums`}
+                    className={`${revenueCell} whitespace-nowrap text-right text-xs text-zinc-600 tabular-nums`}
                   >
                     {coins(request.coinAmount)}
                   </td>
                   <td
-                    className={`${revenueCell} whitespace-nowrap text-right text-sm font-bold text-slate-900 tabular-nums`}
+                    className={`${revenueCell} whitespace-nowrap text-right text-sm font-bold text-zinc-900 tabular-nums`}
                   >
                     {money(request.amount)}
                   </td>
@@ -220,7 +220,7 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
                   <td className={`${revenueCell} text-right`}>
                     <button
                       aria-label={`Xem yêu cầu ${request._id.slice(-8)}`}
-                      className="rounded-lg p-2 text-slate-400 transition hover:bg-sky-50 hover:text-sky-700"
+                      className="rounded-lg p-2 text-zinc-400 transition hover:bg-sky-50 hover:text-sky-700"
                       onClick={() => setSelected(request._id)}
                     >
                       <RevenueIcon name="chevron" />

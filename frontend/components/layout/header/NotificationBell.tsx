@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
+import { toast } from "@/lib/toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationService, notificationKeys } from "@/features/notifications";
 import { commentService } from "@/features/comments";
@@ -100,8 +101,12 @@ export function NotificationBell({
 
   const deleteReadMutation = useMutation({
     mutationFn: () => notificationService.deleteAllRead(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+    onSuccess: (result) => {
+      toast.success(result.message ?? "Đã xóa thông báo đã đọc.");
+      return queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+    },
+    onError: () => {
+      toast.error("Không thể xóa thông báo đã đọc. Vui lòng thử lại.");
     },
   });
 

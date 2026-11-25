@@ -62,7 +62,7 @@ export function StoryRevisionDetailViewer({
     <div className="flex flex-col h-[750px]">
       {/* Header of Detail */}
       <div className="p-4 sm:p-5 border-b border-zinc-200 bg-zinc-50/50">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 mb-1">
               <span
@@ -81,13 +81,16 @@ export function StoryRevisionDetailViewer({
                 </span>
               )}
             </div>
-            <h2 className="text-base sm:text-lg font-bold text-zinc-900 leading-tight break-words">
+            <h2
+              className="truncate text-base font-bold leading-tight text-zinc-900 sm:text-lg"
+              title={selectedRevision.title}
+            >
               {selectedRevision.title || "(Chưa có tiêu đề)"}
             </h2>
           </div>
 
           {/* Hành động theo trạng thái bản sửa */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-2">
             {selectedRevision.isActive &&
               selectedRevision.status === "PENDING_REVIEW" && (
                 <button

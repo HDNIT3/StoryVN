@@ -918,10 +918,11 @@ export class ChaptersService {
       return this.buildChapterResponse(chapter._id);
     }
 
-    // Đang chờ duyệt: phải rút trước khi sửa
+    // Cập nhật nội dung đang chờ duyệt khi tác giả gửi lại trong cùng yêu cầu.
     if (
       activeRevision &&
-      activeRevision.status === RevisionStatus.PENDING_REVIEW
+      activeRevision.status === RevisionStatus.PENDING_REVIEW &&
+      !(contentChanged && dto.action === ChapterAction.SUBMIT)
     ) {
       if (contentChanged || dto.action === ChapterAction.SUBMIT) {
         throw new ConflictException(

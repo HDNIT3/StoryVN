@@ -31,17 +31,17 @@ export function AuthorRevenueBreakdownCard({
     visiblePage * pageSize,
   );
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-      <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-5">
+    <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-2xs">
+      <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5">
         <div>
-          <h2 className="text-sm font-bold text-slate-900">
+          <h2 className="text-sm font-bold text-zinc-900">
             Doanh thu theo tác phẩm
           </h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-zinc-500">
             Chọn một tác phẩm để xem các lượt mở khóa chương.
           </p>
         </div>
-        <span className="rounded-full bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-700">
+        <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
           {coins(totalCoins)} doanh thu
         </span>
       </div>
@@ -53,7 +53,7 @@ export function AuthorRevenueBreakdownCard({
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-left">
-            <thead className="border-y border-slate-100 bg-slate-50/60">
+            <thead className="border-y border-zinc-200 bg-zinc-50">
               <tr>
                 <th className={revenueHead}>Tác phẩm</th>
                 <th className={`${revenueHead} text-right`}>Lượt mua</th>
@@ -64,7 +64,7 @@ export function AuthorRevenueBreakdownCard({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-zinc-200">
               {items.map((item, index) => {
                 const percent = totalCoins
                   ? (item.totalCoins / totalCoins) * 100
@@ -75,7 +75,7 @@ export function AuthorRevenueBreakdownCard({
                     className={
                       selectedStoryId === item.storyId
                         ? "bg-sky-50/60"
-                        : "hover:bg-slate-50/70"
+                        : "hover:bg-zinc-50/70"
                     }
                   >
                     <td className={revenueCell}>
@@ -83,23 +83,23 @@ export function AuthorRevenueBreakdownCard({
                         onClick={() => onSelectStory(item.storyId)}
                         className="flex max-w-sm items-center gap-3 text-left"
                       >
-                        <span className="flex h-10 w-8 shrink-0 items-center justify-center rounded-md border border-amber-200/60 bg-amber-50 text-[11px] font-semibold text-amber-700">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-xs font-bold text-zinc-700">
                           {String(
                             (visiblePage - 1) * pageSize + index + 1,
                           ).padStart(2, "0")}
                         </span>
                         <span className="min-w-0">
-                          <span className="line-clamp-1 text-xs font-semibold text-slate-800 hover:text-sky-700">
+                          <span className="line-clamp-1 text-xs font-semibold text-zinc-800 hover:text-sky-700">
                             {item.title}
                           </span>
-                          <span className="mt-1 block text-[11px] text-slate-400">
+                          <span className="mt-1 block text-[11px] text-zinc-400">
                             {item.chapterCount} chương
                           </span>
                         </span>
                       </button>
                     </td>
                     <td
-                      className={`${revenueCell} text-right text-xs text-slate-600 tabular-nums`}
+                      className={`${revenueCell} text-right text-xs text-zinc-600 tabular-nums`}
                     >
                       {item.unlockCount.toLocaleString("vi-VN")}
                     </td>
@@ -110,15 +110,15 @@ export function AuthorRevenueBreakdownCard({
                     </td>
                     <td className={revenueCell}>
                       <div className="min-w-24">
-                        <div className="mb-1.5 text-[11px] font-semibold text-slate-500">
+                        <div className="mb-1.5 text-[11px] font-semibold text-zinc-500">
                           {percent.toLocaleString("vi-VN", {
                             maximumFractionDigits: 1,
                           })}
                           %
                         </div>
-                        <div className="h-1 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-1 overflow-hidden rounded-full bg-zinc-100">
                           <div
-                            className="h-full rounded-full bg-amber-400"
+                            className="h-full rounded-full bg-sky-500"
                             style={{ width: `${Math.min(100, percent)}%` }}
                           />
                         </div>
@@ -128,7 +128,7 @@ export function AuthorRevenueBreakdownCard({
                       <button
                         aria-label={`Xem doanh thu ${item.title}`}
                         onClick={() => onSelectStory(item.storyId)}
-                        className="rounded-lg p-2 text-slate-400 transition hover:bg-sky-50 hover:text-sky-700"
+                        className="rounded-lg p-2 text-zinc-400 transition hover:bg-sky-50 hover:text-sky-700"
                       >
                         <RevenueIcon name="chevron" />
                       </button>

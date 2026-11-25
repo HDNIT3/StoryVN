@@ -159,12 +159,12 @@ export function StoryCoverUploader({
           {selectedFile && (
             <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
               <span>✓</span>
-              <span>Đã chọn: {selectedFile.name} (chỉ upload khi bấm lưu)</span>
+              <span>Đã chọn: {selectedFile.name}</span>
             </p>
           )}
 
           <p className="text-xs text-zinc-500 leading-relaxed">
-            Hỗ trợ JPG, PNG, WEBP tối đa 5MB. Ảnh sẽ tự động tải lên khi bạn nhấn Lưu / Gửi duyệt.
+            Hỗ trợ JPG, PNG, WEBP tối đa 5MB.
           </p>
         </div>
       )}

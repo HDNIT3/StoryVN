@@ -56,10 +56,8 @@ export function ChapterRichTextEditor({
 
   // Sync content when prop changes externally (e.g. initial fetch)
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      if (editor.getText().trim() === "" && content) {
-        editor.commands.setContent(content.normalize("NFC"));
-      }
+    if (editor && content.normalize("NFC") !== editor.getHTML()) {
+      editor.commands.setContent(content.normalize("NFC"), { emitUpdate: false });
     }
   }, [content, editor]);
 
@@ -73,7 +71,6 @@ export function ChapterRichTextEditor({
 
   const rawText = editor.getText();
   const wordCount = rawText.trim() ? rawText.trim().split(/\s+/).length : 0;
-  const charCount = rawText.length;
 
   return (
     <div className="w-full bg-white border border-slate-300 rounded-none shadow-none flex flex-col focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-200 transition">

@@ -46,7 +46,7 @@ export function EarningsSummary({
         ? `Tương đương ${money(data.pendingAmount)}`
         : "Yêu cầu đang được xử lý",
       icon: "clock",
-      color: "text-violet-600 bg-violet-50",
+      color: "text-amber-700 bg-amber-50",
     },
     {
       label: "Đã quyết toán",
@@ -63,27 +63,27 @@ export function EarningsSummary({
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs sm:p-5"
+          className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xs"
         >
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <p className="text-xs font-medium text-slate-500">{stat.label}</p>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{stat.label}</p>
             <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${stat.color}`}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${stat.color}`}
             >
               <RevenueIcon name={stat.icon} />
             </span>
           </div>
           {loading ? (
             <>
-              <div className="h-7 w-3/4 animate-pulse rounded bg-slate-100" />
-              <div className="mt-2 h-3 w-4/5 animate-pulse rounded bg-slate-100" />
+              <div className="h-7 w-3/4 animate-pulse rounded bg-zinc-100" />
+              <div className="mt-2 h-3 w-4/5 animate-pulse rounded bg-zinc-100" />
             </>
           ) : (
             <>
-              <p className="break-words text-xl font-bold tracking-tight text-slate-900 tabular-nums sm:text-2xl">
+              <p className="break-words text-xl font-bold tracking-tight text-zinc-900 tabular-nums sm:text-2xl">
                 {stat.value}
               </p>
-              <p className="mt-1.5 text-[11px] leading-5 text-slate-500">
+              <p className="mt-1.5 text-[11px] leading-5 text-zinc-500">
                 {stat.hint}
               </p>
             </>
@@ -130,13 +130,13 @@ export function AuthorWithdrawalsPanel({
   if (loading)
     return (
       <div className="grid animate-pulse gap-4 lg:grid-cols-5">
-        <div className="h-64 rounded-2xl bg-slate-100 lg:col-span-3" />
-        <div className="h-64 rounded-2xl bg-slate-100 lg:col-span-2" />
+        <div className="h-64 rounded-lg bg-zinc-100 lg:col-span-3" />
+        <div className="h-64 rounded-lg bg-zinc-100 lg:col-span-2" />
       </div>
     );
   if (error || !data)
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white">
+      <div className="rounded-lg border border-zinc-200 bg-white">
         <RevenueEmpty
           error
           title="Chưa tải được số dư"
@@ -156,14 +156,14 @@ export function AuthorWithdrawalsPanel({
   return (
     <>
       <div className="grid items-stretch gap-4 lg:grid-cols-5">
-        <section className="flex flex-col overflow-hidden rounded-2xl border border-sky-200/70 bg-white shadow-xs lg:col-span-3">
-          <div className="flex-1 bg-linear-to-br from-sky-50/90 via-white to-white p-5 sm:p-6">
+        <section className="flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-2xs lg:col-span-3">
+          <div className="flex-1 p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-xs font-semibold text-sky-700">
+              <span className="text-xs font-semibold tracking-wider text-zinc-500">
                 NHUẬN BÚT KHẢ DỤNG
               </span>
               <button
-                className="rounded-lg p-2 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600 disabled:opacity-40"
+                className="rounded-lg p-2 text-zinc-400 transition hover:bg-sky-50 hover:text-sky-600 disabled:opacity-40"
                 aria-label="Cập nhật số dư"
                 disabled={refreshing}
                 onClick={onRefresh}
@@ -174,21 +174,21 @@ export function AuthorWithdrawalsPanel({
                 />
               </button>
             </div>
-            <p className="mt-3 break-words text-3xl font-bold tracking-tight text-slate-900 tabular-nums sm:text-4xl">
+            <p className="mt-3 break-words text-2xl font-bold tracking-tight text-zinc-900 tabular-nums sm:text-3xl">
               {money(data.availableAmount)}
             </p>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-zinc-500">
               Số tiền thực nhận từ{" "}
-              <strong className="font-semibold text-slate-700">
+              <strong className="font-semibold text-zinc-700">
                 {coins(data.availableCoins)}
               </strong>{" "}
               khả dụng
             </p>
             {data.activeRequest ? (
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-sky-100 bg-sky-50 p-3">
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-sky-200 bg-sky-50 p-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <WithdrawalBadge status={data.activeRequest.status} />
-                  <span className="text-xs text-slate-600">
+                  <span className="text-xs text-zinc-600">
                     Bạn có một yêu cầu đang mở.
                   </span>
                 </div>
@@ -203,13 +203,13 @@ export function AuthorWithdrawalsPanel({
             ) : (
               <div className="mt-5">
                 <div className="mb-2 flex items-center justify-between gap-2 text-[11px]">
-                  <span className="text-slate-500">Ngưỡng rút tối thiểu</span>
-                  <span className="font-semibold text-slate-700">
+                  <span className="text-zinc-500">Ngưỡng rút tối thiểu</span>
+                  <span className="font-semibold text-zinc-700">
                     {money(data.policy.minimumAmount)}
                   </span>
                 </div>
                 <div
-                  className="h-1.5 overflow-hidden rounded-full bg-slate-100"
+                  className="h-1.5 overflow-hidden rounded-full bg-zinc-100"
                   role="progressbar"
                   aria-label="Tiến độ đạt ngưỡng rút"
                   aria-valuenow={Math.round(progress)}
@@ -221,7 +221,7 @@ export function AuthorWithdrawalsPanel({
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <p className="mt-2 text-[11px] leading-5 text-slate-500">
+                <p className="mt-2 text-[11px] leading-5 text-zinc-500">
                   {data.availableAmount < data.policy.minimumAmount
                     ? `Cần thêm ${money(data.policy.minimumAmount - data.availableAmount)} thực nhận để gửi yêu cầu.`
                     : "Số dư của bạn đã đạt ngưỡng rút tối thiểu."}
@@ -237,9 +237,9 @@ export function AuthorWithdrawalsPanel({
               </p>
             )}
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50/50 p-4 sm:px-5">
             <button
-              className="text-xs font-semibold text-slate-500 hover:text-sky-700"
+              className="text-xs font-semibold text-zinc-500 hover:text-sky-700"
               onClick={onShowRequests}
             >
               Lịch sử rút tiền
@@ -257,34 +257,34 @@ export function AuthorWithdrawalsPanel({
             </button>
           </div>
         </section>
-        <section className="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-6 lg:col-span-2">
+        <section className="flex flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-2xs sm:p-5 lg:col-span-2">
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900">
+            <h2 className="text-sm font-bold text-zinc-900">
               Tài khoản nhận tiền
             </h2>
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-100 text-zinc-500">
               <RevenueIcon name="bank" />
             </span>
           </div>
           {data.bankReady ? (
             <>
-              <div className="flex-1 rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                <p className="text-xs font-semibold text-slate-500">
+              <div className="flex-1 rounded-md border border-zinc-200 bg-zinc-50 p-4">
+                <p className="text-xs font-semibold text-zinc-500">
                   {data.bank.bankName}
                 </p>
-                <p className="mt-3 break-all font-mono text-lg font-semibold tracking-wide text-slate-900">
+                <p className="mt-3 break-all font-mono text-lg font-semibold tracking-wide text-zinc-900">
                   {data.bank.bankAccountNumber}
                 </p>
-                <p className="mt-2 text-xs font-medium text-slate-600">
+                <p className="mt-2 text-xs font-medium text-zinc-600">
                   {data.bank.bankAccountName}
                 </p>
               </div>
-              <p className="mt-3 text-[11px] leading-5 text-slate-400">
+              <p className="mt-3 text-[11px] leading-5 text-zinc-400">
                 Thông tin này được chốt khi bạn gửi yêu cầu rút tiền.
               </p>
             </>
           ) : (
-            <div className="flex-1 rounded-xl border border-dashed border-amber-200 bg-amber-50/60 p-4">
+            <div className="flex-1 rounded-md border border-dashed border-amber-200 bg-amber-50/60 p-4">
               <p className="text-sm font-semibold text-amber-800">
                 Chưa có đủ thông tin ngân hàng
               </p>
@@ -304,25 +304,6 @@ export function AuthorWithdrawalsPanel({
             <RevenueIcon name="arrow" className="h-3.5 w-3.5" />
           </Link>
         </section>
-      </div>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-slate-200/70 bg-slate-50/70 px-4 py-3 text-[11px] leading-5 text-slate-500">
-        <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
-          <RevenueIcon name="info" />
-          Chính sách nhuận bút
-        </span>
-        <span>
-          Quy đổi{" "}
-          <strong className="font-semibold text-slate-700">
-            {money(data.policy.exchangeRate)}/Xu
-          </strong>
-        </span>
-        <span>
-          Tác giả thực nhận{" "}
-          <strong className="font-semibold text-slate-700">
-            {data.policy.payoutPercent}%
-          </strong>
-        </span>
-        <span>Chuyển khoản thủ công · Rút toàn bộ Xu khả dụng</span>
       </div>
       {confirm && (
         <RevenueDialog
@@ -352,18 +333,18 @@ export function AuthorWithdrawalsPanel({
             </>
           }
         >
-          <div className="mb-5 rounded-2xl bg-sky-50 p-5 text-center">
+          <div className="mb-5 rounded-lg bg-sky-50 p-5 text-center">
             <p className="text-xs font-medium text-sky-700">
               Số tiền bạn thực nhận
             </p>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900 tabular-nums">
+            <p className="mt-2 text-3xl font-bold tracking-tight text-zinc-900 tabular-nums">
               {money(data.availableAmount)}
             </p>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-zinc-500">
               Quyết toán toàn bộ {coins(data.availableCoins)}
             </p>
           </div>
-          <dl className="divide-y divide-slate-100 text-sm">
+          <dl className="divide-y divide-zinc-200 text-sm">
             {[
               ["Xu yêu cầu rút", coins(data.availableCoins)],
               [
@@ -383,30 +364,30 @@ export function AuthorWithdrawalsPanel({
               ],
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between gap-4 py-3">
-                <dt className="text-slate-500">{label}</dt>
-                <dd className="text-right font-semibold text-slate-900 tabular-nums">
+                <dt className="text-zinc-500">{label}</dt>
+                <dd className="text-right font-semibold text-zinc-900 tabular-nums">
                   {value}
                 </dd>
               </div>
             ))}
           </dl>
-          <div className="mt-4 flex items-start gap-3 rounded-xl border border-slate-200 p-4">
-            <span className="rounded-lg bg-slate-100 p-2 text-slate-500">
+          <div className="mt-4 flex items-start gap-3 rounded-xl border border-zinc-200 p-4">
+            <span className="rounded-lg bg-zinc-100 p-2 text-zinc-500">
               <RevenueIcon name="bank" />
             </span>
             <div className="min-w-0 text-sm">
-              <p className="font-semibold text-slate-800">
+              <p className="font-semibold text-zinc-800">
                 {data.bank.bankName}
               </p>
-              <p className="mt-1 break-all text-slate-600">
+              <p className="mt-1 break-all text-zinc-600">
                 {data.bank.bankAccountNumber}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-zinc-500">
                 {data.bank.bankAccountName}
               </p>
             </div>
           </div>
-          <p className="mt-4 text-xs leading-5 text-slate-500">
+          <p className="mt-4 text-xs leading-5 text-zinc-500">
             Xu kiếm thêm sau khi gửi sẽ được tính cho lần rút tiếp theo. Bạn có
             thể hủy yêu cầu khi còn ở trạng thái chờ duyệt.
           </p>
