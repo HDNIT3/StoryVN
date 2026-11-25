@@ -64,4 +64,5 @@ export const StoryRatingSchema = SchemaFactory.createForClass(StoryRating);
 StoryRatingSchema.index({ userId: 1, storyId: 1 }, { unique: true });
 StoryRatingSchema.index({ storyId: 1, status: 1, createdAt: -1 });
 StoryRatingSchema.index({ storyId: 1, rating: 1 });
+StoryRatingSchema.index({ status: 1, updatedAt: -1 });
 

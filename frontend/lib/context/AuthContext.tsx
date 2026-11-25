@@ -23,6 +23,7 @@ import {
   clearTokens,
   syncSessionCookies,
   isJwtExpired,
+  decodeJwtPayloadClient,
 } from "@/lib/auth-tokens";
 
 export {
@@ -151,9 +152,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       syncSessionCookies(currentToken);
-      if (!user) {
+      const tokenUserId = decodeJwtPayloadClient(currentToken)?.sub;
+      if (!user || tokenUserId !== user._id) {
+        // localStorage is shared by tabs. Switching accounts must also replace
+        // the in-memory profile used by account-scoped recommendation queries.
+        setUser(null);
         fetchProfile({ silentAuthFailure: true }).then((profile) => {
-          setUser(profile);
+          if (getStoredAccessToken() === currentToken) setUser(profile);
         });
       }
     };
@@ -187,6 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (accessToken: string, refreshToken: string) => {
+      setUser(null);
       saveTokens(accessToken, refreshToken);
       const profile = await fetchProfile();
       setUser(profile);

@@ -53,4 +53,5 @@ export const FollowSchema = SchemaFactory.createForClass(Follow);
 
 FollowSchema.index({ userId: 1, targetType: 1, targetId: 1 }, { unique: true });
 FollowSchema.index({ userId: 1, targetType: 1, createdAt: -1 });
+FollowSchema.index({ targetType: 1, createdAt: -1 });
 FollowSchema.index({ targetId: 1, targetType: 1 });

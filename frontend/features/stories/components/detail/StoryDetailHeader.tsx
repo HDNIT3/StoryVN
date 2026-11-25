@@ -11,6 +11,7 @@ interface StoryDetailHeaderProps {
   slugParam: string;
   publicChapterCount: number;
   firstChapter?: { chapterNumber: number };
+  readingContext?: { chapterNumber: number; chaptersRead: number; totalChapters: number; progressPercent: number } | null;
   onShare: () => void;
   onPlaceholder: (name: string) => void;
   isFollowing?: boolean;
@@ -165,6 +166,7 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
   slugParam,
   publicChapterCount,
   firstChapter,
+  readingContext,
   onShare,
   onPlaceholder,
   isFollowing,
@@ -292,17 +294,23 @@ export const StoryDetailHeader: React.FC<StoryDetailHeaderProps> = ({
             </div>
           </div>
 
+          {readingContext && (
+            <div className="mt-4 text-xs text-slate-500">
+              <p>Đã mở {readingContext.chaptersRead}/{readingContext.totalChapters} chương · {readingContext.progressPercent}% · Gần nhất: chương {readingContext.chapterNumber}</p>
+              <progress aria-label="Tiến độ đọc" value={readingContext.progressPercent} max={100} className="mt-2 h-1.5 w-full accent-emerald-600" />
+            </div>
+          )}
           {/* Nút thao tác CTA */}
           <div className="mt-6 flex flex-wrap items-center gap-3">
             {firstChapter ? (
               <Link
-                href={`/truyen/${slugParam}/chuong/${firstChapter.chapterNumber}`}
+                href={`/truyen/${slugParam}/chuong/${readingContext?.chapterNumber ?? firstChapter.chapterNumber}`}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-md shadow-emerald-700/20 active:scale-[0.98] transition-all"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-                Đọc từ đầu
+                {readingContext ? 'Đọc tiếp' : 'Đọc từ đầu'}
               </Link>
             ) : (
               <button

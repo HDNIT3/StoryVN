@@ -9,7 +9,6 @@ export interface HomeSectionItem {
 
 export const HOME_SECTIONS: HomeSectionItem[] = [
   { id: "noi-bat", label: "Nổi bật" },
-  { id: "bang-xep-hang", label: "Bảng xếp hạng" },
   { id: "tac-gia-noi-bat", label: "Tác giả nổi bật" },
   { id: "truyen-moi-nhat", label: "Truyện mới nhất" },
   { id: "moi-cap-nhat", label: "Mới cập nhật" },
