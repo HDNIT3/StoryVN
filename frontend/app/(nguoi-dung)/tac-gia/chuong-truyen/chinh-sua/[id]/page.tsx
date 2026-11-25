@@ -7,5 +7,5 @@ interface PageProps {
 
 export default function ChinhSuaChuongPage({ params }: PageProps) {
   const resolvedParams = use(params);
-  return <AuthorEditChapterView chapterId={resolvedParams.id} />;
+  return <AuthorEditChapterView key={resolvedParams.id} chapterId={resolvedParams.id} />;
 }

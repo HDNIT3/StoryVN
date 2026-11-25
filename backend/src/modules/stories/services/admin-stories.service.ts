@@ -436,12 +436,8 @@ export class AdminStoriesService {
       story.description = snapshot.description ?? '';
       story.coverUrl = snapshot.coverUrl ?? null;
       story.authorNote = snapshot.authorNote ?? '';
-      story.genreIds = (snapshot.genreIds || []).map(
-        (gid: any) => new Types.ObjectId(gid),
-      );
-      story.tagIds = (snapshot.tagIds || []).map(
-        (tid: any) => new Types.ObjectId(tid),
-      );
+      snapshot.genreIds = story.genreIds;
+      snapshot.tagIds = story.tagIds;
       story.ageRating = snapshot.ageRating;
 
       pendingRevision.status = RevisionStatus.APPROVED;

@@ -155,6 +155,35 @@ describe('published chapter pricing independent of content review', () => {
     expect(notify).toHaveBeenCalledTimes(1);
   });
 
+  it('submits updated content and pricing in one save when a revision is pending', async () => {
+    const revisionId = new Types.ObjectId();
+    chapter.revisions.push({
+      _id: revisionId,
+      status: RevisionStatus.PENDING_REVIEW,
+      snapshot: {
+        title: 'Tiêu đề chờ duyệt',
+        content: 'Nội dung chờ duyệt',
+      },
+    });
+
+    await update({
+      content: 'Nội dung gửi lại',
+      coinPrice: 40,
+      action: ChapterAction.SUBMIT,
+    });
+
+    expect(chapter.content).toBe('Nội dung chính thức');
+    expect(chapter.coinPrice).toBe(40);
+    expect(chapter.revisions).toHaveLength(1);
+    expect(chapter.revisions[0]).toMatchObject({
+      _id: revisionId,
+      status: RevisionStatus.PENDING_REVIEW,
+      snapshot: { title: 'Tiêu đề chờ duyệt', content: 'Nội dung gửi lại' },
+    });
+    expect(chapter.save).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledTimes(1);
+  });
+
   it('enables and disables the previous-chapter restriction immediately', async () => {
     await update({ requirePreviousChapter: true, action: ChapterAction.DRAFT });
     expect(chapter.requirePreviousChapter).toBe(true);

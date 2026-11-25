@@ -93,6 +93,18 @@ export class NotificationsController {
     };
   }
 
+  @ApiOperation({ summary: 'Xóa tất cả thông báo đã đọc' })
+  @Delete('clear-read')
+  @HttpCode(HttpStatus.OK)
+  async deleteAllRead(@CurrentUser() user: User & { _id: any }) {
+    const data = await this.notificationsService.deleteAllRead(user._id.toString());
+    return {
+      success: true,
+      message: `Đã xóa ${data.deletedCount} thông báo đã đọc`,
+      data,
+    };
+  }
+
   @ApiOperation({ summary: 'Xóa một thông báo' })
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
@@ -104,18 +116,6 @@ export class NotificationsController {
     return {
       success: true,
       message: 'Đã xóa thông báo',
-    };
-  }
-
-  @ApiOperation({ summary: 'Xóa tất cả thông báo đã đọc' })
-  @Delete('clear-read')
-  @HttpCode(HttpStatus.OK)
-  async deleteAllRead(@CurrentUser() user: User & { _id: any }) {
-    const data = await this.notificationsService.deleteAllRead(user._id.toString());
-    return {
-      success: true,
-      message: `Đã xóa ${data.deletedCount} thông báo đã đọc`,
-      data,
     };
   }
 }

@@ -22,13 +22,13 @@ export function AuthorEarningsMovements() {
   const [selected, setSelected] = useState<string | null>(null);
   const query = useMovements({ page, limit: 10, startDate, endDate });
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-      <div className="flex items-start justify-between gap-3 px-5 py-5">
+    <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-2xs">
+      <div className="flex items-start justify-between gap-3 p-4 sm:p-5">
         <div>
-          <h2 className="text-sm font-bold text-slate-900">
+          <h2 className="text-sm font-bold text-zinc-900">
             Lịch sử biến động
           </h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-zinc-500">
             Theo dõi Xu phát sinh, khoản giữ để rút và các lần quyết toán.
           </p>
         </div>
@@ -44,8 +44,8 @@ export function AuthorEarningsMovements() {
           Làm mới
         </button>
       </div>
-      <div className="flex flex-wrap items-end gap-3 border-y border-slate-100 bg-slate-50/60 px-5 py-3">
-        <label className="min-w-36 flex-1 space-y-1.5 text-[11px] font-medium text-slate-500 sm:max-w-48">
+      <div className="flex flex-wrap items-end gap-3 border-y border-zinc-200 bg-zinc-50/50 p-3.5 sm:p-4">
+        <label className="min-w-36 flex-1 space-y-1.5 text-[11px] font-medium text-zinc-500 sm:max-w-48">
           Từ ngày
           <input
             type="date"
@@ -58,7 +58,7 @@ export function AuthorEarningsMovements() {
             }}
           />
         </label>
-        <label className="min-w-36 flex-1 space-y-1.5 text-[11px] font-medium text-slate-500 sm:max-w-48">
+        <label className="min-w-36 flex-1 space-y-1.5 text-[11px] font-medium text-zinc-500 sm:max-w-48">
           Đến ngày
           <input
             type="date"
@@ -105,7 +105,7 @@ export function AuthorEarningsMovements() {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left">
-            <thead className="border-b border-slate-100 bg-slate-50/50">
+            <thead className="border-b border-zinc-200 bg-zinc-50">
               <tr>
                 <th className={revenueHead}>Hoạt động</th>
                 <th className={`${revenueHead} text-right`}>Xu khả dụng</th>
@@ -116,13 +116,13 @@ export function AuthorEarningsMovements() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-zinc-200">
               {query.data.items.map((item) => (
-                <tr key={item._id} className="hover:bg-slate-50/70">
+                <tr key={item._id} className="hover:bg-zinc-50/70">
                   <td className={revenueCell}>
                     <div className="flex items-start gap-3">
                       <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${item.type === "REVENUE" ? "bg-amber-50 text-amber-600" : "bg-slate-100 text-slate-500"}`}
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${item.type === "REVENUE" ? "bg-amber-50 text-amber-600" : "bg-zinc-100 text-zinc-500"}`}
                       >
                         <RevenueIcon
                           name={item.type === "REVENUE" ? "coins" : "history"}
@@ -130,13 +130,13 @@ export function AuthorEarningsMovements() {
                         />
                       </span>
                       <div className="max-w-64">
-                        <p className="text-xs font-semibold text-slate-800">
+                        <p className="text-xs font-semibold text-zinc-800">
                           {item.type === "REVENUE"
                             ? "Độc giả mua chương"
                             : statusLabels[item.type]}
                         </p>
                         <p
-                          className="mt-1 line-clamp-2 text-[11px] leading-5 text-slate-400"
+                          className="mt-1 line-clamp-2 text-[11px] leading-5 text-zinc-400"
                           title={item.note}
                         >
                           {item.note || "Cập nhật trạng thái yêu cầu"}
@@ -145,21 +145,21 @@ export function AuthorEarningsMovements() {
                     </div>
                   </td>
                   <td
-                    className={`${revenueCell} whitespace-nowrap text-right text-xs font-semibold tabular-nums ${item.coinDelta > 0 ? "text-emerald-600" : item.coinDelta < 0 ? "text-rose-600" : "text-slate-400"}`}
+                    className={`${revenueCell} whitespace-nowrap text-right text-xs font-semibold tabular-nums ${item.coinDelta > 0 ? "text-emerald-600" : item.coinDelta < 0 ? "text-rose-600" : "text-zinc-400"}`}
                   >
                     {item.coinDelta === 0
                       ? "—"
                       : `${item.coinDelta > 0 ? "+" : ""}${coins(item.coinDelta)}`}
                   </td>
                   <td
-                    className={`${revenueCell} whitespace-nowrap text-right text-xs tabular-nums ${item.reservedDelta === 0 ? "text-slate-400" : "text-slate-600"}`}
+                    className={`${revenueCell} whitespace-nowrap text-right text-xs tabular-nums ${item.reservedDelta === 0 ? "text-zinc-400" : "text-zinc-600"}`}
                   >
                     {item.reservedDelta === 0
                       ? "—"
                       : `${item.reservedDelta > 0 ? "+" : ""}${coins(item.reservedDelta)}`}
                   </td>
                   <td
-                    className={`${revenueCell} whitespace-nowrap text-right text-[11px] text-slate-500`}
+                    className={`${revenueCell} whitespace-nowrap text-right text-[11px] text-zinc-500`}
                   >
                     {dateTime(item.at)}
                   </td>
@@ -167,7 +167,7 @@ export function AuthorEarningsMovements() {
                     {item.requestId && (
                       <button
                         aria-label="Xem yêu cầu rút tiền liên quan"
-                        className="rounded-lg p-2 text-slate-400 hover:bg-sky-50 hover:text-sky-700"
+                        className="rounded-lg p-2 text-zinc-400 hover:bg-sky-50 hover:text-sky-700"
                         onClick={() => setSelected(item.requestId!)}
                       >
                         <RevenueIcon name="chevron" />
