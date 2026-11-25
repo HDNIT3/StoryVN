@@ -12,6 +12,7 @@ import {
   StoryItem,
   StoryProgressState,
   StoryVisibility,
+  UpdateStoryPayload,
 } from "@/features/stories";
 import { uploadService } from "@/features/upload";
 import { toast } from "@/lib/toast";
@@ -27,6 +28,20 @@ import { StoryRevisionHistoryPanel } from "./StoryRevisionHistoryPanel";
 interface StoryStepFormProps {
   isEdit?: boolean;
   initialStory?: StoryItem | null;
+}
+
+function resolveSelection(selection: string[], options: { _id: string; name: string }[]) {
+  return selection.map((value) =>
+    options.find(({ _id, name }) =>
+      _id === value || name.trim().toLowerCase() === value.trim().toLowerCase()
+    )?._id ?? value
+  );
+}
+
+function sameSelection(current: string[], saved: string[]) {
+  const savedIds = new Set(saved);
+  const currentIds = new Set(current);
+  return currentIds.size === savedIds.size && [...currentIds].every((id) => savedIds.has(id));
 }
 
 export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormProps) {
@@ -51,8 +66,6 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
       coverUrl: revision.coverUrl === undefined ? initialStory.coverUrl : revision.coverUrl,
       authorNote: revision.authorNote ?? initialStory.authorNote,
       ageRating: revision.ageRating ?? initialStory.ageRating,
-      genreIds: revision.genreIds ?? initialStory.genreIds,
-      tagIds: revision.tagIds ?? initialStory.tagIds,
     };
   }, [initialStory]);
 
@@ -93,33 +106,39 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
   const { data: tagsData } = useTags({ all: true });
   const apiTags = tagsData?.items || [];
 
-  const selectedGenres = genreSelection ?? initialSource?.genreIds?.map((genre) =>
+  const savedGenres = initialStory?.genreIds?.map((genre) =>
     typeof genre === "string" ? apiCategories.find((item) => item._id === genre)?.name ?? genre : genre.name
-  ) ?? initialSource?.genres ?? [];
-  const selectedTags = tagSelection ?? initialSource?.tagIds?.map((tag) =>
+  ) ?? initialStory?.genres ?? [];
+  const savedTags = initialStory?.tagIds?.map((tag) =>
     typeof tag === "string" ? apiTags.find((item) => item._id === tag)?.name ?? tag : tag.name
-  ) ?? initialSource?.tags ?? [];
+  ) ?? initialStory?.tags ?? [];
+  const selectedGenres = genreSelection ?? savedGenres;
+  const selectedTags = tagSelection ?? savedTags;
+  const resolvedGenreIds = resolveSelection(selectedGenres, apiCategories);
+  const resolvedTagIds = resolveSelection(selectedTags, apiTags);
 
   const savedProgress = initialStory?.progressState ?? "ONGOING";
   const savedVisibility = initialStory?.visibility ?? "PUBLIC";
   const progressState = progressChoice ?? savedProgress;
   const visibility = initialStory?.hiddenByModerator ? "PRIVATE" : visibilityChoice ?? savedVisibility;
-  const settingsChanged = progressState !== savedProgress || visibility !== savedVisibility;
-
-  const handleSaveSettings = async () => {
-    if (!storyId || !initialStory || !settingsChanged) return;
-    try {
-      await updateStoryMutation.mutateAsync({
-        id: storyId,
-        payload: {
-          progressState: progressState === savedProgress ? undefined : progressState,
-          visibility: visibility === savedVisibility ? undefined : visibility,
-        },
-      });
-    } catch {
-      // The mutation displays the error.
-    }
-  };
+  const settings: UpdateStoryPayload = {};
+  if (progressState !== savedProgress) settings.progressState = progressState;
+  if (!initialStory?.hiddenByModerator && visibility !== savedVisibility) settings.visibility = visibility;
+  if (slug.trim() !== (initialStory?.slug ?? "") && slug.trim()) settings.slug = slug.trim();
+  if (!sameSelection(resolvedGenreIds, resolveSelection(savedGenres, apiCategories))) {
+    settings.genreIds = resolvedGenreIds.filter((id) => /^[a-f\d]{24}$/i.test(id));
+  }
+  if (!sameSelection(resolvedTagIds, resolveSelection(savedTags, apiTags))) {
+    settings.tagIds = resolvedTagIds.filter((id) => /^[a-f\d]{24}$/i.test(id));
+  }
+  const settingsChanged = Object.keys(settings).length > 0;
+  const contentChanges: UpdateStoryPayload = {};
+  if (title.trim() !== (initialSource?.title ?? "").trim()) contentChanges.title = title.trim();
+  if (description.trim() !== (initialSource?.description ?? "").trim()) contentChanges.description = description.trim();
+  if (authorNote.trim() !== (initialSource?.authorNote ?? "").trim()) contentChanges.authorNote = authorNote.trim();
+  if (ageRating !== (initialSource?.ageRating ?? "ALL")) contentChanges.ageRating = ageRating;
+  const coverChanged = Boolean(selectedFile) || previewUrl.trim() !== (initialSource?.coverUrl ?? "").trim();
+  const contentChanged = coverChanged || Object.keys(contentChanges).length > 0;
 
   const generateSlug = (str: string) => {
     return str
@@ -203,8 +222,8 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
     }
   };
 
-  const handleSubmit = async (action: "DRAFT" | "SUBMIT") => {
-    if (!title.trim() || title.trim().length < 2) {
+  const handleSubmit = async (action?: "DRAFT" | "SUBMIT") => {
+    if ((!isEdit || contentChanged) && title.trim().length < 2) {
       toast.error("Tên tác phẩm phải từ 2 ký tự trở lên");
       return;
     }
@@ -212,7 +231,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
     setIsSubmitting(true);
     let finalCoverUrl = "";
 
-    if (selectedFile) {
+    if (selectedFile && (!isEdit || contentChanged)) {
       try {
         setIsUploadingImage(true);
         const uploadRes = await uploadService.uploadImage(selectedFile, "covers");
@@ -230,72 +249,30 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
       finalCoverUrl = previewUrl.trim();
     }
 
-    const resolvedGenreIds: string[] = [];
-    selectedGenres.forEach((name) => {
-      const matched = apiCategories.find(
-        (c) =>
-          c._id === name ||
-          c.name.trim().toLowerCase() === name.trim().toLowerCase()
-      );
-      const id = matched?._id ?? (/^[a-f\d]{24}$/i.test(name) ? name : undefined);
-      if (id) resolvedGenreIds.push(id);
-    });
-
-    const resolvedTagIds: string[] = [];
-    selectedTags.forEach((name) => {
-      const matched = apiTags.find(
-        (t) =>
-          t._id === name ||
-          t.name.trim().toLowerCase() === name.trim().toLowerCase()
-      );
-      const id = matched?._id ?? (/^[a-f\d]{24}$/i.test(name) ? name : undefined);
-      if (id) resolvedTagIds.push(id);
-    });
-
-    const sendGenreIds = isEdit
-      ? genreSelection !== null && (genreSelection.length === 0 || resolvedGenreIds.length > 0)
-      : resolvedGenreIds.length > 0;
-    const sendTagIds = isEdit
-      ? tagSelection !== null && (tagSelection.length === 0 || resolvedTagIds.length > 0)
-      : resolvedTagIds.length > 0;
-
-    const payload: CreateStoryPayload = {
-      title: title.trim(),
-      slug: slug.trim() || undefined,
-      description: description.trim(),
-      coverImage: isEdit ? finalCoverUrl : finalCoverUrl || undefined,
-      genreIds: sendGenreIds ? resolvedGenreIds : undefined,
-      tagIds: sendTagIds ? resolvedTagIds : undefined,
-      ageRating,
-      visibility: isEdit ? undefined : visibility,
-      authorNote: isEdit ? authorNote.trim() : authorNote.trim() || undefined,
-      progressState: isEdit ? undefined : progressState,
-    };
-
     try {
       if (isEdit) {
         const identifier = storyId || initialStory?.slug;
-        if (identifier) {
-          // Bản đang chờ duyệt: rút khỏi hàng đợi và lưu luôn nội dung mới vào
-          // chính bản sửa đó, rồi gửi duyệt lại nếu cần.
-          if (initialStory?.pendingRevision?.status === "PENDING_REVIEW") {
-            await updateStoryMutation.mutateAsync({
-              id: identifier,
-              payload,
-              action: "WITHDRAW",
-            });
-            if (action === "SUBMIT") {
-              await updateStoryMutation.mutateAsync({
-                id: identifier,
-                payload,
-                action: "SUBMIT",
-              });
-            }
-          } else {
-            await updateStoryMutation.mutateAsync({ id: identifier, payload, action });
-          }
-        }
+        if (!identifier || (!settingsChanged && !contentChanged)) return;
+        const payload = { ...settings, ...contentChanges };
+        if (coverChanged) payload.coverImage = finalCoverUrl;
+        await updateStoryMutation.mutateAsync({
+          id: identifier,
+          payload,
+          action: contentChanged ? "SUBMIT" : undefined,
+        });
       } else {
+        const payload: CreateStoryPayload = {
+          title: title.trim(),
+          description: description.trim(),
+          coverImage: finalCoverUrl || undefined,
+          authorNote: authorNote.trim() || undefined,
+          ageRating,
+          slug: slug.trim() || undefined,
+          genreIds: settings.genreIds?.length ? settings.genreIds : undefined,
+          tagIds: settings.tagIds?.length ? settings.tagIds : undefined,
+          visibility,
+          progressState,
+        };
         await createStoryMutation.mutateAsync({ payload, action });
       }
       router.push("/tac-gia/tac-pham");
@@ -416,7 +393,7 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-zinc-500">
                   {pendingRevision.status === "PENDING_REVIEW"
-                    ? "Biểu mẫu đang mở chính bản sửa đã gửi duyệt. Khi lưu, bản sửa được rút khỏi hàng đợi (vẫn giữ nguyên là một bản) và lưu nội dung mới — gửi duyệt lại để đưa vào kiểm duyệt."
+                    ? "Nếu sửa nội dung, lần gửi tiếp theo sẽ cập nhật bản đang chờ duyệt."
                     : "Bản đang phát hành vẫn giữ nguyên cho tới khi bản sửa được duyệt."}
                 </p>
                 {pendingRevision.status === "REJECTED" && pendingRevision.rejectReason && (
@@ -518,12 +495,23 @@ export function StoryStepForm({ isEdit = false, initialStory }: StoryStepFormPro
               progressState,
               onProgressStateChange: setProgressChoice,
               hiddenByModerator: initialStory?.hiddenByModerator,
-              settingsChanged,
-              onSave: handleSaveSettings,
             } : undefined}
           />
         </div>
       </div>
+
+      {isEdit && (settingsChanged || contentChanged) && (
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            disabled={isSubmitting || updateStoryMutation.isPending}
+            onClick={() => handleSubmit()}
+            className="rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
+          >
+            {isUploadingImage ? "Đang tải ảnh..." : isSubmitting ? "Đang xử lý..." : contentChanged ? "Gửi duyệt nội dung" : "Cập nhật"}
+          </button>
+        </div>
+      )}
 
       {isEdit && (initialStory?.slug || storyId) && (
         <StoryRevisionHistoryPanel

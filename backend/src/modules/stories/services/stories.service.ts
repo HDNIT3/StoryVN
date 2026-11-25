@@ -576,14 +576,8 @@ export class StoriesService {
         dto.authorNote !== undefined
           ? (dto.authorNote || '').trim()
           : (base.authorNote || ''),
-      genreIds:
-        dto.genreIds !== undefined
-          ? dto.genreIds.map((id) => new Types.ObjectId(id))
-          : (base.genreIds || []),
-      tagIds:
-        dto.tagIds !== undefined
-          ? dto.tagIds.map((id) => new Types.ObjectId(id))
-          : (base.tagIds || []),
+      genreIds: base.genreIds || [],
+      tagIds: base.tagIds || [],
       ageRating: dto.ageRating !== undefined ? dto.ageRating : base.ageRating,
     };
   }
@@ -598,9 +592,7 @@ export class StoriesService {
       next.description !== (base.description || '') ||
       (next.coverUrl ?? null) !== (base.coverUrl ?? null) ||
       next.authorNote !== (base.authorNote || '') ||
-      next.ageRating !== base.ageRating ||
-      !this.sameObjectIdSet(next.genreIds, base.genreIds) ||
-      !this.sameObjectIdSet(next.tagIds, base.tagIds)
+      next.ageRating !== base.ageRating
     );
   }
 
@@ -621,12 +613,6 @@ export class StoriesService {
       story.coverUrl = dto.coverImage || null;
     } else if (dto.coverUrl !== undefined) {
       story.coverUrl = dto.coverUrl || null;
-    }
-    if (dto.genreIds !== undefined) {
-      story.genreIds = dto.genreIds.map((id) => new Types.ObjectId(id));
-    }
-    if (dto.tagIds !== undefined) {
-      story.tagIds = dto.tagIds.map((id) => new Types.ObjectId(id));
     }
     if (dto.ageRating !== undefined) {
       story.ageRating = dto.ageRating;
@@ -694,6 +680,9 @@ export class StoriesService {
     const wasPublishedPublic =
       story.status === StoryStatus.PUBLISHED &&
       story.visibility === StoryVisibility.PUBLIC;
+    const taxonomyChanged =
+      (dto.genreIds !== undefined && !this.sameObjectIdSet(dto.genreIds, story.genreIds)) ||
+      (dto.tagIds !== undefined && !this.sameObjectIdSet(dto.tagIds, story.tagIds));
     const action = actionOverride || dto.action;
     const makingPublic = dto.visibility === StoryVisibility.PUBLIC;
 
@@ -713,6 +702,9 @@ export class StoriesService {
         }
         throw error;
       }
+      if (taxonomyChanged && wasPublishedPublic && story.visibility === StoryVisibility.PUBLIC) {
+        this.searchEmbedding?.storyChanged(String(story._id));
+      }
     };
 
     if (dto.title !== undefined && dto.title.trim() !== story.title) {
@@ -725,6 +717,12 @@ export class StoriesService {
     }
     if (dto.visibility !== undefined) {
       story.visibility = dto.visibility;
+    }
+    if (dto.genreIds !== undefined) {
+      story.genreIds = dto.genreIds.map((id) => new Types.ObjectId(id));
+    }
+    if (dto.tagIds !== undefined) {
+      story.tagIds = dto.tagIds.map((id) => new Types.ObjectId(id));
     }
 
     // Slug tùy chỉnh không thuộc nội dung kiểm duyệt
@@ -783,6 +781,8 @@ export class StoriesService {
     const base = activeRevision
       ? this.cloneSnapshot(activeRevision.snapshot)
       : this.buildStorySnapshotFromDoc(story);
+    base.genreIds = story.genreIds;
+    base.tagIds = story.tagIds;
     const contentChanged = this.hasStoryContentChanged(base, dto);
     const now = new Date();
     let submittedForReview = false;
@@ -814,8 +814,9 @@ export class StoriesService {
       return this.buildStoryResponse(story._id);
     }
 
-    // Đang chờ duyệt: không được sửa nội dung, phải rút trước
-    if (activeRevision && activeRevision.status === RevisionStatus.PENDING_REVIEW) {
+    // Cập nhật nội dung đang chờ duyệt khi tác giả gửi lại trong cùng yêu cầu.
+    if (activeRevision?.status === RevisionStatus.PENDING_REVIEW &&
+        !(contentChanged && action === StoryAction.SUBMIT)) {
       if (contentChanged || action === StoryAction.SUBMIT) {
         throw new ConflictException(
           'Tác phẩm đang có bản chỉnh sửa chờ duyệt. Vui lòng rút bản đó (WITHDRAW) trước khi chỉnh sửa hoặc gửi duyệt lại.',
@@ -932,7 +933,11 @@ export class StoriesService {
 
     const now = new Date();
     revisions.push({
-      snapshot: this.cloneSnapshot(target.snapshot),
+      snapshot: {
+        ...this.cloneSnapshot(target.snapshot),
+        genreIds: story.genreIds,
+        tagIds: story.tagIds,
+      },
       status: RevisionStatus.DRAFT,
       createdAt: now,
       updatedAt: now,

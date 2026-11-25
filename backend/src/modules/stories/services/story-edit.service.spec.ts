@@ -82,7 +82,7 @@ describe('sửa tác phẩm', () => {
     expect(story.revisions[0].snapshot.title).toBe('Tên chờ duyệt');
   });
 
-  it('lưu yêu cầu xóa ảnh bìa, lời ngỏ và toàn bộ thẻ vào bản sửa', async () => {
+  it('lưu thay đổi nội dung vào bản sửa và áp dụng việc xóa thẻ ngay', async () => {
     const { story, update } = setup();
     await update({ action: StoryAction.DRAFT, coverImage: '', authorNote: '', tagIds: [] });
 
@@ -91,6 +91,50 @@ describe('sửa tác phẩm', () => {
       authorNote: '',
       tagIds: [],
     });
+    expect(story.tagIds).toEqual([]);
+  });
+
+  it('cập nhật thể loại và thẻ ngay, kể cả khi một bản sửa cũ đang chờ duyệt', async () => {
+    const { story, update, admin, reviewerId, identifier, queueRevision, chain } = setup();
+    queueRevision('Tên chờ duyệt');
+    story.revisions[0].snapshot.genreIds = [new Types.ObjectId()];
+    story.revisions[0].snapshot.tagIds = [...story.tagIds];
+    const newGenre = new Types.ObjectId();
+
+    await update({ genreIds: [String(newGenre)], tagIds: [] });
+
+    expect(story.genreIds).toEqual([newGenre]);
+    expect(story.tagIds).toEqual([]);
+    expect(story.revisions[0].status).toBe(RevisionStatus.PENDING_REVIEW);
+
+    chain.select.mockResolvedValueOnce(story);
+    await admin.approveStory(identifier, reviewerId);
+
+    expect(story.title).toBe('Tên chờ duyệt');
+    expect(story.genreIds).toEqual([newGenre]);
+    expect(story.tagIds).toEqual([]);
+  });
+
+  it('gửi lại nội dung kèm cài đặt trong một lần cập nhật bản chờ duyệt', async () => {
+    const { story, update, queueRevision } = setup();
+    queueRevision('Tên chờ duyệt');
+    const revisionId = story.revisions[0]._id;
+
+    await update({
+      description: 'Tóm tắt mới',
+      progressState: StoryProgressState.COMPLETED,
+      action: StoryAction.SUBMIT,
+    });
+
+    expect(story.progressState).toBe(StoryProgressState.COMPLETED);
+    expect(story.description).toBe('');
+    expect(story.revisions).toHaveLength(1);
+    expect(story.revisions[0]).toMatchObject({
+      _id: revisionId,
+      status: RevisionStatus.PENDING_REVIEW,
+      snapshot: { title: 'Tên chờ duyệt', description: 'Tóm tắt mới' },
+    });
+    expect(story.save).toHaveBeenCalledTimes(1);
   });
 
   it('duyệt tên mới và giữ đường dẫn đang sử dụng', async () => {

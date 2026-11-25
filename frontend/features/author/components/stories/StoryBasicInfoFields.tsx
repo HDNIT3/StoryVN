@@ -56,6 +56,9 @@ export function StoryBasicInfoFields({
   onAgeRatingChange,
   onAuthorNoteChange,
 }: StoryBasicInfoFieldsProps) {
+  const descriptionId = useId();
+  const descriptionLayout = "col-start-1 row-start-1 min-w-0 border px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]";
+
   return (
     <div className="bg-white rounded-xl border border-zinc-200/90 p-5 sm:p-6 shadow-2xs space-y-5">
       <h2 className="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3">
@@ -97,18 +100,24 @@ export function StoryBasicInfoFields({
       {/* Tóm tắt */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="block text-sm font-semibold text-zinc-800">
+          <label htmlFor={descriptionId} className="block text-sm font-semibold text-zinc-800">
             Tóm tắt cốt truyện
           </label>
           <span className="text-xs text-zinc-400 font-medium">{description.length} ký tự</span>
         </div>
-        <textarea
-          rows={5}
-          value={description}
-          onChange={(e) => onDescriptionChange(e.target.value)}
-          placeholder="Giới thiệu nội dung, bối cảnh và điểm hấp dẫn của tác phẩm..."
-          className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-hidden focus:ring-1 focus:ring-sky-500 focus:border-sky-500 resize-none leading-relaxed"
-        />
+        <div className="grid">
+          <div aria-hidden="true" className={`${descriptionLayout} invisible`}>
+            {description}{" "}
+          </div>
+          <textarea
+            id={descriptionId}
+            rows={1}
+            value={description}
+            onChange={(e) => onDescriptionChange(e.target.value)}
+            placeholder="Giới thiệu nội dung, bối cảnh và điểm hấp dẫn của tác phẩm..."
+            className={`${descriptionLayout} w-full min-h-28 self-stretch resize-none overflow-hidden rounded-lg border-zinc-200 bg-zinc-50 text-zinc-900 focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500`}
+          />
+        </div>
       </div>
 
       {/* Tiến độ sáng tác & Độ tuổi độc giả */}

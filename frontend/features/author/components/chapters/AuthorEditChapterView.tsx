@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useChapterDetail, useUpdateChapter, ChapterAction, ChapterItem, ChapterRevisionItem } from "@/features/chapters";
+import { useChapterDetail, useUpdateChapter, UpdateChapterPayload } from "@/features/chapters";
 import { useMyStories } from "@/features/stories";
 import { ChapterRichTextEditor } from "./ChapterRichTextEditor";
 import { ChapterPricingFields } from "./ChapterPricingFields";
@@ -28,52 +28,50 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
   );
 
   // Form states
-  const [chapterNumber, setChapterNumber] = useState<number>(1);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [titleChoice, setTitle] = useState<string>();
+  const [contentChoice, setContent] = useState<string>();
   const [wordCount, setWordCount] = useState(0);
-  const [isFree, setIsFree] = useState(true);
-  const [coinPrice, setCoinPrice] = useState<number>(0);
-  const [requirePrevious, setRequirePrevious] = useState(false);
-  const [scheduledAt, setScheduledAt] = useState<string>("");
+  const [freeChoice, setIsFree] = useState<boolean>();
+  const [priceChoice, setCoinPrice] = useState<number>();
+  const [previousChoice, setRequirePrevious] = useState<boolean>();
+  const [scheduleChoice, setScheduledAt] = useState<string>();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (chapter) {
-      // Luôn mở đúng bản sửa đang mở (chờ duyệt/nháp/bị từ chối) để tác giả
-      // chỉnh tiếp trên chính bản đó, không quay về nội dung đang phát hành.
-      const pending = chapter.pendingRevision;
-      const source: ChapterRevisionItem | ChapterItem = pending ?? chapter;
-
-      setChapterNumber(chapter.chapterNumber);
-      setTitle(source.title);
-      setContent(source.content || "");
-      // Use the current unlock settings while editing any content revision.
-      setIsFree(chapter.isFree);
-      setCoinPrice(chapter.coinPrice ?? 0);
-      setRequirePrevious(chapter.requirePreviousChapter ?? false);
-
-      if (chapter.scheduledAt) {
-        const d = new Date(chapter.scheduledAt);
-        const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-        setScheduledAt(localIso);
-      }
-    }
-  }, [chapter]);
+  const scheduledDate = chapter?.scheduledAt ? new Date(chapter.scheduledAt) : null;
+  const savedScheduleInput = scheduledDate
+    ? new Date(scheduledDate.getTime() - scheduledDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+    : "";
+  const currentContent = chapter?.pendingRevision ?? chapter;
+  const chapterNumber = chapter?.chapterNumber ?? 1;
+  const title = titleChoice ?? currentContent?.title ?? "";
+  const savedContent = (currentContent?.content ?? "").normalize("NFC");
+  const content = contentChoice ?? savedContent;
+  const isFree = freeChoice ?? chapter?.isFree ?? true;
+  const coinPrice = priceChoice ?? chapter?.coinPrice ?? 0;
+  const requirePrevious = previousChoice ?? chapter?.requirePreviousChapter ?? false;
+  const scheduledAt = scheduleChoice ?? savedScheduleInput;
+  const titleChanged = title.trim() !== (currentContent?.title ?? "").trim();
+  const textChanged = content !== savedContent && (Boolean(savedContent) || content !== "<p></p>");
+  const contentChanged = titleChanged || textChanged;
+  const pricingChanged = isFree !== chapter?.isFree ||
+    (!isFree && (coinPrice !== (chapter?.coinPrice ?? 0) ||
+      requirePrevious !== (chapter?.requirePreviousChapter ?? false)));
+  const scheduleChanged = !hasOfficialVersion && scheduledAt !== savedScheduleInput;
+  const hasChanges = contentChanged || pricingChanged || scheduleChanged;
 
   const updateChapterMutation = useUpdateChapter();
 
   const validateForm = () => {
     const errs: Record<string, string> = {};
-    if (!title.trim()) {
+    if (contentChanged && !title.trim()) {
       errs.title = "Vui lòng nhập tiêu đề chương";
     }
-    if (!content.trim() || content === "<p></p>") {
+    if (contentChanged && (!content.trim() || content === "<p></p>")) {
       errs.content = "Vui lòng nhập nội dung chương";
-    } else if (wordCount > 2500) {
+    } else if (textChanged && wordCount > 2500) {
       errs.content = `Nội dung chương có ${wordCount.toLocaleString()} từ, vượt quá giới hạn tối đa 2.500 từ`;
     }
-    if (!isFree) {
+    if (pricingChanged && !isFree) {
       if (!coinPrice || coinPrice <= 0) {
         errs.coinPrice = "Giá xu phải lớn hơn 0 khi đặt chương trả phí";
       }
@@ -82,49 +80,27 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async (action: ChapterAction) => {
-    if (!validateForm() || !chapterId) return;
+  const handleSubmit = async () => {
+    if (!chapterId || !hasChanges || !validateForm()) return;
 
-    // Không gửi chapterNumber khi chỉnh sửa (việc đổi vị trí dùng chức năng Sắp xếp thứ tự)
-    const payload = {
-      title: title.trim(),
-      content,
-      isFree,
-      coinPrice: isFree ? 0 : coinPrice,
-      requirePreviousChapter: isFree ? false : requirePrevious,
-      ...(hasOfficialVersion
-        ? {}
-        : { scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null }),
-    };
-
-    // Bản đang chờ duyệt: rút khỏi hàng đợi và lưu luôn nội dung mới vào
-    // chính bản sửa đó (một request), rồi gửi duyệt lại nếu cần.
-    const currentContent = chapter?.pendingRevision ?? chapter;
-    const reviewFieldsChanged = title.trim() !== currentContent?.title ||
-      content !== (currentContent?.content || "");
-    const needsWithdrawFirst = chapter?.pendingRevision?.status === "PENDING_REVIEW" &&
-      (reviewFieldsChanged || action === "SUBMIT");
-
-    if (needsWithdrawFirst) {
-      await updateChapterMutation.mutateAsync({
-        id: chapterId,
-        payload: { ...payload, action: "WITHDRAW" },
-      });
-      if (action === "SUBMIT") {
-        await updateChapterMutation.mutateAsync({
-          id: chapterId,
-          payload: { ...payload, action: "SUBMIT" },
-        });
-      }
-    } else {
-      await updateChapterMutation.mutateAsync({
-        id: chapterId,
-        payload: { ...payload, action },
-      });
+    const payload: UpdateChapterPayload = {};
+    if (titleChanged) payload.title = title.trim();
+    if (textChanged) payload.content = content;
+    if (contentChanged) payload.action = "SUBMIT";
+    if (pricingChanged) {
+      payload.isFree = isFree;
+      payload.coinPrice = isFree ? 0 : coinPrice;
+      payload.requirePreviousChapter = !isFree && requirePrevious;
     }
+    if (scheduleChanged) payload.scheduledAt = scheduledAt ? new Date(scheduledAt).toISOString() : null;
 
-    const storySlug = story?.slug || chapter?.storyId;
-    router.push(`/tac-gia/chuong-truyen?story=${storySlug}`);
+    try {
+      await updateChapterMutation.mutateAsync({ id: chapterId, payload });
+      const storySlug = story?.slug || chapter?.storyId;
+      router.push(`/tac-gia/chuong-truyen?story=${storySlug}`);
+    } catch {
+      // The mutation displays the error.
+    }
   };
 
   const handleDiscardUpdate = async () => {
@@ -135,10 +111,11 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
     });
     if (chapter) {
       setTitle(chapter.title);
-      setContent(chapter.content || "");
-      setIsFree(chapter.isFree);
-      setCoinPrice(chapter.coinPrice || 0);
-      setRequirePrevious(chapter.requirePreviousChapter || false);
+      setContent((chapter.content || "").normalize("NFC"));
+      setWordCount(0);
+      setIsFree(undefined);
+      setCoinPrice(undefined);
+      setRequirePrevious(undefined);
     }
     toast.success("Đã hủy bản sửa đổi thành công!");
   };
@@ -208,7 +185,6 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
           <span>Quay lại danh sách chương</span>
         </Link>
 
-        {/* Top Actions */}
         <div className="flex items-center gap-2">
           <Link
             href={`/tac-gia/chuong-truyen/lich-su?story=${story?.slug || ""}&chapter=${chapter.chapterNumber}`}
@@ -219,22 +195,6 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
             </svg>
             <span>Lịch sử chỉnh sửa</span>
           </Link>
-          <button
-            type="button"
-            disabled={updateChapterMutation.isPending}
-            onClick={() => handleSubmit("DRAFT")}
-            className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-md transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {hasOfficialVersion ? "Lưu thay đổi" : "Lưu bản nháp"}
-          </button>
-          <button
-            type="button"
-            disabled={updateChapterMutation.isPending}
-            onClick={() => handleSubmit("SUBMIT")}
-            className="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-md transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {updateChapterMutation.isPending ? "Đang lưu..." : "Gửi duyệt ngay"}
-          </button>
         </div>
       </div>
 
@@ -277,8 +237,8 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
                   </div>
                   <p className="mt-1 text-xs leading-relaxed text-zinc-500">
                     {pendingRevision?.status === "PENDING_REVIEW"
-                      ? "Nếu sửa nội dung, bản chờ duyệt được rút về nháp để gửi lại. Chỉ đổi miễn phí/thu phí hoặc giá Xu sẽ áp dụng ngay và giữ nguyên bản đang chờ duyệt."
-                      : "Tiêu đề, nội dung và yêu cầu mua chương trước được lưu riêng để gửi duyệt. Miễn phí/thu phí và giá Xu áp dụng ngay khi lưu."}
+                      ? "Nếu sửa nội dung, lần gửi tiếp theo sẽ cập nhật bản đang chờ duyệt."
+                      : "Tiêu đề và nội dung chỉnh sửa có hiệu lực sau khi được duyệt."}
                   </p>
                   {pendingRevision?.status === "REJECTED" && pendingRevision.rejectReason && (
                     <p className="mt-1 text-xs text-rose-600">
@@ -328,7 +288,7 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
             <div>
               <strong className="font-bold block mb-0.5">Chương này đã bị từ chối trước đó:</strong>
               {chapter.rejectReason ? `Lý do: "${chapter.rejectReason}". ` : ""}
-              Vui lòng điều chỉnh nội dung cho phù hợp với tiêu chuẩn cộng đồng và nhấn "Gửi duyệt ngay".
+              Vui lòng điều chỉnh nội dung cho phù hợp với tiêu chuẩn cộng đồng rồi gửi duyệt lại.
             </div>
           </div>
         )}
@@ -419,9 +379,6 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
             setRequirePrevious={setRequirePrevious}
             error={errors.coinPrice}
           />
-          {hasOfficialVersion && <p className="text-xs text-sky-700">
-            Cấu hình mở khóa có hiệu lực ngay khi bấm “Lưu thay đổi”. Tiêu đề và nội dung chỉnh sửa có hiệu lực sau khi được duyệt.
-          </p>}
 
           {/* Scheduled At */}
           {!hasOfficialVersion && (
@@ -472,34 +429,18 @@ export function AuthorEditChapterView({ chapterId }: AuthorEditChapterViewProps)
           )}
         </div>
 
-        {/* Bottom Actions */}
-        <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-          <Link
-            href={`/tac-gia/chuong-truyen${story?.slug ? `?story=${story.slug}` : ""}`}
-            className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition"
-          >
-            Hủy bỏ
-          </Link>
-
-          <div className="flex items-center gap-2">
+        {hasChanges && (
+          <div className="flex justify-end border-t border-slate-100 pt-4">
             <button
               type="button"
               disabled={updateChapterMutation.isPending}
-                onClick={() => handleSubmit("DRAFT")}
-              className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              {hasOfficialVersion ? "Lưu thay đổi" : "Lưu bản nháp"}
-            </button>
-            <button
-              type="button"
-              disabled={updateChapterMutation.isPending}
-                onClick={() => handleSubmit("SUBMIT")}
+              onClick={handleSubmit}
               className="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-md transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              {updateChapterMutation.isPending ? "Đang lưu..." : "Gửi duyệt ngay"}
+              {updateChapterMutation.isPending ? "Đang lưu..." : contentChanged ? "Gửi duyệt nội dung" : "Cập nhật"}
             </button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

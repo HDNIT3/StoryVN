@@ -15,8 +15,6 @@ interface StoryPublishSettingsProps {
     progressState: StoryProgressState;
     onProgressStateChange: (value: StoryProgressState) => void;
     hiddenByModerator?: boolean;
-    settingsChanged: boolean;
-    onSave: () => void;
   };
 }
 
@@ -73,44 +71,34 @@ export function StoryPublishSettings({
       {editSettings?.hiddenByModerator && (
         <p className="text-xs text-zinc-600">Ban quản trị đang ẩn tác phẩm này.</p>
       )}
-      {editSettings && (
-        <button
-          type="button"
-          onClick={editSettings.onSave}
-          disabled={isBusy || !editSettings.settingsChanged}
-          className="w-full rounded-lg border border-sky-200 px-4 py-2.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50"
-        >
-          Lưu cài đặt
-        </button>
+      {!editSettings && (
+        <div className="pt-2 border-t border-zinc-100 space-y-2">
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => onSubmit("SUBMIT")}
+            className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-semibold transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {isBusy ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>{isUploadingImage ? "Đang tải ảnh..." : "Đang xử lý..."}</span>
+              </>
+            ) : (
+              <span>Gửi xét duyệt tác phẩm</span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => onSubmit("DRAFT")}
+            className="w-full py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-lg text-sm font-semibold transition cursor-pointer disabled:opacity-50"
+          >
+            Lưu bản nháp
+          </button>
+        </div>
       )}
-
-      {/* Action Buttons */}
-      <div className="pt-2 border-t border-zinc-100 space-y-2">
-        <button
-          type="button"
-          disabled={isBusy}
-          onClick={() => onSubmit("SUBMIT")}
-          className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-semibold transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center justify-center gap-1.5"
-        >
-          {isBusy ? (
-            <>
-              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>{isUploadingImage ? "Đang tải ảnh..." : "Đang xử lý..."}</span>
-            </>
-          ) : (
-            <span>{editSettings ? "Gửi duyệt nội dung" : "Gửi xét duyệt tác phẩm"}</span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          disabled={isBusy}
-          onClick={() => onSubmit("DRAFT")}
-          className="w-full py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-lg text-sm font-semibold transition cursor-pointer disabled:opacity-50"
-        >
-          {editSettings ? "Lưu nháp nội dung" : "Lưu bản nháp"}
-        </button>
-      </div>
     </div>
   );
 }

@@ -14,7 +14,7 @@ import {
 import { WithdrawalList } from "@/features/withdrawals/WithdrawalList";
 import { AuthorEarningsMovements } from "@/features/withdrawals/AuthorEarningsMovements";
 import { useEarnings } from "@/features/withdrawals/queries";
-import { coins, dateTime } from "@/features/withdrawals/types";
+import { coins, dateTime, money } from "@/features/withdrawals/types";
 import {
   RevenueEmpty,
   RevenueIcon,
@@ -44,6 +44,7 @@ export function AuthorRevenueView() {
   const { data: walletData } = useMyWallet();
   const { data: myStoriesData } = useMyStories({ limit: 100 });
   const earnings = useEarnings();
+  const policy = earnings.data?.policy;
   const {
     data: revenueData,
     isLoading,
@@ -72,16 +73,14 @@ export function AuthorRevenueView() {
   };
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-5 px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
-      <header className="flex flex-col justify-between gap-4 rounded-2xl border border-sky-200/50 bg-linear-to-r from-sky-500/10 via-amber-500/5 to-transparent p-5 sm:flex-row sm:items-center sm:p-6">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-5 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <header className="flex flex-col justify-between gap-4 pb-1 sm:flex-row sm:items-center">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">
-            <RevenueIcon name="coins" className="h-3.5 w-3.5" /> Studio tác giả
-          </div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+          <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-zinc-900 sm:text-2xl">
+            <RevenueIcon name="coins" className="h-6 w-6 shrink-0 text-sky-600" />
             Doanh thu & nhuận bút
           </h1>
-          <p className="mt-1.5 text-xs leading-5 text-slate-500 sm:text-sm">
+          <p className="mt-1 text-xs text-zinc-500 sm:text-sm">
             Theo dõi thu nhập từ tác phẩm và quản lý các khoản rút tiền của bạn.
           </p>
         </div>
@@ -90,7 +89,7 @@ export function AuthorRevenueView() {
             <RevenueIcon name="wallet" />
             <span>
               Ví cá nhân{" "}
-              <span className="ml-1 text-slate-900">
+              <span className="ml-1 text-zinc-900">
                 {coins(walletData?.balance ?? 0)}
               </span>
             </span>
@@ -111,12 +110,33 @@ export function AuthorRevenueView() {
           </button>
         </div>
       </header>
+      {policy && !earnings.isError && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-[11px] leading-5 text-zinc-500">
+          <span className="inline-flex items-center gap-2 font-semibold text-zinc-600">
+            <RevenueIcon name="info" />
+            Chính sách nhuận bút
+          </span>
+          <span>
+            Quy đổi{" "}
+            <strong className="font-semibold text-zinc-700">
+              {money(policy.exchangeRate)}/Xu
+            </strong>
+          </span>
+          <span>
+            Tác giả thực nhận{" "}
+            <strong className="font-semibold text-zinc-700">
+              {policy.payoutPercent}%
+            </strong>
+          </span>
+          <span>Chuyển khoản thủ công · Rút toàn bộ Xu khả dụng</span>
+        </div>
+      )}
       <EarningsSummary data={earnings.data} loading={earnings.isPending} />
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-xs">
+      <div className="rounded-lg border border-zinc-200 bg-white p-3 shadow-2xs sm:p-3.5">
         <div
           role="tablist"
           aria-label="Quản lý doanh thu tác giả"
-          className="flex gap-1 overflow-x-auto"
+          className="flex items-center gap-1.5 overflow-x-auto py-0.5"
           onKeyDown={(event) => {
             if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
               return;
@@ -145,7 +165,7 @@ export function AuthorRevenueView() {
               aria-controls={`revenue-panel-${item.id}`}
               tabIndex={tab === item.id ? 0 : -1}
               onClick={() => setTab(item.id)}
-              className={`inline-flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 sm:text-sm ${tab === item.id ? "bg-sky-50 text-sky-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}
+              className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset ${tab === item.id ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900"}`}
             >
               <RevenueIcon name={item.icon} />
               {item.label}
@@ -177,11 +197,11 @@ export function AuthorRevenueView() {
           onShowRequests={() => setTab("withdrawals")}
         />
         {isLoading ? (
-          <div className="rounded-2xl border border-slate-200 bg-white">
+          <div className="rounded-lg border border-zinc-200 bg-white">
             <RevenueLoading rows={3} />
           </div>
         ) : isError ? (
-          <div className="rounded-2xl border border-slate-200 bg-white">
+          <div className="rounded-lg border border-zinc-200 bg-white">
             <RevenueEmpty
               error
               title="Chưa tải được nguồn doanh thu"
@@ -208,27 +228,27 @@ export function AuthorRevenueView() {
         aria-labelledby="revenue-tab-chapters"
         hidden={tab !== "chapters"}
       >
-        <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-          <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-5">
+        <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-2xs">
+          <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5">
             <div>
-              <h2 className="text-sm font-bold text-slate-900">
+              <h2 className="text-sm font-bold text-zinc-900">
                 Lịch sử mở khóa chương
               </h2>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-zinc-500">
                 Chi tiết độc giả, tác phẩm và số Xu phát sinh từ mỗi lượt mua.
               </p>
             </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-600">
+            <span className="rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[11px] font-semibold text-zinc-600">
               {(meta?.total ?? 0).toLocaleString("vi-VN")} lượt mở khóa
             </span>
           </div>
-          <div className="flex flex-col gap-3 border-y border-slate-100 bg-slate-50/60 px-5 py-3 sm:flex-row sm:items-end">
-            <label className="flex-1 space-y-1.5 text-[11px] font-medium text-slate-500">
+          <div className="flex flex-col gap-3 border-y border-zinc-200 bg-zinc-50/50 p-3.5 sm:p-4 sm:flex-row sm:items-end">
+            <label className="flex-1 space-y-1.5 text-[11px] font-medium text-zinc-500">
               Tìm kiếm
               <div className="relative">
                 <RevenueIcon
                   name="search"
-                  className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"
                 />
                 <input
                   aria-label="Tìm chương hoặc độc giả"
@@ -242,7 +262,7 @@ export function AuthorRevenueView() {
                 />
               </div>
             </label>
-            <label className="space-y-1.5 text-[11px] font-medium text-slate-500 sm:w-64">
+            <label className="space-y-1.5 text-[11px] font-medium text-zinc-500 sm:w-64">
               Tác phẩm
               <select
                 aria-label="Lọc doanh thu theo tác phẩm"
@@ -296,7 +316,7 @@ export function AuthorRevenueView() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[680px] text-left">
-                <thead className="border-b border-slate-100 bg-slate-50/50">
+                <thead className="border-b border-zinc-200 bg-zinc-50">
                   <tr>
                     <th className={revenueHead}>Độc giả</th>
                     <th className={revenueHead}>Chương / Tác phẩm</th>
@@ -306,7 +326,7 @@ export function AuthorRevenueView() {
                     <th className={`${revenueHead} text-right`}>Thời gian</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-zinc-200">
                   {items.map((item) => {
                     const reader =
                       item.reader?.displayName ||
@@ -316,7 +336,7 @@ export function AuthorRevenueView() {
                     return (
                       <tr
                         key={item._id}
-                        className="transition hover:bg-slate-50/70"
+                        className="transition hover:bg-zinc-50/70"
                       >
                         <td className={revenueCell}>
                           <div className="flex items-center gap-2.5">
@@ -324,11 +344,11 @@ export function AuthorRevenueView() {
                               {reader.slice(0, 1).toUpperCase()}
                             </span>
                             <div>
-                              <p className="max-w-40 truncate text-xs font-semibold text-slate-800">
+                              <p className="max-w-40 truncate text-xs font-semibold text-zinc-800">
                                 {reader}
                               </p>
                               {item.reader?.username && (
-                                <p className="mt-1 text-[11px] text-slate-400">
+                                <p className="mt-1 text-[11px] text-zinc-400">
                                   @{item.reader.username}
                                 </p>
                               )}
@@ -341,17 +361,17 @@ export function AuthorRevenueView() {
                               href={`/truyen/${slug}/chuong/${item.chapter.chapterNumber}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="line-clamp-1 max-w-xs text-xs font-semibold text-slate-800 hover:text-sky-700"
+                              className="line-clamp-1 max-w-xs text-xs font-semibold text-zinc-800 hover:text-sky-700"
                             >
                               Chương {item.chapter.chapterNumber}:{" "}
                               {item.chapter.title || "Chưa có tiêu đề"}
                             </Link>
                           ) : (
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-zinc-500">
                               Chương không còn hiển thị
                             </span>
                           )}
-                          <p className="mt-1 max-w-xs truncate text-[11px] text-slate-400">
+                          <p className="mt-1 max-w-xs truncate text-[11px] text-zinc-400">
                             {item.story?.title || "Tác phẩm không còn hiển thị"}
                           </p>
                         </td>
@@ -361,7 +381,7 @@ export function AuthorRevenueView() {
                           +{coins(item.coinPrice)}
                         </td>
                         <td
-                          className={`${revenueCell} whitespace-nowrap text-right text-[11px] text-slate-500`}
+                          className={`${revenueCell} whitespace-nowrap text-right text-[11px] text-zinc-500`}
                         >
                           {dateTime(item.unlockedAt)}
                         </td>
