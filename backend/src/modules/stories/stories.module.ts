@@ -14,6 +14,12 @@ import {
 import { AdminStoriesService } from './services/admin-stories.service.js';
 import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema.js';
 import { StoriesService } from './services/stories.service.js';
+import { DiscoveryController } from './controllers/discovery.controller.js';
+import { DiscoveryService } from './services/discovery.service.js';
+import { ChapterUnlock, ChapterUnlockSchema } from '../chapters/schemas/chapter-unlock.schema.js';
+import { Follow, FollowSchema } from '../follows/schemas/follow.schema.js';
+import { ReadingHistory, ReadingHistorySchema } from '../reading-history/schemas/reading-history.schema.js';
+import { StoryRating, StoryRatingSchema } from '../story-ratings/schemas/story-rating.schema.js';
 
 @Module({
   imports: [
@@ -25,10 +31,14 @@ import { StoriesService } from './services/stories.service.js';
       { name: User.name, schema: UserSchema },
       { name: Genre.name, schema: GenreSchema },
       { name: Chapter.name, schema: ChapterSchema },
+      { name: ChapterUnlock.name, schema: ChapterUnlockSchema },
+      { name: Follow.name, schema: FollowSchema },
+      { name: ReadingHistory.name, schema: ReadingHistorySchema },
+      { name: StoryRating.name, schema: StoryRatingSchema },
     ]),
   ],
-  controllers: [StoriesController, AdminStoriesController],
-  providers: [StoriesService, AdminStoriesService],
+  controllers: [DiscoveryController, StoriesController, AdminStoriesController],
+  providers: [StoriesService, AdminStoriesService, DiscoveryService],
   exports: [StoriesService, AdminStoriesService, MongooseModule],
 })
 export class StoriesModule { }

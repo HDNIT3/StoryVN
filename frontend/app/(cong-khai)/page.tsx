@@ -25,11 +25,8 @@ async function getHomeInitialData(): Promise<HomeViewInitialData> {
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"
   ).replace(/\/$/, "");
 
-  const [topStories, latestUpdatedData, newestRes, authorsRes] =
+  const [latestUpdatedData, newestRes, authorsRes] =
     await Promise.all([
-      fetchJsonSafe<HomeViewInitialData["topStories"]>(
-        `${apiUrl}/stories/top-views?limit=10`
-      ),
       fetchJsonSafe<HomeViewInitialData["latestUpdatedData"]>(
         `${apiUrl}/stories/latest-updated?limit=12`
       ),
@@ -42,7 +39,6 @@ async function getHomeInitialData(): Promise<HomeViewInitialData> {
     ]);
 
   return {
-    topStories: topStories && topStories.length > 0 ? topStories : undefined,
     latestUpdatedData: latestUpdatedData?.items
       ? latestUpdatedData
       : undefined,

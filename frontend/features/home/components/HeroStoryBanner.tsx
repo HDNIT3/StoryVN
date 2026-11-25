@@ -78,14 +78,22 @@ const PROGRESS_LABELS: Record<string, string> = {
    Hero carousel
    ───────────────────────────────────────────────────────────── */
 
+type HeroStory = Pick<FilteredStoryItem, '_id' | 'slug' | 'title' | 'coverUrl' | 'author' | 'genres'> & {
+  description?: string;
+  progressState?: FilteredStoryItem['progressState'];
+  stats: Pick<FilteredStoryItem['stats'], 'viewCount' | 'chapterCount' | 'ratingAverage'>;
+};
+
 interface HeroStoryBannerProps {
-  stories?: FilteredStoryItem[];
+  stories?: HeroStory[];
   isLoading?: boolean;
+  personalized?: boolean;
 }
 
 export function HeroStoryBanner({
   stories: externalStories,
   isLoading: externalIsLoading,
+  personalized = false,
 }: HeroStoryBannerProps = {}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -108,7 +116,7 @@ export function HeroStoryBanner({
   });
 
   const isLoading = hasExternalProps ? Boolean(externalIsLoading) : queryIsLoading;
-  const stories: FilteredStoryItem[] = hasExternalProps ? externalStories : data || [];
+  const stories: HeroStory[] = hasExternalProps ? externalStories : data || [];
   const total = stories.length;
 
   const nextSlide = useCallback(() => {
@@ -159,7 +167,7 @@ export function HeroStoryBanner({
   }
 
   const current = stories[activeIndex] || stories[0];
-  const progressText = PROGRESS_LABELS[current.progressState] || "Đang phát hành";
+  const progressText = PROGRESS_LABELS[current.progressState ?? 'ONGOING'] || "Đang phát hành";
   const authorName = current.author?.name || "Đang cập nhật";
   const genresList = current.genres?.map((g) => g.name).filter(Boolean) || [];
   const viewCount = current.stats?.viewCount ?? 0;
@@ -172,7 +180,7 @@ export function HeroStoryBanner({
       onMouseLeave={() => setIsPaused(false)}
       role="region"
       aria-roledescription="carousel"
-      aria-label="Truyện mới nhất nổi bật"
+      aria-label={personalized ? 'Truyện nổi bật dành cho bạn' : 'Truyện mới nhất nổi bật'}
     >
       {/* Mesh gradient + lưới chấm siêu mảnh bên trong khung */}
       <div
@@ -196,7 +204,7 @@ export function HeroStoryBanner({
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-70" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sky-500" />
                 </span>
-                <span className="uppercase tracking-[0.12em]">Truyện mới xuất bản</span>
+                <span className="uppercase tracking-[0.12em]">{personalized ? 'Dành riêng cho bạn' : 'Truyện mới xuất bản'}</span>
               </span>
 
               <span className="inline-flex items-center text-sm font-semibold text-indigo-600">
@@ -329,7 +337,7 @@ export function HeroStoryBanner({
                   {/* Nhãn kính mờ gradient trên bìa */}
                   <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-sky-500/30">
                     <FlameIcon className="h-3 w-3" />
-                    <span>Mới nhất</span>
+                    <span>{personalized ? 'Gợi ý' : 'Mới nhất'}</span>
                   </div>
                 </div>
               </Link>

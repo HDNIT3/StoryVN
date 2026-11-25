@@ -239,6 +239,8 @@ export function useUnlockChapter() {
         queryClient.setQueryData(walletKeys.me(), res.data.wallet);
       }
       queryClient.invalidateQueries({ queryKey: walletKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['stories', 'recommendations'] });
+      queryClient.invalidateQueries({ queryKey: ['stories', 'rankings'] });
       queryClient.invalidateQueries({ queryKey: chapterKeys.all });
       toast.success(res.message || "Mở khóa chương truyện thành công!");
     },

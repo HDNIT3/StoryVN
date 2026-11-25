@@ -6,6 +6,8 @@ import type { SameGenreStoryItem, StoryDetailData } from "@/features/stories";
 interface SameGenreStoriesWidgetProps {
   sameGenreStories: SameGenreStoryItem[];
   genres?: StoryDetailData["genres"];
+  personalized?: boolean;
+  recommended?: boolean;
 }
 
 function formatNumber(num?: number): string {
@@ -22,6 +24,8 @@ function formatNumber(num?: number): string {
 export const SameGenreStoriesWidget: React.FC<SameGenreStoriesWidgetProps> = ({
   sameGenreStories,
   genres,
+  personalized = false,
+  recommended = false,
 }) => {
   return (
     <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm">
@@ -34,10 +38,10 @@ export const SameGenreStoriesWidget: React.FC<SameGenreStoriesWidgetProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-900 leading-tight">
-              Cùng thể loại
+              {personalized ? 'Gợi ý dành cho bạn' : recommended ? 'Gợi ý liên quan' : 'Cùng thể loại'}
             </h3>
             <p className="text-xs text-slate-500">
-              Gợi ý tác phẩm tương tự
+              {personalized ? 'Phù hợp với sở thích và truyện đang xem' : 'Gợi ý tác phẩm tương tự'}
             </p>
           </div>
         </div>
@@ -79,7 +83,7 @@ export const SameGenreStoriesWidget: React.FC<SameGenreStoriesWidgetProps> = ({
                 <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
                   <span>{formatNumber(item.stats?.viewCount)} lượt đọc</span>
                   <span>•</span>
-                  <span className="text-amber-600 font-bold">★ {item.stats?.ratingAverage ? item.stats.ratingAverage.toFixed(1) : "5.0"}</span>
+                  <span className="text-amber-600 font-bold">{item.stats?.ratingAverage ? `★ ${item.stats.ratingAverage.toFixed(1)}` : 'Chưa có đánh giá'}</span>
                 </div>
               </div>
             </Link>
