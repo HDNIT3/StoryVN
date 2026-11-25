@@ -8,7 +8,7 @@ import {
   Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Error as MongooseError, Model, Types } from 'mongoose';
 import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { dateRangeKeys, dateRangeMatch, recordedDateRange, resolveDateRange } from '../../../common/utils/date-range.util.js';
 import { buildPaginationMeta, PaginatedResult } from '../../../common/dto/pagination.dto.js';
@@ -28,6 +28,7 @@ import {
 } from '../../../common/utils/slug.util.js';
 import { AuthorProfile, AuthorProfileDocument } from '../../users/schemas/author-profile.schema.js';
 import { Genre, GenreDocument } from '../../genres/schemas/genre.schema.js';
+import { Tag, TagDocument } from '../../tags/schemas/tag.schema.js';
 import { ChapterReleaseService } from '../../chapters/services/chapter-release.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { CreateStoryDto, StoryAction } from '../dto/create-story.dto.js';
@@ -73,6 +74,7 @@ export class StoriesService {
     @InjectModel(Chapter.name)
     private readonly chapterModel: Model<ChapterDocument>,
     private readonly notificationsService: NotificationsService,
+    @InjectModel(Tag.name) private readonly tagModel: Model<TagDocument>,
     @Optional()
     private readonly chapterReleaseService?: ChapterReleaseService,
     @Optional()
@@ -569,7 +571,7 @@ export class StoriesService {
         dto.description !== undefined
           ? (dto.description || '').trim()
           : (base.description || ''),
-      coverUrl: nextCover ?? null,
+      coverUrl: nextCover || null,
       authorNote:
         dto.authorNote !== undefined
           ? (dto.authorNote || '').trim()
@@ -616,9 +618,9 @@ export class StoriesService {
       story.description = (dto.description || '').trim();
     }
     if (dto.coverImage !== undefined) {
-      story.coverUrl = dto.coverImage;
+      story.coverUrl = dto.coverImage || null;
     } else if (dto.coverUrl !== undefined) {
-      story.coverUrl = dto.coverUrl;
+      story.coverUrl = dto.coverUrl || null;
     }
     if (dto.genreIds !== undefined) {
       story.genreIds = dto.genreIds.map((id) => new Types.ObjectId(id));
@@ -693,6 +695,25 @@ export class StoriesService {
       story.status === StoryStatus.PUBLISHED &&
       story.visibility === StoryVisibility.PUBLIC;
     const action = actionOverride || dto.action;
+    const makingPublic = dto.visibility === StoryVisibility.PUBLIC;
+
+    if (makingPublic && story.hiddenByModerator) {
+      throw new ForbiddenException('Tác phẩm đang bị ban quản trị ẩn.');
+    }
+    if (makingPublic) {
+      // Check again when saving in case moderation hides the story concurrently.
+      story.$where = { ...story.$where, hiddenByModerator: { $ne: true } };
+    }
+    const saveStory = async () => {
+      try {
+        await story.save();
+      } catch (error) {
+        if (makingPublic && error instanceof MongooseError.DocumentNotFoundError) {
+          throw new ConflictException('Tác phẩm vừa thay đổi trạng thái. Vui lòng tải lại trang.');
+        }
+        throw error;
+      }
+    };
 
     if (dto.title !== undefined && dto.title.trim() !== story.title) {
       await this.assertStoryTitleAvailable(authorId, dto.title, story._id);
@@ -733,7 +754,7 @@ export class StoriesService {
         story.status = StoryStatus.DRAFT;
       }
 
-      await story.save();
+      await saveStory();
 
       if (action === StoryAction.SUBMIT) {
         await this.notifyStorySubmitted(story._id, story.title, authorId);
@@ -754,7 +775,7 @@ export class StoriesService {
         if (index >= 0) revisions.splice(index, 1);
       }
       trimRevisions(revisions);
-      await story.save();
+      await saveStory();
       await this.releaseChaptersIfStoryBecamePublic(story, wasPublishedPublic);
       return this.buildStoryResponse(story._id);
     }
@@ -788,7 +809,7 @@ export class StoriesService {
         }
       }
       trimRevisions(revisions);
-      await story.save();
+      await saveStory();
       await this.releaseChaptersIfStoryBecamePublic(story, wasPublishedPublic);
       return this.buildStoryResponse(story._id);
     }
@@ -800,7 +821,7 @@ export class StoriesService {
           'Tác phẩm đang có bản chỉnh sửa chờ duyệt. Vui lòng rút bản đó (WITHDRAW) trước khi chỉnh sửa hoặc gửi duyệt lại.',
         );
       }
-      await story.save();
+      await saveStory();
       await this.releaseChaptersIfStoryBecamePublic(story, wasPublishedPublic);
       return this.buildStoryResponse(story._id);
     }
@@ -842,7 +863,7 @@ export class StoriesService {
     }
 
     trimRevisions(revisions);
-    await story.save();
+    await saveStory();
     await this.releaseChaptersIfStoryBecamePublic(story, wasPublishedPublic);
 
     if (submittedForReview) {
@@ -1392,6 +1413,21 @@ export class StoriesService {
       }
     }
 
+    const tagSlug = query.tag?.trim();
+    if (tagSlug) {
+      const tag = await this.tagModel.findOne({ slug: tagSlug, isActive: true })
+        .select('_id')
+        .lean()
+        .exec();
+      if (!tag) {
+        return {
+          items: [],
+          pagination: buildPaginationMeta(0, query.page, query.limit),
+        };
+      }
+      filter.tagIds = tag._id;
+    }
+
     // 3. Tìm kiếm theo tên truyện hoặc tác giả
     if (query.search?.trim()) {
       const keyword = query.search.trim();
@@ -1481,6 +1517,7 @@ export class StoriesService {
         const fetched = await this.storyModel
           .find({ _id: { $in: pageIds } })
           .populate('genreIds', 'name slug')
+          .populate({ path: 'tagIds', select: 'name slug', match: { isActive: true } })
           .populate('authorId', 'displayName username avatarUrl')
           .lean()
           .exec();
@@ -1526,6 +1563,7 @@ export class StoriesService {
           .skip(query.skip)
           .limit(query.limit)
           .populate('genreIds', 'name slug')
+          .populate({ path: 'tagIds', select: 'name slug', match: { isActive: true } })
           .populate('authorId', 'displayName username avatarUrl')
           .lean()
           .exec(),
@@ -1591,6 +1629,9 @@ export class StoriesService {
           name: g.name,
           slug: g.slug,
         }));
+        const tags = ((story.tagIds ?? []) as Pick<Tag, '_id' | 'name' | 'slug'>[])
+          .slice(0, 2)
+          .map(({ _id, name, slug }) => ({ _id, name, slug }));
 
         const pViews = periodViewsMap.get(story._id.toString()) || {
           viewsToday: 0,
@@ -1623,6 +1664,7 @@ export class StoriesService {
             avatar: authorUser?.avatarUrl || null,
           },
           genres,
+          tags,
           publishedAt: story.publishedAt || story.createdAt,
           updatedAt: story.updatedAt,
         };
@@ -1729,7 +1771,7 @@ export class StoriesService {
     const story = await this.storyModel
       .findOne(filter)
       .populate('genreIds', 'name slug')
-      .populate('tagIds', 'name slug')
+      .populate({ path: 'tagIds', select: 'name slug', match: { isActive: true } })
       .populate('authorId', 'displayName username avatarUrl email')
       .lean()
       .exec();

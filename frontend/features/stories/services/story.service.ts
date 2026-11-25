@@ -36,6 +36,7 @@ export const storyService = {
     const searchParams = new URLSearchParams();
     if (params?.search) searchParams.append("search", params.search);
     if (params?.genre) searchParams.append("genre", params.genre);
+    if (params?.tag) searchParams.append("tag", params.tag);
     if (params?.progressState) searchParams.append("progressState", params.progressState);
     if (params?.sortBy) searchParams.append("sortBy", params.sortBy);
     if (params?.timeFrame && params.timeFrame !== "all") {

@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { StoryVisibility } from "@/features/stories";
+import { StoryProgressState, StoryVisibility } from "@/features/stories";
+import { StoryProgressField } from "./StoryBasicInfoFields";
 
 interface StoryPublishSettingsProps {
   visibility: StoryVisibility;
@@ -10,6 +11,13 @@ interface StoryPublishSettingsProps {
   isPendingMutation: boolean;
   onVisibilityChange: (v: StoryVisibility) => void;
   onSubmit: (action: "DRAFT" | "SUBMIT") => void;
+  editSettings?: {
+    progressState: StoryProgressState;
+    onProgressStateChange: (value: StoryProgressState) => void;
+    hiddenByModerator?: boolean;
+    settingsChanged: boolean;
+    onSave: () => void;
+  };
 }
 
 export function StoryPublishSettings({
@@ -19,20 +27,26 @@ export function StoryPublishSettings({
   isPendingMutation,
   onVisibilityChange,
   onSubmit,
+  editSettings,
 }: StoryPublishSettingsProps) {
   const isBusy = isSubmitting || isPendingMutation;
 
   return (
     <div className="bg-white rounded-xl border border-zinc-200/90 p-5 sm:p-6 shadow-2xs space-y-4">
       <h2 className="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3">
-        Chế độ hiển thị
+        {editSettings ? "Cài đặt tác phẩm" : "Chế độ hiển thị"}
       </h2>
+
+      {editSettings && (
+        <StoryProgressField value={editSettings.progressState} onChange={editSettings.onProgressStateChange} />
+      )}
 
       <div className="grid grid-cols-2 gap-2.5">
         <button
           type="button"
           onClick={() => onVisibilityChange("PUBLIC")}
-          className={`p-3 rounded-lg border text-left transition cursor-pointer ${
+          disabled={editSettings?.hiddenByModerator}
+          className={`p-3 rounded-lg border text-left transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
             visibility === "PUBLIC"
               ? "border-sky-500 bg-sky-50/50 ring-1 ring-sky-500"
               : "border-zinc-200 hover:bg-zinc-50"
@@ -56,6 +70,20 @@ export function StoryPublishSettings({
         </button>
       </div>
 
+      {editSettings?.hiddenByModerator && (
+        <p className="text-xs text-zinc-600">Ban quản trị đang ẩn tác phẩm này.</p>
+      )}
+      {editSettings && (
+        <button
+          type="button"
+          onClick={editSettings.onSave}
+          disabled={isBusy || !editSettings.settingsChanged}
+          className="w-full rounded-lg border border-sky-200 px-4 py-2.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50"
+        >
+          Lưu cài đặt
+        </button>
+      )}
+
       {/* Action Buttons */}
       <div className="pt-2 border-t border-zinc-100 space-y-2">
         <button
@@ -70,7 +98,7 @@ export function StoryPublishSettings({
               <span>{isUploadingImage ? "Đang tải ảnh..." : "Đang xử lý..."}</span>
             </>
           ) : (
-            <span>Gửi xét duyệt tác phẩm</span>
+            <span>{editSettings ? "Gửi duyệt nội dung" : "Gửi xét duyệt tác phẩm"}</span>
           )}
         </button>
 
@@ -80,7 +108,7 @@ export function StoryPublishSettings({
           onClick={() => onSubmit("DRAFT")}
           className="w-full py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-lg text-sm font-semibold transition cursor-pointer disabled:opacity-50"
         >
-          Lưu bản nháp
+          {editSettings ? "Lưu nháp nội dung" : "Lưu bản nháp"}
         </button>
       </div>
     </div>

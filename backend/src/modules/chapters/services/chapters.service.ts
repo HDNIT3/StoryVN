@@ -248,17 +248,6 @@ export class ChaptersService {
     return merged;
   }
 
-  private chapterSnapshotChanged(
-    a: Record<string, any>,
-    b: Record<string, any>,
-  ): boolean {
-    return (
-      a.title !== b.title ||
-      a.content !== b.content ||
-      a.requirePreviousChapter !== b.requirePreviousChapter
-    );
-  }
-
   /**
    * Chuyển revision nhúng thành object phẳng cho API (tương thích payload cũ).
    */
@@ -871,11 +860,11 @@ export class ChaptersService {
     const base = activeRevision
       ? this.cloneRevisionSnapshot(activeRevision.snapshot)
       : this.buildChapterSnapshotFromDoc(chapter);
-    // Pricing is live configuration, even when a content revision is pending.
-    // Never restore obsolete pricing from an older revision into the edit form.
+    // Use the live unlock settings even when a content revision is pending.
     base.isFree = chapter.isFree;
     base.coinPrice = chapter.coinPrice;
-    if (chapter.isFree) base.requirePreviousChapter = false;
+    base.requirePreviousChapter =
+      !chapter.isFree && Boolean(chapter.requirePreviousChapter);
     const merged = this.mergeChapterSnapshot(base, dto);
 
     if (
@@ -885,20 +874,17 @@ export class ChaptersService {
       throw new BadRequestException('Nội dung chương không được vượt quá 2.500 từ');
     }
 
-    const contentChanged = this.chapterSnapshotChanged(
-      { ...base, requirePreviousChapter: merged.isFree ? false : base.requirePreviousChapter },
-      merged,
-    );
+    const contentChanged =
+      merged.title !== base.title || merged.content !== base.content;
 
-    // Free/paid and coin price take effect immediately, without content review.
-    // Keep the active snapshot consistent so a later approval cannot undo this.
+    // Keep the active revision in sync with the settings shown to readers.
     chapter.isFree = merged.isFree;
     chapter.coinPrice = merged.coinPrice;
-    if (merged.isFree) chapter.requirePreviousChapter = false;
+    chapter.requirePreviousChapter = merged.requirePreviousChapter;
     if (activeRevision) {
       activeRevision.snapshot.isFree = merged.isFree;
       activeRevision.snapshot.coinPrice = merged.coinPrice;
-      if (merged.isFree) activeRevision.snapshot.requirePreviousChapter = false;
+      activeRevision.snapshot.requirePreviousChapter = merged.requirePreviousChapter;
     }
     const now = new Date();
     let submittedForReview = false;

@@ -197,6 +197,9 @@ export class Story {
   })
   visibility: StoryVisibility;
 
+  @Prop({ type: Boolean })
+  hiddenByModerator?: boolean;
+
   @Prop({ type: StoryStatsSchema, default: () => ({}) })
   stats: StoryStats;
 

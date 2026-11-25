@@ -42,7 +42,7 @@ describe('published chapter pricing independent of content review', () => {
       _id: chapterId,
       storyId,
       status: ChapterStatus.PUBLISHED,
-      chapterNumber: 1,
+      chapterNumber: 2,
       title: 'Tiêu đề chính thức',
       content: 'Nội dung chính thức',
       isFree: false,
@@ -125,12 +125,18 @@ describe('published chapter pricing independent of content review', () => {
         requirePreviousChapter: false,
       },
     });
-    await update({ coinPrice: 30, action: ChapterAction.DRAFT });
+    await update({
+      coinPrice: 30,
+      requirePreviousChapter: true,
+      action: ChapterAction.DRAFT,
+    });
     expect(chapter.title).toBe('Tiêu đề chính thức');
     expect(chapter.coinPrice).toBe(30);
+    expect(chapter.requirePreviousChapter).toBe(true);
     expect(chapter.revisions).toHaveLength(1);
     expect(chapter.revisions[0].status).toBe(RevisionStatus.PENDING_REVIEW);
     expect(chapter.revisions[0].snapshot.coinPrice).toBe(30);
+    expect(chapter.revisions[0].snapshot.requirePreviousChapter).toBe(true);
     expect(notify).not.toHaveBeenCalled();
   });
 
@@ -149,14 +155,19 @@ describe('published chapter pricing independent of content review', () => {
     expect(notify).toHaveBeenCalledTimes(1);
   });
 
-  it('continues moderating previous-chapter restrictions separately', async () => {
+  it('enables and disables the previous-chapter restriction immediately', async () => {
     await update({ requirePreviousChapter: true, action: ChapterAction.DRAFT });
+    expect(chapter.requirePreviousChapter).toBe(true);
+
+    await update({ requirePreviousChapter: false, action: ChapterAction.DRAFT });
     expect(chapter.requirePreviousChapter).toBe(false);
-    expect(chapter.revisions[0].snapshot.requirePreviousChapter).toBe(true);
+    expect(chapter.revisions).toHaveLength(0);
+    expect(notify).not.toHaveBeenCalled();
   });
 
   it('does not overwrite pricing from an old draft when submitting content later', async () => {
     chapter.coinPrice = 70;
+    chapter.requirePreviousChapter = true;
     chapter.revisions.push({
       _id: new Types.ObjectId(),
       status: RevisionStatus.DRAFT,
@@ -170,7 +181,9 @@ describe('published chapter pricing independent of content review', () => {
     });
     await update({ action: ChapterAction.SUBMIT });
     expect(chapter.coinPrice).toBe(70);
+    expect(chapter.requirePreviousChapter).toBe(true);
     expect(chapter.revisions[0].snapshot.coinPrice).toBe(70);
+    expect(chapter.revisions[0].snapshot.requirePreviousChapter).toBe(true);
     expect(chapter.revisions[0].status).toBe(RevisionStatus.PENDING_REVIEW);
   });
 });

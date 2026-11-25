@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import type { CategoryItem } from "@/features/categories";
+import type { TagItem } from "@/features/tags";
 import type {
   StoryProgressState,
   StorySortOption,
@@ -44,6 +45,9 @@ interface StoryFilterBarProps {
   selectedTimeFrame: StoryViewTimeFrame;
   setSelectedTimeFrame: (val: StoryViewTimeFrame) => void;
   genresData: CategoryItem[];
+  selectedTag: string;
+  tags: TagItem[];
+  isLoadingTags: boolean;
   currentGenreName: string;
   currentProgressName: string;
   currentSortName: string;
@@ -52,6 +56,7 @@ interface StoryFilterBarProps {
   onApplyFilter: (overrideParams?: {
     search?: string;
     genre?: string;
+    tag?: string;
     progressState?: string;
     sortBy?: StorySortOption;
     timeFrame?: StoryViewTimeFrame;
@@ -71,6 +76,9 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
   selectedTimeFrame,
   setSelectedTimeFrame,
   genresData,
+  selectedTag,
+  tags,
+  isLoadingTags,
   currentGenreName,
   currentProgressName,
   currentSortName,
@@ -108,7 +116,7 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
         </p>
 
         {/* Filters */}
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5 sm:gap-3">
+        <div className="flex flex-col lg:flex-row lg:flex-wrap items-stretch lg:items-center gap-2.5 sm:gap-3">
           {/* Dropdown Thể loại */}
           <div className="relative shrink-0">
             <button
@@ -167,6 +175,25 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
               </div>
             )}
           </div>
+
+          <select
+            aria-label="Lọc theo tag"
+            value={selectedTag}
+            onChange={(event) => onApplyFilter({ tag: event.target.value })}
+            className={`w-full lg:w-44 shrink-0 truncate rounded-xl border px-3.5 py-2.5 text-sm font-medium focus-visible:outline-emerald-600 ${
+              selectedTag
+                ? "border-emerald-600 bg-emerald-50/40 text-emerald-800"
+                : "border-zinc-200 bg-white text-zinc-700"
+            }`}
+          >
+            <option value="">{isLoadingTags && !selectedTag ? "Đang tải tag…" : "Tất cả tag"}</option>
+            {selectedTag && !tags.some((tag) => tag.slug === selectedTag) && (
+              <option value={selectedTag}>{selectedTag}</option>
+            )}
+            {tags.map((tag) => (
+              <option key={tag._id} value={tag.slug}>{tag.name}</option>
+            ))}
+          </select>
 
           {/* Dropdown Trạng thái */}
           <div className="relative shrink-0">
@@ -248,7 +275,7 @@ export const StoryFilterBar: React.FC<StoryFilterBarProps> = ({
           </div>
 
           {/* Ô tìm kiếm */}
-          <div className="relative flex-1 min-w-0">
+          <div className="relative flex-1 min-w-0 lg:min-w-48">
             <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
             <input
               type="text"
