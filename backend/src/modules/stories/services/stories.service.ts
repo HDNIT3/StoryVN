@@ -1050,7 +1050,7 @@ export class StoriesService {
         .sort({ updatedAt: -1 })
         .skip(query.skip)
         .limit(query.limit)
-        .populate('authorId', 'displayName username')
+        .populate('authorId', 'displayName')
         .populate('genreIds', 'name slug')
         .lean()
         .exec(),
@@ -1072,7 +1072,7 @@ export class StoriesService {
         .find({
           userId: { $in: authorUserIds.map((id) => new Types.ObjectId(id)) },
         })
-        .select('userId penName')
+        .select('userId penName slug')
         .lean()
         .exec();
 
@@ -1108,7 +1108,6 @@ export class StoriesService {
       const authorName =
         authorProfile?.penName ||
         authorUser?.displayName ||
-        authorUser?.username ||
         'Tác giả ẩn danh';
 
       const rawGenres = Array.isArray(story.genreIds) ? story.genreIds : [];
@@ -1198,7 +1197,7 @@ export class StoriesService {
                 visibility: StoryVisibility.PUBLIC,
               })
               .select('title slug coverUrl stats.viewCount authorId updatedAt')
-              .populate('authorId', 'displayName username')
+              .populate('authorId', 'displayName')
               .lean()
               .exec()
           : [];
@@ -1224,7 +1223,7 @@ export class StoriesService {
           .select('title slug coverUrl stats.viewCount authorId updatedAt')
           .sort({ 'stats.viewCount': -1, updatedAt: -1 })
           .limit(take - stories.length)
-          .populate('authorId', 'displayName username')
+          .populate('authorId', 'displayName')
           .lean()
           .exec();
 
@@ -1239,7 +1238,7 @@ export class StoriesService {
         .select('title slug coverUrl stats.viewCount authorId updatedAt')
         .sort({ 'stats.viewCount': -1, updatedAt: -1 })
         .limit(take)
-        .populate('authorId', 'displayName username')
+        .populate('authorId', 'displayName')
         .lean()
         .exec();
     }
@@ -1258,7 +1257,7 @@ export class StoriesService {
         .find({
           userId: { $in: authorUserIds.map((id) => new Types.ObjectId(id)) },
         })
-        .select('userId penName')
+        .select('userId penName slug')
         .lean()
         .exec();
 
@@ -1272,7 +1271,6 @@ export class StoriesService {
       const authorName =
         authorProfile?.penName ||
         authorUser?.displayName ||
-        authorUser?.username ||
         'Tác giả ẩn danh';
 
       const totalViewCount = story.stats?.viewCount ?? 0;
@@ -1311,7 +1309,7 @@ export class StoriesService {
       .select('title slug coverUrl stats.wordCount stats.chapterCount stats.viewCount authorId updatedAt')
       .sort({ 'stats.wordCount': -1, 'stats.chapterCount': -1, updatedAt: -1 })
       .limit(candidateLimit)
-      .populate('authorId', 'displayName username')
+      .populate('authorId', 'displayName')
       .lean()
       .exec();
 
@@ -1329,7 +1327,7 @@ export class StoriesService {
         .find({
           userId: { $in: authorUserIds.map((id) => new Types.ObjectId(id)) },
         })
-        .select('userId penName')
+        .select('userId penName slug')
         .lean()
         .exec();
 
@@ -1359,7 +1357,6 @@ export class StoriesService {
         const authorName =
           authorProfile?.penName ||
           authorUser?.displayName ||
-          authorUser?.username ||
           'Tác giả ẩn danh';
 
         return {
@@ -1523,7 +1520,7 @@ export class StoriesService {
           .find({ _id: { $in: pageIds } })
           .populate('genreIds', 'name slug')
           .populate({ path: 'tagIds', select: 'name slug', match: { isActive: true } })
-          .populate('authorId', 'displayName username avatarUrl')
+          .populate('authorId', 'displayName avatarUrl')
           .lean()
           .exec();
 
@@ -1569,7 +1566,7 @@ export class StoriesService {
           .limit(query.limit)
           .populate('genreIds', 'name slug')
           .populate({ path: 'tagIds', select: 'name slug', match: { isActive: true } })
-          .populate('authorId', 'displayName username avatarUrl')
+          .populate('authorId', 'displayName avatarUrl')
           .lean()
           .exec(),
         this.storyModel.countDocuments(filter),
@@ -1591,7 +1588,7 @@ export class StoriesService {
             .find({
               userId: { $in: authorUserIds.map((id) => new Types.ObjectId(id)) },
             })
-            .select('userId penName')
+            .select('userId penName slug')
             .lean()
             .exec()
         : Promise.resolve([]),
@@ -1625,7 +1622,6 @@ export class StoriesService {
         const authorName =
           authorProfile?.penName ||
           authorUser?.displayName ||
-          authorUser?.username ||
           'Tác giả ẩn danh';
 
         const rawGenres = (story.genreIds as any[]) || [];
@@ -1777,7 +1773,7 @@ export class StoriesService {
       .findOne(filter)
       .populate('genreIds', 'name slug')
       .populate({ path: 'tagIds', select: 'name slug', match: { isActive: true } })
-      .populate('authorId', 'displayName username avatarUrl email')
+      .populate('authorId', 'displayName avatarUrl email')
       .lean()
       .exec();
 
@@ -1798,7 +1794,6 @@ export class StoriesService {
     const authorName =
       authorProfile?.penName ||
       authorUser?.displayName ||
-      authorUser?.username ||
       'Tác giả ẩn danh';
 
     const rawGenres = (story.genreIds as any[]) || [];
@@ -1830,7 +1825,7 @@ export class StoriesService {
         .sort({ 'stats.viewCount': -1, updatedAt: -1 })
         .limit(8)
         .populate('genreIds', 'name slug')
-        .populate('authorId', 'displayName username')
+        .populate('authorId', 'displayName')
         .lean()
         .exec();
 
@@ -1848,7 +1843,7 @@ export class StoriesService {
           .find({
             userId: { $in: sameGenreAuthorUserIds.map((id) => new Types.ObjectId(id)) },
           })
-          .select('userId penName')
+          .select('userId penName slug')
           .lean()
           .exec();
         sameGenreProfileMap = new Map(sameGenreProfiles.map((p) => [p.userId.toString(), p]));
@@ -1859,7 +1854,7 @@ export class StoriesService {
         const aIdStr = aUser?._id?.toString() || aUser?.toString();
         const aProf = aIdStr ? sameGenreProfileMap.get(aIdStr) : null;
         const itemAuthorName =
-          aProf?.penName || aUser?.displayName || aUser?.username || 'Tác giả ẩn danh';
+          aProf?.penName || aUser?.displayName || 'Tác giả ẩn danh';
 
         return {
           _id: item._id,
@@ -1869,7 +1864,7 @@ export class StoriesService {
           author: {
             _id: aUser?._id || null,
             name: itemAuthorName,
-            username: aUser?.username || null,
+            slug: aProf?.slug || aUser?._id?.toString() || null,
           },
           stats: {
             chapterCount: item.stats?.chapterCount ?? 0,
@@ -1924,9 +1919,9 @@ export class StoriesService {
       tags,
       author: {
         _id: authorUser?._id || null,
-        username: authorUser?.username || '',
+        slug: authorProfile?.slug || authorUser?._id?.toString() || '',
         displayName: authorUser?.displayName || '',
-        penName: authorProfile?.penName || authorUser?.displayName || authorUser?.username || 'Tác giả',
+        penName: authorProfile?.penName || authorUser?.displayName || 'Tác giả',
         name: authorName,
         avatar: authorUser?.avatarUrl || null,
         bio: authorProfile?.bio || '',
@@ -1971,7 +1966,7 @@ export class StoriesService {
       .sort({ 'stats.viewCount': -1, updatedAt: -1 })
       .limit(take)
       .populate('genreIds', 'name slug')
-      .populate('authorId', 'displayName username')
+      .populate('authorId', 'displayName')
       .lean()
       .exec();
 
@@ -1989,7 +1984,7 @@ export class StoriesService {
         .find({
           userId: { $in: authorUserIds.map((id) => new Types.ObjectId(id)) },
         })
-        .select('userId penName')
+        .select('userId penName slug')
         .lean()
         .exec();
       profileMap = new Map(profiles.map((p) => [p.userId.toString(), p]));
@@ -2000,7 +1995,7 @@ export class StoriesService {
       const aIdStr = aUser?._id?.toString() || aUser?.toString();
       const aProf = aIdStr ? profileMap.get(aIdStr) : null;
       const itemAuthorName =
-        aProf?.penName || aUser?.displayName || aUser?.username || 'Tác giả ẩn danh';
+        aProf?.penName || aUser?.displayName || 'Tác giả ẩn danh';
 
       return {
         _id: item._id,
@@ -2010,7 +2005,7 @@ export class StoriesService {
         author: {
           _id: aUser?._id || null,
           name: itemAuthorName,
-          username: aUser?.username || null,
+          slug: aProf?.slug || aUser?._id?.toString() || null,
         },
         stats: {
           chapterCount: item.stats?.chapterCount ?? 0,

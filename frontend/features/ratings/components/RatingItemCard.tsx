@@ -21,7 +21,7 @@ function formatDate(dateStr: string): string {
 
 export const RatingItemCard: React.FC<RatingItemCardProps> = ({ rating }) => {
   const user = rating.userId;
-  const displayName = user?.displayName || user?.username || "Độc giả";
+  const displayName = user?.displayName || "Độc giả";
   const avatarUrl = user?.avatarUrl;
 
   return (

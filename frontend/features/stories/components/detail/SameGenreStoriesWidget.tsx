@@ -78,7 +78,7 @@ export const SameGenreStoriesWidget: React.FC<SameGenreStoriesWidgetProps> = ({
                   {item.title}
                 </h4>
                 <p className="text-xs text-slate-500 mt-1 truncate">
-                  {item.author?.name || item.author?.username || "Tác giả"}
+                  {item.author?.name || "Tác giả"}
                 </p>
                 <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
                   <span>{formatNumber(item.stats?.viewCount)} lượt đọc</span>

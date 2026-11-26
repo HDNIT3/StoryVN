@@ -11,7 +11,7 @@ interface AuthorCardItemProps {
 export function AuthorCardItem({ author, formatNumber }: AuthorCardItemProps) {
   return (
     <Link
-      href={`/tac-gia/${author.username}`}
+      href={`/tac-gia/${author.slug}`}
       className="group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-sky-300 hover:shadow-xs transition-all cursor-pointer overflow-hidden shadow-2xs"
     >
       <div>

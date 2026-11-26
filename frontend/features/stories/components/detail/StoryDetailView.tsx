@@ -65,6 +65,10 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({
     queryKey: storyKeys.bySlug(slugParam),
     queryFn: () => storyService.getStoryBySlug(slugParam),
     enabled: !!slugParam,
+    refetchOnMount: (query) => {
+      const author = query.state.data?.data.author;
+      return author?._id && !author.slug?.trim() ? "always" : true;
+    },
     initialData: initialStory
       ? {
           success: true,
@@ -114,7 +118,6 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({
       story.author?.penName ||
       story.author?.displayName ||
       story.author?.name ||
-      story.author?.username ||
       "Tác giả";
     const shareUrl = window.location.href;
     const shareData = {
@@ -334,7 +337,7 @@ export const StoryDetailView: React.FC<StoryDetailViewProps> = ({
             <AuthorSidebarCard
               author={story.author}
               isFollowingAuthor={isFollowingAuthor}
-              isFollowAuthorPending={isPendingFollow}
+              isFollowAuthorPending={isLoadingFollowAuthor || isPendingFollow}
               onToggleFollowAuthor={handleToggleFollowAuthor}
             />
             <SameGenreStoriesWidget

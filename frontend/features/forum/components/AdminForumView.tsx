@@ -38,7 +38,7 @@ function PostDetailAndReportsModal({
 
   const author = post.userId;
   const avatar = author?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80";
-  const authorName = author?.displayName || author?.username || "Thành viên ẩn danh";
+  const authorName = author?.displayName || "Thành viên ẩn danh";
 
   return (
     <div
@@ -130,7 +130,7 @@ function PostDetailAndReportsModal({
                   <div>
                     <div className="text-sm font-medium text-gray-900">{authorName}</div>
                     <div className="text-xs text-gray-500">
-                      @{author?.username || "an-danh"} · Đăng ngày {new Date(post.createdAt).toLocaleDateString("vi-VN")}
+                      Đăng ngày {new Date(post.createdAt).toLocaleDateString("vi-VN")}
                     </div>
                   </div>
                 </div>
@@ -191,7 +191,7 @@ function PostDetailAndReportsModal({
                     <div key={report._id} className="p-4 rounded-2xl border border-gray-200 bg-gray-50/60 text-sm space-y-1.5">
                       <div className="flex items-center justify-between text-xs text-gray-500">
                         <span className="font-medium text-gray-800">
-                          {report.userId?.displayName || report.userId?.username || "Người dùng"}
+                          {report.userId?.displayName || "Người dùng"}
                         </span>
                         <span>{new Date(report.createdAt).toLocaleDateString("vi-VN")}</span>
                       </div>
@@ -300,12 +300,12 @@ export function AdminForumView() {
 
   const stats = statsQuery.data;
 
-  // Filter items client-side by search query (title or author username/display name)
+  // Filter items client-side by search query (title or author display name)
   const filteredPosts = (posts.data?.items ?? []).filter((post) => {
     if (!search.trim()) return true;
     const q = search.trim().toLowerCase();
     const titleMatch = post.title.toLowerCase().includes(q);
-    const authorMatch = (post.userId?.displayName || post.userId?.username || "").toLowerCase().includes(q);
+    const authorMatch = (post.userId?.displayName || "").toLowerCase().includes(q);
     return titleMatch || authorMatch;
   });
 
@@ -559,7 +559,7 @@ export function AdminForumView() {
                 {filteredPosts.map((post) => {
                   const author = post.userId;
                   const avatar = author?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80";
-                  const authorName = author?.displayName || author?.username || "Thành viên";
+                  const authorName = author?.displayName || "Thành viên";
                   const reportCount = post.reportCount ?? 0;
 
                   return (
@@ -575,7 +575,6 @@ export function AdminForumView() {
                               {authorName}
                             </div>
                             <div className="text-xs text-gray-400 truncate max-w-[130px]">
-                              @{author?.username || "an-danh"}
                             </div>
                           </div>
                         </div>

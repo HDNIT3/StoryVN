@@ -100,7 +100,7 @@ export function RecentActivity({
           <div className="divide-y divide-slate-100">
             {comments.map((comment) => {
               const displayName =
-                comment.user?.displayName || comment.user?.username || "Độc giả";
+                comment.user?.displayName || "Độc giả";
               const storyTitle = comment.story?.title || "Tác phẩm";
               const storySlug = comment.story?.slug || "";
               const chapterNum = comment.chapter?.chapterNumber;

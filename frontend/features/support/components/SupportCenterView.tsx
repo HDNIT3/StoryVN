@@ -459,7 +459,7 @@ export function SupportCenterView() {
     if (!forumSearchQuery.trim()) return true;
     const q = forumSearchQuery.trim().toLowerCase();
     const author =
-      post.userId?.displayName || post.userId?.username || "";
+      post.userId?.displayName || "";
     return (
       post.title.toLowerCase().includes(q) ||
       author.toLowerCase().includes(q)
@@ -1684,7 +1684,6 @@ export function SupportCenterView() {
                                     filteredForumOptions.map((p) => {
                                       const authorName =
                                         p.userId?.displayName ||
-                                        p.userId?.username ||
                                         "Thành viên";
                                       return (
                                         <button
@@ -1760,7 +1759,6 @@ export function SupportCenterView() {
                                     (cm: any) => {
                                       const cAuthor =
                                         cm.userId?.displayName ||
-                                        cm.userId?.username ||
                                         "Người dùng";
                                       return (
                                         <button

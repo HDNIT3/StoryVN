@@ -73,11 +73,12 @@ describe('story discovery with isolated MongoDB', () => {
       await collection.deleteMany({});
     await connection
       .collection('users')
-      .insertOne({ _id: author, username: 'author', displayName: 'Tác giả' });
+      .insertOne({ _id: author, displayName: 'Tác giả' });
     await connection
       .collection('author_profiles')
       .insertOne({
         userId: author,
+        slug: 'tac-gia',
         penName: 'Bút danh',
         status: 'ACTIVE',
         followerCount: 0,
@@ -192,6 +193,7 @@ describe('story discovery with isolated MongoDB', () => {
     ]);
     expect(result.hasNextPage).toBe(true);
     expect(result.items[0].author.name).toBe('Bút danh');
+    expect(result.items[0].author.slug).toBe('tac-gia');
     const next = await service.rankings(
       Object.assign(new RankingsQueryDto(), { limit: 1, page: 2 }),
     );

@@ -3,7 +3,6 @@ export type AdminCommentStatus = 'VISIBLE' | 'HIDDEN' | 'DELETED';
 export interface AdminCommentUser {
   _id: string;
   displayName?: string;
-  username?: string;
   avatarUrl?: string;
   email?: string;
   role?: string;

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/context/AuthContext";
 import { toast } from "@/lib/toast";
+import { adminFinancialSummaryQueryKey } from "@/features/admin/queries/useAdminDashboardQueries";
 import type { Earnings, Filters, Movement, Page, Withdrawal } from "./types";
 
 function queryString(filters: Filters) {
@@ -71,6 +72,7 @@ export function useWithdrawalAction() {
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ["withdrawals"] });
       void client.invalidateQueries({ queryKey: ["notifications"] });
+      void client.invalidateQueries({ queryKey: adminFinancialSummaryQueryKey });
       toast.success("Đã cập nhật yêu cầu rút tiền");
     },
     onError: (error: { message?: string }) =>

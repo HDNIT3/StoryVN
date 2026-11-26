@@ -7,7 +7,7 @@ export type StatusFilter = UserStatus | "ALL";
 export interface ConfirmModalState {
   open: boolean;
   userId: string;
-  username: string;
+  displayName: string;
   action: "ban" | "unban" | "role";
   newStatus?: UserStatus;
   newRole?: UserRole;

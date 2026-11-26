@@ -158,7 +158,7 @@ export class WalletService {
       const regex = new RegExp(query.search.trim(), 'i');
       const users = await this.userModel
         .find({
-          $or: [{ displayName: regex }, { email: regex }, { username: regex }],
+          $or: [{ displayName: regex }, { email: regex }],
         })
         .select('_id')
         .lean()
@@ -176,7 +176,7 @@ export class WalletService {
         .sort({ [sortField]: sortDirection })
         .skip((page - 1) * limit)
         .limit(limit)
-        .populate('userId', 'displayName email username avatarUrl role status')
+        .populate('userId', 'displayName email avatarUrl role status')
         .lean()
         .exec(),
       this.walletModel.countDocuments(filter).exec(),

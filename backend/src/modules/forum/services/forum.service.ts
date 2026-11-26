@@ -6,15 +6,14 @@ import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { dateRangeMatch, resolveDateRange } from '../../../common/utils/date-range.util.js';
 import { toSlug } from '../../../common/utils/slug.util.js';
 import { QueryReportsDto } from '../../reports/dto/reports.dto.js';
-import { AdminQueryForumPostsDto, CreateForumPostDto, UpdateForumPostDto } from '../dto/forum.dto.js';
+import { AdminQueryForumPostsDto, CreateForumPostDto, MyQueryForumPostsDto, UpdateForumPostDto } from '../dto/forum.dto.js';
 import { ContentReportTargetType } from '../../reports/schemas/content-report.schema.js';
 import { ReportsService } from '../../reports/services/reports.service.js';
-import { ForumContentFormat, ForumPost, ForumPostDocument, ForumPostStatus } from '../schemas/forum-post.schema.js';
+import { editableStatuses, ForumContentFormat, ForumPost, ForumPostDocument, ForumPostStatus } from '../schemas/forum-post.schema.js';
 import { prepareForumContent } from './forum-content.js';
 
-const authorFields = '_id username displayName avatarUrl';
+const authorFields = '_id displayName avatarUrl';
 const postFields = '_id slug title content contentFormat status userId likedBy sharedBy viewCount shareCount commentCount createdAt updatedAt';
-export const editableStatuses = [ForumPostStatus.VISIBLE, ForumPostStatus.HIDDEN, ForumPostStatus.PENDING, ForumPostStatus.REJECTED];
 
 @Injectable()
 export class ForumService implements OnModuleInit {
@@ -110,9 +109,9 @@ export class ForumService implements OnModuleInit {
     });
   }
 
-  async list(query: PaginationQueryDto & DateRangeQueryDto, userId?: string, viewerId?: string) {
+  async list(query: PaginationQueryDto & DateRangeQueryDto & Pick<MyQueryForumPostsDto, 'status'>, userId?: string, viewerId?: string) {
     const filter = userId
-      ? { userId: this.objectId(userId), status: { $in: editableStatuses } }
+      ? { userId: this.objectId(userId), status: query.status ?? { $in: editableStatuses } }
       : { status: ForumPostStatus.VISIBLE };
     return this.listPosts(filter, query, false, userId ?? viewerId);
   }

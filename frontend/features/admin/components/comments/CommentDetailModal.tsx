@@ -80,14 +80,14 @@ export function CommentDetailModal({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center font-medium text-admin-brand-700 bg-admin-brand-100">
-                  {(commenter?.displayName || commenter?.username || "U").charAt(0).toUpperCase()}
+                  {(commenter?.displayName || "U").charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-medium text-gray-900 text-sm">
-                  {commenter?.displayName || commenter?.username || "Không tên"}
+                  {commenter?.displayName || "Không tên"}
                 </span>
                 {commenter?.role && (
                   <span className="px-1.5 py-0.2 rounded text-xs font-medium bg-admin-brand-50 text-admin-brand-700 border border-admin-brand-200/70">
@@ -96,7 +96,7 @@ export function CommentDetailModal({
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-0.5 truncate">
-                @{commenter?.username || "username"} {commenter?.email ? `• ${commenter.email}` : ""}
+                {commenter?.email}
               </p>
             </div>
           </div>
@@ -163,7 +163,7 @@ export function CommentDetailModal({
               {replyTo && (
                 <div className="flex items-center gap-1.5">
                   <span className="text-gray-400">Trả lời:</span>
-                  <span className="font-semibold text-admin-brand-700">@{replyTo.displayName || replyTo.username}</span>
+                  <span className="font-semibold text-admin-brand-700">@{replyTo.displayName}</span>
                 </div>
               )}
               {comment.replyCount > 0 && (

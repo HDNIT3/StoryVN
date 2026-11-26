@@ -37,7 +37,7 @@ export interface NotificationPopulatedRefs {
   actor?: {
     _id: any;
     displayName?: string;
-    username?: string;
+
     avatarUrl?: string | null;
   };
 }
@@ -109,7 +109,7 @@ export class NotificationsService {
         .findById(saved._id)
         .populate('storyId', 'title slug coverUrl')
         .populate('chapterId', 'chapterNumber title')
-        .populate('actorId', 'displayName username avatarUrl')
+        .populate('actorId', 'displayName avatarUrl')
         .exec();
       if (populated) notificationForEvent = populated;
     } catch {
@@ -436,7 +436,7 @@ export class NotificationsService {
         .limit(limit)
         .populate('storyId', 'title slug coverUrl')
         .populate('chapterId', 'chapterNumber title')
-        .populate('actorId', 'displayName username avatarUrl')
+        .populate('actorId', 'displayName avatarUrl')
         .exec(),
       this.notificationModel.countDocuments(filter),
     ]);

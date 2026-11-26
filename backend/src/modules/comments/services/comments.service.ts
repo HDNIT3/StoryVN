@@ -206,8 +206,8 @@ export class CommentsService {
 
     const createdDoc: any = await this.commentModel
       .findById(newComment._id)
-      .populate('userId', 'displayName username avatarUrl role')
-      .populate('replyToUserId', 'displayName username avatarUrl role')
+      .populate('userId', 'displayName avatarUrl role')
+      .populate('replyToUserId', 'displayName avatarUrl role')
       .populate('chapterId', 'chapterNumber title')
       .lean();
 
@@ -282,8 +282,8 @@ export class CommentsService {
         .sort(sort as any)
         .skip(query.skip)
         .limit(query.limit)
-        .populate('userId', 'displayName username avatarUrl role')
-        .populate('replyToUserId', 'displayName username avatarUrl role')
+        .populate('userId', 'displayName avatarUrl role')
+        .populate('replyToUserId', 'displayName avatarUrl role')
         .populate('chapterId', 'chapterNumber title')
         .lean(),
       this.commentModel.countDocuments(filter),
@@ -366,8 +366,8 @@ export class CommentsService {
         .sort(sort as any)
         .skip(query.skip)
         .limit(query.limit)
-        .populate('userId', 'displayName username avatarUrl role')
-        .populate('replyToUserId', 'displayName username avatarUrl role')
+        .populate('userId', 'displayName avatarUrl role')
+        .populate('replyToUserId', 'displayName avatarUrl role')
         .lean(),
       this.commentModel.countDocuments(filter),
     ]);
@@ -447,8 +447,8 @@ export class CommentsService {
         .sort({ createdAt: 1 })
         .skip(query.skip)
         .limit(query.limit)
-        .populate('userId', 'displayName username avatarUrl role')
-        .populate('replyToUserId', 'displayName username avatarUrl role')
+        .populate('userId', 'displayName avatarUrl role')
+        .populate('replyToUserId', 'displayName avatarUrl role')
         .lean(),
       this.commentModel.countDocuments(filter),
     ]);
@@ -498,7 +498,7 @@ export class CommentsService {
 
     return (await this.commentModel
       .findById(comment._id)
-      .populate('userId', 'displayName username avatarUrl role')
+      .populate('userId', 'displayName avatarUrl role')
       .lean()) as any;
   }
 
@@ -610,8 +610,8 @@ export class CommentsService {
 
     return (await this.commentModel
       .findById(comment._id)
-      .populate('userId', 'displayName username avatarUrl role')
-      .populate('replyToUserId', 'displayName username avatarUrl role')
+      .populate('userId', 'displayName avatarUrl role')
+      .populate('replyToUserId', 'displayName avatarUrl role')
       .populate('chapterId', 'chapterNumber title')
       .lean()) as any;
   }
@@ -710,8 +710,8 @@ export class CommentsService {
 
     const comment = await this.commentModel
       .findById(commentId)
-      .populate('userId', 'displayName username avatarUrl role email')
-      .populate('replyToUserId', 'displayName username avatarUrl role')
+      .populate('userId', 'displayName avatarUrl role email')
+      .populate('replyToUserId', 'displayName avatarUrl role')
       .populate('storyId', 'title slug coverUrl authorId')
       .populate('forumPostId', 'title slug userId')
       .populate('chapterId', 'chapterNumber title')
@@ -753,7 +753,7 @@ export class CommentsService {
       const regex = new RegExp(search.trim(), 'i');
       const matchingUsers = this.userModel
         ? await this.userModel
-            .find({ $or: [{ displayName: regex }, { username: regex }, { email: regex }] })
+            .find({ $or: [{ displayName: regex }, { email: regex }] })
             .select('_id')
             .lean()
         : [];
@@ -774,8 +774,8 @@ export class CommentsService {
         .sort(sortOption)
         .skip(skip)
         .limit(limit)
-        .populate('userId', 'displayName username avatarUrl role email')
-        .populate('replyToUserId', 'displayName username avatarUrl role')
+        .populate('userId', 'displayName avatarUrl role email')
+        .populate('replyToUserId', 'displayName avatarUrl role')
         .populate('storyId', 'title slug coverUrl')
         .populate('forumPostId', 'title slug')
         .populate('chapterId', 'chapterNumber title')
@@ -853,8 +853,8 @@ export class CommentsService {
 
     return this.commentModel
       .findById(comment._id)
-      .populate('userId', 'displayName username avatarUrl role email')
-      .populate('replyToUserId', 'displayName username avatarUrl role')
+      .populate('userId', 'displayName avatarUrl role email')
+      .populate('replyToUserId', 'displayName avatarUrl role')
       .populate('storyId', 'title slug coverUrl')
       .populate('forumPostId', 'title slug')
       .populate('chapterId', 'chapterNumber title')

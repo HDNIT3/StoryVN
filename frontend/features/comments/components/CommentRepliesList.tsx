@@ -117,10 +117,10 @@ export const CommentRepliesList: React.FC<CommentRepliesListProps> = ({
       {replies.map((reply) => {
         const commenter = reply.userId;
         const displayName =
-          commenter?.displayName || commenter?.username || "Độc giả";
+          commenter?.displayName || "Độc giả";
         const replyToUser = reply.replyToUserId;
         const replyToDisplayName =
-          replyToUser?.displayName || replyToUser?.username;
+          replyToUser?.displayName;
         const avatarUrl = commenter?.avatarUrl;
         const isOwner = user && user._id === commenter?._id;
         const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -313,7 +313,7 @@ export const CommentRepliesList: React.FC<CommentRepliesListProps> = ({
         targetId={reportingReply?._id || ""}
         targetTitle={
           reportingReply
-            ? `Phản hồi của @${reportingReply.userId?.displayName || reportingReply.userId?.username || "Độc giả"}`
+            ? `Phản hồi của @${reportingReply.userId?.displayName || "Độc giả"}`
             : undefined
         }
       />

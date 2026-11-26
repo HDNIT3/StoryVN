@@ -227,7 +227,7 @@ export class AdminChaptersService {
           select: 'title slug coverUrl authorId status visibility',
           populate: {
             path: 'authorId',
-            select: 'displayName username avatarUrl email role',
+            select: 'displayName avatarUrl email role',
           },
         })
         .sort(sort)
@@ -324,7 +324,7 @@ export class AdminChaptersService {
         select: 'title slug coverUrl authorId status visibility',
         populate: {
           path: 'authorId',
-          select: 'displayName username avatarUrl email role',
+          select: 'displayName avatarUrl email role',
         },
       })
       .lean()

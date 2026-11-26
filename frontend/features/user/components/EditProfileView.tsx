@@ -198,19 +198,11 @@ function AccountSection({ user, onSaved }: { user: UserProfile; onSaved: () => P
           <p className="text-xs text-zinc-400">Từ 2 đến 50 ký tự</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <span className={labelClass}>Tên đăng nhập</span>
-            <p className="text-sm text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-xl py-2.5 px-3.5 truncate">
-              @{user.username}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <span className={labelClass}>Email</span>
-            <p className="text-sm text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-xl py-2.5 px-3.5 truncate">
-              {user.email}
-            </p>
-          </div>
+        <div className="space-y-1">
+          <span className={labelClass}>Email</span>
+          <p className="text-sm text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-xl py-2.5 px-3.5 truncate">
+            {user.email}
+          </p>
         </div>
 
         <Button id="btn-save-account" type="submit" variant="primary" size="sm" isLoading={isSaving}>
@@ -386,6 +378,14 @@ function AuthorProfileForm({ authorProfile }: { authorProfile: AuthorProfileItem
       <div className="rounded-xl bg-sky-50/60 border border-sky-100 px-4 py-3">
         <p className="text-xs text-zinc-500">Bút danh chính thức</p>
         <p className="text-base font-bold text-zinc-900 mt-0.5">{authorProfile.penName}</p>
+        {authorProfile.slug && (
+          <Link
+            href={`/tac-gia/${encodeURIComponent(authorProfile.slug)}`}
+            className="mt-1 inline-block break-all text-sm font-medium text-sky-700 hover:underline"
+          >
+            /tac-gia/{authorProfile.slug}
+          </Link>
+        )}
       </div>
 
       <ImageUploader
@@ -576,7 +576,7 @@ export function EditProfileView() {
 
         {isAuthor && (
           <Link
-            href={`/tac-gia/${encodeURIComponent(user.username)}`}
+            href={`/tac-gia/${encodeURIComponent(authorProfile?.slug ?? user._id)}`}
             target="_blank"
             className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3.5 py-2 rounded-xl transition"
           >

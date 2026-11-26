@@ -17,7 +17,6 @@ export interface SupportMessageItem {
 
 export interface SupportTicketUser {
   _id: string;
-  username: string;
   displayName?: string;
   avatarUrl?: string;
   role?: string;
@@ -38,7 +37,6 @@ export interface SupportTicketItem {
   messages: SupportMessageItem[];
   lastRepliedBy?: {
     _id: string;
-    username: string;
     displayName?: string;
   } | null;
   lastRepliedAt?: string | null;

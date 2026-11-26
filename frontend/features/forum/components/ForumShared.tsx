@@ -14,7 +14,7 @@ export function ForumBanner({ eyebrow, title, description }: { eyebrow: string; 
 }
 
 export function ForumAuthor({ post }: { post: ForumPost }) {
-  const name = post.userId?.displayName || post.userId?.username || "Người dùng";
+  const name = post.userId?.displayName || "Người dùng";
   const avatarUrl = post.userId?.avatarUrl;
   const [imgError, setImgError] = React.useState(false);
 

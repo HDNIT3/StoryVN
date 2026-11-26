@@ -6,7 +6,7 @@ export type FollowStorySortOption = "followedAt" | "updatedAt" | "title";
 
 export interface FollowedStoryAuthor {
   _id: string;
-  username: string;
+  slug: string;
   displayName: string;
   penName: string;
   avatarUrl: string | null;
@@ -102,7 +102,7 @@ export interface FollowedAuthorStoryItem {
 
 export interface FollowedAuthorItem {
   _id: string;
-  username: string;
+  slug: string;
   displayName: string;
   penName: string;
   avatarUrl: string | null;

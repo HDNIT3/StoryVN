@@ -23,7 +23,6 @@ export interface NotificationChapter {
 export interface NotificationActor {
   _id: string;
   displayName?: string;
-  username?: string;
   avatarUrl?: string;
 }
 

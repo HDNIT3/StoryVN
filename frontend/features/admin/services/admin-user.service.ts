@@ -4,7 +4,6 @@ import type { UserRole, UserStatus } from "@/features/user";
 export interface AdminUserItem {
   _id: string;
   email: string;
-  username: string;
   displayName: string;
   avatarUrl?: string | null;
   role: UserRole;

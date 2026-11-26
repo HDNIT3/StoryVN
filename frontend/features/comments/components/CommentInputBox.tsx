@@ -64,14 +64,14 @@ export const CommentInputBox: React.FC<CommentInputBoxProps> = ({
         {user?.avatarUrl ? (
           <Image
             src={user.avatarUrl}
-            alt={user.displayName || user.username}
+            alt={user.displayName}
             fill
             unoptimized
             className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center font-bold text-xs sm:text-sm text-emerald-800 bg-emerald-100">
-            {(user?.displayName || user?.username || "U").charAt(0).toUpperCase()}
+            {(user?.displayName || "U").charAt(0).toUpperCase()}
           </div>
         )}
       </div>

@@ -1,6 +1,43 @@
 import { describe, expect, it, vi } from 'vitest';
 import { AdminDashboardService } from './admin-dashboard.service.js';
 
+describe('admin financial summary', () => {
+  it('totals successful deposits, paid withdrawals, and requests awaiting payment separately', async () => {
+    const transactions = { aggregate: vi.fn().mockResolvedValue([{ total: 900_000 }]) };
+    const withdrawals = { aggregate: vi.fn().mockResolvedValue([
+      { _id: 'COMPLETED', total: 500_000 },
+      { _id: 'PENDING', total: 200_000 },
+      { _id: 'PROCESSING', total: 100_000 },
+    ]) };
+    const service: AdminDashboardService = Reflect.construct(AdminDashboardService, [
+      transactions, {}, {}, {}, {}, {}, {}, {}, {}, {}, withdrawals,
+    ]);
+
+    await expect(service.getFinancialSummary()).resolves.toEqual({
+      successfulTopUps: 900_000,
+      paidRoyalties: 500_000,
+      pendingRoyalties: 300_000,
+    });
+    expect(transactions.aggregate.mock.calls[0][0][0]).toEqual({ $match: { status: 'SUCCESS' } });
+    expect(withdrawals.aggregate.mock.calls[0][0][0]).toEqual({
+      $match: { status: { $in: ['PENDING', 'PROCESSING', 'COMPLETED'] } },
+    });
+  });
+
+  it('returns zero totals when there are no successful deposits or eligible withdrawals', async () => {
+    const empty = { aggregate: vi.fn().mockResolvedValue([]) };
+    const service: AdminDashboardService = Reflect.construct(AdminDashboardService, [
+      empty, {}, {}, {}, {}, {}, {}, {}, {}, {}, empty,
+    ]);
+
+    await expect(service.getFinancialSummary()).resolves.toEqual({
+      successfulTopUps: 0,
+      paidRoyalties: 0,
+      pendingRoyalties: 0,
+    });
+  });
+});
+
 describe('admin overview user growth', () => {
   it('defaults to all time and includes activity older than one year', async () => {
     const chain = { populate: vi.fn(), sort: vi.fn(), limit: vi.fn(), lean: vi.fn().mockResolvedValue([]) };

@@ -7,8 +7,6 @@ import { AuthInput } from "../shared";
 export interface RegisterFormProps {
   displayName: string;
   setDisplayName: (val: string) => void;
-  username: string;
-  setUsername: (val: string) => void;
   email: string;
   setEmail: (val: string) => void;
   password: string;
@@ -24,8 +22,6 @@ export interface RegisterFormProps {
 export function RegisterForm({
   displayName,
   setDisplayName,
-  username,
-  setUsername,
   email,
   setEmail,
   password,
@@ -45,43 +41,22 @@ export function RegisterForm({
       onSubmit={handleRegisterSubmit}
       className="space-y-4"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        {/* Display Name */}
-        <AuthInput
-          id="fullname"
-          name="fullname"
-          label="Họ và tên hoặc Biệt danh"
-          placeholder="Ví dụ: Hoàng Long"
-          type="text"
-          required
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          helperText="Tên thật hoặc bút danh hiển thị"
-          leftIcon={
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          }
-        />
-
-        {/* Username */}
-        <AuthInput
-          id="username"
-          name="username"
-          label="Tên đăng nhập (Username)"
-          placeholder="Ví dụ: hoanglong99"
-          type="text"
-          required
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          helperText="Tối thiểu 3 ký tự (chữ, số, gạch dưới)"
-          leftIcon={
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-            </svg>
-          }
-        />
-      </div>
+      <AuthInput
+        id="fullname"
+        name="fullname"
+        label="Họ và tên hoặc Biệt danh"
+        placeholder="Ví dụ: Hoàng Long"
+        type="text"
+        required
+        value={displayName}
+        onChange={(e) => setDisplayName(e.target.value)}
+        helperText="Tên thật hoặc bút danh hiển thị"
+        leftIcon={
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        }
+      />
 
       {/* Email */}
       <AuthInput

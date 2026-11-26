@@ -73,7 +73,7 @@ export interface FollowedStoryItem {
   description: string;
   author: {
     _id: string;
-    username: string;
+    slug: string;
     displayName: string;
     penName: string;
     avatarUrl: string | null;
@@ -101,7 +101,7 @@ export interface FollowedStoryUpdateItem {
     progressState: string;
     author: {
       _id: string;
-      username: string;
+      slug: string;
       displayName: string;
       penName: string;
       avatarUrl: string | null;
@@ -147,7 +147,7 @@ export interface FollowedAuthorStoryItem {
 
 export interface FollowedAuthorItem {
   _id: string;
-  username: string;
+  slug: string;
   displayName: string;
   penName: string;
   avatarUrl: string | null;
@@ -422,7 +422,7 @@ export class FollowsService {
                   if: { $gt: [{ $size: '$authorUser' }, 0] },
                   then: {
                     _id: { $arrayElemAt: ['$authorUser._id', 0] },
-                    username: { $arrayElemAt: ['$authorUser.username', 0] },
+                    slug: { $ifNull: [{ $first: '$authorProfile.slug' }, { $toString: { $first: '$authorUser._id' } }] },
                     displayName: {
                       $arrayElemAt: ['$authorUser.displayName', 0],
                     },
@@ -682,12 +682,12 @@ export class FollowsService {
         ? await Promise.all([
             this.userModel
               .find({ _id: { $in: authorIds } })
-              .select('username displayName avatarUrl')
+              .select('displayName avatarUrl')
               .lean()
               .exec(),
             this.authorProfileModel
               .find({ userId: { $in: authorIds } })
-              .select('userId penName')
+              .select('userId penName slug')
               .lean()
               .exec(),
           ])
@@ -716,7 +716,7 @@ export class FollowsService {
             author: authorUser
               ? {
                   _id: String(authorUser._id),
-                  username: authorUser.username,
+                  slug: authorProfile?.slug || String(authorUser._id),
                   displayName: authorUser.displayName,
                   penName: authorProfile?.penName || authorUser.displayName,
                   avatarUrl: authorUser.avatarUrl ?? null,
@@ -1106,7 +1106,7 @@ export class FollowsService {
         $match: {
           $or: [
             { 'authorUser.displayName': regex },
-            { 'authorUser.username': regex },
+            { 'profile.slug': regex },
             { 'profile.penName': regex },
           ],
         },
@@ -1121,7 +1121,7 @@ export class FollowsService {
           {
             $project: {
               _id: '$authorUser._id',
-              username: '$authorUser.username',
+              slug: { $ifNull: ['$profile.slug', { $toString: '$authorUser._id' }] },
               displayName: '$authorUser.displayName',
               penName: {
                 $ifNull: [

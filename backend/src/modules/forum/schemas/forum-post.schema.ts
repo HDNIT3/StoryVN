@@ -10,6 +10,13 @@ export enum ForumPostStatus {
   DELETED = 'DELETED',
 }
 
+export const editableStatuses = [
+  ForumPostStatus.VISIBLE,
+  ForumPostStatus.HIDDEN,
+  ForumPostStatus.PENDING,
+  ForumPostStatus.REJECTED,
+] as const;
+
 export enum ForumContentFormat {
   PLAIN = 'plain',
   HTML = 'html',

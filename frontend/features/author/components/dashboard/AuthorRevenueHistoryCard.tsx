@@ -24,7 +24,7 @@ const formatDate = (dateStr?: string) => {
 };
 
 export function AuthorRevenueHistoryCard({ item }: AuthorRevenueHistoryCardProps) {
-  const readerName = item.reader?.displayName || item.reader?.username || "Độc giả";
+  const readerName = item.reader?.displayName || "Độc giả";
   const readerInitial = readerName.charAt(0).toUpperCase();
 
   const storySlug = item.story?.slug || item.story?._id;
@@ -62,11 +62,6 @@ export function AuthorRevenueHistoryCard({ item }: AuthorRevenueHistoryCardProps
             <span className="font-semibold text-zinc-900 truncate">
               {readerName}
             </span>
-            {item.reader?.username && (
-              <span className="text-zinc-400 font-normal">
-                @{item.reader.username}
-              </span>
-            )}
             <span className="text-zinc-300">•</span>
             <span className="text-zinc-500">đã mở khóa</span>
           </div>

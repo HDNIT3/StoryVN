@@ -18,7 +18,7 @@ export function FollowedUpdateCard({ item }: FollowedUpdateCardProps) {
   const isCompleted = story.progressState === "COMPLETED";
   const authorPenName =
     story.author?.penName || story.author?.displayName || "Tác giả StoryVN";
-  const authorUsername = story.author?.username;
+  const authorUsername = story.author?.slug;
 
   const ctaLabel =
     item.unreadChapterCount > 1

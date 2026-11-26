@@ -199,7 +199,6 @@ export function ForumView() {
           const inTitle = item.title.toLowerCase().includes(q);
           const inAuthor = (
             item.userId?.displayName ||
-            item.userId?.username ||
             ""
           )
             .toLowerCase()

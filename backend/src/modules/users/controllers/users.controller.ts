@@ -35,7 +35,6 @@ export class UsersController {
         user: {
           _id: user._id,
           email: user.email,
-          username: user.username,
           displayName: user.displayName,
           avatarUrl: user.avatarUrl,
           role: user.role,
@@ -65,7 +64,6 @@ export class UsersController {
         user: {
           _id: updatedUser._id,
           email: updatedUser.email,
-          username: updatedUser.username,
           displayName: updatedUser.displayName,
           avatarUrl: updatedUser.avatarUrl,
           role: updatedUser.role,

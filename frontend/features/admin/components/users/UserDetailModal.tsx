@@ -59,12 +59,11 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 className="w-full h-full rounded-2xl object-cover"
               />
             ) : (
-              (user.displayName || user.username || "?").charAt(0).toUpperCase()
+              (user.displayName || "?").charAt(0).toUpperCase()
             )}
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="admin-dialog-title text-lg sm:text-xl font-semibold text-gray-900 truncate">{user.displayName}</h2>
-            <p className="text-xs sm:text-sm text-gray-500 truncate">@{user.username}</p>
             <div className="flex flex-wrap items-center gap-2 mt-1.5">
               <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${ROLE_COLOR[user.role] || "bg-gray-100 text-gray-600"}`}>
                 {ROLE_LABEL[user.role] || user.role}

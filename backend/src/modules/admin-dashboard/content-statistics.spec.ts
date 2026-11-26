@@ -92,7 +92,7 @@ function fixture(withActivity = true, profilePenName: string | null = 'Bút danh
       .fn()
       .mockReturnValue(
         chain([
-          { _id: authorId, displayName: 'Tác giả A', username: 'author-a' },
+          { _id: authorId, displayName: 'Tác giả A' },
         ]),
       ),
   };
@@ -121,7 +121,7 @@ describe('content statistics', () => {
     const { service } = fixture(true, profileName, applicationName);
     const data = await service.getContentStatistics(query);
     expect(data.authors).toEqual([{
-      _id: authorId.toString(), username: 'author-a', penName: profileName || applicationName,
+      _id: authorId.toString(), penName: profileName || applicationName,
       name: `Tác giả A - ${expectedName}`,
     }]);
   });

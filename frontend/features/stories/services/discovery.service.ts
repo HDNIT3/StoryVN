@@ -11,7 +11,7 @@ export interface RankingItem extends SameGenreStoryItem {
 
 export interface AuthorRankingItem {
   _id: string;
-  username: string;
+  slug: string;
   name: string;
   avatarUrl: string | null;
   stats: { followerCount: number; storyCount: number; totalViews: number };

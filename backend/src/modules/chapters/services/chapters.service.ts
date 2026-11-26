@@ -1508,7 +1508,7 @@ export class ChaptersService {
     const story = await this.storyModel
       .findOne({ slug })
       .select('title slug coverUrl authorId status visibility')
-      .populate('authorId', 'displayName username')
+      .populate('authorId', 'displayName')
       .lean();
 
     if (!story) {
@@ -1695,7 +1695,6 @@ export class ChaptersService {
         coverUrl: story.coverUrl,
         author:
           (story.authorId as any)?.displayName ||
-          (story.authorId as any)?.username ||
           'Tác giả',
       },
       prevChapter: prevChapter
@@ -2164,7 +2163,7 @@ export class ChaptersService {
           select: 'title slug coverUrl authorId',
           populate: {
             path: 'authorId',
-            select: 'displayName username',
+            select: 'displayName',
           },
         },
       })
@@ -2196,7 +2195,6 @@ export class ChaptersService {
                 coverUrl: story.coverUrl,
                 authorName:
                   story.authorId?.displayName ||
-                  story.authorId?.username ||
                   'Tác giả',
               }
             : null,
@@ -2300,7 +2298,7 @@ export class ChaptersService {
     const story: any = await this.storyModel
       .findById(chapter.storyId)
       .select('title slug coverUrl authorId')
-      .populate('authorId', 'displayName username avatarUrl')
+      .populate('authorId', 'displayName avatarUrl')
       .lean();
 
     const activeRevisionId = getActiveRevision(
@@ -2417,7 +2415,7 @@ export class ChaptersService {
         select: 'title slug coverUrl authorId',
         populate: {
           path: 'authorId',
-          select: 'displayName username avatarUrl',
+          select: 'displayName avatarUrl',
         },
       })
       .lean();

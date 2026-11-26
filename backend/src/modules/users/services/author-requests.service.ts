@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { buildPaginationMeta, PaginatedResult } from '../../../common/dto/pagination.dto.js';
 import { ErrorCode } from '../../../common/enums/error-code.enum.js';
+import { authorSlugBase } from '../author-slug.js';
 import { MailService } from '../../mail/mail.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { CreateAuthorRequestDto } from '../dto/create-author-request.dto.js';
@@ -149,7 +150,7 @@ export class AuthorRequestsService {
       this.authorRequestModel
         .findOne({ userId: new Types.ObjectId(userId) })
         .sort({ createdAt: -1 })
-        .populate('processedBy', 'displayName email username'),
+        .populate('processedBy', 'displayName email'),
       this.authorProfileModel.findOne({ userId: new Types.ObjectId(userId) }),
     ]);
 
@@ -325,8 +326,8 @@ export class AuthorRequestsService {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('userId', 'email username displayName avatarUrl role status')
-        .populate('processedBy', 'email username displayName role')
+        .populate('userId', 'email displayName avatarUrl role status')
+        .populate('processedBy', 'email displayName role')
         .exec(),
       this.authorRequestModel.countDocuments(filter),
       this.authorRequestModel.countDocuments({ status: AuthorRequestStatus.PENDING }),
@@ -375,25 +376,44 @@ export class AuthorRequestsService {
         throw new BadRequestException(ErrorCode.PEN_NAME_ALREADY_EXISTS);
       }
 
+      const profileData = {
+        penName: request.penName,
+        biography: request.biography,
+        website: request.website,
+        socialLinks: request.socialLinks,
+        bankName: request.bankName,
+        bankAccountNumber: request.bankAccountNumber,
+        bankAccountName: request.bankAccountName,
+        status: AuthorProfileStatus.ACTIVE,
+      };
+      const profile = await this.authorProfileModel.findOne({ userId: targetUser._id });
+      if (profile?.slug) {
+        await this.authorProfileModel.updateOne({ _id: profile._id }, profileData);
+      } else {
+        const base = authorSlugBase(request.penName);
+        for (let suffix = 1; ; suffix++) {
+          const slug = suffix === 1 ? base : `${base}-${suffix}`;
+          if (await this.authorProfileModel.exists({ slug })) continue;
+          try {
+            await this.authorProfileModel.updateOne(
+              { userId: targetUser._id, slug: null },
+              { $set: { ...profileData, slug } },
+              { upsert: true },
+            );
+            break;
+          } catch (error) {
+            const duplicate = error as { code?: number; keyPattern?: Record<string, number> };
+            if (duplicate.code !== 11000 || (!duplicate.keyPattern?.slug && !duplicate.keyPattern?.userId)) throw error;
+            const concurrentProfile = await this.authorProfileModel.findOne({ userId: targetUser._id });
+            if (!concurrentProfile?.slug) continue;
+            break;
+          }
+        }
+      }
+
       targetUser.role = UserRole.AUTHOR;
       targetUser.versionToken = (targetUser.versionToken || 0) + 1;
       await targetUser.save();
-
-      await this.authorProfileModel.findOneAndUpdate(
-        { userId: targetUser._id },
-        {
-          userId: targetUser._id,
-          penName: request.penName,
-          biography: request.biography,
-          website: request.website,
-          socialLinks: request.socialLinks,
-          bankName: request.bankName,
-          bankAccountNumber: request.bankAccountNumber,
-          bankAccountName: request.bankAccountName,
-          status: AuthorProfileStatus.ACTIVE,
-        },
-        { upsert: true, returnDocument: 'after' },
-      );
 
       request.status = AuthorRequestStatus.APPROVED;
       request.processedBy = new Types.ObjectId(reviewerId);
@@ -482,7 +502,7 @@ export class AuthorRequestsService {
       if (adminIds.length > 0) {
         await this.notificationsService.notifyNewAuthorRequestToAdmins(
           adminIds,
-          applicantUser.displayName || applicantUser.username,
+          applicantUser.displayName,
           penName,
           applicantUser._id.toString(),
           requestId,

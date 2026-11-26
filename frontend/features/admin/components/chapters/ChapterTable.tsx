@@ -161,7 +161,7 @@ export function ChapterTable({
               const story = typeof ch.storyId === "object" ? ch.storyId : null;
               const author = story && typeof story.authorId === "object" ? story.authorId : null;
               const authorName =
-                author?.displayName || author?.username || "Chưa xác định";
+                author?.displayName || "Chưa xác định";
               const authorEmail = author?.email || "";
               const authorAvatar = author?.avatarUrl;
               const isPendingRevisionReview = Boolean(

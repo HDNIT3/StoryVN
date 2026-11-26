@@ -3,7 +3,6 @@ export type AdminRatingStatus = 'VISIBLE' | 'HIDDEN' | 'DELETED';
 export interface AdminRatingUser {
   _id: string;
   displayName?: string;
-  username?: string;
   avatarUrl?: string;
   email?: string;
 }

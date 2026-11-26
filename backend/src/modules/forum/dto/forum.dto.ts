@@ -3,7 +3,7 @@ import { IntersectionType } from '@nestjs/swagger';
 import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { IsEnum, IsIn, IsOptional, IsString, Length, ValidateIf } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
-import { ForumContentFormat, ForumPostStatus } from '../schemas/forum-post.schema.js';
+import { editableStatuses, ForumContentFormat, ForumPostStatus } from '../schemas/forum-post.schema.js';
 
 const trimText = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
@@ -51,6 +51,12 @@ export class ReportForumPostDto {
 
 export class QueryForumPostsDto extends IntersectionType(PaginationQueryDto, DateRangeQueryDto) {
   get skip(): number { return (this.page - 1) * this.limit; }
+}
+
+export class MyQueryForumPostsDto extends QueryForumPostsDto {
+  @IsOptional()
+  @IsIn(editableStatuses)
+  status?: (typeof editableStatuses)[number];
 }
 
 export class AdminQueryForumPostsDto extends QueryForumPostsDto {

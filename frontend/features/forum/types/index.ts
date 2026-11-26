@@ -2,7 +2,6 @@ export type ForumPostStatus = "PENDING" | "VISIBLE" | "HIDDEN" | "REJECTED" | "D
 
 export interface ForumUser {
   _id: string;
-  username: string;
   displayName?: string;
   avatarUrl?: string;
 }
