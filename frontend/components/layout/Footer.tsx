@@ -1,8 +1,12 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useFooterConfig } from "@/features/system-config/queries/useSystemConfigQueries";
 
 export function Footer() {
+  const { data: config } = useFooterConfig();
   return (
     <footer className="mt-20 w-full border-t border-slate-200/80 bg-gradient-to-b from-white/90 via-slate-50/50 to-slate-100/60 text-slate-500 backdrop-blur-xl">
       <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
@@ -27,14 +31,13 @@ export function Footer() {
                   </span>
                 </span>
                 <span className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  Tiểu thuyết trực tuyến
+                  {config?.["footer.tagline"]?.trim() || "Tiểu thuyết trực tuyến"}
                 </span>
               </div>
             </Link>
             <p className="text-sm leading-relaxed text-slate-600">
-              StoryVN là nền tảng đọc truyện chữ, truyện dịch online miễn phí chất
-              lượng cao với hàng ngàn bộ truyện tiên hiệp, huyền huyễn, đô thị được
-              cập nhật liên tục mỗi ngày.
+              {config?.["footer.description"]?.trim() ||
+                "StoryVN là nền tảng đọc truyện chữ, truyện dịch online miễn phí chất lượng cao với hàng ngàn bộ truyện tiên hiệp, huyền huyễn, đô thị được cập nhật liên tục mỗi ngày."}
             </p>
             <div className="flex items-center gap-2 pt-1">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
@@ -180,14 +183,15 @@ export function Footer() {
             © {new Date().getFullYear()} StoryVN. Bản quyền thuộc về tác giả và dịch giả.
           </p>
           <p className="text-xs text-slate-500 font-medium">
-            Phát triển bởi nhóm sinh viên SPKT (HCMUTE)
+            {config?.["footer.credit"]?.trim() || "Phát triển bởi nhóm sinh viên SPKT (HCMUTE)"}
           </p>
         </div>
 
         {/* Dòng miễn trừ trách nhiệm phục vụ đồ án SPKT */}
         <div className="mt-3 text-center border-t border-slate-200/50 pt-3">
           <p className="text-[11px] text-slate-400">
-            Lưu ý: Đây là website đồ án phục vụ mục đích học tập, không có giá trị thương mại.
+            {config?.["footer.disclaimer"]?.trim() ||
+              "Lưu ý: Đây là website đồ án phục vụ mục đích học tập, không có giá trị thương mại."}
           </p>
         </div>
       </div>

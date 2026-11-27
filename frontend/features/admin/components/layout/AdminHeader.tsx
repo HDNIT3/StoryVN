@@ -12,6 +12,7 @@ interface AdminHeaderProps {
 }
 
 const ROUTE_TITLES: Record<string, { title: string; subtitle: string }> = {
+  "/quan-ly/cau-hinh": { title: "Quản lý cấu hình hệ thống", subtitle: "Xem và cập nhật các tham số cấu hình" },
   "/quan-ly/thong-ke-truyen": { title: "Truyện & tác giả", subtitle: "Theo dõi tác phẩm, chương truyện và hoạt động sáng tác" },
   "/quan-ly": { title: "Tổng quan Quản trị", subtitle: "Thống kê thời gian thực, biểu đồ doanh thu và vận hành hệ thống StoryVN" },
   "/quan-ly/duyet-tac-gia": { title: "Duyệt hồ sơ tác giả", subtitle: "Xét duyệt yêu cầu trở thành tác giả" },
