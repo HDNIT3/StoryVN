@@ -153,7 +153,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     id: "the-loai",
     label: "Quản lý thể loại",
     href: "/quan-ly/the-loai",
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "MANAGER"],
     section: "taxonomy",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,7 +165,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     id: "the-tag",
     label: "Quản lý thẻ tag",
     href: "/quan-ly/the-tag",
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "MANAGER"],
     section: "taxonomy",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,12 +186,25 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     ),
   },
 
+  {
+    id: "cau-hinh",
+    label: "Quản lý cấu hình",
+    href: "/quan-ly/cau-hinh",
+    roles: ["ADMIN"],
+    section: "taxonomy",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16M4 18h16M8 4v4m8 2v4m-6 2v4" />
+      </svg>
+    ),
+  },
+
   // Nhóm 3: Người dùng & Tài chính
   {
     id: "nguoi-dung",
     label: "Quản lý người dùng",
     href: "/quan-ly/nguoi-dung",
-    roles: ["ADMIN", "MANAGER"],
+    roles: ["ADMIN"],
     section: "finance",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
