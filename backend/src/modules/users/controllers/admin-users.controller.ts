@@ -23,12 +23,12 @@ import { AdminUsersService } from '../services/admin-users.service.js';
 @ApiTags('Admin Users')
 @ApiBearerAuth()
 @UseGuards(AuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 @Controller('admin/users')
 export class AdminUsersController {
   constructor(private readonly adminUsersService: AdminUsersService) {}
 
   @ApiOperation({ summary: 'Lấy danh sách người dùng (phân trang, lọc, tìm kiếm)' })
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(@Query() query: QueryUsersDto) {
@@ -41,7 +41,6 @@ export class AdminUsersController {
   }
 
   @ApiOperation({ summary: 'Lấy thống kê tổng quan người dùng theo vai trò và trạng thái' })
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Get('stats')
   @HttpCode(HttpStatus.OK)
   async getStats() {
@@ -54,7 +53,6 @@ export class AdminUsersController {
   }
 
   @ApiOperation({ summary: 'Xem chi tiết thông tin người dùng theo ID' })
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findById(@Param('id') id: string) {
@@ -67,7 +65,6 @@ export class AdminUsersController {
   }
 
   @ApiOperation({ summary: 'Thay đổi trạng thái tài khoản (ACTIVE, BANNED)' })
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
   async updateStatus(
@@ -88,7 +85,6 @@ export class AdminUsersController {
   }
 
   @ApiOperation({ summary: 'Thay đổi vai trò người dùng (Chỉ ADMIN)' })
-  @Roles(UserRole.ADMIN)
   @Patch(':id/role')
   @HttpCode(HttpStatus.OK)
   async updateRole(

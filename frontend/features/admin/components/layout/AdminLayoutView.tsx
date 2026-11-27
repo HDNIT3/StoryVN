@@ -10,6 +10,13 @@ interface AdminLayoutViewProps {
   children: React.ReactNode;
 }
 
+const ADMIN_ONLY_ROUTES = [
+  "/quan-ly/media",
+  "/quan-ly/goi-nap",
+  "/quan-ly/nguoi-dung",
+  "/quan-ly/cau-hinh",
+];
+
 export function AdminLayoutView({ children }: AdminLayoutViewProps) {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -17,6 +24,9 @@ export function AdminLayoutView({ children }: AdminLayoutViewProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const managerOnAdminOnlyRoute =
+    user?.role === "MANAGER" &&
+    ADMIN_ONLY_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   useEffect(() => {
     if (!isLoading) {
@@ -28,20 +38,19 @@ export function AdminLayoutView({ children }: AdminLayoutViewProps) {
       } else if (user && user.role !== "ADMIN" && user.role !== "MANAGER") {
         setRedirecting(true);
         router.replace("/ho-so");
-      } else if (user?.role === "MANAGER" && ["/quan-ly/the-loai", "/quan-ly/the-tag", "/quan-ly/media", "/quan-ly/goi-nap"].some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
-        setRedirecting(true);
+      } else if (managerOnAdminOnlyRoute) {
         router.replace("/quan-ly");
       }
     }
-  }, [isLoading, isAuthenticated, user, pathname, router]);
+  }, [isLoading, isAuthenticated, user, pathname, router, managerOnAdminOnlyRoute]);
 
-  if (isLoading || redirecting) {
+  if (isLoading || redirecting || managerOnAdminOnlyRoute) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
         <div className="flex flex-col items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-slate-200/80 max-w-xs w-full text-center">
           <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-semibold text-slate-700">
-            {redirecting ? "Đang chuyển hướng..." : "Đang tải dữ liệu quản trị..."}
+            {redirecting || managerOnAdminOnlyRoute ? "Đang chuyển hướng..." : "Đang tải dữ liệu quản trị..."}
           </p>
         </div>
       </div>
