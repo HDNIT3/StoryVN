@@ -6,7 +6,7 @@ import { Public } from '../../../common/decorators/public.decorator.js';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 import { DateRangeQueryDto } from '../../../common/dto/date-range.dto.js';
 import { AuthGuard } from '../../../common/guards/auth.guard.js';
-import { CreateForumPostDto, QueryForumPostsDto, ReportForumPostDto, UpdateForumPostDto } from '../dto/forum.dto.js';
+import { CreateForumPostDto, MyQueryForumPostsDto, ReportForumPostDto, UpdateForumPostDto } from '../dto/forum.dto.js';
 import { ForumService } from '../services/forum.service.js';
 
 @ApiTags('Forum')
@@ -23,7 +23,7 @@ export class ForumController {
   }
 
   @Get('me')
-  async mine(@Query() query: QueryForumPostsDto, @CurrentUser() user: { _id: Types.ObjectId }) {
+  async mine(@Query() query: MyQueryForumPostsDto, @CurrentUser() user: { _id: Types.ObjectId }) {
     return { success: true, data: await this.forum.list(query, user._id.toString()) };
   }
 

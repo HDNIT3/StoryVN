@@ -3,14 +3,6 @@ export const ErrorCode = {
     error: 'EMAIL_ALREADY_EXISTS',
     message: 'Email đã tồn tại trên hệ thống',
   },
-  USERNAME_ALREADY_EXISTS: {
-    error: 'USERNAME_ALREADY_EXISTS',
-    message: 'Username đã tồn tại trên hệ thống',
-  },
-  USER_ALREADY_EXISTS: {
-    error: 'USER_ALREADY_EXISTS',
-    message: 'Email hoặc username đã tồn tại trên hệ thống',
-  },
   OTP_EXPIRED_OR_NOT_FOUND: {
     error: 'OTP_EXPIRED_OR_NOT_FOUND',
     message: 'Mã OTP đã hết hạn hoặc chưa được gửi',
@@ -33,7 +25,7 @@ export const ErrorCode = {
   },
   DUPLICATE_KEY_ERROR: {
     error: 'DUPLICATE_KEY_ERROR',
-    message: 'Email hoặc username đã được đăng ký',
+    message: 'Email đã được đăng ký',
   },
   TOO_MANY_REQUESTS: {
     error: 'TOO_MANY_REQUESTS',

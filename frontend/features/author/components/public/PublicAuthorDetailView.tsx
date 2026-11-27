@@ -38,10 +38,10 @@ function formatJoinedDate(dateStr?: string | null): string {
 }
 
 interface PublicAuthorDetailViewProps {
-  username: string;
+  slug: string;
 }
 
-export function PublicAuthorDetailView({ username }: PublicAuthorDetailViewProps) {
+export function PublicAuthorDetailView({ slug }: PublicAuthorDetailViewProps) {
   const [activeNavTab, setActiveNavTab] = useState<"stories" | "about" | "donate">("stories");
 
   const [searchKeyword, setSearchKeyword] = useState<string>("");
@@ -66,9 +66,9 @@ export function PublicAuthorDetailView({ username }: PublicAuthorDetailViewProps
     isLoading: isLoadingAuthor,
     isError: isErrorAuthor,
   } = useQuery({
-    queryKey: authorKeys.profile(username),
-    queryFn: () => authorService.getPublicProfile(username),
-    enabled: !!username,
+    queryKey: authorKeys.profile(slug),
+    queryFn: () => authorService.getPublicProfile(slug),
+    enabled: !!slug,
   });
 
   const author = authorData?.data?.author;
@@ -77,21 +77,21 @@ export function PublicAuthorDetailView({ username }: PublicAuthorDetailViewProps
     data: storiesData,
     isLoading: isLoadingStories,
   } = useQuery({
-    queryKey: authorKeys.stories(username, {
+    queryKey: authorKeys.stories(slug, {
       progressState: progressTab !== "ALL" ? progressTab : undefined,
       sortBy,
       page: currentPage,
       search: debouncedSearch || undefined,
     }),
     queryFn: () =>
-      authorService.getPublicStories(username, {
+      authorService.getPublicStories(slug, {
         progressState: progressTab !== "ALL" ? progressTab : undefined,
         sortBy,
         page: currentPage,
         limit: 10,
         search: debouncedSearch || undefined,
       }),
-    enabled: !!username,
+    enabled: !!slug,
   });
 
   const stories = storiesData?.data?.items || [];
@@ -195,7 +195,7 @@ export function PublicAuthorDetailView({ username }: PublicAuthorDetailViewProps
             Không tìm thấy tác giả
           </h1>
           <p className="mt-2 text-sm text-stone-600 leading-relaxed">
-            Hồ sơ tác giả &quot;{username}&quot; không tồn tại hoặc đã ngừng hoạt động trên StoryVN.
+            Hồ sơ tác giả &quot;{slug}&quot; không tồn tại hoặc đã ngừng hoạt động trên StoryVN.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
             <Link

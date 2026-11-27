@@ -59,7 +59,6 @@ export function AdminReportsView() {
     const inReason = item.reason.toLowerCase().includes(q);
     const inUser = (
       item.userId?.displayName ||
-      item.userId?.username ||
       ""
     )
       .toLowerCase()
@@ -228,7 +227,7 @@ export function AdminReportsView() {
                 {filteredItems.map((report) => {
                   const reporter = report.userId;
                   const name =
-                    reporter?.displayName || reporter?.username || "Người dùng";
+                    reporter?.displayName || "Người dùng";
                   const badge =
                     TARGET_BADGE_CONFIG[report.targetType] ||
                     TARGET_BADGE_CONFIG.FORUM_POST;
@@ -257,7 +256,6 @@ export function AdminReportsView() {
                               {name}
                             </div>
                             <div className="text-xs text-gray-400">
-                              @{reporter?.username || "user"}
                             </div>
                           </div>
                         </div>
@@ -311,8 +309,8 @@ export function AdminReportsView() {
                           </select>
                           <textarea rows={2} value={resolutionNotes[report._id] ?? report.resolutionNote ?? ""} onChange={(e) => setResolutionNotes((current) => ({ ...current, [report._id]: e.target.value }))} placeholder="Ghi kết quả xem xét; bắt buộc khi đóng hồ sơ" className="w-full resize-y rounded-lg border border-gray-200 px-2 py-1.5 text-sm" />
                           <button type="button" disabled={updateReport.isPending || (((statuses[report._id] ?? report.status) === "ACTION_TAKEN" || (statuses[report._id] ?? report.status) === "REJECTED") && !(resolutionNotes[report._id] ?? report.resolutionNote)?.trim())} onClick={() => updateReport.mutate({ id: report._id, status: statuses[report._id] ?? report.status ?? "PENDING", resolutionNote: resolutionNotes[report._id] ?? report.resolutionNote ?? "" })} className="rounded-lg bg-admin-brand-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50">{"Lưu cập nhật"}</button>
-                          {report.history?.length ? <details className="text-xs text-gray-500"><summary className="cursor-pointer">Review history ({report.history.length})</summary><ol className="mt-1 space-y-1">{report.history.map((entry, index) => <li key={`${entry.createdAt}-${index}`} className="border-l-2 border-gray-200 pl-2">{new Date(entry.createdAt).toLocaleString("vi-VN")} - {entry.actorId?.displayName || entry.actorId?.username || "Manager"} - {entry.status}{entry.note ? `: ${entry.note}` : ""}</li>)}</ol></details> : null}
-                          {report.reviewedBy && <p className="text-xs text-gray-400">{"Đã cập nhật bởi "}{report.reviewedBy.displayName || report.reviewedBy.username}{report.reviewedAt ? ` ? ${new Date(report.reviewedAt).toLocaleString("vi-VN")}` : ""}</p>}
+                          {report.history?.length ? <details className="text-xs text-gray-500"><summary className="cursor-pointer">Review history ({report.history.length})</summary><ol className="mt-1 space-y-1">{report.history.map((entry, index) => <li key={`${entry.createdAt}-${index}`} className="border-l-2 border-gray-200 pl-2">{new Date(entry.createdAt).toLocaleString("vi-VN")} - {entry.actorId?.displayName || "Manager"} - {entry.status}{entry.note ? `: ${entry.note}` : ""}</li>)}</ol></details> : null}
+                          {report.reviewedBy && <p className="text-xs text-gray-400">{"Đã cập nhật bởi "}{report.reviewedBy.displayName}{report.reviewedAt ? ` ? ${new Date(report.reviewedAt).toLocaleString("vi-VN")}` : ""}</p>}
                         </div>
                       </td>
 

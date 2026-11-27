@@ -23,6 +23,9 @@ export class AuthorProfile {
   @Prop({ required: true, trim: true })
   penName: string;
 
+  @Prop({ type: String, trim: true })
+  slug?: string;
+
   @Prop({ type: String, default: null, trim: true })
   coverUrl?: string | null;
 
@@ -65,3 +68,4 @@ export class AuthorProfile {
 }
 
 export const AuthorProfileSchema = SchemaFactory.createForClass(AuthorProfile);
+AuthorProfileSchema.index({ slug: 1 }, { unique: true, sparse: true });

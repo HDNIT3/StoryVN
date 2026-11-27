@@ -180,7 +180,7 @@ export function AuthorRankingsSection() {
             {items.slice(0, 3).map((author, index) => (
               <Link
                 key={author._id}
-                href={author.username ? `/tac-gia/${author.username}` : '/tac-gia'}
+                href={author.slug ? `/tac-gia/${author.slug}` : '/tac-gia'}
                 className="group relative flex items-center gap-4 overflow-hidden rounded-3xl border border-white/80 bg-white/90 p-5 shadow-[0_14px_44px_-28px_rgba(15,23,42,0.35)] transition hover:-translate-y-1 hover:border-amber-200 hover:shadow-[0_24px_60px_-26px_rgba(245,158,11,0.25)]"
               >
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold ${index === 0 ? 'bg-amber-100 text-amber-700' : index === 1 ? 'bg-slate-100 text-slate-600' : 'bg-orange-100 text-orange-700'}`}>
@@ -222,7 +222,7 @@ export function AuthorRankingsSection() {
                 {items.slice(3).map((author) => (
                   <li key={author._id}>
                     <Link
-                      href={author.username ? `/tac-gia/${author.username}` : '/tac-gia'}
+                      href={author.slug ? `/tac-gia/${author.slug}` : '/tac-gia'}
                       className="flex items-center gap-3 px-4 py-3 transition hover:bg-amber-50/50 sm:gap-4 sm:px-5"
                     >
                       <span className="w-8 shrink-0 text-center text-sm font-bold tabular-nums text-slate-400">{author.rank}</span>

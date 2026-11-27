@@ -161,7 +161,7 @@ export class AdminStoriesService {
       const matchedUsers = await this.userModel
         .find({
           $or: [
-            { username: searchRegex },
+
             { displayName: searchRegex },
             { email: searchRegex },
           ],
@@ -196,7 +196,7 @@ export class AdminStoriesService {
       const allMatching = await this.storyModel
         .find(filter)
         .select('+revisions')
-        .populate('authorId', 'displayName username email avatarUrl role')
+        .populate('authorId', 'displayName email avatarUrl role')
         .populate('genreIds', 'name slug')
         .populate('tagIds', 'name slug')
         .lean()
@@ -261,7 +261,7 @@ export class AdminStoriesService {
       this.storyModel
         .find(filter)
         .select('+revisions')
-        .populate('authorId', 'displayName username email avatarUrl role')
+        .populate('authorId', 'displayName email avatarUrl role')
         .populate('genreIds', 'name slug')
         .populate('tagIds', 'name slug')
         .sort(sort)
@@ -362,7 +362,7 @@ export class AdminStoriesService {
     const story: any = await this.storyModel
       .findById(id)
       .select('+revisions')
-      .populate('authorId', 'displayName username email avatarUrl role createdAt')
+      .populate('authorId', 'displayName email avatarUrl role createdAt')
       .populate('genreIds', 'name slug description')
       .populate('tagIds', 'name slug')
       .lean()

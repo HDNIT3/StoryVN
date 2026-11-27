@@ -156,7 +156,7 @@ describe('FollowsService - Updates & Read Sync', () => {
 
     mockUserModel.find.mockReturnValue(
       createChainQuery([
-        { _id: authorId, username: 'tacgia', displayName: 'Tác Giả', avatarUrl: null },
+        { _id: authorId, displayName: 'Tác Giả', avatarUrl: null },
       ]),
     );
     mockAuthorProfileModel.find.mockReturnValue(

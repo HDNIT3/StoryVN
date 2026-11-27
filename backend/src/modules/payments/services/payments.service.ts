@@ -427,7 +427,7 @@ export class PaymentsService {
 
       const matchingUsers = await this.userModel
         .find({
-          $or: [{ displayName: regex }, { email: regex }, { username: regex }],
+          $or: [{ displayName: regex }, { email: regex }],
         })
         .select('_id')
         .lean()
@@ -451,7 +451,7 @@ export class PaymentsService {
         .sort({ [sortField]: sortDirection })
         .skip(skip)
         .limit(limit)
-        .populate('userId', 'displayName email avatarUrl username')
+        .populate('userId', 'displayName email avatarUrl')
         .populate('packageId', 'name')
         .lean()
         .exec(),

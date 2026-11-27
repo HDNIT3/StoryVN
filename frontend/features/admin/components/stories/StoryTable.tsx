@@ -170,7 +170,6 @@ export function StoryTable({
               const authorName =
                 story.authorProfile?.penName ||
                 author?.displayName ||
-                author?.username ||
                 "Chưa xác định";
 
               const isPending = story.status === "PENDING_REVIEW";

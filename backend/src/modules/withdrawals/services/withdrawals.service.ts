@@ -271,7 +271,7 @@ export class WithdrawalsService implements OnModuleInit {
         .find({
           $or: [
             { displayName: new RegExp(escaped, 'i') },
-            { username: new RegExp(escaped, 'i') },
+
             { email: new RegExp(escaped, 'i') },
           ],
         })
@@ -290,7 +290,7 @@ export class WithdrawalsService implements OnModuleInit {
         .sort({ createdAt: -1, _id: -1 })
         .skip(query.skip)
         .limit(query.limit)
-        .populate('authorId', 'username displayName email')
+        .populate('authorId', 'displayName email')
         .lean(),
       this.requests.countDocuments(filter),
     ]);
@@ -306,8 +306,8 @@ export class WithdrawalsService implements OnModuleInit {
         _id: this.id(id),
         ...(author ? { authorId: this.id(author) } : {}),
       })
-      .populate('authorId', 'username displayName email')
-      .populate('history.actorId', 'displayName username')
+      .populate('authorId', 'displayName email')
+      .populate('history.actorId', 'displayName')
       .lean();
     if (!request)
       throw new NotFoundException('Không tìm thấy yêu cầu rút tiền');

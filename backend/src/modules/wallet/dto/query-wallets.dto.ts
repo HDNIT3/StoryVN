@@ -5,7 +5,7 @@ import { PaginationQueryDto } from '../../../common/dto/pagination.dto.js';
 export class QueryWalletsDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     example: 'nguyen',
-    description: 'Tìm kiếm theo email, username hoặc displayName của người dùng',
+    description: 'Tìm kiếm theo email hoặc tên hiển thị của người dùng',
   })
   @IsOptional()
   @IsString({ message: 'Từ khóa tìm kiếm phải là chuỗi' })

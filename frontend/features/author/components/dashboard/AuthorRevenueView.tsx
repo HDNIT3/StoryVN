@@ -330,7 +330,6 @@ export function AuthorRevenueView() {
                   {items.map((item) => {
                     const reader =
                       item.reader?.displayName ||
-                      item.reader?.username ||
                       "Độc giả";
                     const slug = item.story?.slug || item.story?._id;
                     return (
@@ -347,11 +346,6 @@ export function AuthorRevenueView() {
                               <p className="max-w-40 truncate text-xs font-semibold text-zinc-800">
                                 {reader}
                               </p>
-                              {item.reader?.username && (
-                                <p className="mt-1 text-[11px] text-zinc-400">
-                                  @{item.reader.username}
-                                </p>
-                              )}
                             </div>
                           </div>
                         </td>

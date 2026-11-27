@@ -18,7 +18,7 @@ export function FollowedStoryCard({ item }: FollowedStoryCardProps) {
   const isCompleted = item.progressState === "COMPLETED";
   const authorPenName =
     item.author?.penName || item.author?.displayName || "Tác giả StoryVN";
-  const authorUsername = item.author?.username;
+  const authorUsername = item.author?.slug;
 
   const handleUnfollowClick = (e: React.MouseEvent) => {
     e.preventDefault();

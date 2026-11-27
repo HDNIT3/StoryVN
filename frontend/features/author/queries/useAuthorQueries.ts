@@ -59,29 +59,29 @@ export function useAuthorsList(params?: QueryAuthorsParams) {
   });
 }
 
-export function usePublicAuthorProfile(username: string, enabled = true) {
+export function usePublicAuthorProfile(slug: string, enabled = true) {
   return useQuery({
-    queryKey: authorKeys.profile(username),
+    queryKey: authorKeys.profile(slug),
     queryFn: async () => {
-      const res = await authorService.getPublicProfile(username);
+      const res = await authorService.getPublicProfile(slug);
       return res.data?.author;
     },
-    enabled: Boolean(username) && enabled,
+    enabled: Boolean(slug) && enabled,
   });
 }
 
 export function usePublicAuthorStories(
-  username: string,
+  slug: string,
   params?: QueryAuthorPublicStoriesParams,
   enabled = true
 ) {
   return useQuery({
-    queryKey: authorKeys.stories(username, params as Record<string, unknown>),
+    queryKey: authorKeys.stories(slug, params as Record<string, unknown>),
     queryFn: async () => {
-      const res = await authorService.getPublicStories(username, params);
+      const res = await authorService.getPublicStories(slug, params);
       return res.data;
     },
-    enabled: Boolean(username) && enabled,
+    enabled: Boolean(slug) && enabled,
     placeholderData: keepPreviousData,
   });
 }

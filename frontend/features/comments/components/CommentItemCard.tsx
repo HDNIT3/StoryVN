@@ -84,9 +84,9 @@ export const CommentItemCard: React.FC<CommentItemCardProps> = ({
   const [editContent, setEditContent] = useState(comment.content);
 
   const commenter = comment.userId;
-  const displayName = commenter?.displayName || commenter?.username || "Độc giả";
+  const displayName = commenter?.displayName || "Độc giả";
   const replyToUser = comment.replyToUserId;
-  const replyToDisplayName = replyToUser?.displayName || replyToUser?.username;
+  const replyToDisplayName = replyToUser?.displayName;
   const avatarUrl = commenter?.avatarUrl;
   const isOwner = user && user._id === commenter?._id;
   const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -385,13 +385,13 @@ export const CommentItemCard: React.FC<CommentItemCardProps> = ({
               autoFocus
               replyToName={
                 replyTarget?.isReplyToReply
-                  ? replyTarget.user.displayName || replyTarget.user.username
+                  ? replyTarget.user.displayName
                   : undefined
               }
               onClearReplyTo={handleClearReplyTarget}
               placeholder={
                 replyTarget?.isReplyToReply
-                  ? `Trả lời @${replyTarget.user.displayName || replyTarget.user.username}...`
+                  ? `Trả lời @${replyTarget.user.displayName}...`
                   : `Trả lời @${displayName}...`
               }
               onSubmit={handleReplySubmit}

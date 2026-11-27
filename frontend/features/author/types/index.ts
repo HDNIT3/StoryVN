@@ -66,7 +66,6 @@ export interface AuthorRequestItem {
   | {
     _id: string;
     email: string;
-    username: string;
     displayName: string;
     avatarUrl?: string | null;
     role: UserRole;
@@ -86,7 +85,6 @@ export interface AuthorRequestItem {
   | {
     _id: string;
     email: string;
-    username: string;
     displayName: string;
     role: UserRole;
   }
@@ -101,6 +99,7 @@ export interface AuthorRequestItem {
 export interface AuthorProfileItem {
   _id: string;
   userId: string;
+  slug?: string;
   penName: string;
   coverUrl?: string | null;
   biography?: string | null;
@@ -166,7 +165,7 @@ export interface AuthorDonateInfo {
 /** Dữ liệu hồ sơ công khai của tác giả */
 export interface PublicAuthorProfile {
   _id: string;
-  username: string;
+  slug: string;
   displayName: string;
   penName: string;
   avatarUrl?: string | null;
@@ -237,7 +236,7 @@ export interface AuthorCommunityStats {
 export interface AuthorListItem {
   _id: string;
   userId: string;
-  username: string;
+  slug: string;
   displayName: string;
   penName: string;
   avatarUrl?: string | null;
@@ -286,7 +285,6 @@ export interface AuthorRecentCommentItem {
   _id: string;
   user: {
     displayName: string;
-    username: string;
     avatarUrl?: string | null;
   };
   story: {
@@ -396,7 +394,6 @@ export interface AuthorRevenueHistoryItem {
   unlockedAt: string;
   reader: {
     _id: string;
-    username: string;
     displayName: string;
     avatarUrl?: string | null;
   } | null;

@@ -3,7 +3,6 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
-  Matches,
   MinLength,
 } from 'class-validator';
 
@@ -15,18 +14,6 @@ export class RegisterDto {
   @IsEmail({}, { message: 'Email không đúng định dạng' })
   @IsNotEmpty({ message: 'Email không được để trống' })
   email: string;
-
-  @ApiProperty({
-    example: 'truyenhay2026',
-    description: 'Username duy nhất, chỉ chứa chữ cái, số và dấu gạch dưới',
-  })
-  @IsString({ message: 'Username phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'Username không được để trống' })
-  @MinLength(3, { message: 'Username phải có ít nhất 3 ký tự' })
-  @Matches(/^[a-zA-Z0-9_]+$/, {
-    message: 'Username chỉ được chứa chữ cái, chữ số và dấu gạch dưới',
-  })
-  username: string;
 
   @ApiProperty({
     example: 'MatKhau123@#',

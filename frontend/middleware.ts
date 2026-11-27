@@ -66,7 +66,7 @@ export function middleware(request: NextRequest) {
   }
 
   // ─── 2. BẢO VỆ PHÂN HỆ STUDIO TÁC GIẢ ───────────────────────────
-  // Không chặn các route công khai (/tac-gia, /tac-gia/[username]) hay trang /tac-gia/dang-ky
+  // Không chặn các route công khai (/tac-gia, /tac-gia/[slug]) hay trang /tac-gia/dang-ky
   const isAuthorStudioRoute = AUTHOR_STUDIO_PREFIXES.some((prefix) =>
     matchesRoutePrefix(pathname, prefix)
   );

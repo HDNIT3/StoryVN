@@ -1,8 +1,8 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { editableStatuses, ForumService } from './forum.service.js';
-import { ForumContentFormat, ForumPostStatus } from '../schemas/forum-post.schema.js';
+import { ForumService } from './forum.service.js';
+import { editableStatuses, ForumContentFormat, ForumPostStatus } from '../schemas/forum-post.schema.js';
 
 function query(value: unknown) {
   const chain: any = {};

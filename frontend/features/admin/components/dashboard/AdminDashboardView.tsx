@@ -432,7 +432,7 @@ export function AdminDashboardView() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5 truncate">
-                      {tx.user?.displayName || tx.user?.username} • {new Date(tx.createdAt).toLocaleDateString("vi-VN", {
+                      {tx.user?.displayName} • {new Date(tx.createdAt).toLocaleDateString("vi-VN", {
                         hour: "2-digit",
                         minute: "2-digit",
                         day: "2-digit",

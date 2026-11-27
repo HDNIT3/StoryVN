@@ -50,7 +50,7 @@ export class AdminSupportController {
   async reply(
     @Param('id') id: string,
     @Body() dto: AdminReplySupportTicketDto,
-    @CurrentUser() adminUser: { _id: Types.ObjectId; displayName?: string; username?: string },
+    @CurrentUser() adminUser: { _id: Types.ObjectId; displayName?: string },
   ) {
     return {
       success: true,

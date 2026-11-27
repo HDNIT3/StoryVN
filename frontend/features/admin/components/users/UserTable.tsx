@@ -104,12 +104,11 @@ export const UserTable: React.FC<UserTableProps> = ({
                         {u.avatarUrl ? (
                           <img src={u.avatarUrl} alt={u.displayName} className="w-full h-full rounded-xl object-cover" />
                         ) : (
-                          (u.displayName || u.username || "?").charAt(0).toUpperCase()
+                          (u.displayName || "?").charAt(0).toUpperCase()
                         )}
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-gray-800 truncate max-w-[140px]">{u.displayName}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">@{u.username}</p>
                       </div>
                     </div>
                   </td>

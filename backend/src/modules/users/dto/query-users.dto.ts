@@ -6,7 +6,7 @@ import { UserRole, UserStatus } from '../schemas/user.schema.js';
 export class QueryUsersDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     example: 'nguyen',
-    description: 'Tìm kiếm theo email, username hoặc displayName',
+    description: 'Tìm kiếm theo email hoặc tên hiển thị',
   })
   @IsOptional()
   @IsString({ message: 'Từ khóa tìm kiếm phải là chuỗi' })
@@ -30,11 +30,11 @@ export class QueryUsersDto extends PaginationQueryDto {
 
   @ApiPropertyOptional({
     example: 'createdAt',
-    description: 'Trường cần sắp xếp (createdAt, username, displayName, email)',
+    description: 'Trường cần sắp xếp (createdAt, displayName, email)',
     default: 'createdAt',
   })
   @IsOptional()
-  @IsIn(['createdAt', 'username', 'displayName', 'email', 'status', 'role'], {
+  @IsIn(['createdAt', 'displayName', 'email', 'status', 'role'], {
     message: 'Trường sắp xếp không hợp lệ',
   })
   sortBy?: string = 'createdAt';

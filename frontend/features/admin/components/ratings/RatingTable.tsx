@@ -91,16 +91,15 @@ export function RatingTable({
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center font-medium text-xs text-amber-700 bg-amber-100">
-                            {(user?.displayName || user?.username || "U").charAt(0).toUpperCase()}
+                            {(user?.displayName || "U").charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-gray-900 truncate max-w-[130px]">
-                          {user?.displayName || user?.username || "Ẩn danh"}
+                          {user?.displayName || "Ẩn danh"}
                         </p>
                         <p className="text-xs text-gray-400 truncate max-w-[130px]">
-                          @{user?.username || "user"}
                         </p>
                       </div>
                     </div>

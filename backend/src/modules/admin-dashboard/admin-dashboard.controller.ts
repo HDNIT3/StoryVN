@@ -23,6 +23,16 @@ import { ContentStatisticsQueryDto } from './content-statistics-query.dto.js';
 export class AdminDashboardController {
   constructor(private readonly adminDashboardService: AdminDashboardService) {}
 
+  @Get('financial-summary')
+  @ApiOperation({ summary: 'Tổng tiền nạp xu và chi nhuận bút toàn hệ thống' })
+  async getFinancialSummary() {
+    return {
+      success: true,
+      message: 'Lấy tổng quan tài chính thành công',
+      data: await this.adminDashboardService.getFinancialSummary(),
+    };
+  }
+
   @Get('content')
   @ApiOperation({ summary: 'Thống kê truyện, chương, tác giả và hàng đợi kiểm duyệt' })
   async getContentStatistics(@Query() query: ContentStatisticsQueryDto) {

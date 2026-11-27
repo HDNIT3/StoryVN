@@ -158,7 +158,7 @@ export class StoryRatingsService {
         .sort(sort)
         .skip(query.skip)
         .limit(query.limit)
-        .populate('userId', 'displayName username avatarUrl role')
+        .populate('userId', 'displayName avatarUrl role')
         .lean(),
       this.ratingModel.countDocuments(filter),
     ]);
@@ -323,7 +323,7 @@ export class StoryRatingsService {
     if (search && search.trim()) {
       const regex = new RegExp(search.trim(), 'i');
       const matchingUsers = await this.userModel
-        .find({ $or: [{ displayName: regex }, { username: regex }, { email: regex }] })
+        .find({ $or: [{ displayName: regex }, { email: regex }] })
         .select('_id')
         .lean();
       const userIds = matchingUsers.map((u) => u._id);
@@ -351,7 +351,7 @@ export class StoryRatingsService {
         .sort(sortOption)
         .skip(skip)
         .limit(limit)
-        .populate('userId', 'displayName username avatarUrl role email')
+        .populate('userId', 'displayName avatarUrl role email')
         .populate('storyId', 'title slug coverUrl authorId')
         .lean(),
       this.ratingModel.countDocuments(filter),

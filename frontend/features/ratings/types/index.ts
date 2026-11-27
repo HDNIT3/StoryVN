@@ -3,7 +3,6 @@ export type RatingStatus = "VISIBLE" | "HIDDEN" | "DELETED";
 export interface RatingUser {
   _id: string;
   displayName: string;
-  username: string;
   avatarUrl?: string | null;
   role?: string;
 }

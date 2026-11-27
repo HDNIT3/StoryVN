@@ -23,10 +23,10 @@ export const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
     : `Đổi vai trò → ${ROLE_LABEL[modal.newRole || ""] || modal.newRole}`;
 
   const desc = isBan
-    ? `Tài khoản @${modal.username} sẽ bị cấm và không thể đăng nhập.`
+    ? `Tài khoản ${modal.displayName} sẽ bị cấm và không thể đăng nhập.`
     : modal.action === "unban"
-    ? `Tài khoản @${modal.username} sẽ được mở khóa và có thể đăng nhập lại.`
-    : `Vai trò của @${modal.username} sẽ thay đổi thành "${ROLE_LABEL[modal.newRole || ""] || modal.newRole}".`;
+    ? `Tài khoản ${modal.displayName} sẽ được mở khóa và có thể đăng nhập lại.`
+    : `Vai trò của ${modal.displayName} sẽ thay đổi thành "${ROLE_LABEL[modal.newRole || ""] || modal.newRole}".`;
 
   const confirmColor = isBan
     ? "bg-red-500 hover:bg-red-600 text-white"

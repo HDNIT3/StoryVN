@@ -39,7 +39,7 @@ export const AdminUsersView: React.FC = () => {
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
     open: false,
     userId: "",
-    username: "",
+    displayName: "",
     action: "ban",
     isLoading: false,
   });
@@ -106,7 +106,7 @@ export const AdminUsersView: React.FC = () => {
     setConfirmModal({
       open: true,
       userId: u._id,
-      username: u.username,
+      displayName: u.displayName || u.email,
       action: "ban",
       newStatus: "BANNED",
       isLoading: false,
@@ -118,7 +118,7 @@ export const AdminUsersView: React.FC = () => {
     setConfirmModal({
       open: true,
       userId: u._id,
-      username: u.username,
+      displayName: u.displayName || u.email,
       action: "unban",
       newStatus: "ACTIVE",
       isLoading: false,
@@ -131,7 +131,7 @@ export const AdminUsersView: React.FC = () => {
     setConfirmModal({
       open: true,
       userId: u._id,
-      username: u.username,
+      displayName: u.displayName || u.email,
       action: "role",
       newRole: role,
       isLoading: false,
@@ -149,7 +149,7 @@ export const AdminUsersView: React.FC = () => {
         });
       } else if (confirmModal.action === "role") {
         if (currentUser?.role !== "ADMIN") {
-          setConfirmModal({ open: false, userId: "", username: "", action: "ban", isLoading: false });
+          setConfirmModal({ open: false, userId: "", displayName: "", action: "ban", isLoading: false });
           return;
         }
         await updateRoleMutation.mutateAsync({
@@ -157,7 +157,7 @@ export const AdminUsersView: React.FC = () => {
           role: confirmModal.newRole!,
         });
       }
-      setConfirmModal({ open: false, userId: "", username: "", action: "ban", isLoading: false });
+      setConfirmModal({ open: false, userId: "", displayName: "", action: "ban", isLoading: false });
     } catch {
       setConfirmModal((prev) => ({ ...prev, isLoading: false }));
     }
@@ -376,7 +376,7 @@ export const AdminUsersView: React.FC = () => {
       {/* Confirm Modal */}
       <ConfirmActionModal
         modal={confirmModal}
-        onClose={() => setConfirmModal({ open: false, userId: "", username: "", action: "ban", isLoading: false })}
+        onClose={() => setConfirmModal({ open: false, userId: "", displayName: "", action: "ban", isLoading: false })}
         onConfirm={handleConfirm}
       />
     </div>

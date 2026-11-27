@@ -1,3 +1,9 @@
+export interface AdminFinancialSummary {
+  successfulTopUps: number;
+  paidRoyalties: number;
+  pendingRoyalties: number;
+}
+
 export interface AdminDashboardRevenueKPI {
   total: number;
   today: number;
@@ -110,7 +116,6 @@ export interface AdminDashboardRecentTx {
   user: {
     _id: string;
     displayName: string;
-    username: string;
     email: string;
     avatarUrl?: string | null;
   };
@@ -176,7 +181,7 @@ export interface AdminContentStatistics {
   counts: { stories: number; chapters: number; authors: number; views: number };
   storyStatuses: Record<string, number>;
   chapterStatuses: Record<string, number>;
-  authors: { _id: string; name: string; username: string; penName: string | null }[];
+  authors: { _id: string; name: string; penName: string | null }[];
   timeline: { date: string; label: string; stories: number; chapters: number; views: number }[];
   categories: AdminDashboardCategoryDist[];
   stories: {

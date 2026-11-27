@@ -21,7 +21,6 @@ export interface ContentReportItem {
   };
   userId: {
     _id: string;
-    username: string;
     displayName?: string;
     avatarUrl?: string;
   } | null;
@@ -29,8 +28,8 @@ export interface ContentReportItem {
   status: ReportStatus;
   resolutionNote?: string | null;
   reviewedAt?: string | null;
-  reviewedBy?: { _id: string; username: string; displayName?: string } | null;
-  history?: Array<{ status: ReportStatus; note?: string | null; actorId: { _id: string; username: string; displayName?: string }; createdAt: string }>;
+  reviewedBy?: { _id: string; displayName?: string } | null;
+  history?: Array<{ status: ReportStatus; note?: string | null; actorId: { _id: string; displayName?: string }; createdAt: string }>;
   createdAt: string;
   updatedAt: string;
 }

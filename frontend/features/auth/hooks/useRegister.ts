@@ -28,7 +28,6 @@ export function useRegister() {
 
   // Form states
   const [displayName, setDisplayName] = useState("");
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -80,7 +79,6 @@ export function useRegister() {
     try {
       const res = await authService.register({
         displayName: displayName.trim(),
-        username: username.trim(),
         email: email.trim().toLowerCase(),
         password,
       });
@@ -173,8 +171,6 @@ export function useRegister() {
   return {
     displayName,
     setDisplayName,
-    username,
-    setUsername,
     email,
     setEmail,
     password,

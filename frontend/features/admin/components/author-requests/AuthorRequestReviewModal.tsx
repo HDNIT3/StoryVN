@@ -28,7 +28,7 @@ export function AuthorRequestReviewModal({
 
   const isApproved = action === "APPROVED";
   const userInfo = typeof request.userId === "object" && request.userId !== null ? request.userId : null;
-  const displayName = userInfo?.displayName || userInfo?.username || "Người dùng";
+  const displayName = userInfo?.displayName || "Người dùng";
 
   return (
     <div className="admin-dialog-overlay fixed inset-0 z-[70] flex items-center justify-center p-4 bg-gray-950/50 animate-in fade-in duration-200">

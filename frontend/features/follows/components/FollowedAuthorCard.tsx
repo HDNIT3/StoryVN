@@ -49,7 +49,7 @@ export function FollowedAuthorCard({ author }: FollowedAuthorCardProps) {
           {/* Avatar + Tên + Bút danh */}
           <div className="flex items-start gap-3.5 min-w-0">
             <Link
-              href={`/tac-gia/${author.username}`}
+              href={`/tac-gia/${author.slug}`}
               className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-zinc-100 border-2 border-white shadow-xs shrink-0 group"
               title={author.penName}
             >
@@ -72,7 +72,7 @@ export function FollowedAuthorCard({ author }: FollowedAuthorCardProps) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <Link
-                  href={`/tac-gia/${author.username}`}
+                  href={`/tac-gia/${author.slug}`}
                   className="font-serif text-base sm:text-lg font-bold text-zinc-900 hover:text-emerald-700 transition-colors truncate"
                 >
                   {author.penName}
@@ -83,7 +83,7 @@ export function FollowedAuthorCard({ author }: FollowedAuthorCardProps) {
               </div>
 
               <div className="text-xs text-zinc-400 mt-0.5 truncate">
-                @{author.username}
+                @{author.slug}
                 {author.followedAt && (
                   <span className="ml-2">
                     • Theo dõi từ {formatRelativeTime(author.followedAt)}
@@ -164,7 +164,7 @@ export function FollowedAuthorCard({ author }: FollowedAuthorCardProps) {
             )}
 
             <Link
-              href={`/tac-gia/${author.username}`}
+              href={`/tac-gia/${author.slug}`}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold shadow-2xs transition-colors"
             >
               <span>Trang tác giả</span>
