@@ -12,6 +12,8 @@ import { Comment, CommentDocument, CommentStatus } from '../comments/schemas/com
 import { StoryRating, StoryRatingDocument, StoryRatingStatus } from '../story-ratings/schemas/story-rating.schema.js';
 import { Genre, GenreDocument } from '../genres/schemas/genre.schema.js';
 import { DateRangeQueryDto } from '../../common/dto/date-range.dto.js';
+import { OPEN_STATUSES, WithdrawalStatus } from '../withdrawals/enums/withdrawal-status.enum.js';
+import { WithdrawalDocument, WithdrawalRequest } from '../withdrawals/schemas/withdrawal-request.schema.js';
 import { ContentStatisticsQueryDto } from './content-statistics-query.dto.js';
 import { AuthorProfile, AuthorProfileDocument } from '../users/schemas/author-profile.schema.js';
 import { calculateGrowthPercent, dateRangeKeys, dateRangeMatch, previousDateRange, resolveDateRange } from '../../common/utils/date-range.util.js';
@@ -39,6 +41,8 @@ export class AdminDashboardService {
     private readonly genreModel: Model<GenreDocument>,
     @InjectModel(AuthorProfile.name)
     private readonly authorProfileModel: Model<AuthorProfileDocument>,
+    @InjectModel(WithdrawalRequest.name)
+    private readonly withdrawalModel: Model<WithdrawalDocument>,
   ) {}
 
   async getContentStatistics(query: ContentStatisticsQueryDto = {}) {
@@ -67,7 +71,7 @@ export class AdminDashboardService {
       ]),
       // Keep options independent of the active filters, including pending applicants.
       this.userModel.find({ $or: [ { role: UserRole.AUTHOR }, { _id: { $in: pendingAuthorIds } }, { _id: { $in: storyAuthorIds } } ] })
-        .select('_id displayName username').sort({ displayName: 1, username: 1 }).lean(),
+        .select('_id displayName').sort({ displayName: 1, _id: 1 }).lean(),
       this.genreModel.find().select('_id name').lean(),
       this.storyModel.find({ ...(authorId ? { authorId } : {}), status: StoryStatus.PENDING_REVIEW, ...withinRange('createdAt') })
         .sort({ createdAt: 1 }).limit(5).lean(),
@@ -81,7 +85,7 @@ export class AdminDashboardService {
     const penNames = new Map(authorApplications.map((request) => [request.userId.toString(), request.penName]));
     // Approved profiles hold the current pen name; applicants use the submitted pen name.
     for (const profile of authorProfiles) penNames.set(profile.userId.toString(), profile.penName);
-    const authorNames = new Map(authors.map((author) => [author._id.toString(), author.displayName || author.username]));
+    const authorNames = new Map(authors.map((author) => [author._id.toString(), author.displayName]));
     const genreNames = new Map(genres.map((genre) => [genre._id.toString(), genre.name]));
     const storyNames = new Map(stories.map((story) => [story._id.toString(), story.title]));
     const timeline = new Map<string, { date: string; label: string; stories: number; chapters: number; views: number }>();
@@ -137,7 +141,7 @@ export class AdminDashboardService {
       counts, storyStatuses, chapterStatuses,
       authors: authors.map((author) => {
         const penName = penNames.get(author._id.toString()) || null;
-        return { _id: author._id.toString(), username: author.username, penName, name: `${author.displayName || author.username} - ${penName || 'Chưa có bút danh'}` };
+        return { _id: author._id.toString(), penName, name: `${author.displayName} - ${penName || 'Chưa có bút danh'}` };
       }),
       timeline: [...timeline.values()].sort((a, b) => a.date.localeCompare(b.date)),
       categories: [...categories].map(([id, count]) => ({ id, name: genreNames.get(id) || 'Khác', count, percentage: categoryTotal ? Math.round(count / categoryTotal * 100) : 0 })),
@@ -155,6 +159,26 @@ export class AdminDashboardService {
    * Tổng quan thống kê toàn diện cho Admin Dashboard
    * Omitted dates return all time; explicit dates/days select a bounded period.
    */
+  async getFinancialSummary() {
+    const [topUps, withdrawals] = await Promise.all([
+      this.transactionModel.aggregate<{ total: number }>([
+        { $match: { status: TransactionStatus.SUCCESS } },
+        { $group: { _id: null, total: { $sum: '$amount' } } },
+      ]),
+      this.withdrawalModel.aggregate<{ _id: WithdrawalStatus; total: number }>([
+        { $match: { status: { $in: [...OPEN_STATUSES, WithdrawalStatus.COMPLETED] } } },
+        { $group: { _id: '$status', total: { $sum: '$amount' } } },
+      ]),
+    ]);
+    const amountByStatus = new Map(withdrawals.map(({ _id, total }) => [_id, total]));
+
+    return {
+      successfulTopUps: topUps[0]?.total ?? 0,
+      paidRoyalties: amountByStatus.get(WithdrawalStatus.COMPLETED) ?? 0,
+      pendingRoyalties: OPEN_STATUSES.reduce((total, status) => total + (amountByStatus.get(status) ?? 0), 0),
+    };
+  }
+
   async getOverview(query?: DateRangeQueryDto | number) {
     const rangeQuery = typeof query === 'number' ? { days: query } : query;
     const allTime = rangeQuery?.days === undefined && rangeQuery?.startDate === undefined && rangeQuery?.endDate === undefined;
@@ -556,7 +580,7 @@ export class AdminDashboardService {
     const topViewsMap = new Map(topViews.map((v) => [v._id.toString(), v.views]));
     const topStoriesRaw = await this.storyModel
       .find({ status: StoryStatus.PUBLISHED, _id: { $in: topViews.map((v) => v._id) } })
-      .populate('authorId', 'displayName username avatarUrl')
+      .populate('authorId', 'displayName avatarUrl')
       .lean();
 
     const topStories = topStoriesRaw.sort((a, b) => Number(topViewsMap.get(b._id.toString()) || 0) - Number(topViewsMap.get(a._id.toString()) || 0)).slice(0, 6).map((s: any) => ({
@@ -564,7 +588,7 @@ export class AdminDashboardService {
       title: s.title,
       slug: s.slug,
       coverImage: s.coverImage || null,
-      authorName: s.authorId?.displayName || s.authorId?.username || 'Tác giả',
+      authorName: s.authorId?.displayName || 'Tác giả',
       authorAvatar: s.authorId?.avatarUrl || null,
       views: topViewsMap.get(s._id.toString()) || 0,
       likes: s.stats?.followCount || 0,
@@ -576,7 +600,7 @@ export class AdminDashboardService {
     // 8. 6 GIAO DỊCH NẠP GẦN NHẤT
     const recentTransactionsRaw = await this.transactionModel
       .find(withinRange('createdAt'))
-      .populate('userId', 'displayName username email avatarUrl')
+      .populate('userId', 'displayName email avatarUrl')
       .populate('packageId', 'name')
       .sort({ createdAt: -1 })
       .limit(6)
@@ -597,7 +621,6 @@ export class AdminDashboardService {
       user: {
         _id: tx.userId?._id?.toString() || '',
         displayName: tx.userId?.displayName || 'Khách',
-        username: tx.userId?.username || 'user',
         email: tx.userId?.email || '',
         avatarUrl: tx.userId?.avatarUrl || null,
       },
@@ -607,7 +630,7 @@ export class AdminDashboardService {
     const [urgentPendingStories, urgentPendingChapters, urgentAuthorRequests] = await Promise.all([
       this.storyModel
         .find({ status: StoryStatus.PENDING_REVIEW, ...withinRange('createdAt') })
-        .populate('authorId', 'displayName username')
+        .populate('authorId', 'displayName')
         .sort({ createdAt: 1 })
         .limit(5)
         .lean(),
@@ -619,7 +642,7 @@ export class AdminDashboardService {
         .lean(),
       this.authorRequestModel
         .find({ status: AuthorRequestStatus.PENDING, ...withinRange('createdAt') })
-        .populate('userId', 'displayName username email avatarUrl')
+        .populate('userId', 'displayName email avatarUrl')
         .sort({ createdAt: 1 })
         .limit(5)
         .lean(),
@@ -704,7 +727,7 @@ export class AdminDashboardService {
           title: s.title,
           slug: s.slug,
           coverImage: s.coverImage || null,
-          authorName: s.authorId?.displayName || s.authorId?.username || 'Tác giả',
+          authorName: s.authorId?.displayName || 'Tác giả',
           createdAt: s.createdAt,
         })),
         chapters: urgentPendingChapters.map((c: any) => ({
@@ -717,7 +740,7 @@ export class AdminDashboardService {
         authorRequests: urgentAuthorRequests.map((r: any) => ({
           _id: r._id.toString(),
           penName: r.penName,
-          userName: r.userId?.displayName || r.userId?.username || 'Người dùng',
+          userName: r.userId?.displayName || 'Người dùng',
           userEmail: r.userId?.email || '',
           userAvatar: r.userId?.avatarUrl || null,
           experience: r.experience,

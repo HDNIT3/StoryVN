@@ -109,7 +109,7 @@ export function AuthorRequestTable({
           <tbody className="divide-y divide-gray-100 text-gray-700">
             {items.map((req) => {
               const userInfo = typeof req.userId === "object" && req.userId !== null ? req.userId : null;
-              const displayName = userInfo?.displayName || userInfo?.username || "Người dùng ẩn";
+              const displayName = userInfo?.displayName || "Người dùng ẩn";
               const email = userInfo?.email || "-";
               const badge = STATUS_BADGE_CONFIG[req.status] || STATUS_BADGE_CONFIG.PENDING;
 

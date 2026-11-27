@@ -31,22 +31,6 @@ export class UsersService {
     return this.userModel.findOne({ email: email.toLowerCase().trim() });
   }
 
-  async findByUsername(username: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ username: username.trim() });
-  }
-
-  async findByEmailOrUsername(
-    email: string,
-    username: string,
-  ): Promise<UserDocument | null> {
-    return this.userModel.findOne({
-      $or: [
-        { email: email.toLowerCase().trim() },
-        { username: username.trim() },
-      ],
-    });
-  }
-
   async findById(id: string): Promise<UserDocument | null> {
     return this.userModel.findById(id);
   }

@@ -39,7 +39,7 @@ export function ChapterDetailModal({
   const currentChapter = fullChapter || chapter;
   const story = typeof currentChapter.storyId === "object" ? currentChapter.storyId : null;
   const author = story && typeof story.authorId === "object" ? story.authorId : null;
-  const authorName = author?.displayName || author?.username || "Chưa xác định";
+  const authorName = author?.displayName || "Chưa xác định";
 
   const pendingRevision = (currentChapter as any).pendingRevision;
   const isPendingRevisionReview =

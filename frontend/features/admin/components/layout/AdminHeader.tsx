@@ -135,7 +135,7 @@ export function AdminHeader({ onMobileOpen }: AdminHeaderProps) {
         <Link
           href="/ho-so"
           className="flex items-center gap-3 px-1 py-1 rounded-lg bg-white transition-colors cursor-pointer group"
-          title={`Đang đăng nhập: ${user.displayName || user.username}`}
+          title={`Đang đăng nhập: ${user.displayName}`}
         >
           <div className="w-10 h-10 rounded-full bg-[#ecf3ff] flex items-center justify-center text-sm font-semibold text-[#465fff] shrink-0 overflow-hidden">
             {user.avatarUrl ? (
@@ -151,7 +151,7 @@ export function AdminHeader({ onMobileOpen }: AdminHeaderProps) {
             )}
           </div>
           <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate hidden sm:inline group-hover:text-[#465fff]">
-            {user.displayName || user.username}
+            {user.displayName}
           </span>
         </Link>
       </div>

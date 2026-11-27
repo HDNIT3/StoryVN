@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import type { PublicAuthorProfile } from "@/features/author";
+import { AuthorCover } from "./AuthorCover";
 
 interface AuthorProfileHeaderProps {
   author: PublicAuthorProfile;
@@ -29,27 +29,14 @@ export function AuthorProfileHeader({
   formatJoinedDate,
   effectiveFollowerCount,
 }: AuthorProfileHeaderProps) {
-  const coverUrl = author.coverUrl?.trim();
-  const [failedCoverUrl, setFailedCoverUrl] = useState<string>();
-
   return (
     <div className="bg-white rounded-2xl border border-[#EDE7DF] shadow-xs relative overflow-hidden">
-      {coverUrl && coverUrl !== failedCoverUrl && (
-        <div className="relative aspect-[3/1] w-full">
-          <Image
-            key={coverUrl}
-            src={coverUrl}
-            alt={`Ảnh bìa của ${author.penName}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 1152px"
-            priority
-            unoptimized
-            onError={() => setFailedCoverUrl(coverUrl)}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/5 pointer-events-none" />
-        </div>
-      )}
+      <AuthorCover
+        coverUrl={author.coverUrl}
+        penName={author.penName}
+        sizes="(max-width: 1024px) 100vw, 1152px"
+        priority
+      />
 
       <div className="px-5 sm:px-7 md:px-8 pt-5 sm:pt-6 pb-5 sm:pb-7 md:pb-8">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 lg:gap-8 relative z-10">
@@ -86,9 +73,9 @@ export function AuthorProfileHeader({
               Tác giả chính thức
             </span>
 
-            {author.username && (
+            {author.slug && (
               <span className="text-xs font-mono text-stone-500 bg-[#FAF7F2] px-2 py-0.5 rounded-md border border-[#EDE7DF]">
-                @{author.username}
+                @{author.slug}
               </span>
             )}
 

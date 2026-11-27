@@ -3,7 +3,6 @@ export type CommentStatus = "VISIBLE" | "HIDDEN" | "DELETED";
 export interface CommentUser {
   _id: string;
   displayName: string;
-  username: string;
   avatarUrl?: string | null;
   role?: string;
 }

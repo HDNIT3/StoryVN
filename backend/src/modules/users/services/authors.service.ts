@@ -98,11 +98,11 @@ export class AuthorsService {
 
   /**
    * Định danh tác giả thông minh:
-   * Chấp nhận Username, Bút danh (penName), Slug của bút danh, hoặc ObjectId
+   * Chấp nhận slug, bút danh hoặc ObjectId
    */
   private async resolveAuthorUser(identifier: string): Promise<any | null> {
     if (!identifier) return null;
-    const raw = decodeURIComponent(identifier).trim();
+    const raw = identifier.trim();
     if (!raw) return null;
 
     // 1. Kiểm tra ObjectId hợp lệ
@@ -110,7 +110,7 @@ export class AuthorsService {
       const objId = new Types.ObjectId(raw);
       const userById = await this.userModel
         .findOne({ _id: objId, status: { $ne: UserStatus.BANNED } })
-        .select('_id username displayName avatarUrl role status createdAt')
+        .select('_id displayName avatarUrl role status createdAt')
         .lean()
         .exec();
       if (userById) return userById;
@@ -122,7 +122,7 @@ export class AuthorsService {
       if (profileById?.userId) {
         return this.userModel
           .findOne({ _id: profileById.userId, status: { $ne: UserStatus.BANNED } })
-          .select('_id username displayName avatarUrl role status createdAt')
+          .select('_id displayName avatarUrl role status createdAt')
           .lean()
           .exec();
       }
@@ -130,16 +130,18 @@ export class AuthorsService {
 
     const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    // 2. Tìm theo User.username
-    const userByUsername = await this.userModel
-      .findOne({
-        username: { $regex: new RegExp(`^${escaped}$`, 'i') },
-        status: { $ne: UserStatus.BANNED },
-      })
-      .select('_id username displayName avatarUrl role status createdAt')
+    const profileBySlug = await this.authorProfileModel
+      .findOne({ slug: raw.toLowerCase() })
+      .select('userId')
       .lean()
       .exec();
-    if (userByUsername) return userByUsername;
+    if (profileBySlug) {
+      return this.userModel
+        .findOne({ _id: profileBySlug.userId, status: { $ne: UserStatus.BANNED } })
+        .select('_id displayName avatarUrl role status createdAt')
+        .lean()
+        .exec();
+    }
 
     // 3. Tìm theo AuthorProfile.penName (bút danh có dấu hoặc không dấu)
     const profileByPenName = await this.authorProfileModel
@@ -151,7 +153,7 @@ export class AuthorsService {
     if (profileByPenName?.userId) {
       return this.userModel
         .findOne({ _id: profileByPenName.userId, status: { $ne: UserStatus.BANNED } })
-        .select('_id username displayName avatarUrl role status createdAt')
+        .select('_id displayName avatarUrl role status createdAt')
         .lean()
         .exec();
     }
@@ -166,7 +168,7 @@ export class AuthorsService {
       if (matchedProfile?.userId) {
         return this.userModel
           .findOne({ _id: matchedProfile.userId, status: { $ne: UserStatus.BANNED } })
-          .select('_id username displayName avatarUrl role status createdAt')
+          .select('_id displayName avatarUrl role status createdAt')
           .lean()
           .exec();
       }
@@ -178,7 +180,7 @@ export class AuthorsService {
         displayName: { $regex: new RegExp(`^${escaped}$`, 'i') },
         status: { $ne: UserStatus.BANNED },
       })
-      .select('_id username displayName avatarUrl role status createdAt')
+      .select('_id displayName avatarUrl role status createdAt')
       .lean()
       .exec();
     if (userByDisplayName) return userByDisplayName;
@@ -187,7 +189,7 @@ export class AuthorsService {
   }
 
   /**
-   * Lấy thông tin công khai của tác giả theo username, bút danh hoặc slug
+   * Lấy thông tin công khai của tác giả theo slug hoặc bút danh
    */
   async getAuthorPublicProfile(identifier: string) {
     const user = await this.resolveAuthorUser(identifier);
@@ -256,7 +258,7 @@ export class AuthorsService {
     };
 
     const penName =
-      authorProfile?.penName || user.displayName || user.username;
+      authorProfile?.penName || user.displayName;
     const avatarUrl = user.avatarUrl || null;
     const coverUrl = authorProfile?.coverUrl || null;
     const biography = authorProfile?.biography || '';
@@ -284,7 +286,7 @@ export class AuthorsService {
 
     return {
       _id: user._id,
-      username: user.username,
+      slug: authorProfile?.slug || user._id.toString(),
       displayName: user.displayName,
       penName,
       avatarUrl,
@@ -536,7 +538,7 @@ export class AuthorsService {
 
     // Lọc theo từ khóa tìm kiếm (search)
     if (query.search) {
-      const rawSearch = decodeURIComponent(query.search).trim();
+      const rawSearch = query.search.trim().replace(/^@/, '');
       if (rawSearch) {
         const escaped = rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const searchRegex = new RegExp(escaped, 'i');
@@ -545,7 +547,6 @@ export class AuthorsService {
         const matchedUsers = await this.userModel
           .find({
             $or: [
-              { username: { $regex: searchRegex } },
               { displayName: { $regex: searchRegex } },
             ],
             status: { $ne: UserStatus.BANNED },
@@ -558,6 +559,7 @@ export class AuthorsService {
 
         const searchConditions: any[] = [
           { penName: { $regex: searchRegex } },
+          { slug: { $regex: searchRegex } },
         ];
         if (matchedUserIds.length > 0) {
           searchConditions.push({ userId: { $in: matchedUserIds } });
@@ -565,6 +567,7 @@ export class AuthorsService {
 
         // Tìm thêm theo slug không dấu nếu người dùng gõ slug (vd: 'nhi-can')
         if (targetSlug) {
+          searchConditions.push({ slug: { $regex: targetSlug } });
           const allProfiles = await this.authorProfileModel
             .find({ status: AuthorProfileStatus.ACTIVE })
             .select('_id penName')
@@ -690,7 +693,7 @@ export class AuthorsService {
     const [users, stories] = await Promise.all([
       this.userModel
         .find({ _id: { $in: targetUserIds } })
-        .select('_id username displayName avatarUrl createdAt')
+        .select('_id displayName avatarUrl createdAt')
         .lean()
         .exec(),
       this.storyModel
@@ -762,9 +765,9 @@ export class AuthorsService {
       return {
         _id: p._id,
         userId: user?._id || p.userId,
-        username: user?.username || '',
+        slug: p.slug || p.userId.toString(),
         displayName: user?.displayName || '',
-        penName: p.penName || user?.displayName || user?.username || '',
+        penName: p.penName || user?.displayName || '',
         avatarUrl: user?.avatarUrl || null,
         biography: p.biography || '',
         genres: topGenres,
@@ -896,7 +899,7 @@ export class AuthorsService {
             })
             .sort({ createdAt: -1 })
             .limit(6)
-            .populate('userId', 'username displayName avatarUrl')
+            .populate('userId', 'displayName avatarUrl')
             .populate('storyId', 'title slug')
             .populate('chapterId', 'chapterNumber title')
             .lean()
@@ -1110,8 +1113,7 @@ export class AuthorsService {
         _id: c._id.toString(),
         user: {
           displayName:
-            commenter?.displayName || commenter?.username || 'Độc giả StoryVN',
-          username: commenter?.username || '',
+            commenter?.displayName || 'Độc giả StoryVN',
           avatarUrl: commenter?.avatarUrl || null,
         },
         story: storyObj
@@ -1427,7 +1429,6 @@ export class AuthorsService {
       const matchedUsers = await this.userModel
         .find({
           $or: [
-            { username: { $regex: kw, $options: 'i' } },
             { displayName: { $regex: kw, $options: 'i' } },
           ],
         })
@@ -1449,7 +1450,7 @@ export class AuthorsService {
       .sort({ unlockedAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('userId', 'username displayName avatarUrl')
+      .populate('userId', 'displayName avatarUrl')
       .lean();
 
     const items = rawUnlocks.map((u: any) => {
@@ -1464,8 +1465,7 @@ export class AuthorsService {
         reader: reader
           ? {
               _id: reader._id?.toString(),
-              username: reader.username,
-              displayName: reader.displayName || reader.username,
+              displayName: reader.displayName,
               avatarUrl: reader.avatarUrl || null,
             }
           : null,

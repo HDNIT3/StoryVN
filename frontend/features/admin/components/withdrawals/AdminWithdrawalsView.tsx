@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useAdminFinancialSummary } from "../../queries/useAdminDashboardQueries";
 import { useWithdrawals } from "@/features/withdrawals/queries";
 import type {
   Withdrawal,
@@ -38,6 +39,7 @@ const STATUS_TABS = [
 
 export function AdminWithdrawalsView() {
   const { user } = useAuth();
+  const financialSummary = useAdminFinancialSummary(user?._id);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [status, setStatus] = useState<WithdrawalStatus | "">("");
@@ -75,7 +77,7 @@ export function AdminWithdrawalsView() {
     page: 1,
     limit: 1,
   });
-  const refreshing = [query, totals, pending, processing, completed].some(
+  const refreshing = [query, totals, pending, processing, completed, financialSummary].some(
     (item) => item.isFetching,
   );
   const reset = () => {
@@ -96,6 +98,7 @@ export function AdminWithdrawalsView() {
       pending.refetch(),
       processing.refetch(),
       completed.refetch(),
+      financialSummary.refetch(),
     ]);
   };
   const open = (request: Withdrawal) =>
@@ -106,6 +109,37 @@ export function AdminWithdrawalsView() {
         : "information",
     });
   const hasFilters = Boolean(search || startDate || endDate || status);
+  const financialData = financialSummary.data;
+  const financialCards = [
+    {
+      label: "Tiền nạp xu thành công",
+      amount: financialData?.successfulTopUps,
+      hint: "Tổng tiền từ các giao dịch nạp xu thành công",
+      icon: "coins",
+      color: "bg-emerald-50 text-emerald-700",
+    },
+    {
+      label: "Nhuận bút đã chi",
+      amount: financialData?.paidRoyalties,
+      hint: "Các yêu cầu đã xác nhận thanh toán",
+      icon: "bank",
+      color: "bg-admin-brand-50 text-admin-brand-600",
+    },
+    {
+      label: "Nhuận bút đang chờ chi",
+      amount: financialData?.pendingRoyalties,
+      hint: "Gồm yêu cầu chờ duyệt và đang xử lý",
+      icon: "clock",
+      color: "bg-amber-50 text-amber-700",
+    },
+    {
+      label: "Chênh lệch nạp và chi",
+      amount: financialData && financialData.successfulTopUps - financialData.paidRoyalties,
+      hint: "Tiền nạp thành công trừ nhuận bút đã chi",
+      icon: "wallet",
+      color: "bg-gray-100 text-gray-600",
+    },
+  ] as const;
   const cards = [
     {
       label: "Tổng yêu cầu",
@@ -178,6 +212,38 @@ export function AdminWithdrawalsView() {
           </button>
         </div>
       </header>
+      <section aria-labelledby="withdrawals-financial-summary" className="space-y-3">
+        <div>
+          <h2 id="withdrawals-financial-summary" className="text-base font-semibold text-gray-900">
+            Đối soát tài chính
+          </h2>
+          <p className="mt-1 text-xs text-gray-500">
+            Số liệu toàn hệ thống từ trước đến nay. Bộ lọc bên dưới áp dụng cho danh sách yêu cầu.
+          </p>
+        </div>
+        {financialSummary.isError && (
+          <p role="alert" className="text-sm text-red-600">Không thể tải số liệu tài chính. Chọn Làm mới để thử lại.</p>
+        )}
+        <dl
+          aria-busy={financialSummary.isFetching}
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        >
+          {financialCards.map((card) => (
+            <div key={card.label} className="min-w-0 rounded-lg border border-gray-200 bg-white p-4 shadow-admin-card sm:p-5">
+              <dt className="mb-3 flex items-center justify-between gap-2 text-sm font-medium text-gray-600">
+                {card.label}
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${card.color}`}>
+                  <RevenueIcon name={card.icon} />
+                </span>
+              </dt>
+              <dd className="text-2xl font-semibold tracking-tight text-gray-900 tabular-nums">
+                {financialSummary.isError || card.amount === undefined ? "—" : money(card.amount)}
+              </dd>
+              <dd className="mt-1 text-xs leading-5 text-gray-500">{card.hint}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
       <section
         aria-label="Thống kê yêu cầu rút tiền"
         className="grid grid-cols-2 gap-3 xl:grid-cols-4"
@@ -412,7 +478,6 @@ export function AdminWithdrawalsView() {
                         : request.authorId;
                     const name =
                       author?.displayName ||
-                      author?.username ||
                       "Tài khoản đã xóa";
                     const handler = request.history.find(
                       (event) => event.status === "PROCESSING",
@@ -444,9 +509,7 @@ export function AdminWithdrawalsView() {
                                 title={author?.email}
                               >
                                 {author?.email ||
-                                  (author?.username
-                                    ? `@${author.username}`
-                                    : "—")}
+                                  "—"}
                               </p>
                             </div>
                           </div>

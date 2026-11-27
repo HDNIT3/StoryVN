@@ -11,7 +11,7 @@ export interface ChapterRevisionItem {
   _id: string;
   chapterId: string | { _id: string; chapterNumber?: number; title?: string; status?: ChapterStatus };
   storyId: string | { _id: string; title?: string; slug?: string; coverUrl?: string };
-  authorId: string | { _id: string; displayName?: string; username?: string; avatarUrl?: string };
+  authorId: string | { _id: string; displayName?: string; avatarUrl?: string };
   title: string;
   content: string;
   isFree: boolean;
@@ -21,7 +21,7 @@ export interface ChapterRevisionItem {
   isActive?: boolean;
   wordCount?: number;
   rejectReason?: string | null;
-  reviewerId?: string | { _id: string; displayName?: string; username?: string; avatarUrl?: string } | null;
+  reviewerId?: string | { _id: string; displayName?: string; avatarUrl?: string } | null;
   reviewedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;

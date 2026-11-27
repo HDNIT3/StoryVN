@@ -178,7 +178,6 @@ export interface StoryApiResponse<T = unknown> {
 export interface AdminStoryAuthor {
   _id: string;
   displayName: string;
-  username: string;
   email: string;
   avatarUrl?: string | null;
   role: string;
@@ -308,7 +307,7 @@ export interface PaginatedFilteredStories {
 
 export interface StoryDetailAuthor {
   _id: string | null;
-  username: string;
+  slug: string;
   displayName: string;
   penName: string;
   name: string;
@@ -325,7 +324,7 @@ export interface SameGenreStoryItem {
   author: {
     _id: string | null;
     name: string;
-    username?: string | null;
+    slug?: string | null;
   };
   stats: {
     chapterCount: number;

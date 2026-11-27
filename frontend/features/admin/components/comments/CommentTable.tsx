@@ -96,16 +96,15 @@ export function CommentTable({
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center font-medium text-xs text-admin-brand-700 bg-admin-brand-100">
-                            {(commenter?.displayName || commenter?.username || "U").charAt(0).toUpperCase()}
+                            {(commenter?.displayName || "U").charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-gray-900 truncate max-w-[130px]">
-                          {commenter?.displayName || commenter?.username || "Ẩn danh"}
+                          {commenter?.displayName || "Ẩn danh"}
                         </p>
                         <p className="text-xs text-gray-400 truncate max-w-[130px]">
-                          @{commenter?.username || "user"}
                         </p>
                       </div>
                     </div>
@@ -157,7 +156,7 @@ export function CommentTable({
                     {replyTo && (
                       <div className="inline-flex items-center gap-1 text-xs text-admin-brand-600 bg-admin-brand-50/70 px-1.5 py-0.2 rounded mb-1 border border-admin-brand-100">
                         <span className="text-gray-400">Trả lời</span>
-                        <span className="font-semibold">@{replyTo.displayName || replyTo.username}</span>
+                        <span className="font-semibold">@{replyTo.displayName}</span>
                       </div>
                     )}
                     <p className={`line-clamp-2 text-xs leading-relaxed ${isDeleted ? "text-gray-400 italic" : "text-gray-800"}`}>

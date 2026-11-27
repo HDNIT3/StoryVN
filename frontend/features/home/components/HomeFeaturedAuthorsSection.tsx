@@ -157,14 +157,14 @@ export function HomeFeaturedAuthorsSection({
         <div className="relative">
           <div className="flex items-start justify-between gap-3 overflow-x-auto px-2 pb-3 pt-3 sm:gap-6 scrollbar-none">
             {authors.map((author, index) => {
-              const name = author.penName || author.displayName || author.username;
+              const name = author.penName || author.displayName;
               const badgeBg = VERIFIED_BADGE_COLORS[index % VERIFIED_BADGE_COLORS.length];
               const totalViews = author.totalViews ?? 0;
 
               return (
                 <Link
                   key={author._id}
-                  href={`/tac-gia/${encodeURIComponent(author.username)}`}
+                  href={`/tac-gia/${encodeURIComponent(author.slug)}`}
                   className="group flex flex-col items-center gap-2 text-center shrink-0 w-24 sm:w-28 focus:outline-hidden transition-transform duration-200 hover:-translate-y-1"
                 >
                   {/* Avatar hình tròn có badge tích xác minh */}

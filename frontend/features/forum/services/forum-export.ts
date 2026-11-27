@@ -12,7 +12,7 @@ export async function exportForum(scope: "me" | "admin", range: DateRange, statu
   }
   const sheets: ExcelSheet[] = [
     { name: "Summary", columns: ["Metric", "Value"], rows: [["Matching posts", items.length], ["Visible", items.filter(p => p.status === "VISIBLE").length], ["Hidden", items.filter(p => p.status === "HIDDEN").length], ["Deleted", items.filter(p => p.status === "DELETED").length], ["Reports in period", items.reduce((n, p) => n + (p.reportCount ?? 0), 0)]] },
-    { name: "Posts", columns: ["ID", "Title", "Author", "Status", "Created at", "Reports in period"], rows: items.map(p => [p._id, p.title, p.userId?.displayName || p.userId?.username || "", p.status, p.createdAt, p.reportCount ?? 0]) },
+    { name: "Posts", columns: ["ID", "Title", "Author", "Status", "Created at", "Reports in period"], rows: items.map(p => [p._id, p.title, p.userId?.displayName || "", p.status, p.createdAt, p.reportCount ?? 0]) },
   ];
   if (scope === "me") {
     sheets[0].rows.pop();
@@ -25,7 +25,7 @@ export async function exportForum(scope: "me" | "admin", range: DateRange, statu
       for (let page = 1; ; page++) {
         const response = await forumService.reports(post._id, page, range, 100);
         if (!response.data) throw new Error("Không thể tải báo cáo xuất.");
-        rows.push(...response.data.items.map(r => [post._id, r._id, r.userId?.displayName || r.userId?.username || "", r.reason ?? "", r.createdAt]));
+        rows.push(...response.data.items.map(r => [post._id, r._id, r.userId?.displayName || "", r.reason ?? "", r.createdAt]));
         if (page >= response.data.pagination.totalPages) break;
       }
     }

@@ -13,6 +13,7 @@ import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema.js';
 import { Comment, CommentSchema } from '../comments/schemas/comment.schema.js';
 import { StoryRating, StoryRatingSchema } from '../story-ratings/schemas/story-rating.schema.js';
 import { Genre, GenreSchema } from '../genres/schemas/genre.schema.js';
+import { WithdrawalRequest, WithdrawalSchema } from '../withdrawals/schemas/withdrawal-request.schema.js';
 import { AdminDashboardController } from './admin-dashboard.controller.js';
 import { AdminDashboardService } from './admin-dashboard.service.js';
 
@@ -29,6 +30,7 @@ import { AdminDashboardService } from './admin-dashboard.service.js';
       { name: Comment.name, schema: CommentSchema },
       { name: StoryRating.name, schema: StoryRatingSchema },
       { name: Genre.name, schema: GenreSchema },
+      { name: WithdrawalRequest.name, schema: WithdrawalSchema },
     ]),
     AuthModule,
     UsersModule,

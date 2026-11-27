@@ -32,7 +32,6 @@ export interface AdminTransactionItem {
     displayName: string;
     email: string;
     avatarUrl?: string;
-    username: string;
   };
   packageId?: {
     _id: string;

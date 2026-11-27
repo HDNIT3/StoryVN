@@ -1,10 +1,11 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException, ValidationPipe } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { editableStatuses, ForumService } from './forum.service.js';
+import { ForumService } from './forum.service.js';
 import { ContentReportTargetType } from '../../reports/schemas/content-report.schema.js';
-import { ForumPostStatus } from '../schemas/forum-post.schema.js';
-import { AdminQueryForumPostsDto, QueryForumPostsDto } from '../dto/forum.dto.js';
+import { editableStatuses, ForumPostStatus } from '../schemas/forum-post.schema.js';
+import { AdminQueryForumPostsDto, MyQueryForumPostsDto, QueryForumPostsDto } from '../dto/forum.dto.js';
+import { ForumController } from '../controllers/forum.controller.js';
 
 const owner = '507f1f77bcf86cd799439100';
 const other = '507f1f77bcf86cd799439101';
@@ -152,6 +153,27 @@ describe('ForumService', () => {
     expect(posts.find).toHaveBeenCalledWith({ userId: new Types.ObjectId(owner), status: { $in: editableStatuses } });
     await service.list(Object.assign(new QueryForumPostsDto(), { startDate: '2026-11-01', endDate: '2026-11-01' }), owner);
     expect(posts.find.mock.lastCall[0]).toMatchObject({ userId: new Types.ObjectId(owner), createdAt: { $gte: new Date('2026-10-31T17:00:00Z'), $lt: new Date('2026-11-01T17:00:00Z') } });
+  });
+
+  it('accepts each personal tab and filters rows and totals by owner and status', async () => {
+    const pipe = new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true });
+    const metadata = { type: 'query' as const, metatype: MyQueryForumPostsDto };
+    const controller = new ForumController(service);
+    const user = { _id: new Types.ObjectId(owner) };
+    posts.find = vi.fn().mockReturnValue(query([]));
+    posts.countDocuments = vi.fn().mockResolvedValue(0);
+
+    for (const status of editableStatuses) {
+      const input = await pipe.transform({ page: '1', limit: '10', status }, metadata);
+      await expect(controller.mine(input, user)).resolves.toMatchObject({
+        success: true,
+        data: { items: [], pagination: { total: 0 } },
+      });
+      expect(posts.find).toHaveBeenLastCalledWith({ userId: user._id, status });
+      expect(posts.countDocuments).toHaveBeenLastCalledWith({ userId: user._id, status });
+    }
+
+    await expect(pipe.transform({ status: ForumPostStatus.DELETED }, metadata)).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('generates clean slug on create and supports resolving posts by slug without exposing MongoDB ID in URL', async () => {

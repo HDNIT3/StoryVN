@@ -8,7 +8,6 @@ export type UserStatus = "ACTIVE" | "BANNED";
 export interface UserProfile {
   _id: string;
   email: string;
-  username: string;
   displayName: string;
   avatarUrl?: string | null;
   role: UserRole;

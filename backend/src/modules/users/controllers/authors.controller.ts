@@ -131,16 +131,16 @@ export class AuthorsController {
   }
 
   @ApiOperation({
-    summary: 'Lấy thông tin hồ sơ công khai của tác giả theo username',
+    summary: 'Lấy thông tin hồ sơ công khai của tác giả theo slug',
     description:
       'Trả về bút danh, tiểu sử, avatar, mạng xã hội, số lượng tác phẩm, tổng lượt xem, người theo dõi và thông tin ủng hộ.',
   })
-  @ApiParam({ name: 'username', description: 'Tên định danh (username) của tác giả' })
+  @ApiParam({ name: 'slug', description: 'Đường dẫn (slug) của tác giả' })
   @Public()
-  @Get(':username')
+  @Get(':slug')
   @HttpCode(HttpStatus.OK)
-  async getAuthorProfile(@Param('username') username: string) {
-    const author = await this.authorsService.getAuthorPublicProfile(username);
+  async getAuthorProfile(@Param('slug') slug: string) {
+    const author = await this.authorsService.getAuthorPublicProfile(slug);
     return {
       success: true,
       message: 'Lấy thông tin tác giả thành công',
@@ -153,15 +153,15 @@ export class AuthorsController {
     description:
       'Trả về danh sách truyện đã xuất bản của tác giả có hỗ trợ lọc theo trạng thái tiến độ, sắp xếp và phân trang.',
   })
-  @ApiParam({ name: 'username', description: 'Tên định danh (username) của tác giả' })
+  @ApiParam({ name: 'slug', description: 'Đường dẫn (slug) của tác giả' })
   @Public()
-  @Get(':username/stories')
+  @Get(':slug/stories')
   @HttpCode(HttpStatus.OK)
   async getAuthorStories(
-    @Param('username') username: string,
+    @Param('slug') slug: string,
     @Query() query: QueryAuthorStoriesDto,
   ) {
-    const data = await this.authorsService.getAuthorPublicStories(username, query);
+    const data = await this.authorsService.getAuthorPublicStories(slug, query);
     return {
       success: true,
       message: 'Lấy danh sách tác phẩm của tác giả thành công',

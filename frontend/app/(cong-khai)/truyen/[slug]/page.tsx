@@ -52,7 +52,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     story.author?.penName ||
     story.author?.displayName ||
     story.author?.name ||
-    story.author?.username ||
     "Tác giả StoryVN";
 
   const title = `${story.title} - Tác giả ${authorName}`;

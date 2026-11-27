@@ -6,7 +6,6 @@ export type Role = UserRole;
 /** Thông tin cơ bản người dùng sau khi đăng nhập */
 export interface User {
   id: string;
-  username: string;
   email: string;
   name: string;
   avatarUrl?: string;
@@ -17,7 +16,7 @@ export interface User {
 
 /** Dữ liệu form đăng nhập */
 export interface LoginDto {
-  emailOrUsername: string;
+  email: string;
   password: string;
   rememberMe?: boolean;
 }
@@ -25,7 +24,6 @@ export interface LoginDto {
 /** Dữ liệu form đăng ký */
 export interface RegisterDto {
   displayName: string;
-  username: string;
   email: string;
   password: string;
   confirmPassword?: string;
@@ -35,7 +33,6 @@ export interface RegisterDto {
 /** Dữ liệu gửi lên API khi đăng ký tài khoản */
 export interface RegisterPayload {
   email: string;
-  username: string;
   password: string;
   displayName: string;
 }

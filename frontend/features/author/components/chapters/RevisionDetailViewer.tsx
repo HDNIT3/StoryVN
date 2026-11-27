@@ -155,7 +155,7 @@ export function RevisionDetailViewer({
             <span className="text-zinc-400 block text-[11px]">Người kiểm duyệt:</span>
             <span className="font-semibold text-zinc-800">
               {selectedRevision.reviewerId && typeof selectedRevision.reviewerId === "object"
-                ? (selectedRevision.reviewerId as any).displayName || (selectedRevision.reviewerId as any).username
+                ? (selectedRevision.reviewerId as any).displayName
                 : "—"}
             </span>
           </div>

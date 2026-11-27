@@ -83,7 +83,7 @@ function AuthorLink({ author }: { author?: StoryDetailData["author"] }) {
     author?.penName ||
     author?.displayName ||
     author?.name ||
-    author?.username ||
+    author?.slug ||
     "Tác giả StoryVN";
 
   const content = (
@@ -97,10 +97,11 @@ function AuthorLink({ author }: { author?: StoryDetailData["author"] }) {
     </>
   );
 
-  if (author?.username) {
+  const authorIdentifier = author?.slug?.trim() || author?._id;
+  if (authorIdentifier) {
     return (
       <Link
-        href={`/tac-gia/${author.username}`}
+        href={`/tac-gia/${encodeURIComponent(authorIdentifier)}`}
         className="inline-flex items-center gap-1.5 font-bold text-emerald-800 hover:text-emerald-900 hover:underline transition-colors"
       >
         {content}

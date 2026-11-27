@@ -96,13 +96,12 @@ export class SupportService {
 
   async createTicket(
     dto: CreateSupportTicketDto,
-    currentUser?: { _id: Types.ObjectId; displayName?: string; username?: string; email?: string },
+    currentUser?: { _id: Types.ObjectId; displayName?: string; email?: string },
   ) {
     const ticketCode = await this.generateTicketCode();
     const senderName =
       dto.senderName?.trim() ||
       currentUser?.displayName ||
-      currentUser?.username ||
       dto.email.split('@')[0] ||
       'Độc giả StoryVN';
 
@@ -257,7 +256,7 @@ export class SupportService {
   async userReply(
     ticketCodeRaw: string,
     dto: UserReplySupportTicketDto,
-    currentUser?: { _id: Types.ObjectId; displayName?: string; username?: string; email?: string },
+    currentUser?: { _id: Types.ObjectId; displayName?: string; email?: string },
   ) {
     const code = ticketCodeRaw.trim().toUpperCase().replace(/^#/, '');
     const ticket = await this.tickets.findOne({ ticketCode: code });
@@ -286,7 +285,7 @@ export class SupportService {
     }
 
     const senderName =
-      currentUser?.displayName || currentUser?.username || ticket.senderName || 'Người dùng';
+      currentUser?.displayName || ticket.senderName || 'Người dùng';
 
     ticket.messages.push({
       senderRole: SupportSenderRole.USER,
@@ -362,8 +361,8 @@ export class SupportService {
         .sort({ status: 1, updatedAt: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('userId', '_id username displayName avatarUrl role email')
-        .populate('lastRepliedBy', '_id username displayName')
+        .populate('userId', '_id displayName avatarUrl role email')
+        .populate('lastRepliedBy', '_id displayName')
         .lean(),
       this.tickets.countDocuments(filter),
     ]);
@@ -383,8 +382,8 @@ export class SupportService {
   async adminGetDetail(idOrCode: string) {
     const ticket = await this.tickets
       .findOne(this.resolveTicketFilter(idOrCode))
-      .populate('userId', '_id username displayName avatarUrl role email')
-      .populate('lastRepliedBy', '_id username displayName')
+      .populate('userId', '_id displayName avatarUrl role email')
+      .populate('lastRepliedBy', '_id displayName')
       .lean();
     if (!ticket) {
       throw new NotFoundException('Không tìm thấy phiếu hỗ trợ');
@@ -395,14 +394,14 @@ export class SupportService {
   async adminReply(
     idOrCode: string,
     dto: AdminReplySupportTicketDto,
-    adminUser: { _id: Types.ObjectId; displayName?: string; username?: string },
+    adminUser: { _id: Types.ObjectId; displayName?: string },
   ) {
     const ticket = await this.tickets.findOne(this.resolveTicketFilter(idOrCode));
     if (!ticket) {
       throw new NotFoundException('Không tìm thấy phiếu hỗ trợ');
     }
 
-    const adminName = adminUser.displayName || adminUser.username || 'Ban quản trị StoryVN';
+    const adminName = adminUser.displayName || 'Ban quản trị StoryVN';
     const nextStatus = dto.status ?? SupportTicketStatus.RESOLVED;
     const shouldSendEmail = dto.sendEmail !== false;
 
@@ -497,8 +496,8 @@ export class SupportService {
         { $set: updates },
         { new: true, runValidators: true },
       )
-      .populate('userId', '_id username displayName avatarUrl role email')
-      .populate('lastRepliedBy', '_id username displayName')
+      .populate('userId', '_id displayName avatarUrl role email')
+      .populate('lastRepliedBy', '_id displayName')
       .lean();
 
     if (!updated) {

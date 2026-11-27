@@ -67,7 +67,7 @@ export class AdminUsersService {
       const searchRegex = new RegExp(query.search.trim(), 'i');
       filter.$or = [
         { email: searchRegex },
-        { username: searchRegex },
+
         { displayName: searchRegex },
       ];
     }
@@ -216,7 +216,6 @@ export class AdminUsersService {
     return {
       _id: targetUser._id,
       email: targetUser.email,
-      username: targetUser.username,
       displayName: targetUser.displayName,
       role: targetUser.role,
       status: targetUser.status,
@@ -276,7 +275,6 @@ export class AdminUsersService {
     return {
       _id: targetUser._id,
       email: targetUser.email,
-      username: targetUser.username,
       displayName: targetUser.displayName,
       role: targetUser.role,
       status: targetUser.status,

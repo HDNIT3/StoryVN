@@ -33,7 +33,7 @@ export function AuthorRequestDetailModal({
   if (!request) return null;
 
   const userInfo = typeof request.userId === "object" && request.userId !== null ? request.userId : null;
-  const displayName = userInfo?.displayName || userInfo?.username || "Người dùng";
+  const displayName = userInfo?.displayName || "Người dùng";
   const email = userInfo?.email || "-";
 
   return (

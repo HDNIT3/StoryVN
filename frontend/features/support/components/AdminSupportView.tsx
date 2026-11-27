@@ -191,7 +191,7 @@ function TicketDetailAndReplyModal({
                   </span>
                   {ticket.userId ? (
                     <span className="rounded bg-admin-brand-50 border border-admin-brand-200 px-1.5 py-0.5 text-xs font-medium text-admin-brand-700">
-                      Thành viên @{ticket.userId.username}
+                      Thành viên
                     </span>
                   ) : (
                     <span className="rounded bg-gray-200/70 px-1.5 py-0.5 text-xs font-semibold text-gray-600">
@@ -697,7 +697,7 @@ export function AdminSupportView() {
                         </div>
                         {ticket.userId && (
                           <div className="text-xs text-gray-400 mt-0.5">
-                            @{ticket.userId.username}
+                            {ticket.userId.email}
                           </div>
                         )}
                       </td>

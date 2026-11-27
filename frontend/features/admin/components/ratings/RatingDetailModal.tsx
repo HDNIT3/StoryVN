@@ -75,16 +75,16 @@ export function RatingDetailModal({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center font-medium text-amber-700 bg-amber-100">
-                  {(user?.displayName || user?.username || "U").charAt(0).toUpperCase()}
+                  {(user?.displayName || "U").charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
             <div className="min-w-0 flex-1">
               <span className="font-medium text-gray-900 text-sm">
-                {user?.displayName || user?.username || "Ẩn danh"}
+                {user?.displayName || "Ẩn danh"}
               </span>
               <p className="text-xs text-gray-500 mt-0.5 truncate">
-                @{user?.username || "username"} {user?.email ? `• ${user.email}` : ""}
+                {user?.email}
               </p>
             </div>
           </div>

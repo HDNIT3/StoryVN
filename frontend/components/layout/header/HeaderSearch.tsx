@@ -5,10 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchSuggestions } from "@/features/search/hooks/useSearchSuggestions";
+import type { SearchSuggestion } from "@/features/search/services/search.service";
 import { HeaderSearchProps, DEFAULT_SEARCH, SMART_SEARCH_LABEL } from "./header.config";
 
+function resultHref(item: SearchSuggestion) {
+  return `/${item.kind === "author" ? "tac-gia" : "truyen"}/${encodeURIComponent(item.slug)}`;
+}
+
 export function HeaderSearch({
-  placeholder = DEFAULT_SEARCH.placeholder ?? "Tìm truyện nhanh, chính xác…",
+  placeholder = DEFAULT_SEARCH.placeholder ?? "Tìm truyện hoặc tác giả…",
   iconSrc = DEFAULT_SEARCH.iconSrc ?? "/icon/search.svg",
   defaultValue = "",
   className = "",
@@ -166,7 +171,7 @@ export function HeaderSearch({
                     event.preventDefault();
                     if (showResults && active >= 0 && items[active]) {
                       close();
-                      router.push(`/truyen/${items[active].slug}`);
+                      router.push(resultHref(items[active]));
                     } else {
                       // Use the same submit path for hardware and mobile keyboards.
                       event.currentTarget.form?.requestSubmit();
@@ -203,19 +208,19 @@ export function HeaderSearch({
                   <span aria-hidden="true" className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-emerald-100 border-t-emerald-600 motion-reduce:animate-none" />
                   <span className="font-medium text-slate-700">Đang phân tích nội dung tìm kiếm…</span>
                 </div>
-              ) : error ? "Tìm kiếm chưa thành công. Vui lòng thử lại." : !searchedQuery ? "Nhập ít nhất 2 ký tự trong tên truyện hoặc mô tả nội dung, rồi nhấn Tìm kiếm hoặc Enter." : items.length ? `${items.length} truyện phù hợp` : "Không có kết quả. Thử tên truyện hoặc mô tả khác."}
+              ) : error ? "Tìm kiếm chưa thành công. Vui lòng thử lại." : !searchedQuery ? "Nhập tên truyện, bút danh hoặc đường dẫn tác giả rồi nhấn Enter." : items.length ? `${items.length} kết quả phù hợp` : "Không có truyện hoặc tác giả phù hợp."}
             </div>
-            {showResults && <ul id={listId} role="listbox" aria-label="Kết quả tìm truyện" className="space-y-1">
+            {showResults && <ul id={listId} role="listbox" aria-label="Kết quả tìm truyện và tác giả" className="space-y-1">
               {items.map((item, index) => (
-                <li key={item._id} id={`${listId}-${index}`} role="option" aria-selected={active === index}>
-                  <Link href={`/truyen/${item.slug}`} onClick={close} className={`flex items-start gap-3 rounded-lg p-2 transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-emerald-500 ${active === index ? "bg-emerald-50" : ""}`}>
+                <li key={`${item.kind ?? "story"}-${item._id}`} id={`${listId}-${index}`} role="option" aria-selected={active === index}>
+                  <Link href={resultHref(item)} onClick={close} className={`flex items-start gap-3 rounded-lg p-2 transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-emerald-500 ${active === index ? "bg-emerald-50" : ""}`}>
                     {item.coverUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.coverUrl} alt="" loading="lazy" className="h-16 w-11 shrink-0 rounded object-cover sm:h-20 sm:w-14 shadow-sm" />
                     ) : <span aria-hidden="true" className="h-16 w-11 shrink-0 rounded bg-slate-100 sm:h-20 sm:w-14" />}
                     <span className="min-w-0 flex-1 py-1">
                       <span className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900">{item.title}</span>
-                      <span className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">{item.description}</span>
+                      <span className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">{item.kind === "author" ? `Tác giả · ${item.description}` : item.description}</span>
                     </span>
                   </Link>
                 </li>

@@ -206,9 +206,9 @@ export class ReportsService {
     const [items, total] = await Promise.all([
       this.reports.find(filter).select('_id targetType targetId userId reason status resolutionNote reviewedBy reviewedAt history createdAt updatedAt')
         .sort({ createdAt: -1, _id: -1 }).skip(query.skip).limit(query.limit)
-        .populate('userId', '_id username displayName avatarUrl')
-        .populate('reviewedBy', '_id username displayName')
-        .populate('history.actorId', '_id username displayName').lean(),
+        .populate('userId', '_id displayName avatarUrl')
+        .populate('reviewedBy', '_id displayName')
+        .populate('history.actorId', '_id displayName').lean(),
       this.reports.countDocuments(filter),
     ]);
     const enrichedItems = await this.enrichReportItems(items);

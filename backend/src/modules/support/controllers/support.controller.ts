@@ -24,7 +24,7 @@ export class SupportController {
   async create(
     @Body() dto: CreateSupportTicketDto,
     @CurrentUser()
-    user?: { _id: Types.ObjectId; displayName?: string; username?: string; email?: string },
+    user?: { _id: Types.ObjectId; displayName?: string; email?: string },
   ) {
     return {
       success: true,
@@ -59,7 +59,7 @@ export class SupportController {
     @Param('ticketCode') ticketCode: string,
     @Body() dto: UserReplySupportTicketDto,
     @CurrentUser()
-    user?: { _id: Types.ObjectId; displayName?: string; username?: string; email?: string },
+    user?: { _id: Types.ObjectId; displayName?: string; email?: string },
   ) {
     return {
       success: true,

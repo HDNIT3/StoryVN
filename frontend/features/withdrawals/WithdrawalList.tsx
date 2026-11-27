@@ -187,7 +187,6 @@ export function WithdrawalList({ admin = false }: { admin?: boolean }) {
                     {admin && typeof request.authorId !== "string" && (
                       <p className="mb-1.5 text-xs font-semibold text-zinc-800">
                         {request.authorId?.displayName ||
-                          request.authorId?.username ||
                           "Tài khoản đã xóa"}
                       </p>
                     )}

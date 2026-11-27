@@ -3,7 +3,6 @@ export type WithdrawalStatus =
 export interface Person {
   _id: string;
   displayName?: string;
-  username?: string;
   email?: string;
 }
 export interface Withdrawal {

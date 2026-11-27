@@ -218,7 +218,6 @@ export function WithdrawalDetail({
                     <dt className="text-slate-400">Tác giả</dt>
                     <dd className="mt-1.5 font-medium text-slate-700">
                       {request.authorId?.displayName ||
-                        request.authorId?.username ||
                         "Không còn tài khoản"}
                     </dd>
                   </div>
@@ -297,7 +296,6 @@ export function WithdrawalDetail({
                       {typeof event.actorId === "string"
                         ? event.actorId
                         : event.actorId?.displayName ||
-                          event.actorId?.username ||
                           "Tài khoản đã xóa"}
                     </p>
                     {event.note && (

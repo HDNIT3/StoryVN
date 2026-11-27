@@ -45,7 +45,7 @@ export function ProfileUserCard({
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const updateAvatarMutation = useUpdateAvatar();
 
-  const avatarInitial = (user.displayName || user.username || "U").charAt(0).toUpperCase();
+  const avatarInitial = (user.displayName || "U").charAt(0).toUpperCase();
 
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -163,7 +163,6 @@ export function ProfileUserCard({
         </div>
 
         <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">{user.displayName}</h1>
-        <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-0.5 truncate">@{user.username}</p>
         <p className="text-xs sm:text-sm text-slate-500 mt-0.5 truncate">{user.email}</p>
 
         <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-400">

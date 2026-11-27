@@ -30,14 +30,14 @@ export class CoinPackagesController {
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN)
   @Get('admin/economics')
   economics() { return { success: true, data: this.coinPackagesService.getEconomics() }; }
 
   @ApiOperation({ summary: 'Khởi tạo danh sách gói nạp mặc định (Seed Data)' })
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN)
   @Post('admin/seed')
   @HttpCode(HttpStatus.OK)
   async seed() {
@@ -52,7 +52,7 @@ export class CoinPackagesController {
   @ApiOperation({ summary: 'Lấy danh sách gói nạp cho Admin (phân trang, lọc, tìm kiếm)' })
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN)
   @Get('admin')
   @HttpCode(HttpStatus.OK)
   async findAdminAll(@Query() query: QueryCoinPackageDto) {
@@ -67,7 +67,7 @@ export class CoinPackagesController {
   @ApiOperation({ summary: 'Tạo mới gói nạp Xu' })
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateCoinPackageDto) {
@@ -82,7 +82,7 @@ export class CoinPackagesController {
   @ApiOperation({ summary: 'Bật/tắt trạng thái hoạt động của gói nạp' })
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN)
   @Patch(':id/toggle-status')
   @HttpCode(HttpStatus.OK)
   async toggleStatus(@Param('id') id: string) {
@@ -97,7 +97,7 @@ export class CoinPackagesController {
   @ApiOperation({ summary: 'Cập nhật thông tin gói nạp theo ID' })
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(@Param('id') id: string, @Body() dto: UpdateCoinPackageDto) {
@@ -112,7 +112,7 @@ export class CoinPackagesController {
   @ApiOperation({ summary: 'Xóa gói nạp theo ID' })
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string) {

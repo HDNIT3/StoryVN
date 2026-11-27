@@ -41,7 +41,7 @@ export interface StoryResult {
   title: string;
   slug: string;
   coverUrl: string | null;
-  author: { _id: Types.ObjectId | null; name: string; username: string | null };
+  author: { _id: Types.ObjectId | null; name: string; slug: string | null };
   stats: {
     chapterCount: number;
     viewCount: number;
@@ -57,7 +57,7 @@ export interface StoryResult {
 
 export interface AuthorRankingResult {
   _id: Types.ObjectId;
-  username: string;
+  slug: string;
   name: string;
   avatarUrl: string | null;
   stats: { followerCount: number; storyCount: number; totalViews: number };
@@ -137,12 +137,11 @@ function displayStages(includeDescription = false): PipelineStage[] {
         ...(includeDescription ? { description: { $ifNull: ['$description', ''] } } : {}),
         author: {
           _id: '$authorId',
-          username: { $ifNull: [{ $first: '$authorUser.username' }, null] },
+          slug: { $ifNull: [{ $first: '$profile.slug' }, { $toString: '$authorId' }] },
           name: {
             $ifNull: [
               { $first: '$profile.penName' },
               { $first: '$authorUser.displayName' },
-              { $first: '$authorUser.username' },
               'Tác giả',
             ],
           },
@@ -187,12 +186,11 @@ function displayAuthorStages(): PipelineStage[] {
     },
     {
       $project: {
-        username: { $ifNull: [{ $first: '$user.username' }, ''] },
+        slug: { $ifNull: ['$profile.slug', { $toString: '$_id' }] },
         name: {
           $ifNull: [
             '$profile.penName',
             { $first: '$user.displayName' },
-            { $first: '$user.username' },
             'Tác giả',
           ],
         },

@@ -65,18 +65,18 @@ export const authorService = {
   },
 
   /**
-   * Lấy thông tin hồ sơ công khai của tác giả theo username
+   * Lấy thông tin hồ sơ công khai của tác giả theo slug
    */
-  getPublicProfile(username: string) {
+  getPublicProfile(slug: string) {
     return api.get<ApiResponse<{ author: PublicAuthorProfile }>>(
-      `/authors/${encodeURIComponent(username)}`
+      `/authors/${encodeURIComponent(slug)}`
     );
   },
 
   /**
    * Lấy danh sách tác phẩm công khai của tác giả (lọc tiến độ, sắp xếp, phân trang)
    */
-  getPublicStories(username: string, params?: QueryAuthorPublicStoriesParams) {
+  getPublicStories(slug: string, params?: QueryAuthorPublicStoriesParams) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.append("page", params.page.toString());
     if (params?.limit) searchParams.append("limit", params.limit.toString());
@@ -87,8 +87,8 @@ export const authorService = {
 
     const qs = searchParams.toString();
     const endpoint = qs
-      ? `/authors/${encodeURIComponent(username)}/stories?${qs}`
-      : `/authors/${encodeURIComponent(username)}/stories`;
+      ? `/authors/${encodeURIComponent(slug)}/stories?${qs}`
+      : `/authors/${encodeURIComponent(slug)}/stories`;
 
     return api.get<ApiResponse<PaginatedAuthorStories>>(endpoint);
   },

@@ -55,16 +55,10 @@ export class AuthService {
   ) { }
 
   async register(dto: RegisterDto) {
-    const existingUser = await this.usersService.findByEmailOrUsername(
-      dto.email,
-      dto.username,
-    );
+    const existingUser = await this.usersService.findByEmail(dto.email);
 
     if (existingUser) {
-      if (existingUser.email.toLowerCase() === dto.email.toLowerCase()) {
-        throw new ConflictException(ErrorCode.EMAIL_ALREADY_EXISTS);
-      }
-      throw new ConflictException(ErrorCode.USERNAME_ALREADY_EXISTS);
+      throw new ConflictException(ErrorCode.EMAIL_ALREADY_EXISTS);
     }
 
     const passwordHash = await hashPassword(dto.password);
@@ -77,7 +71,6 @@ export class AuthService {
       {
         otpHash,
         email: dto.email.toLowerCase(),
-        username: dto.username,
         passwordHash,
         displayName: dto.displayName,
       },
@@ -126,19 +119,15 @@ export class AuthService {
       throw new BadRequestException(ErrorCode.INVALID_OTP);
     }
 
-    const existingUser = await this.usersService.findByEmailOrUsername(
-      cached.email,
-      cached.username,
-    );
+    const existingUser = await this.usersService.findByEmail(cached.email);
 
     if (existingUser) {
-      throw new ConflictException(ErrorCode.USER_ALREADY_EXISTS);
+      throw new ConflictException(ErrorCode.EMAIL_ALREADY_EXISTS);
     }
 
     try {
       const user = await this.usersService.create({
         email: cached.email,
-        username: cached.username,
         passwordHash: cached.passwordHash,
         displayName: cached.displayName,
         avatarUrl: null,
@@ -157,7 +146,6 @@ export class AuthService {
           user: {
             _id: user._id,
             email: user.email,
-            username: user.username,
             displayName: user.displayName,
             role: user.role,
             status: user.status,
@@ -323,24 +311,13 @@ export class AuthService {
 
         await user.save();
       } else {
-        const baseUsername = googleUser.email
-          .split('@')[0]
-          .replace(/[^a-zA-Z0-9_]/g, '')
-          .toLowerCase();
-        let username = baseUsername || 'user';
-        const existingUsername = await this.usersService.findByUsername(username);
-        if (existingUsername) {
-          username = `${username}_${crypto.randomBytes(3).toString('hex')}`;
-        }
-
         const randomPassword = `Sv@${crypto.randomBytes(4).toString('hex')}`;
         const passwordHash = await hashPassword(randomPassword);
 
         user = await this.usersService.create({
           email: googleUser.email,
-          username,
           passwordHash,
-          displayName: googleUser.name || username,
+          displayName: googleUser.name || 'Độc giả',
           avatarUrl: googleUser.picture || null,
           googleId: googleUser.googleId,
           role: UserRole.USER,

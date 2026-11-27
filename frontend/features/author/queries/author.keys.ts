@@ -4,9 +4,9 @@ export const authorKeys = {
   communityStats: ["author", "community-stats"] as const,
   list: (params?: Record<string, unknown>) =>
     ["author", "list", ...(params ? [params] : [])] as const,
-  profile: (username: string) => ["author", "profile", username] as const,
-  stories: (username: string, params?: Record<string, unknown>) =>
-    ["author", "stories", username, ...(params ? [params] : [])] as const,
+  profile: (slug: string) => ["author", "profile", slug] as const,
+  stories: (slug: string, params?: Record<string, unknown>) =>
+    ["author", "stories", slug, ...(params ? [params] : [])] as const,
   revenueHistory: (params?: Record<string, unknown>) =>
     ["author", "revenue-history", ...(params ? [params] : [])] as const,
 } as const;
