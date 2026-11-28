@@ -103,7 +103,7 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
 export const SMART_SEARCH_LABEL = "Tìm kiếm thông minh";
 
 export const DEFAULT_SEARCH: HeaderSearchProps = {
-  placeholder: "Tìm truyện hoặc tác giả…",
+  placeholder: "Mô tả truyện bạn muốn đọc…",
   iconSrc: "/icon/search.svg",
 };
 

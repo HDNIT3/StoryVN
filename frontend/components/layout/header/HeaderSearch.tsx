@@ -5,15 +5,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchSuggestions } from "@/features/search/hooks/useSearchSuggestions";
-import type { SearchSuggestion } from "@/features/search/services/search.service";
 import { HeaderSearchProps, DEFAULT_SEARCH, SMART_SEARCH_LABEL } from "./header.config";
 
-function resultHref(item: SearchSuggestion) {
-  return `/${item.kind === "author" ? "tac-gia" : "truyen"}/${encodeURIComponent(item.slug)}`;
+const EXAMPLE_QUERIES = [
+  "Truyện về người quay lại quá khứ để cứu gia đình",
+  "Truyện phiêu lưu khám phá một thế giới mới",
+];
+
+function storyHref(slug: string) {
+  return `/truyen/${encodeURIComponent(slug)}`;
 }
 
 export function HeaderSearch({
-  placeholder = DEFAULT_SEARCH.placeholder ?? "Tìm truyện hoặc tác giả…",
+  placeholder = DEFAULT_SEARCH.placeholder,
   iconSrc = DEFAULT_SEARCH.iconSrc ?? "/icon/search.svg",
   defaultValue = "",
   className = "",
@@ -39,6 +43,12 @@ export function HeaderSearch({
   const { items, loading, error, searchedQuery, search, reset } = useSearchSuggestions();
   const hasQuery = query.trim().length >= 2 && !composing;
   const showResults = Boolean(searchedQuery) && !loading && !error;
+
+  const updateQuery = (value: string) => {
+    reset();
+    setQuery(value);
+    setActive(-1);
+  };
 
   React.useEffect(() => {
     const panel = panelRef.current;
@@ -159,7 +169,7 @@ export function HeaderSearch({
                 type="search"
                 enterKeyHint="search"
                 value={query}
-                onChange={(event) => { reset(); setQuery(event.target.value); setActive(-1); }}
+                onChange={(event) => updateQuery(event.target.value)}
                 onCompositionStart={() => setComposing(true)}
                 onCompositionEnd={() => setComposing(false)}
                 onKeyDown={(event) => {
@@ -171,7 +181,7 @@ export function HeaderSearch({
                     event.preventDefault();
                     if (showResults && active >= 0 && items[active]) {
                       close();
-                      router.push(resultHref(items[active]));
+                      router.push(storyHref(items[active].slug));
                     } else {
                       // Use the same submit path for hardware and mobile keyboards.
                       event.currentTarget.form?.requestSubmit();
@@ -197,7 +207,7 @@ export function HeaderSearch({
                 aria-label={SMART_SEARCH_LABEL}
                 className="w-full min-w-0 bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
               />
-              {query && <button type="button" onClick={() => { reset(); setQuery(""); setActive(-1); inputRef.current?.focus(); }} aria-label="Xóa từ khóa" className="flex h-11 w-9 shrink-0 sm:h-9 cursor-pointer items-center justify-center rounded text-slate-400 hover:bg-slate-200 hover:text-slate-700">✕</button>}
+              {query && <button type="button" onClick={() => { updateQuery(""); inputRef.current?.focus(); }} aria-label="Xóa từ khóa" className="flex h-11 w-9 shrink-0 sm:h-9 cursor-pointer items-center justify-center rounded text-slate-400 hover:bg-slate-200 hover:text-slate-700">✕</button>}
             </div>
           </div>
 
@@ -208,19 +218,33 @@ export function HeaderSearch({
                   <span aria-hidden="true" className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-emerald-100 border-t-emerald-600 motion-reduce:animate-none" />
                   <span className="font-medium text-slate-700">Đang phân tích nội dung tìm kiếm…</span>
                 </div>
-              ) : error ? "Tìm kiếm chưa thành công. Vui lòng thử lại." : !searchedQuery ? "Nhập tên truyện, bút danh hoặc đường dẫn tác giả rồi nhấn Enter." : items.length ? `${items.length} kết quả phù hợp` : "Không có truyện hoặc tác giả phù hợp."}
+              ) : error ? "Tìm kiếm chưa thành công. Vui lòng thử lại." : !searchedQuery ? "Nhập tên hoặc mô tả truyện rồi nhấn Enter." : items.length ? `${items.length} kết quả phù hợp` : "Không tìm thấy truyện phù hợp."}
             </div>
-            {showResults && <ul id={listId} role="listbox" aria-label="Kết quả tìm truyện và tác giả" className="space-y-1">
+            {!query.trim() && (
+              <div className="flex flex-wrap gap-2 px-2 pb-2 sm:px-3">
+                {EXAMPLE_QUERIES.map((example) => (
+                  <button
+                    key={example}
+                    type="button"
+                    onClick={() => { updateQuery(example); inputRef.current?.focus(); }}
+                    className="cursor-pointer rounded-lg border border-slate-200 px-3 py-2 text-left text-xs text-slate-700 hover:border-emerald-300 hover:bg-emerald-50"
+                  >
+                    {example}
+                  </button>
+                ))}
+              </div>
+            )}
+            {showResults && <ul id={listId} role="listbox" aria-label="Kết quả tìm truyện" className="space-y-1">
               {items.map((item, index) => (
-                <li key={`${item.kind ?? "story"}-${item._id}`} id={`${listId}-${index}`} role="option" aria-selected={active === index}>
-                  <Link href={resultHref(item)} onClick={close} className={`flex items-start gap-3 rounded-lg p-2 transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-emerald-500 ${active === index ? "bg-emerald-50" : ""}`}>
+                <li key={item._id} id={`${listId}-${index}`} role="option" aria-selected={active === index}>
+                  <Link href={storyHref(item.slug)} onClick={close} className={`flex items-start gap-3 rounded-lg p-2 transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-emerald-500 ${active === index ? "bg-emerald-50" : ""}`}>
                     {item.coverUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.coverUrl} alt="" loading="lazy" className="h-16 w-11 shrink-0 rounded object-cover sm:h-20 sm:w-14 shadow-sm" />
                     ) : <span aria-hidden="true" className="h-16 w-11 shrink-0 rounded bg-slate-100 sm:h-20 sm:w-14" />}
                     <span className="min-w-0 flex-1 py-1">
                       <span className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900">{item.title}</span>
-                      <span className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">{item.kind === "author" ? `Tác giả · ${item.description}` : item.description}</span>
+                      <span className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">{item.description}</span>
                     </span>
                   </Link>
                 </li>
