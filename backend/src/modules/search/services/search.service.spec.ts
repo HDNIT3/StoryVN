@@ -64,6 +64,7 @@ function harness(enabled = true) {
   const search = new SearchService(
     stories as any,
     taxonomy as any,
+    taxonomy as any,
     gemini as any,
   );
   return { service, search, stories, taxonomy, gemini };
@@ -311,12 +312,12 @@ describe('search suggestions', () => {
   it('falls back when Atlas is unavailable and revalidates public visibility', async () => {
     const { search, stories } = harness();
     stories.aggregate
-      .mockReturnValueOnce(chain([{ _id: id, title: official.title }]))
       .mockReturnValueOnce({
         option: () => ({
           exec: () => Promise.reject(new Error('missing vector index')),
         }),
-      } as any);
+      } as any)
+      .mockReturnValueOnce(chain([{ _id: id, title: official.title }]));
     stories.find.mockReturnValue(
       chain([{ ...official, slug: 'cuoc-doi-thu-hai' }]),
     );
@@ -329,5 +330,49 @@ describe('search suggestions', () => {
     });
     expect(result.items[0]).not.toHaveProperty('embedding');
     expect(result.items[0]).not.toHaveProperty('revisions');
+  });
+
+  it('combines vector results with keyword matches on the four story fields', async () => {
+    const { search, stories, taxonomy } = harness();
+    const genreId = new Types.ObjectId();
+    const tagId = new Types.ObjectId();
+    const vectorStoryId = new Types.ObjectId();
+    taxonomy.find
+      .mockReturnValueOnce(chain([{ _id: genreId }]))
+      .mockReturnValueOnce(chain([{ _id: tagId }]));
+    stories.aggregate
+      .mockReturnValueOnce(chain([{ _id: vectorStoryId }, { _id: id }]))
+      .mockReturnValueOnce(chain([{ _id: id, title: official.title }]));
+    stories.find.mockReturnValue(
+      chain([
+        { ...official, slug: 'cuoc-doi-thu-hai' },
+        { ...official, _id: vectorStoryId, slug: 'mot-the-gioi-moi' },
+      ]),
+    );
+
+    const result = await search.suggest('Truyện về phiêu lưu');
+    const matches = {
+      $regex: expect.stringContaining('phiêu'),
+      $options: 'i',
+    };
+    expect(taxonomy.find).toHaveBeenCalledWith({
+      name: matches,
+      isActive: true,
+    });
+    expect(stories.aggregate.mock.calls[1][0][0].$match).toEqual({
+      status: 'PUBLISHED',
+      visibility: 'PUBLIC',
+      $or: [
+        { title: matches },
+        { description: matches },
+        { genreIds: { $in: [genreId] } },
+        { tagIds: { $in: [tagId] } },
+      ],
+    });
+    expect(result.mode).toBe('hybrid');
+    expect(result.items.map((item) => item.slug)).toEqual([
+      'cuoc-doi-thu-hai',
+      'mot-the-gioi-moi',
+    ]);
   });
 });
