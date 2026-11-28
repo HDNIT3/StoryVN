@@ -6,7 +6,8 @@ import {
   StoryStatus,
   StoryVisibility,
 } from '../../stories/schemas/story.schema.js';
-import { AuthorProfile } from '../../users/schemas/author-profile.schema.js';
+import { Genre } from '../../genres/schemas/genre.schema.js';
+import { Tag } from '../../tags/schemas/tag.schema.js';
 import {
   plainText,
   normalizeSearch,
@@ -24,6 +25,19 @@ const PUBLIC = {
   visibility: StoryVisibility.PUBLIC,
 };
 const escapeRegex = (q: string) => q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const COMMON_QUERY_WORDS = new Set([
+  'truyện',
+  'tìm',
+  'muốn',
+  'đọc',
+  'về',
+  'có',
+  'cho',
+  'với',
+  'và',
+  'một',
+  'của',
+]);
 
 @Injectable()
 export class SearchService implements OnModuleInit {
@@ -31,8 +45,8 @@ export class SearchService implements OnModuleInit {
   private lastWarning = 0;
   constructor(
     @InjectModel(Story.name) private readonly stories: Model<Story>,
-    @InjectModel(AuthorProfile.name)
-    private readonly authors: Model<AuthorProfile>,
+    @InjectModel(Genre.name) private readonly genres: Model<Genre>,
+    @InjectModel(Tag.name) private readonly tags: Model<Tag>,
     private readonly gemini: GeminiEmbeddingService,
   ) {}
 
@@ -82,17 +96,23 @@ export class SearchService implements OnModuleInit {
   }
 
   private async keyword(q: string) {
-    const text = new RegExp(escapeRegex(q), 'i');
-    const slug = new RegExp(
-      escapeRegex(normalizeSearch(q).replace(/ /g, '-')),
-      'i',
+    const phrase = escapeRegex(q);
+    const words = [...new Set(q.toLowerCase().match(/[\p{L}\p{N}]+/gu))]
+      .filter((word) => word.length > 1 && !COMMON_QUERY_WORDS.has(word))
+      .slice(0, 10);
+    const wordPatterns = words.map(
+      (word) => `(?:^|[^\\p{L}\\p{M}\\p{N}])${word}(?=$|[^\\p{L}\\p{M}\\p{N}])`,
     );
-    const authors = await this.authors
-      .find({ penName: text })
-      .select('userId')
-      .limit(20)
-      .lean()
-      .exec();
+    const text = { $regex: [phrase, ...wordPatterns].join('|'), $options: 'i' };
+    const taxonomyMatch = { name: text, isActive: true };
+    const [genres, tags] = await Promise.all([
+      this.genres.find(taxonomyMatch).select('_id').lean().exec(),
+      this.tags.find(taxonomyMatch).select('_id').lean().exec(),
+    ]);
+    const genreIds = genres.map((genre) => genre._id);
+    const tagIds = tags.map((tag) => tag._id);
+    const description = { $ifNull: ['$description', ''] };
+    const storyText = { $concat: ['$title', ' ', description] };
     const rows = await this.stories
       .aggregate<{ _id: Types.ObjectId; title: string }>([
         {
@@ -100,8 +120,9 @@ export class SearchService implements OnModuleInit {
             ...PUBLIC,
             $or: [
               { title: text },
-              { slug },
-              { authorId: { $in: authors.map((a) => a.userId) } },
+              { description: text },
+              { genreIds: { $in: genreIds } },
+              { tagIds: { $in: tagIds } },
             ],
           },
         },
@@ -117,11 +138,11 @@ export class SearchService implements OnModuleInit {
                     {
                       $regexMatch: {
                         input: '$title',
-                        regex: `^${escapeRegex(q)}$`,
+                        regex: `^${phrase}$`,
                         options: 'i',
                       },
                     },
-                    2,
+                    30,
                     0,
                   ],
                 },
@@ -130,13 +151,46 @@ export class SearchService implements OnModuleInit {
                     {
                       $regexMatch: {
                         input: '$title',
-                        regex: `^${escapeRegex(q)}`,
+                        regex: phrase,
                         options: 'i',
                       },
                     },
+                    15,
+                    0,
+                  ],
+                },
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: description,
+                        regex: phrase,
+                        options: 'i',
+                      },
+                    },
+                    5,
+                    0,
+                  ],
+                },
+                ...wordPatterns.map((regex) => ({
+                  $cond: [
+                    { $regexMatch: { input: storyText, regex, options: 'i' } },
                     1,
                     0,
                   ],
+                })),
+                {
+                  $size: {
+                    $setIntersection: [
+                      { $ifNull: ['$genreIds', []] },
+                      genreIds,
+                    ],
+                  },
+                },
+                {
+                  $size: {
+                    $setIntersection: [{ $ifNull: ['$tagIds', []] }, tagIds],
+                  },
                 },
               ],
             },

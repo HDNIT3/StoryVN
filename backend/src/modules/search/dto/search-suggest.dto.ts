@@ -4,7 +4,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SearchSuggestDto {
   @ApiPropertyOptional({
-    description: 'Tên truyện, tác giả hoặc mô tả nội dung',
+    description: 'Tên truyện hoặc câu mô tả truyện bằng tiếng Việt',
     maxLength: 256,
   })
   @IsOptional()
